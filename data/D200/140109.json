@@ -1,0 +1,262 @@
+{
+ "grade": "D200",
+ "gradeLabel": "고2",
+ "group": "사회탐구",
+ "subject": "정치와 법",
+ "subjectId": "140109",
+ "count": 28,
+ "papers": [
+  {
+   "title": "10월 학평(경기)",
+   "date": "2025-10-14",
+   "year": 2025,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/go2/s_bnj_mun_A19S47JR.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/mobile/h2_m_s_bnj_ans_KXHZ4482.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/go2/s_bnj_hsj_J1F8461U.pdf"
+  },
+  {
+   "title": "9월 학평(인천)",
+   "date": "2025-09-03",
+   "year": 2025,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20250903/go2/s_bnj_mun_6DO437Y9.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20250903/mobile/h2_m_s_bnj_ans_63O698TZ.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250903/go2/s_bnj_hsj_NBRQ668V.pdf"
+  },
+  {
+   "title": "6월 학평(부산)",
+   "date": "2025-06-04",
+   "year": 2025,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20250604/go2/s_bnj_mun_TU64Q7Q3.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20250604/mobile/h2_m_s_bnj_ans_WY174C43.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250604/go2/s_bnj_hsj_O2N52VQ4.pdf"
+  },
+  {
+   "title": "3월 학평(서울)",
+   "date": "2025-03-26",
+   "year": 2025,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20250326/go2/s_bnj_mun_46999765.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20250326/mobile/h2_m_s_bnj_ans_74597LG8.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250326/go2/s_bnj_hsj_58138M6P.pdf"
+  },
+  {
+   "title": "10월 학평(경기)",
+   "date": "2024-10-15",
+   "year": 2024,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/go2/s_bnj_mun_99E1729M.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/mobile/h2_m_s_bnj_ans_YO2WN7K7.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/go2/s_bnj_hsj_7VG9RS9E.pdf"
+  },
+  {
+   "title": "9월 학평(인천)",
+   "date": "2024-09-04",
+   "year": 2024,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20240904/go2/s_bnj_mun_5S335XP3.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20240904/mobile/h2_m_s_bnj_ans_3UV96LY8.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240904/go2/s_bnj_hsj_5OJ6LQD8.pdf"
+  },
+  {
+   "title": "6월 학평(부산)",
+   "date": "2024-06-04",
+   "year": 2024,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20240604/go2/s_bnj_mun_B1618MAN.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20240604/mobile/h2_m_s_bnj_ans_JN1U21XU.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240604/go2/s_bnj_hsj_V4JA86W2.pdf"
+  },
+  {
+   "title": "3월 학평(서울)",
+   "date": "2024-03-28",
+   "year": 2024,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20240328/go2/s_bnj_mun_BA5SBM2D.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20240328/mobile/h2_m_s_bnj_ans_65U18AL3.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240328/go2/s_bnj_hsj_B11DKJR9.pdf"
+  },
+  {
+   "title": "11월 학평(경기)_12.19 시행",
+   "date": "2023-12-19",
+   "year": 2023,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/go2/s_bnj_mun_73LX81SI.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/mobile/h2_m_s_bnj_ans_C2NF955Z.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/go2/s_bnj_hsj_Y2539SP7.pdf"
+  },
+  {
+   "title": "9월 학평(인천)",
+   "date": "2023-09-06",
+   "year": 2023,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20230906/go2/s_bnj_mun_G225MA5D.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20230906/mobile/h2_m_s_bnj_ans_H5926CE3.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230906/go2/s_bnj_hsj_53DRVH6O.pdf"
+  },
+  {
+   "title": "6월 학평(부산)",
+   "date": "2023-06-01",
+   "year": 2023,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20230601/go2/s_bnj_mun_DU1KP819.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20230601/mobile/h2_m_s_bnj_ans_ARR4N1AC.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230601/go2/s_bnj_hsj_UX425UNM.pdf"
+  },
+  {
+   "title": "3월 학평(서울)",
+   "date": "2023-03-23",
+   "year": 2023,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20230323/go2/s_bnj_mun_6672DDIW.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20230323/mobile/h2_m_s_bnj_ans_5RW21898.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230323/go2/s_bnj_hsj_DN5LYDX7.pdf"
+  },
+  {
+   "title": "11월 학평(경기)",
+   "date": "2022-11-23",
+   "year": 2022,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/go2/s_bnj_mun_AMU5T276.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/mobile/h2_m_s_bnj_ans_5K21211Y.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/go2/s_bnj_hsj_2UEH2F2W.pdf"
+  },
+  {
+   "title": "9월 학평(인천)",
+   "date": "2022-09-01",
+   "year": 2022,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20220901/go2/s_bnj_mun_X7I78Q17.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20220901/mobile/h2_m_s_bnj_ans_2TZ2REAN.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220901/go2/s_bnj_hsj_I4279C68.pdf"
+  },
+  {
+   "title": "6월 학평(부산)",
+   "date": "2022-06-09",
+   "year": 2022,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20220609/go2/s_bnj_mun_BF3IWXV2.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20220609/mobile/h2_m_s_bnj_ans_Y22VSXZR.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220609/go2/s_bnj_hsj_695E237I.pdf"
+  },
+  {
+   "title": "3월 학평(서울)",
+   "date": "2022-03-24",
+   "year": 2022,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20220324/go2/s_bnj_mun_P47UISM7.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20220324/mobile/h2_m_s_bnj_ans_OGEGU7W1.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220324/go2/s_bnj_hsj_7NJ1Y832.pdf"
+  },
+  {
+   "title": "11월 학평(경기)",
+   "date": "2021-11-24",
+   "year": 2021,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/go2/s_bnj_mun_89N7O32A.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/mobile/h2_m_s_bnj_ans_V1XNSQF4.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/go2/s_bnj_hsj_MNJ8T75O.pdf"
+  },
+  {
+   "title": "9월 학평(인천)",
+   "date": "2021-08-31",
+   "year": 2021,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20210831/go2/s_bnj_mun_E5V9UNJC.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20210831/mobile/h2_m_s_bnj_ans_3ZN299UG.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210831/go2/s_bnj_hsj_A3O9461L.pdf"
+  },
+  {
+   "title": "6월 학평(부산)",
+   "date": "2021-06-03",
+   "year": 2021,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20210603/go2/s_bnj_mun_1NEL1N3D.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20210603/mobile/h2_m_s_bnj_ans_548844Q2.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210603/go2/s_bnj_hsj_BSL789Q5.pdf"
+  },
+  {
+   "title": "3월 학평(서울)",
+   "date": "2021-03-25",
+   "year": 2021,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20210325/go2/s_bnj_mun_Q4Y3YTOY.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20210325/mobile/h2_m_s_bnj_ans_31V5936F.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210325/go2/s_bnj_hsj_SN5LKPT4.pdf"
+  },
+  {
+   "title": "11월 학평(경기)",
+   "date": "2020-11-18",
+   "year": 2020,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/go2/s_bnj_mun_PX69HX76.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/mobile/h2_m_s_bnj_ans_5OKMZA8B.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/go2/s_bnj_hsj_5921V4JM.pdf"
+  },
+  {
+   "title": "9월 학평(인천)",
+   "date": "2020-09-16",
+   "year": 2020,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20200916/go2/s_bnj_mun_64YMJEX7.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20200916/mobile/h2_m_s_bnj_ans_83UT21E8.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200916/go2/s_bnj_hsj_826DO8EO.pdf"
+  },
+  {
+   "title": "6월 학평(부산)",
+   "date": "2020-06-18",
+   "year": 2020,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20200618/go2/s_bnj_mun_9L45527X.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20200618/mobile/h2_m_s_bnj_ans_5VO342QK.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200618/go2/s_bnj_hsj_7RXR7A2X.pdf"
+  },
+  {
+   "title": "3월 학평(서울)_4.24 시행",
+   "date": "2020-03-12",
+   "year": 2020,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20200312/go2/s_bnj_mun_5S78W7J2.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20200312/mobile/h2_m_s_bnj_ans_8TIOWKDX.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200312/go2/s_bnj_hsj_2S4FODOD.pdf"
+  },
+  {
+   "title": "11월 학평(경기)",
+   "date": "2019-11-20",
+   "year": 2019,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/s_jnb_mun_SXEUXB72_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/mobile/h2_m_s_jnb_hsj_2667119Q.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/s_jnb_hsj_142LD462_10.pdf"
+  },
+  {
+   "title": "9월 학평(인천)",
+   "date": "2019-09-04",
+   "year": 2019,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/go2/s_bnj_mun_K13R1WM9_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/mobile/h2_m_s_bnj_hsj_86XAI357.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/go2/s_bnj_hsj_4UBDW1BJ_10.pdf"
+  },
+  {
+   "title": "6월 학평(부산)",
+   "date": "2019-06-04",
+   "year": 2019,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/go2/s_bnj_mun_NqFJ3sl3_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/mobile/h2_m_s_bnj_hsj_Ijn04x29.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/go2/s_bnj_hsj_dDW6lCPx_10.pdf"
+  },
+  {
+   "title": "3월 학평(서울)",
+   "date": "2019-03-07",
+   "year": 2019,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/go2/s_bnj_mun_0yAlzIXh_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/mobile/h2_s_bnj_G2UYhPQq.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/go2/s_bnj_hsj_GJPohZC4_11.pdf"
+  }
+ ]
+}

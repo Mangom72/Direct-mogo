@@ -1,0 +1,28 @@
+{
+ "grade": "D200",
+ "gradeLabel": "고2",
+ "group": "사회탐구",
+ "subject": "통합사회",
+ "subjectId": "140220",
+ "count": 2,
+ "papers": [
+  {
+   "title": "6월 학평(부산)",
+   "date": "2026-06-04",
+   "year": 2026,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20260604/go2/s_soc_mun_495QA87G.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20260604/mobile/h2_m_s_soc_ans_6BIQ3U6M.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260604/go2/s_soc_hsj_857U3164.pdf"
+  },
+  {
+   "title": "3월 학평(서울)",
+   "date": "2026-03-24",
+   "year": 2026,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20260324/go2/s_soc_mun_Z719C37S.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20260324/mobile/h2_m_s_soc_ans_3889DNDR.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260324/go2/s_soc_hsj_SQN2O2PT.pdf"
+  }
+ ]
+}
