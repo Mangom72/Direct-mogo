@@ -84,7 +84,13 @@ def encode(path):
 
 
 def parse_rows(html):
-    """(과목ID, 연도, 제목, 날짜, 문제, 정답, 해설) 튜플을 뽑는다."""
+    """(과목ID, 연도, 제목, 날짜, 문제, 정답, 해설) 튜플을 뽑는다.
+
+    주의: 파일 이름은 과목을 나타내지 않는다. 2015년 수능이 대표적으로,
+    한국사 문제지가 s_hanji(한국지리), 한국지리가 s_saeji(세계지리) 이름을 달고 있다.
+    PDF를 열어 확인한 결과 내용은 EBSi가 붙인 행과 일치했다 — 이름만 어긋난 것이다.
+    그러니 이름이 과목과 다르다고 자료를 고치거나 버리면 안 된다.
+    """
     out = []
     for block in ROW_RE.findall(html):
         title = TITLE_RE.search(block)
