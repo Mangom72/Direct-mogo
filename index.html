@@ -16,15 +16,41 @@
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#EDE8DA;
-  --card:#FCFAF4;
+  --paper:#EDE8DA;   /* 바탕 종이 */
+  --card:#FCFAF4;    /* 지면 */
   --ink:#191713;
   --ink2:#6B6353;
   --rule:#CFC6AC;
   --mark:#B4342A;
   --gov:#1D4E6B;
   --edu:#4A6B3D;
+  --btn:#fff;        /* 버튼·입력 표면 */
+  --onmark:#fff;     /* 강조색 위에 얹는 글자 */
+  --sel:#E4DCC6;     /* OMR 선택 */
+  --off:#B5AC98;     /* 비활성 */
+  --scrim:rgba(25,23,19,.55);
+  --shadow:rgba(25,23,19,.3);
 }
+/* 밤에도 신문 결을 유지: 먹빛 지면에 따뜻한 미색 활자.
+   강조색은 어두운 바탕에서 대비가 모자라 밝은 쪽으로 다시 잡았다. */
+:root[data-theme="dark"]{
+  --paper:#14120E;
+  --card:#1E1A15;
+  --ink:#EDE7D8;
+  --ink2:#ADA391;
+  --rule:#3E382C;
+  --mark:#E4685C;
+  --gov:#7CB6DA;
+  --edu:#96C47F;
+  --btn:#272219;
+  --onmark:#17140F;
+  --sel:#3B3425;
+  --off:#8A8272;
+  --scrim:rgba(0,0,0,.68);
+  --shadow:rgba(0,0,0,.6);
+}
+:root{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{
@@ -36,6 +62,23 @@ body{
 }
 .wrap{max-width:900px;margin:0 auto}
 
+/* 알림 막대 — 과목 가져오기 / 새 자료 안내에 함께 쓴다 */
+.notice[hidden]{display:none}
+.notice{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--card);border:1.5px solid var(--ink);border-left-width:5px;border-left-color:var(--mark);
+  padding:11px 14px;margin-bottom:14px;font-size:12.5px;line-height:1.6;
+}
+.notice span{flex:1;min-width:180px}
+.notice .notice-acts{display:flex;gap:6px;flex:none}
+.notice button{
+  font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;
+  padding:7px 14px;border:1.2px solid var(--ink);border-radius:999px;background:var(--ink);color:var(--card);
+}
+.notice button.no{background:var(--btn);color:var(--ink2);border-color:var(--rule)}
+.notice button[hidden]{display:none}
+.notice button:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+
 .masthead{background:var(--card);border:1.5px solid var(--ink)}
 .mast-top{display:flex;align-items:stretch;border-bottom:1.5px solid var(--ink)}
 .mast-title{padding:20px 22px;flex:1}
@@ -43,8 +86,10 @@ body{
 .mast-title h1{font-family:"Gowun Batang",serif;font-weight:700;margin:0;font-size:31px;letter-spacing:-1px;line-height:1.15}
 .mast-title p{margin:8px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.65}
 .mast-side{width:120px;border-left:1.5px solid var(--ink);display:flex;flex-direction:column}
-.mast-side div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1px solid var(--rule);padding:6px}
-.mast-side div:last-child{border-bottom:none}
+.mast-side > *{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1px solid var(--rule);padding:6px}
+.mast-side > *:last-child{border-bottom:none}
+.mast-side .theme{font:inherit;background:none;border:none;color:inherit;cursor:pointer;width:100%}
+.mast-side .theme:focus-visible{outline:2.5px solid var(--mark);outline-offset:-3px}
 .mast-side .n{font-family:"Gowun Batang",serif;font-size:21px;font-weight:700;line-height:1}
 .mast-side .l{font-size:9.5px;color:var(--ink2);letter-spacing:1px;margin-top:3px}
 
@@ -57,17 +102,17 @@ body{
 .omr{display:flex;gap:8px;flex-wrap:wrap}
 .omr button{
   font:inherit;font-size:13.5px;cursor:pointer;display:flex;align-items:center;gap:8px;
-  padding:8px 15px 8px 11px;background:#fff;border:1.2px solid var(--rule);border-radius:0;color:var(--ink);
+  padding:8px 15px 8px 11px;background:var(--btn);border:1.2px solid var(--rule);border-radius:0;color:var(--ink);
 }
 .omr button .b{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--ink);position:relative;flex:none}
-.omr button[aria-pressed="true"]{border-color:var(--ink);background:#E4DCC6}
+.omr button[aria-pressed="true"]{border-color:var(--ink);background:var(--sel)}
 .omr button[aria-pressed="true"] .b::after{content:"";position:absolute;inset:2.5px;border-radius:50%;background:var(--ink)}
 .omr button:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 
 /* 내 과목 — 저장한 과목만 한 줄 알약 버튼으로 */
 .lab .mini{
   order:1;font:inherit;font-size:10.5px;font-weight:700;letter-spacing:1px;cursor:pointer;
-  padding:3px 10px;border:1px solid var(--rule);background:#fff;color:var(--ink2);border-radius:999px;
+  padding:3px 10px;border:1px solid var(--rule);background:var(--btn);color:var(--ink2);border-radius:999px;
 }
 .lab .mini[data-on="1"]{border-color:var(--mark);color:var(--mark)}
 .lab .mini:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
@@ -77,17 +122,17 @@ body{
 .pills .pill{
   font:inherit;font-size:13px;font-weight:500;white-space:nowrap;flex:none;cursor:pointer;
   display:flex;align-items:center;gap:6px;padding:8px 16px;
-  border:1.2px solid var(--rule);border-radius:999px;background:#fff;color:var(--ink);
+  border:1.2px solid var(--rule);border-radius:999px;background:var(--btn);color:var(--ink);
 }
 .pills .pill[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
 .pills .pill .g{font-size:10px;font-weight:700;letter-spacing:.5px;opacity:.62}
 .pills .pill .x{font-size:15px;line-height:1;margin-right:-4px}
-.pills.editing .pill{border-style:dashed;border-color:var(--mark);color:var(--mark);background:#fff}
+.pills.editing .pill{border-style:dashed;border-color:var(--mark);color:var(--mark);background:var(--btn)}
 /* 편집 중에는 알약 위 터치를 가로 스크롤에 뺏기지 않아야 끌어 옮길 수 있다 */
 .pills.editing .pill{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .pills .pill.dragging{
   border-style:solid;border-color:var(--ink);background:var(--card);color:var(--ink);
-  box-shadow:0 7px 20px rgba(25,23,19,.3);position:relative;z-index:2;
+  box-shadow:0 7px 20px var(--shadow);position:relative;z-index:2;
 }
 .pills .pill:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 .pill-empty{font-size:12px;color:var(--ink2);line-height:1.6;padding:3px 0}
@@ -98,13 +143,13 @@ body{
 .subrow select{flex:1;min-width:0}
 .star{
   font:inherit;font-size:15px;line-height:1;cursor:pointer;flex:none;width:44px;
-  border:1.2px solid var(--ink);background:#fff;color:var(--rule);border-radius:0;
+  border:1.2px solid var(--ink);background:var(--btn);color:var(--rule);border-radius:0;
 }
-.star[aria-pressed="true"]{background:var(--mark);border-color:var(--mark);color:#fff}
+.star[aria-pressed="true"]{background:var(--mark);border-color:var(--mark);color:var(--onmark)}
 .star:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-select{width:100%;font:inherit;font-size:14px;padding:10px 11px;border:1.2px solid var(--ink);background:#fff;color:var(--ink);border-radius:0}
+select{width:100%;font:inherit;font-size:14px;padding:10px 11px;border:1.2px solid var(--ink);background:var(--btn);color:var(--ink);border-radius:0}
 select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 
@@ -132,12 +177,12 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 .k-edu .badge{color:var(--edu)}
 
 .acts{display:flex;gap:6px}
-.acts a{font-size:12.5px;font-weight:600;padding:8px 13px;text-decoration:none;border:1.2px solid var(--ink);color:var(--ink);background:#fff;white-space:nowrap}
+.acts a{font-size:12.5px;font-weight:600;padding:8px 13px;text-decoration:none;border:1.2px solid var(--ink);color:var(--ink);background:var(--btn);white-space:nowrap}
 .acts a.q{background:var(--ink);color:var(--card)}
-.acts a.a{background:var(--mark);color:#fff;border-color:var(--mark)}
+.acts a.a{background:var(--mark);color:var(--onmark);border-color:var(--mark)}
 .acts a:hover{opacity:.85}
 .acts a:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
-.acts span.off{font-size:12.5px;font-weight:600;padding:8px 13px;border:1.2px dashed var(--rule);color:#B5AC98;white-space:nowrap}
+.acts span.off{font-size:12.5px;font-weight:600;padding:8px 13px;border:1.2px dashed var(--rule);color:var(--off);white-space:nowrap}
 
 .acts .send{
   font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;
@@ -149,7 +194,7 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 /* 보내기 시트 */
 .sheet[hidden]{display:none}
 .sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
-.sheet-bg{position:absolute;inset:0;background:rgba(25,23,19,.55)}
+.sheet-bg{position:absolute;inset:0;background:var(--scrim)}
 .sheet-card{
   position:relative;width:100%;max-width:460px;background:var(--card);border:1.5px solid var(--ink);
   max-height:88vh;overflow-y:auto;
@@ -160,7 +205,7 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 .sheet-head .t .sb{font-size:11.5px;color:var(--ink2);margin-top:4px}
 .sheet-x{
   font:inherit;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;flex:none;
-  padding:5px 11px;border:1px solid var(--rule);background:#fff;color:var(--ink2);border-radius:999px;
+  padding:5px 11px;border:1px solid var(--rule);background:var(--btn);color:var(--ink2);border-radius:999px;
 }
 .sheet-x:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 .sheet-list{padding:14px 18px 4px}
@@ -173,9 +218,9 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
   font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;flex:none;min-width:104px;
   padding:9px 16px;border:1.2px solid var(--ink);border-radius:999px;background:var(--ink);color:var(--card);
 }
-.sfile .go[data-state="busy"]{background:#fff;color:var(--ink2);border-color:var(--rule);cursor:default}
-.sfile .go[data-state="confirm"]{background:var(--mark);border-color:var(--mark);color:#fff}
-.sfile .go[data-state="done"]{background:#fff;color:var(--edu);border-color:var(--edu)}
+.sfile .go[data-state="busy"]{background:var(--btn);color:var(--ink2);border-color:var(--rule);cursor:default}
+.sfile .go[data-state="confirm"]{background:var(--mark);border-color:var(--mark);color:var(--onmark)}
+.sfile .go[data-state="done"]{background:var(--btn);color:var(--edu);border-color:var(--edu)}
 .sfile .go:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 .sheet-note{margin:0;padding:12px 18px 16px;font-size:11px;color:var(--ink2);line-height:1.7}
 .sheet-note b{color:var(--mark)}
@@ -198,9 +243,28 @@ footer b{color:var(--ink)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
+<script>
+/* 첫 페인트 전에 테마를 정해야 어두운 화면에서 흰 섬광이 없다 */
+(function(){
+  var t="light";
+  try{
+    var p=localStorage.getItem("gijul.theme.v1")||"auto";
+    t = p==="auto" ? (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light") : p;
+  }catch(e){}
+  document.documentElement.dataset.theme=t;
+})();
+</script>
 </head>
 <body>
 <div class="wrap">
+
+  <div class="notice" id="notice" hidden>
+    <span id="noticeText"></span>
+    <span class="notice-acts">
+      <button type="button" id="noticeYes"></button>
+      <button type="button" class="no" id="noticeNo">닫기</button>
+    </span>
+  </div>
 
   <div class="masthead">
     <div class="mast-top">
@@ -212,11 +276,12 @@ footer b{color:var(--ink)}
       <div class="mast-side">
         <div><div class="n" id="cntPaper">–</div><div class="l">회차</div></div>
         <div><div class="n">'06~</div><div class="l">시행연도</div></div>
+        <button type="button" class="theme" id="thBtn"><div class="n" id="thIcon">◐</div><div class="l" id="thLab">자동</div></button>
       </div>
     </div>
     <div class="panel">
       <div class="row">
-        <div class="lab">내 과목<button type="button" class="mini" id="favEdit" hidden>편집</button></div>
+        <div class="lab">내 과목<button type="button" class="mini" id="favShare" hidden>공유</button><button type="button" class="mini" id="favEdit" hidden>편집</button></div>
         <div class="pills" id="favBox"></div>
         <div class="pill-hint" id="favHint" hidden>탭하면 삭제 · 꾹 눌러 끌면 순서 변경 (키보드는 ← →)</div>
       </div>
@@ -297,10 +362,50 @@ const GROUPS = {
 let DB = null;
 let sel = { grade:"D300", grp:0, sub:"158", kind:"all", year:"all" };
 
+/* ── 테마 ────────────────────────────────────────────────
+   자동 → 밝게 → 어둡게 순환. 설치형 앱에서는 theme-color가 상태표시줄 색이라
+   테마를 바꿀 때 같이 갱신하지 않으면 어두운 화면 위에 밝은 띠가 남는다. */
+const THEME_KEY="gijul.theme.v1";
+const THEMES=[["auto","◐","자동"],["light","☀","밝게"],["dark","☾","어둡게"]];
+const BAR={ light:"#191713", dark:"#14120E" };
+let themePref="auto";
+const media = matchMedia("(prefers-color-scheme: dark)");
+
+function applyTheme(){
+  const t = themePref==="auto" ? (media.matches?"dark":"light") : themePref;
+  document.documentElement.dataset.theme = t;
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", BAR[t]);
+  const [,icon,label] = THEMES.find(x=>x[0]===themePref);
+  const btn=document.getElementById("thBtn");
+  document.getElementById("thIcon").textContent=icon;
+  document.getElementById("thLab").textContent=label;
+  btn.setAttribute("aria-label", `화면 테마: ${label}${themePref==="auto"?` (지금 ${t==="dark"?"어둡게":"밝게"})`:""} — 눌러서 변경`);
+}
+try{ themePref = localStorage.getItem(THEME_KEY) || "auto"; }catch(e){}
+if(!THEMES.some(x=>x[0]===themePref)) themePref="auto";
+document.getElementById("thBtn").onclick = ()=>{
+  themePref = THEMES[(THEMES.findIndex(x=>x[0]===themePref)+1) % THEMES.length][0];
+  try{ localStorage.setItem(THEME_KEY, themePref); }catch(e){}
+  applyTheme();
+};
+media.addEventListener("change", ()=>{ if(themePref==="auto") applyTheme(); });
+applyTheme();
+
 const $ = s => document.querySelector(s);
 const gradeBox=$("#gradeBox"), grpSel=$("#grp"), subSel=$("#sub"),
       yrSel=$("#yr"), kindBox=$("#kindBox"), out=$("#out"),
-      favBox=$("#favBox"), favEdit=$("#favEdit"), favToggle=$("#favToggle"), favHint=$("#favHint");
+      favBox=$("#favBox"), favEdit=$("#favEdit"), favToggle=$("#favToggle"), favHint=$("#favHint"),
+      favShare=$("#favShare"), notice=$("#notice"), noticeText=$("#noticeText"),
+      noticeYes=$("#noticeYes"), noticeNo=$("#noticeNo");
+
+function showNotice(text, yesLabel, onYes){
+  noticeText.textContent = text;
+  noticeYes.textContent = yesLabel || "";
+  noticeYes.hidden = !yesLabel;
+  noticeYes.onclick = ()=>{ notice.hidden=true; if(onYes) onYes(); };
+  notice.hidden = false;
+}
+noticeNo.onclick = ()=>{ notice.hidden = true; };
 
 /* ── 내 과목 ─────────────────────────────────────────────
    저장 형식: [{g:"D300", s:"158"}, …] (학년+과목코드). 과목코드는
@@ -340,7 +445,7 @@ function pickSub(grade, subId){
   if(!meta) return;
   sel.grade=grade; sel.grp=meta.grp; sel.sub=subId;
   [...gradeBox.children].forEach((x,i)=>x.setAttribute("aria-pressed", GRADES[i][0]===grade));
-  fillGroups(); fillYears(); render(); syncFav();
+  fillGroups(); fillYears(); render(); syncFav(); syncURL();
 }
 
 function renderFavs(){
@@ -349,11 +454,13 @@ function renderFavs(){
     editing = false;
     favBox.classList.remove("editing");
     favEdit.hidden = true;
+    favShare.hidden = true;
     favHint.hidden = true;
     favBox.innerHTML = `<div class="pill-empty">아래에서 과목을 고른 뒤 <b>★</b>를 누르면 여기에 저장됩니다. 다음에 열어도 그대로 남아 있습니다.</div>`;
     return;
   }
   favEdit.hidden = false;
+  favShare.hidden = false;
   /* 여러 학년을 섞어 저장한 경우에만 학년을 함께 표기 */
   const multiGrade = new Set(favs.map(f=>f.g)).size > 1;
   favs.forEach(f=>{
@@ -533,7 +640,7 @@ GRADES.forEach(([v,label], i)=>{
   b.onclick = ()=>{
     sel.grade=v; sel.grp=0;
     [...gradeBox.children].forEach(x=>x.setAttribute("aria-pressed", x===b));
-    fillGroups(); fillYears(); render(); syncFav();
+    fillGroups(); fillYears(); render(); syncFav(); syncURL();
   };
   gradeBox.appendChild(b);
 });
@@ -542,7 +649,7 @@ kindBox.querySelectorAll("button").forEach(b=>{
   b.onclick = ()=>{
     sel.kind=b.dataset.k;
     kindBox.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
-    fillYears(); render();
+    fillYears(); render(); syncURL();
   };
 });
 
@@ -584,9 +691,96 @@ function fillYears(){
   yrSel.value=sel.year;
 }
 
-grpSel.onchange=()=>{ sel.grp=+grpSel.value; fillSubs(); fillYears(); render(); syncFav(); };
-subSel.onchange=()=>{ sel.sub=subSel.value; fillYears(); render(); syncFav(); };
-yrSel.onchange =()=>{ sel.year=yrSel.value; render(); };
+grpSel.onchange=()=>{ sel.grp=+grpSel.value; fillSubs(); fillYears(); render(); syncFav(); syncURL(); };
+subSel.onchange=()=>{ sel.sub=subSel.value; fillYears(); render(); syncFav(); syncURL(); };
+yrSel.onchange =()=>{ sel.year=yrSel.value; render(); syncURL(); };
+
+/* ── 주소 상태 · 마지막 화면 ─────────────────────────────
+   해시가 곧 화면 상태다: #/학년/과목/연도/기관. 해시가 없으면 지난번 화면으로,
+   그것도 없으면 기본값으로 떨어진다. 뒤로가기가 필터 이력을 훑지 않도록
+   pushState가 아니라 replaceState를 쓴다. */
+const LAST_KEY = "gijul.last.v1";
+let restoring = false;
+
+function validState(s){
+  if(!s) return null;
+  const meta = SUBINDEX[s.grade+"/"+s.sub];
+  if(!meta) return null;
+  return {
+    grade: s.grade, grp: meta.grp, sub: s.sub,
+    kind: ["all","gov","edu"].includes(s.kind) ? s.kind : "all",
+    year: (s.year==="all" || /^\d{4}$/.test(s.year)) ? s.year : "all"
+  };
+}
+function parseHash(){
+  const m = /^#\/([^/]+)\/([^/]+)\/([^/]+)\/([^/]+)$/.exec(location.hash);
+  return m ? validState({ grade:m[1], sub:m[2], year:m[3], kind:m[4] }) : null;
+}
+/* 다른 기기로 내 과목을 옮기는 링크: #subs=D300.140117,D200.17022 */
+function parseSubs(){
+  const m = /^#subs=(.+)$/.exec(decodeURIComponent(location.hash));
+  if(!m) return null;
+  const seen = new Set(), list = [];
+  m[1].split(",").forEach(tok=>{
+    const [g,s] = tok.split(".");
+    const k = g+"/"+s;
+    if(g && s && SUBINDEX[k] && !seen.has(k)){ seen.add(k); list.push({ g, s }); }
+  });
+  return list.length ? list : null;
+}
+function loadLast(){
+  try{ return validState(JSON.parse(localStorage.getItem(LAST_KEY) || "null")); }
+  catch(e){ return null; }
+}
+function syncURL(){
+  if(restoring) return;
+  try{ history.replaceState(null, "", `#/${sel.grade}/${sel.sub}/${sel.year}/${sel.kind}`); }catch(e){}
+  try{ localStorage.setItem(LAST_KEY, JSON.stringify(sel)); }catch(e){}
+}
+/* 드롭다운·버튼을 한꺼번에 맞춘다. 연도는 DB가 있어야 채울 수 있어 여기서 다루지 않는다. */
+function applyState(s){
+  restoring = true;
+  sel.grade=s.grade; sel.grp=s.grp; sel.sub=s.sub; sel.kind=s.kind; sel.year=s.year;
+  [...gradeBox.children].forEach((x,i)=>x.setAttribute("aria-pressed", GRADES[i][0]===s.grade));
+  kindBox.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x.dataset.k===s.kind));
+  fillGroups();
+  restoring = false;
+}
+
+/* 앱이 이미 떠 있을 때 링크를 타고 들어오면 문서가 새로 뜨지 않는다.
+   (우리가 쓰는 replaceState는 이 이벤트를 발생시키지 않으므로 되돌이 걱정은 없다) */
+addEventListener("hashchange", ()=>{
+  if(!DB) return;
+  const list = parseSubs();
+  if(list){ offerImport(list); syncURL(); return; }
+  const st = parseHash();
+  if(st){ applyState(st); fillYears(); render(); syncFav(); }
+});
+
+favShare.onclick = async ()=>{
+  const url = location.origin + location.pathname + "#subs=" + favs.map(f=>f.g+"."+f.s).join(",");
+  if(navigator.share){
+    try{ await navigator.share({ title:"기출 직행 — 내 과목", url }); return; }
+    catch(e){ if(e && e.name==="AbortError") return; }
+  }
+  try{
+    await navigator.clipboard.writeText(url);
+    showNotice("링크를 복사했습니다. 다른 기기에서 열면 이 과목들이 추가됩니다.", "", null);
+  }catch(e){
+    showNotice(url, "", null);
+  }
+};
+
+function offerImport(list){
+  const fresh = list.filter(f=>favIndexOf(f.g, f.s) < 0);
+  const label = f => SUBINDEX[f.g+"/"+f.s].name;
+  if(!fresh.length){
+    showNotice(`링크의 과목 ${list.length}개가 이미 내 과목에 있습니다.`, "", null);
+    return;
+  }
+  showNotice(`링크에서 과목 ${fresh.length}개를 받았습니다 — ${fresh.map(label).join(", ")}. 내 과목에 추가할까요?`,
+    "추가", ()=>{ fresh.forEach(f=>favs.push({ g:f.g, s:f.s })); saveFavs(); syncFav(); });
+}
 
 /* ── 보내기 ──────────────────────────────────────────────
    PWA(standalone)에서 외부 링크는 인앱 브라우저로 열리고, 거기엔 "다른 앱으로 열기"가
@@ -778,12 +972,17 @@ function render(){
 
 (async ()=>{
   favs = loadFavs();
-  fillGroups(); syncFav();
+  const incoming = parseSubs();                       /* #subs= 로 들어온 링크 */
+  const start = (!incoming && parseHash()) || loadLast();
+  if(start) applyState(start); else fillGroups();
+  syncFav();
   out.innerHTML=`<div class="empty">자료를 불러오는 중입니다…</div>`;
   try{
     DB = await loadDB();
-    fillYears();
+    fillYears();          /* 자료 없는 연도를 가리켰다면 여기서 '전체'로 내려앉는다 */
     render();
+    syncURL();            /* #subs= 였다면 이 시점에 보통 주소로 정리된다 */
+    if(incoming) offerImport(incoming);
   }catch(e){
     out.innerHTML=`<div class="empty">자료를 불러오지 못했습니다. (${e.message})<br>
       <a href="https://www.ebsi.co.kr/ebs/xip/xipc/previousPaperList.ebs?targetCd=D300" target="_blank" rel="noopener" style="color:var(--mark);font-weight:700">→ EBSi 기출문제 페이지에서 직접 찾기</a></div>`;
