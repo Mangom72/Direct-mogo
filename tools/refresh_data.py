@@ -94,7 +94,11 @@ def parse_rows(html):
         # 구분자가 &nbsp;이므로 공백으로 바꾸기 전에 쪼개야 한다.
         raw = unescape(re.sub(r"<[^>]+>", "", title.group(1)))
         head, _, tail = raw.partition("\xa0")
-        label = re.sub(r"^\s*고[123]\s+", "", head).strip()
+        # '2013 고3 7월 학평(인천)'처럼 연도·학년이 앞에 붙어 오기도 한다
+        label = re.sub(r"^\s*(\d{4}\s+)?고[123]\s+", "", head).strip()
+        # kindOf()가 제목으로 출제 기관을 가른다. '2014학년도 대학수학능력시험'은
+        # "수능"으로 시작하지도 "평가원"을 품지도 않아 그대로 두면 수능이 교육청이 된다.
+        label = re.sub(r"^\d{4}학년도\s*대학수학능력시험[_\s]*", "수능 ", label).strip()
         # 국어A형·영어 짝수형처럼 형이 과목명 쪽에 붙어 오는데, 회차를 가르는 정보라
         # 제목으로 옮겨야 같은 날 같은 과목의 두 회차가 구별된다.
         form = re.search(r"([A-Z]형|[홀짝]수형)\s*$", tail.replace("\xa0", " ").strip())
