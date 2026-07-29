@@ -970,6 +970,23 @@ function render(){
        <div class="empty">해당 조건으로 수록된 회차가 없습니다.<br>선택한 학년에서 그 과목이 시행되지 않았거나, 연도·기관 필터를 좁게 잡았을 수 있습니다.</div>`;
 }
 
+/* 오프라인 지원. 캐시를 쥐고 있으므로 새 자료는 다음 실행에 보인다 —
+   그 지연을 사용자가 모르면 안 되니 갱신을 감지하면 알림 막대를 띄운다. */
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.addEventListener("message", e=>{
+    if(e.data && e.data.type === "updated")
+      showNotice("새 자료가 있습니다.", "새로고침", ()=>location.reload());
+  });
+  addEventListener("load", async ()=>{
+    try{
+      await navigator.serviceWorker.register("sw.js");
+      await navigator.serviceWorker.ready;
+      /* 갱신 확인은 우리가 먼저 물어본다 — 워커가 알아서 알리면 이 리스너보다 빨라진다 */
+      if(navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage("check");
+    }catch(e){}
+  });
+}
+
 (async ()=>{
   favs = loadFavs();
   const incoming = parseSubs();                       /* #subs= 로 들어온 링크 */
