@@ -1,0 +1,28 @@
+{
+ "grade": "D200",
+ "gradeLabel": "고2",
+ "group": "과학탐구",
+ "subject": "통합과학",
+ "subjectId": "140221",
+ "count": 2,
+ "papers": [
+  {
+   "title": "6월 학평(부산)",
+   "date": "2026-06-04",
+   "year": 2026,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20260604/go2/g_sci_mun_TB11Z59F.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20260604/mobile/h2_m_g_sci_ans_94W53669.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260604/go2/g_sci_hsj_NK15V199.pdf"
+  },
+  {
+   "title": "3월 학평(서울)",
+   "date": "2026-03-24",
+   "year": 2026,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20260324/go2/g_sci_mun_AE6M8H4V.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20260324/mobile/h2_m_g_sci_ans_1U97HY1Z.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260324/go2/g_sci_hsj_NAAMI88N.pdf"
+  }
+ ]
+}

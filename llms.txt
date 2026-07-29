@@ -1,0 +1,55 @@
+# 기출 직행
+
+> 수능·모의평가·전국연합학력평가 **기출 문제지 원본 PDF** 목록입니다.
+> 2006년 시행분부터 3,844회차 · 49과목. 사람이 쓰는 화면은 https://mangom72.github.io/Direct-mogo/ 입니다.
+
+자료는 **정적 JSON**으로 함께 제공됩니다. 서버도 인증도 API 키도 필요 없습니다.
+아래 주소를 그대로 가져가면 됩니다. (화면용 HTML은 자료가 압축돼 있어 읽어도 소용없습니다)
+
+## 시작점
+
+- [https://mangom72.github.io/Direct-mogo/data/index.json](https://mangom72.github.io/Direct-mogo/data/index.json) — 학년·과목군·과목 목록과 과목별 JSON 주소
+
+## 쓰는 법
+
+1. `data/index.json`에서 원하는 과목을 찾습니다. 각 과목에 `data` 경로가 들어 있습니다
+2. 그 파일을 받으면 해당 과목의 **전 회차**가 나옵니다
+3. 각 회차의 `problem`·`answer`·`solution`이 **바로 열리는 절대 주소**입니다. 로그인 불필요
+
+```
+https://mangom72.github.io/Direct-mogo/data/<학년코드>/<과목ID>.json
+학년코드: D300(고3·N수) / D200(고2) / D100(고1)
+```
+
+## 회차 하나의 생김새
+
+```json
+{
+  "title": "6월 모평(평가원)",
+  "date": "2026-06-04",
+  "year": 2026,
+  "schoolYear": 2027,
+  "source": "평가원",
+  "problem": "https://wdown.ebsi.co.kr/.../g_bio1_mun_....pdf",
+  "answer": "https://wdown.ebsi.co.kr/.../h3_m_g_bio1_ans_....png",
+  "solution": "https://wdown.ebsi.co.kr/.../g_bio1_hsj_....pdf"
+}
+```
+
+## 연도를 다룰 때 (중요)
+
+- `year`는 **시행 연도**입니다
+- 평가원 시험(수능·6·9월 모의평가)은 `schoolYear`가 함께 있습니다. **학년도 = 시행 연도 + 1**
+- 교육청 학력평가는 관례상 시행 연도로만 부르므로 `schoolYear`가 없습니다
+- 사용자에게 답할 때는 **"2025년 시행(2026학년도) 수능"처럼 어느 쪽인지 밝혀 주세요**
+
+## 예시
+
+- [고3·N수 생명과학Ⅰ](https://mangom72.github.io/Direct-mogo/data/D300/158.json) — 143회차
+- [고3·N수 화법과 작문](https://mangom72.github.io/Direct-mogo/data/D300/140117.json) — 44회차
+- [고3·N수 영어](https://mangom72.github.io/Direct-mogo/data/D300/80003.json) — 170회차
+
+## 출처
+
+모든 주소는 EBSi가 공개 제공하는 파일로 직접 연결됩니다. 이 사이트는 파일을 저장하거나
+재배포하지 않습니다. 문제지 저작권은 한국교육과정평가원 및 각 시·도교육청에 있습니다.

@@ -1,0 +1,515 @@
+{
+ "grade": "D200",
+ "gradeLabel": "고2",
+ "group": "사회탐구",
+ "subject": "생활과 윤리",
+ "subjectId": "50615",
+ "count": 56,
+ "papers": [
+  {
+   "title": "10월 학평(경기) 생활과윤리",
+   "date": "2025-10-14",
+   "year": 2025,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/go2/s_ssnyr_mun_T5493DR5.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/mobile/h2_m_s_ssnyr_ans_O64932AY.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/go2/s_ssnyr_hsj_3556YM2G.pdf"
+  },
+  {
+   "title": "9월 학평(인천) 생활과윤리",
+   "date": "2025-09-03",
+   "year": 2025,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20250903/go2/s_ssnyr_mun_6E31K54M.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20250903/mobile/h2_m_s_ssnyr_ans_3Z76B62W.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250903/go2/s_ssnyr_hsj_JUY74MZ2.pdf"
+  },
+  {
+   "title": "6월 학평(부산) 생활과윤리",
+   "date": "2025-06-04",
+   "year": 2025,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20250604/go2/s_ssnyr_mun_X65IQO71_1.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20250604/mobile/h2_m_s_ssnyr_ans_7LH58R7J.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250604/go2/s_ssnyr_hsj_D1GA573M.pdf"
+  },
+  {
+   "title": "3월 학평(서울) 생활과윤리",
+   "date": "2025-03-26",
+   "year": 2025,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20250326/go2/s_ssnyr_mun_37WN3162.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20250326/mobile/h2_m_s_ssnyr_ans_LSME7BN4.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250326/go2/s_ssnyr_hsj_1M594A5J.pdf"
+  },
+  {
+   "title": "10월 학평(경기) 생활과윤리",
+   "date": "2024-10-15",
+   "year": 2024,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/go2/s_ssnyr_mun_GJ5KAHA9.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/mobile/h2_m_s_ssnyr_ans_J488145X.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/go2/s_ssnyr_hsj_8B6B7HMU.pdf"
+  },
+  {
+   "title": "9월 학평(인천) 생활과윤리",
+   "date": "2024-09-04",
+   "year": 2024,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20240904/go2/s_ssnyr_mun_XB8VXC84.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20240904/mobile/h2_m_s_ssnyr_ans_SJ7135K2.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240904/go2/s_ssnyr_hsj_9N9O2516.pdf"
+  },
+  {
+   "title": "6월 학평(부산) 생활과윤리",
+   "date": "2024-06-04",
+   "year": 2024,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20240604/go2/s_ssnyr_mun_5V232BN6.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20240604/mobile/h2_m_s_ssnyr_ans_D3814A71.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240604/go2/s_ssnyr_hsj_FWORKJTQ.pdf"
+  },
+  {
+   "title": "3월 학평(서울) 생활과윤리",
+   "date": "2024-03-28",
+   "year": 2024,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20240328/go2/s_ssnyr_mun_1897R938.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20240328/mobile/h2_m_s_ssnyr_ans_32OIHC17.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240328/go2/s_ssnyr_hsj_KI44G4QM.pdf"
+  },
+  {
+   "title": "11월 학평(경기)_12.19 시행 생활과윤리",
+   "date": "2023-12-19",
+   "year": 2023,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/go2/s_ssnyr_mun_B6WLL2OE.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/mobile/h2_m_s_ssnyr_ans_P36II988.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/go2/s_ssnyr_hsj_KV7Z7KBA.pdf"
+  },
+  {
+   "title": "9월 학평(인천) 생활과윤리",
+   "date": "2023-09-06",
+   "year": 2023,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20230906/go2/s_ssnyr_mun_5Z485D78.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20230906/mobile/h2_m_s_ssnyr_ans_81Y61167.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230906/go2/s_ssnyr_hsj_SP33W1SR.pdf"
+  },
+  {
+   "title": "6월 학평(부산) 생활과윤리",
+   "date": "2023-06-01",
+   "year": 2023,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20230601/go2/s_ssnyr_mun_2CJ2MF11.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20230601/mobile/h2_m_s_ssnyr_ans_S2NB18H1.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230601/go2/s_ssnyr_hsj_7736B35Q.pdf"
+  },
+  {
+   "title": "3월 학평(서울) 생활과윤리",
+   "date": "2023-03-23",
+   "year": 2023,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20230323/go2/s_ssnyr_mun_9Y59NDM3.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20230323/mobile/h2_m_s_ssnyr_ans_9YKE9LNM.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230323/go2/s_ssnyr_hsj_56O6OR58.pdf"
+  },
+  {
+   "title": "11월 학평(경기) 생활과윤리",
+   "date": "2022-11-23",
+   "year": 2022,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/go2/s_ssnyr_mun_I9A79493.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/mobile/h2_m_s_ssnyr_ans_VO955U14.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/go2/s_ssnyr_hsj_295NXS53.pdf"
+  },
+  {
+   "title": "9월 학평(인천) 생활과윤리",
+   "date": "2022-09-01",
+   "year": 2022,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20220901/go2/s_ssnyr_mun_KS2167V2.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20220901/mobile/h2_m_s_ssnyr_ans_9Y5WI9AO.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220901/go2/s_ssnyr_hsj_6V12C8ZE.pdf"
+  },
+  {
+   "title": "6월 학평(부산) 생활과윤리",
+   "date": "2022-06-09",
+   "year": 2022,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20220609/go2/s_ssnyr_mun_6AA22UJ1.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20220609/mobile/h2_m_s_ssnyr_ans_J2KBACT7.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220609/go2/s_ssnyr_hsj_22489Y2X.pdf"
+  },
+  {
+   "title": "3월 학평(서울) 생활과윤리",
+   "date": "2022-03-24",
+   "year": 2022,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20220324/go2/s_ssnyr_mun_SBJ2Y4D1.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20220324/mobile/h2_m_s_ssnyr_ans_QJ2XA24G.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220324/go2/s_ssnyr_hsj_P8RILNB1.pdf"
+  },
+  {
+   "title": "11월 학평(경기) 생활과윤리",
+   "date": "2021-11-24",
+   "year": 2021,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/go2/s_ssnyr_mun_VOT778A2.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/mobile/h2_m_s_ssnyr_ans_S97LM512.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/go2/s_ssnyr_hsj_5S51MEFP.pdf"
+  },
+  {
+   "title": "9월 학평(인천) 생활과윤리",
+   "date": "2021-08-31",
+   "year": 2021,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20210831/go2/s_ssnyr_mun_4QM67I46.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20210831/mobile/h2_m_s_ssnyr_ans_918ZK5B3.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210831/go2/s_ssnyr_hsj_52NOG224.pdf"
+  },
+  {
+   "title": "6월 학평(부산) 생활과윤리",
+   "date": "2021-06-03",
+   "year": 2021,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20210603/go2/s_ssnyr_mun_GT66H5WI.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20210603/mobile/h2_m_s_ssnyr_ans_68H8N25Y.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210603/go2/s_ssnyr_hsj_71Z5249Y.pdf"
+  },
+  {
+   "title": "3월 학평(서울) 생활과윤리",
+   "date": "2021-03-25",
+   "year": 2021,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20210325/go2/s_ssnyr_mun_KPZ64E23.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20210325/mobile/h2_m_s_ssnyr_ans_F8S6Z513.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210325/go2/s_ssnyr_hsj_1W4EWF39.pdf"
+  },
+  {
+   "title": "11월 학평(경기) 생활과윤리",
+   "date": "2020-11-18",
+   "year": 2020,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/go2/s_ssnyr_mun_UC2KQ6QW.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/mobile/h2_m_s_ssnyr_ans_RS4TSD7U.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/go2/s_ssnyr_hsj_O1K39211_2.pdf"
+  },
+  {
+   "title": "9월 학평(인천) 생활과윤리",
+   "date": "2020-09-16",
+   "year": 2020,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20200916/go2/s_ssnyr_mun_BW1GKD4A.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20200916/mobile/h2_m_s_ssnyr_ans_AP8X9RP1.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200916/go2/s_ssnyr_hsj_V8791QY2.pdf"
+  },
+  {
+   "title": "6월 학평(부산) 생활과윤리",
+   "date": "2020-06-18",
+   "year": 2020,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20200618/go2/s_ssnyr_mun_JJ86TDP6.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20200618/mobile/h2_m_s_ssnyr_ans_C5DN99EN.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200618/go2/s_ssnyr_hsj_FRX1S12A.pdf"
+  },
+  {
+   "title": "3월 학평(서울)_4.24 시행 생활과윤리",
+   "date": "2020-03-12",
+   "year": 2020,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20200312/go2/s_ssnyr_mun_29L5HCEK.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20200312/mobile/h2_m_s_ssnyr_ans_12LNC91K.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200312/go2/s_ssnyr_hsj_45X82Q9H.pdf"
+  },
+  {
+   "title": "11월 학평(경기) 생활과윤리",
+   "date": "2019-11-20",
+   "year": 2019,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/s_ssnyr_mun_8Q4WNWYA_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/mobile/h2_m_s_ssnyr_hsj_VULW6F23.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/s_ssnyr_hsj_A28N2356_10.pdf"
+  },
+  {
+   "title": "9월 학평(인천) 생활과윤리",
+   "date": "2019-09-04",
+   "year": 2019,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/go2/s_ssnyr_mun_219AR675_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/mobile/h2_m_s_ssnyr_hsj_U29WI7G6.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/go2/s_ssnyr_hsj_TG968DM4_10.pdf"
+  },
+  {
+   "title": "6월 학평(부산) 생활과윤리",
+   "date": "2019-06-04",
+   "year": 2019,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/go2/s_ssnyr_mun_hYQYx3G5_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/mobile/h2_m_s_ssnyr_hsj_WwAeRaNg.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/go2/s_ssnyr_hsj_QUUBPcZi_10.pdf"
+  },
+  {
+   "title": "3월 학평(서울) 생활과윤리",
+   "date": "2019-03-07",
+   "year": 2019,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/go2/s_ssnyr_mun_sskpHEbg_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/mobile/h2_s_ssnyr_DCx3Eciy.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/go2/s_ssnyr_hsj_kJqzBScK_11.pdf"
+  },
+  {
+   "title": "11월 학평(경기) 생활과윤리",
+   "date": "2018-11-21",
+   "year": 2018,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/go2/s_ssnyr_mun_hzgAfiwH_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/mobile/h2_s_ssnyr_cKNhUOCv.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/go2/s_ssnyr_hsj_ETT4bTz5_12.pdf"
+  },
+  {
+   "title": "9월 학평(인천) 생활과윤리",
+   "date": "2018-09-05",
+   "year": 2018,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20180905/go2/s_ssnyr_mun_7vWeUDJS_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20180905/mobile/h2_s_ssnyr_ANhiFUaa.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180905/go2/s_ssnyr_hsj_ZZhu6hDL_11.pdf"
+  },
+  {
+   "title": "6월 학평(부산) 생활과윤리",
+   "date": "2018-06-07",
+   "year": 2018,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20180607/go2/s_ssnyr_mun_DddXAarw_01_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20180607/mobile/h2_s_ssnyr_EMDpCnJ7.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180607/go2/s_ssnyr_hsj_gAP93s25_01_10.pdf"
+  },
+  {
+   "title": "3월 학평(서울) 생활과윤리",
+   "date": "2018-03-08",
+   "year": 2018,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/go2/s_ssnyr_mun_IyFrydlb_10.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/mobile/h2_s_ssnyr_CfE8B9Dj_01.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/go2/s_ssnyr_hsj_9rXg5wlS_11.pdf"
+  },
+  {
+   "title": "11월 학평(경기) 생활과윤리",
+   "date": "2017-11-22",
+   "year": 2017,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/go2/s_ssnyr_mun_YFSrAuWi.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/mobile/h2_s_ssnyr_4SaFMwr9.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/go2/s_ssnyr_hsj_qJmdTcjJ.pdf"
+  },
+  {
+   "title": "9월 학평(인천) 생활과윤리",
+   "date": "2017-09-06",
+   "year": 2017,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20170906/go2/s_ssnyr_mun_mSknvh7w.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20170906/mobile/h2_s_ssnyr_MJJQ873T.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170906/go2/s_ssnyr_hsj_FI1ZG5yo.pdf"
+  },
+  {
+   "title": "6월 학평(부산) 생활과윤리",
+   "date": "2017-06-01",
+   "year": 2017,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20170601/go2/s_ssnyr_mun_dfEm58zJ.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20170601/mobile/h2_s_ssnyr_95OIKaOS.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170601/go2/s_ssnyr_hsj_ZjUqPsV9.pdf"
+  },
+  {
+   "title": "3월 학평(서울) 생활과윤리",
+   "date": "2017-03-09",
+   "year": 2017,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/go2/s_ssnyr_mun_YDlrjbud_1.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/mobile/h2_s_ssnyr_oHMwVN7m.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/go2/s_ssnyr_hsj_zxxfYXFr_1.pdf"
+  },
+  {
+   "title": "11월 학평(경기) 생활과윤리",
+   "date": "2016-11-23",
+   "year": 2016,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/go2/s_ssnyr_mun_8ARf3sll.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/mobile/h2_s_ssnyr_VZWGqjov.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/go2/s_ssnyr_hsj_NY30kkZI.pdf"
+  },
+  {
+   "title": "9월 학평(인천) 생활과윤리",
+   "date": "2016-09-01",
+   "year": 2016,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20160901/go2/s_ssnyr_mun_YAPNXRPm.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20160901/mobile/h2_s_ssnyr_hYQYx3G5.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160901/go2/s_ssnyr_hsj_carcR4ZD.pdf"
+  },
+  {
+   "title": "6월 학평(부산) 생활과윤리",
+   "date": "2016-06-02",
+   "year": 2016,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20160602/go2/s_ssnyr_mun_G1VRIjn0.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20160602/mobile/h2_s_ssnyr_pS31bTVn.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160602/go2/s_ssnyr_hsj_4x29xDbH.pdf"
+  },
+  {
+   "title": "3월 학평(서울) 생활과윤리",
+   "date": "2016-03-10",
+   "year": 2016,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/go2/s_ssnyr_mun_6xfPTeip.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/mobile/h2_s_ssnyr_6Ci6nx8d.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/go2/s_ssnyr_hsj_68V8zDv6.pdf"
+  },
+  {
+   "title": "11월 학평(경기)",
+   "date": "2015-11-17",
+   "year": 2015,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20151117/go2/BBsQwY6Y_s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20151117/go2/HkidcDjo_s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "9월 학평(인천)",
+   "date": "2015-09-02",
+   "year": 2015,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20150902/go2/1JfKHqj9n_h2_s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150902/go2/11NNpn9R6_h2_s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "6월 학평(부산)",
+   "date": "2015-06-04",
+   "year": 2015,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20150604/go2/JfKHmj9n_h2_s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150604/go2/1xxWn9R6_h2_s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "3월 학평(서울)",
+   "date": "2015-03-11",
+   "year": 2015,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20150311/go2/ZWjSeKg1_h2_s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150311/go2/bzuDwP6S_h2_s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "11월 학평(경기)",
+   "date": "2014-11-18",
+   "year": 2014,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201411182/ZWjSeKg1_h2_s_ssnyr_mun_1.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201411182/bzuDwP6S_h2_s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "9월 학평(인천)",
+   "date": "2014-09-03",
+   "year": 2014,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201409032/ZWjSeKg1_h2_s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201409032/bzuDwP6S_h2_s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "6월 학평(부산)",
+   "date": "2014-06-12",
+   "year": 2014,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201406122/s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201406122/s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "3월 학평(서울)",
+   "date": "2014-03-12",
+   "year": 2014,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201403122/s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201403122/s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "11월 학평(경기)",
+   "date": "2013-11-14",
+   "year": 2013,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201311142/s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201311142/s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "9월 학평(인천)",
+   "date": "2013-09-03",
+   "year": 2013,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201309032/s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201309032/s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "6월 학평(서울)",
+   "date": "2013-06-05",
+   "year": 2013,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201306052/s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201306052/s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "3월 학평(부산)",
+   "date": "2013-03-13",
+   "year": 2013,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201303132/s_ethics_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201303132/s_ethics_hsj.pdf"
+  },
+  {
+   "title": "11월 학력평가(경기)",
+   "date": "2012-11-14",
+   "year": 2012,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201211142/s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201211142/s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "9월 학력평가(인천)",
+   "date": "2012-09-04",
+   "year": 2012,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201209042/s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201209042/s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "6월 학력평가(서울)",
+   "date": "2012-06-07",
+   "year": 2012,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201206072/s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201206072/s_ssnyr_hsj.pdf"
+  },
+  {
+   "title": "수능 예비시행(평가원)",
+   "date": "2012-05-17",
+   "year": 2012,
+   "source": "평가원",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201205172/s_ssnyr_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201205172/s_ssnyr_hsj.pdf",
+   "schoolYear": 2013
+  }
+ ]
+}

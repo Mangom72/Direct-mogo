@@ -25,13 +25,55 @@ EBSi를 헤매지 않고 학년 → 과목 → 연도만 고르면 문제·정�
 |---|---|
 | `index.html` | 앱 전체. 자료 3,844회차가 gzip+base64로 안에 들어 있습니다 (154KB) |
 | `sw.js` | 서비스 워커. 앱 셸·폰트·받아둔 PDF를 캐시합니다 |
+| `data/`, `llms.txt` | AI·프로그램용 정적 JSON과 사용 안내 |
 | `tools/refresh_data.py` | EBSi에서 새 회차를 긁어 페이로드를 갱신합니다 |
+| `tools/build_api.py` | 페이로드를 `data/` JSON과 `llms.txt`로 내보냅니다 |
+| `mcp/gijul_server.py` | Claude에 도구로 붙이는 MCP 서버 |
 | `.github/workflows/refresh-data.yml` | 매월 5일 자동 실행 |
 
 자료를 `index.html` 안에 넣어둔 덕분에, **이 파일 하나만 캐시하면 조회·필터가 네트워크 없이 전부 동작합니다.** 네트워크가 필요한 건 PDF를 받을 때뿐입니다.
 
 PDF는 EBSi가 `Access-Control-Allow-Origin: *`를 주기 때문에 페이지가 직접 받아
 `navigator.share()`로 넘길 수 있습니다. 그래서 설치형 앱에서도 노트앱으로 보내집니다.
+
+## AI·프로그램에서 쓰기
+
+화면용 HTML은 자료가 압축돼 있어 AI가 읽어도 소용없습니다. 같은 자료를
+**정적 JSON으로도 함께 배포**합니다. 서버도 인증도 키도 필요 없습니다.
+
+```
+https://mangom72.github.io/Direct-mogo/llms.txt          AI용 사용 안내
+https://mangom72.github.io/Direct-mogo/data/index.json   과목 목록과 각 과목 JSON 주소
+https://mangom72.github.io/Direct-mogo/data/D300/158.json 고3 생명과학Ⅰ 전 회차
+```
+
+과목 하나가 평균 26KB라 필요한 과목만 받아 가면 됩니다. 각 회차에 문제·정답·해설
+**절대 주소**가 들어 있어 경로 규칙을 몰라도 바로 열립니다.
+
+아무 AI에게든 `llms.txt` 주소를 주면 나머지는 알아서 합니다.
+
+### Claude에 도구로 붙이기 (MCP)
+
+`mcp/gijul_server.py`가 위 JSON을 읽어 Claude에 도구로 노출합니다 —
+`list_subjects`, `find_papers`, `site_info`.
+
+```bash
+pip install "mcp[cli]" httpx
+
+# Claude Code
+claude mcp add 기출직행 -- python3 "$PWD/mcp/gijul_server.py"
+```
+
+Claude Desktop은 `claude_desktop_config.json`에:
+
+```json
+{ "mcpServers": {
+    "기출직행": { "command": "python3", "args": ["/절대/경로/mcp/gijul_server.py"] }
+} }
+```
+
+붙이고 나면 이렇게 물으면 됩니다 — *"2026학년도 수능 생명과학Ⅰ 문제 찾아줘"*.
+배포된 JSON을 읽으므로 저장소를 클론하지 않아도 되고, 월간 갱신도 그대로 따라옵니다.
 
 ## 자료 갱신
 
