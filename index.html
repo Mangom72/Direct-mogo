@@ -64,6 +64,37 @@ body{
 .omr button[aria-pressed="true"] .b::after{content:"";position:absolute;inset:2.5px;border-radius:50%;background:var(--ink)}
 .omr button:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 
+/* 내 과목 — 저장한 과목만 한 줄 알약 버튼으로 */
+.lab .mini{
+  order:1;font:inherit;font-size:10.5px;font-weight:700;letter-spacing:1px;cursor:pointer;
+  padding:3px 10px;border:1px solid var(--rule);background:#fff;color:var(--ink2);border-radius:999px;
+}
+.lab .mini[data-on="1"]{border-color:var(--mark);color:var(--mark)}
+.lab .mini:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+
+.pills{display:flex;gap:7px;overflow-x:auto;margin:0 -22px;padding:2px 22px 4px;scrollbar-width:none}
+.pills::-webkit-scrollbar{display:none}
+.pills .pill{
+  font:inherit;font-size:13px;font-weight:500;white-space:nowrap;flex:none;cursor:pointer;
+  display:flex;align-items:center;gap:6px;padding:8px 16px;
+  border:1.2px solid var(--rule);border-radius:999px;background:#fff;color:var(--ink);
+}
+.pills .pill[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+.pills .pill .g{font-size:10px;font-weight:700;letter-spacing:.5px;opacity:.62}
+.pills .pill .x{font-size:15px;line-height:1;margin-right:-4px}
+.pills.editing .pill{border-style:dashed;border-color:var(--mark);color:var(--mark);background:#fff}
+.pills .pill:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+.pill-empty{font-size:12px;color:var(--ink2);line-height:1.6;padding:3px 0}
+
+.subrow{display:flex;gap:7px}
+.subrow select{flex:1;min-width:0}
+.star{
+  font:inherit;font-size:15px;line-height:1;cursor:pointer;flex:none;width:44px;
+  border:1.2px solid var(--ink);background:#fff;color:var(--rule);border-radius:0;
+}
+.star[aria-pressed="true"]{background:var(--mark);border-color:var(--mark);color:#fff}
+.star:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
+
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 select{width:100%;font:inherit;font-size:14px;padding:10px 11px;border:1.2px solid var(--ink);background:#fff;color:var(--ink);border-radius:0}
 select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
@@ -131,6 +162,10 @@ footer b{color:var(--ink)}
     </div>
     <div class="panel">
       <div class="row">
+        <div class="lab">내 과목<button type="button" class="mini" id="favEdit" hidden>편집</button></div>
+        <div class="pills" id="favBox"></div>
+      </div>
+      <div class="row">
         <div class="lab">학년</div>
         <div class="omr" id="gradeBox"></div>
       </div>
@@ -141,7 +176,10 @@ footer b{color:var(--ink)}
         </div>
         <div>
           <div class="lab">과목</div>
-          <select id="sub"></select>
+          <div class="subrow">
+            <select id="sub"></select>
+            <button type="button" class="star" id="favToggle" aria-pressed="false" aria-label="내 과목에 저장">★</button>
+          </div>
         </div>
       </div>
       <div class="row grid2">
@@ -194,7 +232,98 @@ let sel = { grade:"D300", grp:0, sub:"158", kind:"all", year:"all" };
 
 const $ = s => document.querySelector(s);
 const gradeBox=$("#gradeBox"), grpSel=$("#grp"), subSel=$("#sub"),
-      yrSel=$("#yr"), kindBox=$("#kindBox"), out=$("#out");
+      yrSel=$("#yr"), kindBox=$("#kindBox"), out=$("#out"),
+      favBox=$("#favBox"), favEdit=$("#favEdit"), favToggle=$("#favToggle");
+
+/* ── 내 과목 ─────────────────────────────────────────────
+   저장 형식: [{g:"D300", s:"158"}, …] (학년+과목코드). 과목코드는
+   학년마다 다르므로 학년을 함께 들고 있어야 복원 시 그룹을 찾을 수 있다. */
+const FAV_KEY = "gijul.mysubs.v1";
+const GRADE_SHORT = { D300:"고3", D200:"고2", D100:"고1" };
+const SUBINDEX = {};
+GRADES.forEach(([g])=>{
+  (GROUPS[g]||[]).forEach(([,items], gi)=>{
+    items.forEach(([name,id])=>{ SUBINDEX[g+"/"+id] = { grp:gi, name }; });
+  });
+});
+
+let favs = [], editing = false;
+
+function loadFavs(){
+  try{
+    const arr = JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
+    if(!Array.isArray(arr)) return [];
+    /* 과목표가 바뀌어 더 이상 없는 코드는 조용히 버린다 */
+    const seen = new Set();
+    return arr.filter(f=>{
+      if(!f || !SUBINDEX[f.g+"/"+f.s]) return false;
+      const k = f.g+"/"+f.s;
+      return seen.has(k) ? false : (seen.add(k), true);
+    });
+  }catch(e){ return []; }
+}
+/* 시크릿 모드나 저장소 차단 시 예외가 나므로 실패해도 화면은 계속 동작시킨다 */
+function saveFavs(){
+  try{ localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }catch(e){}
+}
+function favIndex(){ return favs.findIndex(f=>f.g===sel.grade && f.s===sel.sub); }
+
+function pickSub(grade, subId){
+  const meta = SUBINDEX[grade+"/"+subId];
+  if(!meta) return;
+  sel.grade=grade; sel.grp=meta.grp; sel.sub=subId;
+  [...gradeBox.children].forEach((x,i)=>x.setAttribute("aria-pressed", GRADES[i][0]===grade));
+  fillGroups(); fillYears(); render(); syncFav();
+}
+
+function renderFavs(){
+  favBox.innerHTML="";
+  if(!favs.length){
+    editing = false;
+    favBox.classList.remove("editing");
+    favEdit.hidden = true;
+    favBox.innerHTML = `<div class="pill-empty">아래에서 과목을 고른 뒤 <b>★</b>를 누르면 여기에 저장됩니다. 다음에 열어도 그대로 남아 있습니다.</div>`;
+    return;
+  }
+  favEdit.hidden = false;
+  /* 여러 학년을 섞어 저장한 경우에만 학년을 함께 표기 */
+  const multiGrade = new Set(favs.map(f=>f.g)).size > 1;
+  favs.forEach((f,i)=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="pill";
+    b.setAttribute("aria-pressed", !editing && sel.grade===f.g && sel.sub===f.s);
+    b.innerHTML = (multiGrade ? `<span class="g">${GRADE_SHORT[f.g]}</span>` : "")
+                + SUBINDEX[f.g+"/"+f.s].name
+                + (editing ? `<span class="x">×</span>` : "");
+    b.setAttribute("aria-label", (editing ? "삭제: " : "") + SUBINDEX[f.g+"/"+f.s].name);
+    b.onclick = ()=>{
+      if(!editing) return pickSub(f.g, f.s);
+      favs.splice(i,1); saveFavs(); syncFav();
+    };
+    favBox.appendChild(b);
+  });
+}
+
+function syncFav(){
+  const on = favIndex() >= 0;
+  favToggle.setAttribute("aria-pressed", on);
+  favToggle.setAttribute("aria-label", on ? "내 과목에서 빼기" : "내 과목에 저장");
+  renderFavs();
+}
+
+favToggle.onclick = ()=>{
+  const i = favIndex();
+  if(i>=0) favs.splice(i,1); else favs.push({ g:sel.grade, s:sel.sub });
+  editing = false; favBox.classList.remove("editing"); favEdit.textContent="편집";
+  saveFavs(); syncFav();
+};
+favEdit.onclick = ()=>{
+  editing = !editing;
+  favBox.classList.toggle("editing", editing);
+  favEdit.textContent = editing ? "완료" : "편집";
+  favEdit.dataset.on = editing ? "1" : "";
+  renderFavs();
+};
 
 async function loadDB(){
   const b64 = document.getElementById("payload").textContent.trim();
@@ -223,7 +352,7 @@ GRADES.forEach(([v,label], i)=>{
   b.onclick = ()=>{
     sel.grade=v; sel.grp=0;
     [...gradeBox.children].forEach(x=>x.setAttribute("aria-pressed", x===b));
-    fillGroups(); fillYears(); render();
+    fillGroups(); fillYears(); render(); syncFav();
   };
   gradeBox.appendChild(b);
 });
@@ -274,8 +403,8 @@ function fillYears(){
   yrSel.value=sel.year;
 }
 
-grpSel.onchange=()=>{ sel.grp=+grpSel.value; fillSubs(); fillYears(); render(); };
-subSel.onchange=()=>{ sel.sub=subSel.value; fillYears(); render(); };
+grpSel.onchange=()=>{ sel.grp=+grpSel.value; fillSubs(); fillYears(); render(); syncFav(); };
+subSel.onchange=()=>{ sel.sub=subSel.value; fillYears(); render(); syncFav(); };
 yrSel.onchange =()=>{ sel.year=yrSel.value; render(); };
 
 function render(){
@@ -325,7 +454,8 @@ function render(){
 }
 
 (async ()=>{
-  fillGroups();
+  favs = loadFavs();
+  fillGroups(); syncFav();
   out.innerHTML=`<div class="empty">자료를 불러오는 중입니다…</div>`;
   try{
     DB = await loadDB();
