@@ -1,0 +1,43 @@
+name: 기출 자료 갱신
+
+on:
+  schedule:
+    # 매월 5일 03:00 UTC (KST 정오) — 전월 시행분이 EBSi에 올라온 뒤
+    - cron: "0 3 5 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests
+
+      # 스크립트는 수집량이 기존의 80%에 못 미치면 스스로 실패한다.
+      # EBSi 구조가 바뀌면 조용히 빈손이 되는 대신 여기서 빨갛게 떠야 한다.
+      - name: 새 회차 수집
+        run: python3 tools/refresh_data.py
+
+      - name: 변경분 커밋
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "새 회차 없음 — 커밋하지 않습니다"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Refresh exam data from EBSi"
+          git push
