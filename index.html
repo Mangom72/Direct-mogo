@@ -285,7 +285,13 @@ footer b{color:var(--ink)}
   var t="light";
   try{
     var p=localStorage.getItem("gijul.theme.v1")||"auto";
-    t = p==="auto" ? (matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light") : p;
+    /* WebView는 prefers-color-scheme를 시스템 다크모드에 연결해 주지 않는다.
+       앱 안에서는 앱이 알려주는 값을 먼저 믿는다. */
+    var dark;
+    try{ dark = window.GijulNative && GijulNative.systemDark(); }catch(e){}
+    if(dark === undefined || dark === null)
+      dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    t = p==="auto" ? (dark?"dark":"light") : p;
   }catch(e){}
   document.documentElement.dataset.theme=t;
 })();
@@ -408,8 +414,20 @@ const BAR={ light:"#191713", dark:"#14120E" };
 let themePref="auto";
 const media = matchMedia("(prefers-color-scheme: dark)");
 
+/* 자동 모드에서 "지금 어두운가"를 판단한다. 앱에서는 네이티브가 답을 준다. */
+function systemDark(){
+  try{
+    if(typeof GijulNative !== "undefined" && GijulNative && GijulNative.systemDark)
+      return !!GijulNative.systemDark();
+  }catch(e){}
+  return media.matches;
+}
+
+/* 앱이 시스템 테마 변경을 알려올 때 부른다 (액티비티가 재생성되지 않으므로 필요) */
+window.gijulThemeChanged = ()=>{ if(themePref==="auto") applyTheme(); };
+
 function applyTheme(){
-  const t = themePref==="auto" ? (media.matches?"dark":"light") : themePref;
+  const t = themePref==="auto" ? (systemDark()?"dark":"light") : themePref;
   document.documentElement.dataset.theme = t;
   document.querySelector('meta[name="theme-color"]').setAttribute("content", BAR[t]);
   const [,icon,label] = THEMES.find(x=>x[0]===themePref);

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 시스템 다크모드를 따라간다. WebView가 prefers-color-scheme를 어둡게 보고하려면
+         앱 테마 자체가 어두워야 하므로, 밝게 고정하면 안 된다. -->
+    <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.Light.NoActionBar" />
+</resources>
