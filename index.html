@@ -224,6 +224,11 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 .sfile .go:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 .sheet-note{margin:0;padding:12px 18px 16px;font-size:11px;color:var(--ink2);line-height:1.7}
 .sheet-note b{color:var(--mark)}
+.sheet-note button{
+  font:inherit;font-size:11px;font-weight:700;cursor:pointer;margin-top:8px;
+  padding:6px 13px;border:1px solid var(--rule);border-radius:999px;background:var(--btn);color:var(--ink2);
+}
+.sheet-note button:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 .sheet-all{
   display:block;width:calc(100% - 36px);margin:4px 18px 0;font:inherit;font-size:13px;font-weight:600;
   cursor:pointer;padding:11px;border:1.2px dashed var(--edu);border-radius:999px;
@@ -804,6 +809,9 @@ const sheet=$("#sheet"), sheetBg=$("#sheetBg"), sheetX=$("#sheetX"), sheetNm=$("
       sheetAll=$("#sheetAll");
 const NOTE_DEFAULT = sheetNote.textContent;
 const ALL_LABEL = sheetAll.textContent;
+/* 앱은 폴더에 담고, 브라우저는 다운로드로 떨어지므로 말이 달라야 한다 */
+const ALL_LABEL_NATIVE = (typeof GijulNative !== "undefined" && GijulNative)
+  ? "오프라인 저장 — 폴더에 담기" : ALL_LABEL;
 let sheetRow = null;              /* 지금 시트가 보여주는 회차 */
 
 /* 확장자는 Content-Type이 아니라 원본 경로에서 뽑는다 */
@@ -874,8 +882,49 @@ async function sendFile(f, btn){
 
 /* 오프라인 저장 — 회차의 파일을 전부 기기에 내려받는다.
    공유는 넘겨주고 끝이지만 이건 파일 앱에 남으므로 네트워크가 없어도 열 수 있다. */
+/* 안드로이드 앱(WebView) 안에서는 저장을 네이티브에 맡긴다.
+   웹만으로는 저장 위치를 정할 수 없어 다운로드 폴더로만 떨어지는데,
+   앱은 사용자가 고른 폴더 안에 회차별 하위 폴더를 만들어 넣는다.
+   앱이 아니면 이 갈래는 건드리지 않으므로 다른 OS는 그대로다. */
+const NATIVE = typeof GijulNative !== "undefined" && GijulNative;
+
+window.gijulSaveResult = (ok, count, message)=>{
+  sheetAll.disabled = false;
+  sheetAll.textContent = ALL_LABEL_NATIVE;
+  sheetNote.innerHTML = ok ? `<b>${message}</b>` : message;
+  addFolderButton();
+};
+
+function addFolderButton(){
+  if(!NATIVE || sheetNote.querySelector("button")) return;
+  const b=document.createElement("button");
+  b.type="button"; b.textContent="저장 폴더 바꾸기";
+  b.onclick=()=>{ try{ NATIVE.pickFolder(); }catch(e){} };
+  sheetNote.appendChild(document.createElement("br"));
+  sheetNote.appendChild(b);
+}
+
+function saveViaNative(){
+  const folder = `${sheetRow.y} ${sheetRow.title} ${sheetRow.sub}`
+    .replace(/[\/\\:*?"<>|\x00-\x1f]/g, "").replace(/\s+/g, " ").trim();
+  sheetAll.disabled = true;
+  sheetAll.textContent = "앱에 맡기는 중…";
+  sheetNote.textContent = "처음 저장할 때는 폴더를 한 번 고르면, 이후로는 그 폴더에 담깁니다.";
+  try{
+    NATIVE.savePaper(JSON.stringify({
+      folder,
+      files: sheetRow.files.map(f=>({ name:f.name, url:f.url })),
+    }));
+  }catch(e){
+    sheetAll.disabled = false;
+    sheetAll.textContent = ALL_LABEL_NATIVE;
+    sheetNote.textContent = "앱에 전달하지 못했습니다: " + e.message;
+  }
+}
+
 async function saveAll(){
   if(!sheetRow || sheetAll.disabled) return;
+  if(NATIVE) return saveViaNative();
   const files = sheetRow.files;
   sheetAll.disabled = true;
   let done = 0, failed = 0;
@@ -896,7 +945,7 @@ async function saveAll(){
     }catch(e){ failed++; }
   }
   sheetAll.disabled = false;
-  sheetAll.textContent = ALL_LABEL;
+  sheetAll.textContent = ALL_LABEL_NATIVE;
   sheetNote.innerHTML = failed
     ? `${done}개 저장, ${failed}개 실패. 연결을 확인하고 다시 눌러 주세요.`
     : `<b>${done}개 파일을 저장했습니다.</b> 네트워크가 없어도 파일 앱(다운로드)에서 열 수 있습니다.`;
@@ -907,7 +956,7 @@ function openSheet(row, opener){
   if(!row) return;
   sheetRow = row;
   sheetAll.disabled = false;
-  sheetAll.textContent = ALL_LABEL;
+  sheetAll.textContent = ALL_LABEL_NATIVE;
   lastFocus = opener || null;
   sheetNm.textContent = `${row.y}년 ${row.title}`;
   sheetSb.textContent = `${row.sub} · ${row.date.slice(0,4)}.${row.date.slice(4,6)}.${row.date.slice(6,8)}`;

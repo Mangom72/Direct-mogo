@@ -30,6 +30,7 @@ EBSi를 헤매지 않고 학년 → 과목 → 연도만 고르면 문제·정�
 | `tools/refresh_data.py` | EBSi에서 새 회차를 긁어 페이로드를 갱신합니다 |
 | `tools/build_api.py` | 페이로드를 `data/` JSON과 `llms.txt`로 내보냅니다 |
 | `mcp/gijul_server.py` | Claude에 도구로 붙이는 MCP 서버 |
+| `android/` | 저장 폴더를 고를 수 있는 WebView 앱 (안드로이드) |
 | `.github/workflows/refresh-data.yml` | 매월 5일 자동 실행 |
 
 자료를 `index.html` 안에 넣어둔 덕분에, **이 파일 하나만 캐시하면 조회·필터가 네트워크 없이 전부 동작합니다.** 네트워크가 필요한 건 PDF를 받을 때뿐입니다.
@@ -75,6 +76,35 @@ Claude Desktop은 `claude_desktop_config.json`에:
 
 붙이고 나면 이렇게 물으면 됩니다 — *"2026학년도 수능 생명과학Ⅰ 문제 찾아줘"*.
 배포된 JSON을 읽으므로 저장소를 클론하지 않아도 되고, 월간 갱신도 그대로 따라옵니다.
+
+## 안드로이드 앱 (저장 폴더를 고르고 싶을 때)
+
+웹에서는 저장 위치를 정할 수 없습니다 — 안드로이드 크롬에 File System Access API가
+없어 다운로드 폴더로만 떨어집니다. `android/`의 WebView 앱은 그 부분만 네이티브로
+처리합니다: 폴더를 한 번 고르면(SAF) 권한을 기억하고, **회차마다 하위 폴더를 만들어**
+문제·정답·해설을 그 안에 넣습니다.
+
+```
+고른 폴더/
+  2026 7월 학평(인천) 생명과학Ⅰ/
+      … 문제.pdf   … 정답.png   … 해설.pdf
+```
+
+페이지는 `window.GijulNative`가 있을 때만 이 경로를 씁니다. **다른 OS·브라우저는 그대로**
+다운로드로 저장됩니다.
+
+앱은 사이트를 그대로 불러오므로 페이지를 고쳐도 APK를 다시 만들 필요가 없습니다.
+
+빌드는 Actions의 **APK 빌드** 워크플로를 수동 실행하면 artifact로 받을 수 있습니다.
+직접 빌드하려면:
+
+```bash
+cd android
+echo "sdk.dir=$ANDROID_HOME" > local.properties
+gradle assembleDebug        # app/build/outputs/apk/debug/app-debug.apk
+```
+
+debug 서명이라 설치할 때 "출처를 알 수 없는 앱"을 허용해야 합니다.
 
 ## 자료 갱신
 
