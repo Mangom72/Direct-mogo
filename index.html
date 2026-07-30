@@ -224,6 +224,13 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 .sfile .go:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 .sheet-note{margin:0;padding:12px 18px 16px;font-size:11px;color:var(--ink2);line-height:1.7}
 .sheet-note b{color:var(--mark)}
+.sheet-all{
+  display:block;width:calc(100% - 36px);margin:4px 18px 0;font:inherit;font-size:13px;font-weight:600;
+  cursor:pointer;padding:11px;border:1.2px dashed var(--edu);border-radius:999px;
+  background:var(--btn);color:var(--edu);
+}
+.sheet-all[hidden]{display:none}
+.sheet-all:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 @media (max-width:620px){
   .sheet{align-items:flex-end;padding:0}
   .sheet-card{max-width:none;border-width:1.5px 0 0;max-height:82vh}
@@ -330,6 +337,7 @@ footer b{color:var(--ink)}
       <button type="button" class="sheet-x" id="sheetX">닫기</button>
     </div>
     <div class="sheet-list" id="sheetList"></div>
+    <button type="button" class="sheet-all" id="sheetAll">오프라인 저장 — 이 회차 전부 내려받기</button>
     <p class="sheet-note" id="sheetNote">파일을 받아 공유 시트로 넘깁니다. 목록에서 노트앱을 고르세요.</p>
   </div>
 </div>
@@ -792,8 +800,11 @@ const blobCache = new Map();
 let lastFocus = null;
 
 const sheet=$("#sheet"), sheetBg=$("#sheetBg"), sheetX=$("#sheetX"), sheetNm=$("#sheetNm"),
-      sheetSb=$("#sheetSb"), sheetList=$("#sheetList"), sheetNote=$("#sheetNote");
+      sheetSb=$("#sheetSb"), sheetList=$("#sheetList"), sheetNote=$("#sheetNote"),
+      sheetAll=$("#sheetAll");
 const NOTE_DEFAULT = sheetNote.textContent;
+const ALL_LABEL = sheetAll.textContent;
+let sheetRow = null;              /* 지금 시트가 보여주는 회차 */
 
 /* 확장자는 Content-Type이 아니라 원본 경로에서 뽑는다 */
 function extOf(code){ const m=/\.([a-z0-9]+)$/i.exec(code||""); return m ? m[1].toLowerCase() : "pdf"; }
@@ -861,8 +872,42 @@ async function sendFile(f, btn){
   sheetNote.innerHTML = `<b>다운로드</b> 폴더에 저장했습니다. 알림에서 열어 노트앱을 고르세요.`;
 }
 
+/* 오프라인 저장 — 회차의 파일을 전부 기기에 내려받는다.
+   공유는 넘겨주고 끝이지만 이건 파일 앱에 남으므로 네트워크가 없어도 열 수 있다. */
+async function saveAll(){
+  if(!sheetRow || sheetAll.disabled) return;
+  const files = sheetRow.files;
+  sheetAll.disabled = true;
+  let done = 0, failed = 0;
+  for(const f of files){
+    sheetAll.textContent = `받는 중… ${done + failed + 1}/${files.length}`;
+    try{
+      let blob = blobCache.get(f.url);
+      if(!blob){
+        const res = await fetch(f.url);
+        if(!res.ok) throw new Error("HTTP " + res.status);
+        blob = await res.blob();
+        blobCache.set(f.url, blob);
+      }
+      saveBlob(blob, f.name);
+      done++;
+      /* 연달아 부르면 브라우저가 뒤쪽 다운로드를 흘린다 */
+      await new Promise(r => setTimeout(r, 400));
+    }catch(e){ failed++; }
+  }
+  sheetAll.disabled = false;
+  sheetAll.textContent = ALL_LABEL;
+  sheetNote.innerHTML = failed
+    ? `${done}개 저장, ${failed}개 실패. 연결을 확인하고 다시 눌러 주세요.`
+    : `<b>${done}개 파일을 저장했습니다.</b> 네트워크가 없어도 파일 앱(다운로드)에서 열 수 있습니다.`;
+}
+sheetAll.onclick = saveAll;
+
 function openSheet(row, opener){
   if(!row) return;
+  sheetRow = row;
+  sheetAll.disabled = false;
+  sheetAll.textContent = ALL_LABEL;
   lastFocus = opener || null;
   sheetNm.textContent = `${row.y}년 ${row.title}`;
   sheetSb.textContent = `${row.sub} · ${row.date.slice(0,4)}.${row.date.slice(4,6)}.${row.date.slice(6,8)}`;
