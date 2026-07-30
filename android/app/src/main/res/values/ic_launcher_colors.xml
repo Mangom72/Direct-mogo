@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 지면 색. 런처가 어떤 모양으로 잘라도 배경은 꽉 찬다 -->
+    <color name="ic_launcher_background">#FCFAF4</color>
+</resources>
