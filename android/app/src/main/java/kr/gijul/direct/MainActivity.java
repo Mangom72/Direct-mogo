@@ -126,7 +126,7 @@ public class MainActivity extends Activity {
             try {
                 Uri u = FileProvider.getUriForFile(MainActivity.this, AUTHORITY, f);
                 Intent i = new Intent(Intent.ACTION_VIEW);
-                i.setDataAndType(u, name.endsWith(".png") ? "image/png" : "application/pdf");
+                i.setDataAndType(u, mimeOf(name));
                 i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
                 open(i);
             } catch (Exception e) {
@@ -145,6 +145,10 @@ public class MainActivity extends Activity {
             if (dirs != null) for (File d : dirs) if (rmrf(d)) n++;
             report(true, n, n + "개 회차를 지웠습니다");
         }
+
+        /** 파일 하나를 시스템 공유 시트로 넘긴다 */
+        @JavascriptInterface
+        public void shareFile(String name, String url) { io.execute(() -> share(name, url)); }
 
         /** 저장 위치를 사람이 읽을 형태로 */
         @JavascriptInterface
@@ -200,6 +204,12 @@ public class MainActivity extends Activity {
     private void writeOne(File dir, String name, String url) throws Exception {
         File out = new File(dir, name);
         File tmp = new File(dir, name + ".part");   // 중간에 끊겨도 반쪽 파일이 남지 않게
+        download(url, tmp);
+        if (out.exists()) out.delete();
+        if (!tmp.renameTo(out)) { tmp.delete(); throw new Exception("파일을 옮기지 못했습니다"); }
+    }
+
+    private void download(String url, File to) throws Exception {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setConnectTimeout(20000);
         conn.setReadTimeout(60000);
@@ -207,17 +217,64 @@ public class MainActivity extends Activity {
         try {
             int code = conn.getResponseCode();
             if (code != 200) throw new Exception("HTTP " + code);
-            try (InputStream in = conn.getInputStream(); OutputStream os = new FileOutputStream(tmp)) {
+            try (InputStream in = conn.getInputStream(); OutputStream os = new FileOutputStream(to)) {
                 byte[] buf = new byte[16384];
                 int n;
                 while ((n = in.read(buf)) > 0) os.write(buf, 0, n);
             }
-            if (out.exists()) out.delete();
-            if (!tmp.renameTo(out)) throw new Exception("파일을 옮기지 못했습니다");
         } finally {
             conn.disconnect();
-            if (tmp.exists()) tmp.delete();
         }
+    }
+
+    private static String mimeOf(String name) {
+        return name.endsWith(".png") ? "image/png"
+                : name.endsWith(".pdf") ? "application/pdf" : "application/octet-stream";
+    }
+
+    /** 이미 받아둔 파일이 있으면 다시 받지 않는다 */
+    private File findSaved(String name) {
+        File[] dirs = root().listFiles(File::isDirectory);
+        if (dirs != null) for (File d : dirs) {
+            File f = new File(d, name);
+            if (f.isFile()) return f;
+        }
+        return null;
+    }
+
+    /**
+     * WebView에는 Web Share API가 없다 — navigator.share 가 아예 없어서 페이지 혼자서는
+     * 공유 시트를 띄울 수 없다. 그래서 앱 안에서는 이 창구로 넘긴다.
+     */
+    private void share(String name, String url) {
+        try {
+            File f = findSaved(name);
+            if (f == null) {
+                File dir = new File(getCacheDir(), "share");
+                if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("임시 폴더를 만들지 못했습니다");
+                f = new File(dir, name);
+                if (!f.isFile() || f.length() == 0) download(url, f);
+            }
+            Uri u = FileProvider.getUriForFile(MainActivity.this, AUTHORITY, f);
+            Intent i = new Intent(Intent.ACTION_SEND);
+            i.setType(mimeOf(name));
+            i.putExtra(Intent.EXTRA_STREAM, u);
+            i.putExtra(Intent.EXTRA_TITLE, name);
+            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent chooser = Intent.createChooser(i, name);
+            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            open(chooser);
+            shareDone(true, "");
+        } catch (Exception e) {
+            Log.w(TAG, "공유 실패: " + name, e);
+            shareDone(false, "공유하지 못했습니다: " + e.getMessage());
+        }
+    }
+
+    private void shareDone(boolean ok, String message) {
+        String js = "window.gijulShareDone && window.gijulShareDone("
+                + ok + "," + JSONObject.quote(message) + ")";
+        runOnUiThread(() -> web.evaluateJavascript(js, null));
     }
 
     /** 결과를 페이지로 돌려준다 */

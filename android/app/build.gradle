@@ -8,8 +8,8 @@ android {
         applicationId 'kr.gijul.direct'
         minSdk 24               // SAF(문서 트리) 지속 권한이 안정적으로 되는 하한
         targetSdk 34
-        versionCode 1
-        versionName '1.0'
+        versionCode 2
+        versionName '1.1'
     }
     // 개인 사이드로드용이라 debug 서명으로 충분하다
     buildTypes {
