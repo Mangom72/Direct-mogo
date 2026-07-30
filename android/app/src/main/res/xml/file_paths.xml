@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 앱 데이터 폴더 전체. 받아둔 자료를 뷰어에 넘길 때만 쓴다 -->
+    <external-files-path name="saved" path="." />
+    <files-path name="saved_internal" path="." />
+</paths>

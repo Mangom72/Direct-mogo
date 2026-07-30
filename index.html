@@ -156,6 +156,13 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 .tally{display:flex;align-items:baseline;gap:10px;margin:22px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
 .tally .big{font-family:"Gowun Batang",serif;font-size:23px;font-weight:700}
 .tally .sm{font-size:12px;color:var(--ink2)}
+.tally{flex-wrap:wrap}
+.vault{
+  margin-left:auto;font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.5px;cursor:pointer;
+  padding:5px 12px;border:1.2px solid var(--edu);border-radius:999px;background:var(--btn);color:var(--edu);
+}
+.vault[hidden]{display:none}
+.vault:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 
 .yr{margin-bottom:20px}
 .yr-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
@@ -891,18 +898,67 @@ const NATIVE = typeof GijulNative !== "undefined" && GijulNative;
 window.gijulSaveResult = (ok, count, message)=>{
   sheetAll.disabled = false;
   sheetAll.textContent = ALL_LABEL_NATIVE;
+  if(vaultMode){ openVault(); return; }        /* 보관함에서 지운 뒤라면 목록을 다시 그린다 */
   sheetNote.innerHTML = ok ? `<b>${message}</b>` : message;
-  addFolderButton();
 };
 
-function addFolderButton(){
-  if(!NATIVE || sheetNote.querySelector("button")) return;
-  const b=document.createElement("button");
-  b.type="button"; b.textContent="저장 폴더 바꾸기";
-  b.onclick=()=>{ try{ NATIVE.pickFolder(); }catch(e){} };
-  sheetNote.appendChild(document.createElement("br"));
-  sheetNote.appendChild(b);
+/* ── 받아둔 자료 (앱 전용) ────────────────────────────────────────────
+   파일이 앱 데이터 폴더에 있어 안드로이드 11+ 에서는 파일 관리자가 열지 못한다.
+   그래서 목록과 열기를 앱이 직접 내준다. */
+let vaultMode = false;
+
+function fmtSize(n){
+  return n >= 1048576 ? (n/1048576).toFixed(1)+"MB" : Math.max(1, Math.round(n/1024))+"KB";
 }
+
+function openVault(opener){
+  let items = [];
+  try{ items = JSON.parse(NATIVE.listSaved() || "[]"); }catch(e){}
+  vaultMode = true;
+  if(opener) lastFocus = opener;
+  const bytes = items.reduce((a,x)=>a + (x.size||0), 0);
+  const folders = new Set(items.map(x=>x.folder));
+
+  sheetNm.textContent = "받아둔 자료";
+  sheetSb.textContent = items.length
+    ? `${folders.size}개 회차 · ${items.length}개 파일 · ${fmtSize(bytes)}`
+    : "아직 받아둔 자료가 없습니다";
+  sheetAll.hidden = true;
+  sheetList.innerHTML = "";
+
+  items.forEach(it=>{
+    const el=document.createElement("div"); el.className="sfile";
+    const info=document.createElement("div"); info.className="info";
+    const k=document.createElement("div"); k.className="k";
+    k.textContent = it.name.replace(/\.(pdf|png)$/i, "").split(" ").pop();
+    const x=document.createElement("div"); x.className="x";
+    x.textContent = `${it.folder} · ${fmtSize(it.size||0)}`;
+    info.append(k, x);
+    const go=document.createElement("button");
+    go.type="button"; go.className="go"; go.textContent="열기";
+    go.onclick=()=>{ try{ NATIVE.openSaved(it.folder, it.name); }catch(e){} };
+    el.append(info, go);
+    sheetList.appendChild(el);
+  });
+
+  sheetNote.innerHTML = items.length
+    ? `기기의 PDF 뷰어로 열립니다. 앱을 지우면 함께 사라집니다.`
+    : `회차의 <b>보내기</b> → <b>폴더에 담기</b>로 받아두면 여기 모입니다.`;
+  if(items.length){
+    const b=document.createElement("button");
+    b.type="button"; b.textContent="모두 지우기";
+    b.onclick=()=>{ try{ NATIVE.deleteSaved(""); }catch(e){} };
+    sheetNote.appendChild(document.createElement("br"));
+    sheetNote.appendChild(b);
+  }
+  sheet.hidden=false;
+  document.body.style.overflow="hidden";
+  sheetX.focus();
+}
+
+out.addEventListener("click", e=>{
+  if(e.target.closest("#vaultBtn")) openVault(e.target.closest("#vaultBtn"));
+});
 
 function saveViaNative(){
   const folder = `${sheetRow.y} ${sheetRow.title} ${sheetRow.sub}`
@@ -955,6 +1011,8 @@ sheetAll.onclick = saveAll;
 function openSheet(row, opener){
   if(!row) return;
   sheetRow = row;
+  vaultMode = false;
+  sheetAll.hidden = false;
   sheetAll.disabled = false;
   sheetAll.textContent = ALL_LABEL_NATIVE;
   lastFocus = opener || null;
@@ -981,6 +1039,7 @@ function openSheet(row, opener){
 
 function closeSheet(){
   if(sheet.hidden) return;
+  vaultMode = false;
   sheet.hidden=true;
   document.body.style.overflow="";
   blobCache.clear();
@@ -1056,11 +1115,13 @@ function render(){
 
   const gradeName=GRADES.find(g=>g[0]===sel.grade)[1];
   const scope = sel.year==="all" ? "전체 연도" : `${sel.year}년(${+sel.year+1}학년도)`;
+  /* 받아둔 자료는 앱 데이터 폴더에 있어 앱 안에서만 열 수 있다 */
+  const vaultBtn = NATIVE ? `<button type="button" class="vault" id="vaultBtn">받아둔 자료</button>` : "";
   $("#cntPaper").textContent=total;
 
   out.innerHTML = total
-    ? `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · ${total}개 회차</span></div>` + html
-    : `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · 0개 회차</span></div>
+    ? `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · ${total}개 회차</span>${vaultBtn}</div>` + html
+    : `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · 0개 회차</span>${vaultBtn}</div>
        <div class="empty">해당 조건으로 수록된 회차가 없습니다.<br>선택한 학년에서 그 과목이 시행되지 않았거나, 연도·기관 필터를 좁게 잡았을 수 있습니다.</div>`;
 }
 
