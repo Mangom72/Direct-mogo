@@ -59,11 +59,15 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);          // localStorage — 내 과목·테마 저장에 필요
         s.setSupportMultipleWindows(false);
-        /* WebView는 시스템 다크모드를 prefers-color-scheme로 자동 연결하지 않는다.
-           이걸 켜야 앱 테마(야간이면 어두움)가 페이지에 전달된다. 페이지가 자체 다크
-           스타일을 갖고 있으면 WebView가 강제 반전하지 않고 그 스타일을 쓴다. */
+        /* WebView가 색에 손대지 못하게 확실히 막는다.
+           켜두면 시스템이 다크일 때, 사용자가 '밝게'를 골라 페이지가 밝은 스타일을
+           내놓아도 그 위에 강제 반전을 덧씌워 화면이 뒤집혔다. 테마는 페이지가
+           GijulNative.systemDark()로 직접 판단하므로 WebView가 개입할 이유가 없다.
+           기본값에 기대지 않고 옛 WebView의 FORCE_DARK_AUTO까지 명시적으로 끈다. */
         if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
-            WebSettingsCompat.setAlgorithmicDarkeningAllowed(s, true);
+            WebSettingsCompat.setAlgorithmicDarkeningAllowed(s, false);
+        } else if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+            WebSettingsCompat.setForceDark(s, WebSettingsCompat.FORCE_DARK_OFF);
         }
         web.setWebViewClient(new WebViewClient() {
             @Override

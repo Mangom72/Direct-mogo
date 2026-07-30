@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 시스템 다크모드를 따라간다. WebView가 prefers-color-scheme를 어둡게 보고하려면
-         앱 테마 자체가 어두워야 하므로, 밝게 고정하면 안 된다. -->
+    <!-- 시스템 다크모드를 따라간다. 페이지 테마와는 무관하다 — 그쪽은 GijulNative가
+         uiMode를 직접 읽어 알려준다. 이 테마가 맞추는 건 창 배경이라, 어두운 환경에서
+         페이지가 그려지기 전 흰 화면이 번쩍이지 않게 하는 몫만 한다. -->
     <style name="AppTheme" parent="@android:style/Theme.DeviceDefault.Light.NoActionBar" />
 </resources>

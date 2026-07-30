@@ -21,13 +21,20 @@ jobs:
       # 러너 이미지에 Android SDK가 이미 깔려 있어 ANDROID_HOME을 따로 잡을 필요가 없다
       - uses: gradle/actions/setup-gradle@v4
 
-      # 저장소 시크릿에 키를 넣어두면 릴리스 서명으로, 없으면 디버그로 빌드한다
+      # 저장소 시크릿에 키를 넣어두면 릴리스 서명으로, 없으면 디버그로 빌드한다.
+      # secrets 컨텍스트는 스텝의 if에서 쓸 수 없다 — 넣으면 워크플로 자체가
+      # 시작 전에 실패한다(잡 0개). 그래서 env로 받아 셸에서 판단한다.
       - name: 서명 키 준비
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
         working-directory: android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > gijul-release.jks
-          echo "release=1" >> "$GITHUB_ENV"
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            printf %s "$KEYSTORE_BASE64" | base64 -d > gijul-release.jks
+            echo "release=1" >> "$GITHUB_ENV"
+          else
+            echo "서명 키 시크릿이 없어 debug로 빌드합니다"
+          fi
 
       - name: assembleRelease
         if: ${{ env.release == '1' }}
