@@ -30,7 +30,7 @@ EBSi를 헤매지 않고 학년 → 과목 → 연도만 고르면 문제·정�
 | `tools/refresh_data.py` | EBSi에서 새 회차를 긁어 페이로드를 갱신합니다 |
 | `tools/build_api.py` | 페이로드를 `data/` JSON과 `llms.txt`로 내보냅니다 |
 | `mcp/gijul_server.py` | Claude에 도구로 붙이는 MCP 서버 |
-| `android/` | 저장 폴더를 고를 수 있는 WebView 앱 (안드로이드) |
+| `android/` | 앱 폴더에 담고 앱에서 여는 WebView 앱 (안드로이드) |
 | `.github/workflows/refresh-data.yml` | 매월 5일 자동 실행 |
 
 자료를 `index.html` 안에 넣어둔 덕분에, **이 파일 하나만 캐시하면 조회·필터가 네트워크 없이 전부 동작합니다.** 네트워크가 필요한 건 PDF를 받을 때뿐입니다.
