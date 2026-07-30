@@ -21,12 +21,38 @@ jobs:
       # 러너 이미지에 Android SDK가 이미 깔려 있어 ANDROID_HOME을 따로 잡을 필요가 없다
       - uses: gradle/actions/setup-gradle@v4
 
+      # 저장소 시크릿에 키를 넣어두면 릴리스 서명으로, 없으면 디버그로 빌드한다
+      - name: 서명 키 준비
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        working-directory: android
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > gijul-release.jks
+          echo "release=1" >> "$GITHUB_ENV"
+
+      - name: assembleRelease
+        if: ${{ env.release == '1' }}
+        working-directory: android
+        env:
+          GIJUL_STORE_FILE: gijul-release.jks
+          GIJUL_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          GIJUL_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          GIJUL_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: gradle assembleRelease --no-daemon
+
       - name: assembleDebug
+        if: ${{ env.release != '1' }}
         working-directory: android
         run: gradle assembleDebug --no-daemon
+
+      - name: 키 지우기
+        if: always()
+        working-directory: android
+        run: rm -f gijul-release.jks
 
       - uses: actions/upload-artifact@v4
         with:
           name: gijul-direct-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error

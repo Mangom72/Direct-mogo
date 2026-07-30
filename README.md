@@ -108,7 +108,31 @@ echo "sdk.dir=$ANDROID_HOME" > local.properties
 gradle assembleDebug        # app/build/outputs/apk/debug/app-debug.apk
 ```
 
-debug 서명이라 설치할 때 "출처를 알 수 없는 앱"을 허용해야 합니다.
+설치할 때 "출처를 알 수 없는 앱"을 허용해야 합니다.
+
+### 릴리스 서명
+
+릴리스 빌드는 저장소에 없는 키로 서명합니다. 키를 만들고 `android/keystore.properties`에
+경로·비밀번호를 적어두면 `assembleRelease`가 그걸 씁니다 (둘 다 gitignore 대상입니다).
+
+```bash
+cd android
+keytool -genkeypair -v -keystore gijul-release.jks -alias gijul \
+  -keyalg RSA -keysize 4096 -validity 10000
+cat > keystore.properties <<'EOF'
+storeFile=gijul-release.jks
+storePassword=…
+keyAlias=gijul
+keyPassword=…
+EOF
+gradle assembleRelease
+```
+
+CI에서 빌드하려면 저장소 시크릿에 `KEYSTORE_BASE64`(키를 base64로 인코딩한 값),
+`KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`를 넣습니다. 시크릿이 없으면 디버그로 빌드합니다.
+
+**서명 키를 바꾸면 기존 앱 위에 덮어쓸 수 없습니다.** 지우고 새로 설치해야 하며 받아둔 자료도
+사라집니다. 키를 잃어버리면 같은 서명으로 업데이트할 수 없으니 따로 보관하세요.
 
 ## 자료 갱신
 

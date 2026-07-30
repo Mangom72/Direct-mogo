@@ -1,5 +1,17 @@
 plugins { id 'com.android.application' }
 
+/* 릴리스 서명 정보. 키와 비밀번호는 저장소에 두지 않는다 —
+   로컬은 keystore.properties(gitignore), CI는 환경변수로 받는다. */
+def signProps = new Properties()
+def signFile = rootProject.file('keystore.properties')
+if (signFile.exists()) signFile.withInputStream { signProps.load(it) }
+
+def signVal = { String key, String env ->
+    signProps[key] ?: System.getenv(env)
+}
+def storePath = signVal('storeFile', 'GIJUL_STORE_FILE')
+def canSign = storePath && rootProject.file(storePath).exists()
+
 android {
     namespace 'kr.gijul.direct'
     compileSdk 34
@@ -8,12 +20,33 @@ android {
         applicationId 'kr.gijul.direct'
         minSdk 24               // SAF(문서 트리) 지속 권한이 안정적으로 되는 하한
         targetSdk 34
-        versionCode 4
-        versionName '1.3'
+        versionCode 5
+        versionName '1.4'
     }
-    // 개인 사이드로드용이라 debug 서명으로 충분하다
+    signingConfigs {
+        release {
+            if (canSign) {
+                storeFile rootProject.file(storePath)
+                storePassword signVal('storePassword', 'GIJUL_STORE_PASSWORD')
+                keyAlias signVal('keyAlias', 'GIJUL_KEY_ALIAS')
+                keyPassword signVal('keyPassword', 'GIJUL_KEY_PASSWORD')
+            }
+        }
+    }
+
     buildTypes {
-        release { minifyEnabled false }
+        release {
+            // @JavascriptInterface 메서드가 축약되면 브리지가 끊긴다. 앱이 작아 이득도 없다.
+            minifyEnabled false
+            if (canSign) signingConfig signingConfigs.release
+        }
+    }
+
+    // v3까지 켜두면 나중에 키를 교체할 여지가 남는다. v1은 minSdk 24라 불필요.
+    signingConfigs.release {
+        enableV1Signing false
+        enableV2Signing true
+        enableV3Signing true
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
