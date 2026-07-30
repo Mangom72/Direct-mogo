@@ -2,6 +2,7 @@ package kr.gijul.direct;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,6 +13,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.core.content.FileProvider;
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewFeature;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -56,6 +59,12 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);          // localStorage — 내 과목·테마 저장에 필요
         s.setSupportMultipleWindows(false);
+        /* WebView는 시스템 다크모드를 prefers-color-scheme로 자동 연결하지 않는다.
+           이걸 켜야 앱 테마(야간이면 어두움)가 페이지에 전달된다. 페이지가 자체 다크
+           스타일을 갖고 있으면 WebView가 강제 반전하지 않고 그 스타일을 쓴다. */
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+            WebSettingsCompat.setAlgorithmicDarkeningAllowed(s, true);
+        }
         web.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
@@ -78,6 +87,20 @@ public class MainActivity extends Activity {
     @Override
     public void onBackPressed() {
         if (web.canGoBack()) web.goBack(); else super.onBackPressed();
+    }
+
+    /** 시스템이 지금 야간 모드인가 */
+    private boolean isNight() {
+        return (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    /* uiMode를 configChanges로 잡아두었으므로 액티비티가 다시 만들어지지 않는다.
+       그래서 테마가 바뀐 사실을 페이지에 직접 알려줘야 한다. */
+    @Override
+    public void onConfigurationChanged(Configuration c) {
+        super.onConfigurationChanged(c);
+        web.evaluateJavascript("window.gijulThemeChanged && window.gijulThemeChanged()", null);
     }
 
     /** 저장 뿌리. 외부 앱 전용 영역이라 권한이 필요 없다. */
@@ -149,6 +172,10 @@ public class MainActivity extends Activity {
         /** 파일 하나를 시스템 공유 시트로 넘긴다 */
         @JavascriptInterface
         public void shareFile(String name, String url) { io.execute(() -> share(name, url)); }
+
+        /** 시스템 다크모드 여부. WebView의 prefers-color-scheme를 믿을 수 없어 직접 알려준다. */
+        @JavascriptInterface
+        public boolean systemDark() { return isNight(); }
 
         /** 저장 위치를 사람이 읽을 형태로 */
         @JavascriptInterface
