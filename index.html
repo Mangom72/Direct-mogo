@@ -831,7 +831,9 @@ let lastFocus = null;
 const sheet=$("#sheet"), sheetBg=$("#sheetBg"), sheetX=$("#sheetX"), sheetNm=$("#sheetNm"),
       sheetSb=$("#sheetSb"), sheetList=$("#sheetList"), sheetNote=$("#sheetNote"),
       sheetAll=$("#sheetAll");
-const NOTE_DEFAULT = sheetNote.textContent;
+const NOTE_DEFAULT = (typeof GijulNative !== "undefined" && GijulNative)
+  ? "보내기를 누르면 공유 시트가 열립니다. 폴더에 담아두면 오프라인에서도 볼 수 있습니다."
+  : sheetNote.textContent;
 const ALL_LABEL = sheetAll.textContent;
 /* 앱은 폴더에 담고, 브라우저는 다운로드로 떨어지므로 말이 달라야 한다 */
 const ALL_LABEL_NATIVE = (typeof GijulNative !== "undefined" && GijulNative)
@@ -858,8 +860,33 @@ function saveBlob(blob, name){
   setTimeout(()=>URL.revokeObjectURL(u), 10000);
 }
 
+/* WebView에는 Web Share API가 없다 — navigator.share 가 아예 없어서 페이지 혼자서는
+   공유 시트를 못 띄우고 다운로드로 흘러버린다. 앱에서는 공유도 네이티브에 맡긴다. */
+let shareBtn = null;
+
+window.gijulShareDone = (ok, message)=>{
+  if(shareBtn){
+    setBtn(shareBtn, ok ? "done" : "", ok ? "보냈습니다" : "보내기");
+    shareBtn = null;
+  }
+  if(!ok && message) sheetNote.textContent = message;
+};
+
+function shareViaNative(f, btn){
+  shareBtn = btn;
+  setBtn(btn, "busy", "여는 중…");
+  try{
+    NATIVE.shareFile(f.name, f.url);
+  }catch(e){
+    setBtn(btn, "", "보내기");
+    shareBtn = null;
+    sheetNote.textContent = "앱에 전달하지 못했습니다: " + e.message;
+  }
+}
+
 async function sendFile(f, btn){
   if(btn.dataset.state==="busy") return;
+  if(NATIVE) return shareViaNative(f, btn);
   const confirming = btn.dataset.state==="confirm";
 
   let blob = blobCache.get(f.url);
