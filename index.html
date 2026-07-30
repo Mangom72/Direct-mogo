@@ -229,6 +229,23 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 .sfile .go[data-state="confirm"]{background:var(--mark);border-color:var(--mark);color:var(--onmark)}
 .sfile .go[data-state="done"]{background:var(--btn);color:var(--edu);border-color:var(--edu)}
 .sfile .go:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+
+/* 받아둔 자료 — 파일을 따로 늘어놓지 않고 회차로 묶는다 */
+.svault{padding:12px 0;border-bottom:1px solid var(--rule)}
+.svault:last-child{border-bottom:none}
+.svault .nm{font-family:"Gowun Batang",serif;font-size:15.5px;font-weight:700;line-height:1.35}
+.svault .sub{font-size:11px;color:var(--ink2);margin-top:3px}
+.svault .row{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.svault .row button{
+  font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;
+  padding:8px 15px;border:1.2px solid var(--ink);border-radius:999px;
+  background:var(--ink);color:var(--card);
+}
+.svault .row .del{
+  margin-left:auto;background:var(--btn);color:var(--ink2);border-color:var(--rule);
+  font-size:11.5px;padding:7px 13px;
+}
+.svault .row button:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 .sheet-note{margin:0;padding:12px 18px 16px;font-size:11px;color:var(--ink2);line-height:1.7}
 .sheet-note b{color:var(--mark)}
 .sheet-note button{
@@ -921,28 +938,49 @@ function openVault(opener){
 
   sheetNm.textContent = "받아둔 자료";
   sheetSb.textContent = items.length
-    ? `${folders.size}개 회차 · ${items.length}개 파일 · ${fmtSize(bytes)}`
+    ? `${folders.size}개 회차 · ${fmtSize(bytes)}`
     : "아직 받아둔 자료가 없습니다";
   sheetAll.hidden = true;
   sheetList.innerHTML = "";
 
+  /* 같은 회차의 파일은 한 장으로 묶고, 그 안에 문제·정답·해설 버튼을 둔다 */
+  const KINDS = ["문제", "정답", "해설"];
+  const kindOfName = n => n.replace(/\.(pdf|png|jpg)$/i, "").split(" ").pop();
+  const byFolder = new Map();
   items.forEach(it=>{
-    const el=document.createElement("div"); el.className="sfile";
-    const info=document.createElement("div"); info.className="info";
-    const k=document.createElement("div"); k.className="k";
-    k.textContent = it.name.replace(/\.(pdf|png)$/i, "").split(" ").pop();
-    const x=document.createElement("div"); x.className="x";
-    x.textContent = `${it.folder} · ${fmtSize(it.size||0)}`;
-    info.append(k, x);
-    const go=document.createElement("button");
-    go.type="button"; go.className="go"; go.textContent="열기";
-    go.onclick=()=>{ try{ NATIVE.openSaved(it.folder, it.name); }catch(e){} };
-    el.append(info, go);
+    if(!byFolder.has(it.folder)) byFolder.set(it.folder, []);
+    byFolder.get(it.folder).push(it);
+  });
+
+  byFolder.forEach((files, folder)=>{
+    const el=document.createElement("div"); el.className="svault";
+    const nm=document.createElement("div"); nm.className="nm"; nm.textContent=folder;
+    const sub=document.createElement("div"); sub.className="sub";
+    sub.textContent = `${files.length}개 파일 · ${fmtSize(files.reduce((a,f)=>a+(f.size||0), 0))}`;
+    const row=document.createElement("div"); row.className="row";
+
+    KINDS.forEach(kind=>{
+      const f = files.find(x=>kindOfName(x.name) === kind);
+      if(!f) return;
+      const b=document.createElement("button");
+      b.type="button"; b.textContent=kind;
+      b.setAttribute("aria-label", `${folder} ${kind} 열기`);
+      b.onclick=()=>{ try{ NATIVE.openSaved(f.folder, f.name); }catch(e){} };
+      row.appendChild(b);
+    });
+
+    const del=document.createElement("button");
+    del.type="button"; del.className="del"; del.textContent="지우기";
+    del.setAttribute("aria-label", `${folder} 지우기`);
+    del.onclick=()=>{ try{ NATIVE.deleteSaved(folder); }catch(e){} };
+    row.appendChild(del);
+
+    el.append(nm, sub, row);
     sheetList.appendChild(el);
   });
 
   sheetNote.innerHTML = items.length
-    ? `기기의 PDF 뷰어로 열립니다. 앱을 지우면 함께 사라집니다.`
+    ? `버튼을 누르면 기기의 PDF 뷰어로 열립니다. 앱을 지우면 함께 사라집니다.`
     : `회차의 <b>보내기</b> → <b>폴더에 담기</b>로 받아두면 여기 모입니다.`;
   if(items.length){
     const b=document.createElement("button");
