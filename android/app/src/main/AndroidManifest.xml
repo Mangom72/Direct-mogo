@@ -25,6 +25,13 @@
             </intent-filter>
         </activity>
 
+        <!-- 문제·정답·해설을 앱 안에서 읽는 화면. WebView에 PDF 뷰어가 없어 직접 그린다. -->
+        <activity
+            android:name=".PdfViewActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden|uiMode"
+            android:parentActivityName=".MainActivity" />
+
         <!-- 받아둔 파일을 외부 뷰어에 넘기려면 content:// 로 줘야 한다 (file:// 는 API 24+에서 막힘) -->
         <provider
             android:name="androidx.core.content.FileProvider"
