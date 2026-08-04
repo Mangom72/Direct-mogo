@@ -218,7 +218,16 @@ public class MainActivity extends Activity {
                 try {
                     JSONObject o = new JSONObject(r);
                     if (!"available".equals(o.optString("state"))) {
-                        if (force) report(false, 0, "이미 최신 버전입니다");
+                        /* 저장 결과 창구(gijulSaveResult)로 보내면 안 된다 — 그쪽은
+                           보내기 시트를 되살리고 보관함을 다시 연다. */
+                        if (force) {
+                            boolean bad = "error".equals(o.optString("state"));
+                            String js = "window.gijulUpdate && window.gijulUpdate("
+                                    + JSONObject.quote(bad ? "error" : "latest") + ","
+                                    + JSONObject.quote(bad ? "새 버전을 확인하지 못했습니다"
+                                                           : "이미 최신 버전입니다") + ")";
+                            runOnUiThread(() -> web.evaluateJavascript(js, null));
+                        }
                         return;
                     }
                     String js = "window.gijulUpdateFound && window.gijulUpdateFound("

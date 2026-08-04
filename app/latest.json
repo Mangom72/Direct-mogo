@@ -1,8 +1,8 @@
 {
-  "versionCode": 8,
-  "versionName": "1.7",
+  "versionCode": 9,
+  "versionName": "1.8",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1833799,
-  "sha256": "6155220b545ccdf51db8d63babab6a9d7682d6adbad8fdcb882efb26bbaa12fb",
-  "notes": "문제·정답·해설을 앱 안에서 바로 읽습니다"
+  "size": 1834523,
+  "sha256": "9722bf4e1ab332beed44a76d9ace786079d0544d241871da3dfca13eceba8023",
+  "notes": "앱 판 정보와 업데이트 확인 버튼 추가"
 }
