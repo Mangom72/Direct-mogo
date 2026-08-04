@@ -74,9 +74,19 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 Uri u = r.getUrl();
-                // 사이트 안은 앱에서, 바깥(EBSi 원본 등)은 기본 브라우저로
-                if (u.toString().startsWith(SITE)) return false;
-                open(new Intent(Intent.ACTION_VIEW, u));
+                String s = u.toString();
+                if (s.startsWith(SITE)) return false;          // 사이트 안은 그대로
+                /* 문제·정답·해설은 앱 안에서 읽는다. WebView에 PDF 뷰어가 없어 예전에는
+                   브라우저로 넘겼는데, 자료를 열 때마다 앱이 바뀌는 건 이 앱의 요점을
+                   잃는 일이었다. 그 밖의 주소(EBSi 사이트 등)는 여전히 브라우저 몫이다. */
+                if (isPaper(s)) {
+                    Intent i = new Intent(MainActivity.this, PdfViewActivity.class);
+                    i.putExtra(PdfViewActivity.EXTRA_URL, s);
+                    i.putExtra(PdfViewActivity.EXTRA_NAME, u.getLastPathSegment());
+                    open(i);
+                } else {
+                    open(new Intent(Intent.ACTION_VIEW, u));
+                }
                 return true;
             }
         });
@@ -107,6 +117,14 @@ public class MainActivity extends Activity {
     public void onConfigurationChanged(Configuration c) {
         super.onConfigurationChanged(c);
         web.evaluateJavascript("window.gijulThemeChanged && window.gijulThemeChanged()", null);
+    }
+
+    /** 우리가 직접 그릴 수 있는 자료인지 — 문제·해설은 PDF, 정답은 PNG다 */
+    private static boolean isPaper(String url) {
+        String p = Uri.parse(url).getPath();
+        if (p == null) return false;
+        p = p.toLowerCase();
+        return p.endsWith(".pdf") || p.endsWith(".png") || p.endsWith(".jpg");
     }
 
     /** 저장 뿌리. 외부 앱 전용 영역이라 권한이 필요 없다. */
