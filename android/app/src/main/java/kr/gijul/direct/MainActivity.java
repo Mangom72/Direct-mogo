@@ -46,9 +46,10 @@ public class MainActivity extends Activity {
 
     private static final String TAG = "기출직행";
     private static final String SITE = "https://mangom72.github.io/Direct-mogo/";
-    private static final String AUTHORITY = "kr.gijul.direct.files";
+    static final String AUTHORITY = "kr.gijul.direct.files";
 
     private WebView web;
+    private Updater updater;
     private final ExecutorService io = Executors.newSingleThreadExecutor();
 
     @Override
@@ -80,6 +81,7 @@ public class MainActivity extends Activity {
             }
         });
         web.addJavascriptInterface(new Bridge(), "GijulNative");
+        updater = new Updater(this);
         setContentView(web);
 
         if (state == null) web.loadUrl(SITE);
@@ -184,7 +186,37 @@ public class MainActivity extends Activity {
         /** 저장 위치를 사람이 읽을 형태로 */
         @JavascriptInterface
         public String where() { return root().getAbsolutePath(); }
+
+        /** 설치된 버전. {"code":6,"name":"1.5"} */
+        @JavascriptInterface
+        public String appVersion() { return updater.version(); }
+
+        /* 새 버전 확인은 네트워크를 타므로 결과를 돌려줄 수 없다.
+           페이지는 window.gijulUpdate(state, message)로 받는다. */
+        @JavascriptInterface
+        public void checkUpdate(boolean force) {
+            io.execute(() -> {
+                String r = updater.check(force);
+                try {
+                    JSONObject o = new JSONObject(r);
+                    if (!"available".equals(o.optString("state"))) {
+                        if (force) report(false, 0, "이미 최신 버전입니다");
+                        return;
+                    }
+                    String js = "window.gijulUpdateFound && window.gijulUpdateFound("
+                            + JSONObject.quote(r) + ")";
+                    runOnUiThread(() -> web.evaluateJavascript(js, null));
+                } catch (Exception ignored) { }
+            });
+        }
+
+        /** 확인된 새 버전을 받아 설치 화면으로 넘긴다 */
+        @JavascriptInterface
+        public void installUpdate() { io.execute(() -> updater.install()); }
     }
+
+    /** Updater가 페이지로 상태를 돌려줄 때 쓴다 */
+    void eval(String js) { web.evaluateJavascript(js, null); }
 
     private boolean rmrf(File d) {
         if (!d.exists()) return false;
