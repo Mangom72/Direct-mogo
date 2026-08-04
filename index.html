@@ -154,6 +154,20 @@ body{
 .star[aria-pressed="true"]{background:var(--mark);border-color:var(--mark);color:var(--onmark)}
 .star:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 
+/* 접힌 과목 고르개. 내 과목이 있으면 기본으로 접혀서, 자주 쓰는 사람이 매번
+   학년·과목군·과목 더미를 넘겨 스크롤하지 않아도 자료가 첫 화면에 온다.
+   내 과목·출제 기관·연도 이동은 접어도 그대로 남는다. */
+#pick[hidden]{display:none}
+.pickfold{margin-top:2px}
+.picksum{
+  width:100%;font:inherit;font-size:14px;text-align:left;cursor:pointer;
+  display:flex;align-items:center;gap:10px;padding:10px 11px;
+  border:1.2px solid var(--ink);background:var(--btn);color:var(--ink);
+}
+.picksum .cv{margin-left:auto;flex:none;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--mark)}
+.picksum.shut{justify-content:center;border-style:dashed;border-color:var(--rule);color:var(--ink2);font-size:12px;padding:7px}
+.picksum:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
+
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 select{width:100%;font:inherit;font-size:14px;padding:10px 11px;border:1.2px solid var(--ink);background:var(--btn);color:var(--ink);border-radius:0}
 select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
@@ -185,6 +199,8 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 .item.k-edu{border-left-color:var(--edu)}
 .item .nm{font-family:"Gowun Batang",serif;font-size:16.5px;font-weight:700}
 .item .meta{font-size:11px;color:var(--ink2);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+/* 앱에 이미 받아둔 회차 */
+.item .meta .kept{font-weight:700;color:var(--edu);border:1px solid var(--edu);border-radius:999px;padding:0 7px;font-size:10px;letter-spacing:.5px}
 .badge{padding:1px 7px;border:1px solid currentColor;font-size:10px;font-weight:600;letter-spacing:.5px}
 .k-gov .badge{color:var(--gov)}
 .k-edu .badge{color:var(--edu)}
@@ -341,22 +357,31 @@ footer b{color:var(--ink)}
         <div class="pills" id="favBox"></div>
         <div class="pill-hint" id="favHint" hidden>탭하면 삭제 · 꾹 눌러 끌면 순서 변경 (키보드는 ← →)</div>
       </div>
-      <div class="row">
-        <div class="lab">학년</div>
-        <div class="omr" id="gradeBox"></div>
+      <div class="row" id="pickShut" hidden>
+        <div class="lab">과목</div>
+        <button type="button" class="picksum" id="pickOpen" aria-expanded="false" aria-controls="pick">
+          <span id="pickText"></span><span class="cv">바꾸기</span>
+        </button>
       </div>
-      <div class="row grid2">
-        <div>
-          <div class="lab">과목군</div>
-          <select id="grp"></select>
+      <div id="pick">
+        <div class="row">
+          <div class="lab">학년</div>
+          <div class="omr" id="gradeBox"></div>
         </div>
-        <div>
-          <div class="lab">과목</div>
-          <div class="subrow">
-            <select id="sub"></select>
-            <button type="button" class="star" id="favToggle" aria-pressed="false" aria-label="내 과목에 저장">★</button>
+        <div class="row grid2">
+          <div>
+            <div class="lab">과목군</div>
+            <select id="grp"></select>
+          </div>
+          <div>
+            <div class="lab">과목</div>
+            <div class="subrow">
+              <select id="sub"></select>
+              <button type="button" class="star" id="favToggle" aria-pressed="false" aria-label="내 과목에 저장">★</button>
+            </div>
           </div>
         </div>
+        <div class="row pickfold"><button type="button" class="picksum shut" id="pickShutBtn">접기</button></div>
       </div>
       <div class="row grid2">
         <div>
@@ -665,6 +690,30 @@ function syncFav(){
   favToggle.setAttribute("aria-label", on ? "내 과목에서 빼기" : "내 과목에 저장");
   renderFavs();
 }
+
+/* ── 과목 고르개 접기 ──────────────────────────────────────────────
+   자료가 첫 화면에서 한 화면 아래에 있었다. 학년·과목군·과목을 접으면 그만큼
+   올라온다. 내 과목·출제 기관·연도 이동은 접어도 남는다 — 접힌 채로도 쓰는
+   것들이라 감춰봐야 다시 펴게 만들 뿐이다. */
+const PICK_KEY = "gijul.pick.v1";
+const pick=$("#pick"), pickShut=$("#pickShut"), pickText=$("#pickText");
+
+function setPick(open){
+  pick.hidden = !open;
+  pickShut.hidden = open;
+  $("#pickOpen").setAttribute("aria-expanded", open);
+  try{ localStorage.setItem(PICK_KEY, open ? "open" : "shut"); }catch(e){}
+}
+function syncPickText(){
+  const g = GRADE_SHORT[sel.grade] || sel.grade;
+  const item = (SUBINDEX[sel.grade+"/"+sel.sub] || {}).name || "";
+  pickText.textContent = `${g} · ${item}`;
+}
+$("#pickOpen").onclick = ()=> setPick(true);
+$("#pickShutBtn").onclick = ()=>{
+  setPick(false);
+  pickShut.scrollIntoView({ block:"nearest" });   /* 접느라 화면이 튀지 않게 */
+};
 
 favToggle.onclick = ()=>{
   const i = favIndex();
@@ -975,8 +1024,9 @@ const NATIVE = typeof GijulNative !== "undefined" && GijulNative;
 window.gijulSaveResult = (ok, count, message)=>{
   sheetAll.disabled = false;
   sheetAll.textContent = ALL_LABEL_NATIVE;
-  if(vaultMode){ openVault(); return; }        /* 보관함에서 지운 뒤라면 목록을 다시 그린다 */
+  if(vaultMode){ openVault(); render(); return; }  /* 보관함에서 지운 뒤라면 목록을 다시 그린다 */
   sheetNote.innerHTML = ok ? `<b>${message}</b>` : message;
+  if(ok) render();                                  /* 방금 담은 회차에 표시가 붙게 */
 };
 
 /* ── 받아둔 자료 (앱 전용) ────────────────────────────────────────────
@@ -1058,9 +1108,22 @@ out.addEventListener("click", e=>{
   if(e.target.closest("#vaultBtn")) openVault(e.target.closest("#vaultBtn"));
 });
 
-function saveViaNative(){
-  const folder = `${sheetRow.y} ${sheetRow.title} ${sheetRow.sub}`
+/* 저장 폴더 이름. 목록의 '담김' 표시가 이 이름으로 대조하므로, 저장하는 쪽과
+   대조하는 쪽이 같은 함수를 써야 한다 — 갈라지면 표시가 조용히 사라진다. */
+function folderName(y, title, sub){
+  return `${y} ${title} ${sub}`
     .replace(/[\/\\:*?"<>|\x00-\x1f]/g, "").replace(/\s+/g, " ").trim();
+}
+
+/* 받아둔 회차 폴더 이름들. 앱이 아니면 늘 빈 집합이다. */
+function savedFolders(){
+  if(!NATIVE) return new Set();
+  try{ return new Set(JSON.parse(NATIVE.listSaved() || "[]").map(x=>x.folder)); }
+  catch(e){ return new Set(); }
+}
+
+function saveViaNative(){
+  const folder = folderName(sheetRow.y, sheetRow.title, sheetRow.sub);
   sheetAll.disabled = true;
   sheetAll.textContent = "앱에 맡기는 중…";
   sheetNote.textContent = "처음 저장할 때는 폴더를 한 번 고르면, 이후로는 그 폴더에 담깁니다.";
@@ -1169,6 +1232,8 @@ function render(){
     .sort((a,b)=>b-a);
 
   const subName=GROUPS[sel.grade][sel.grp][1].find(x=>x[1]===sel.sub)[0];
+  syncPickText();
+  const saved = savedFolders();
   ROWS.length=0;
   let total=0, html="";
   for(const y of keys){
@@ -1195,10 +1260,14 @@ function render(){
         send = `<button type="button" class="send" data-i="${ROWS.length-1}">보내기</button>`;
       }
 
+      /* 이미 받아둔 회차는 표시한다 — 같은 것을 또 받지 않게, 그리고 연결이
+         없을 때 무엇을 볼 수 있는지 목록에서 바로 보이게. */
+      const inVault = saved.has(folderName(y, title, subName));
+
       html += `<div class="item k-${k}">
         <div>
           <div class="nm">${title}</div>
-          <div class="meta"><span class="badge">${kindLabel(k)}</span><span>${date.slice(0,4)}.${date.slice(4,6)}.${date.slice(6,8)}${hak}</span></div>
+          <div class="meta"><span class="badge">${kindLabel(k)}</span><span>${date.slice(0,4)}.${date.slice(4,6)}.${date.slice(6,8)}${hak}</span>${inVault?`<span class="kept">담김</span>`:""}</div>
         </div>
         <div class="acts">
           ${pu?`<a class="q" href="${pu}" target="_blank" rel="noopener">문제</a>`:`<span class="off">문제</span>`}
@@ -1291,6 +1360,12 @@ if("serviceWorker" in navigator){
   const start = (!incoming && parseHash()) || loadLast();
   if(start) applyState(start); else fillGroups();
   syncFav();
+  /* 처음 온 사람에게는 펴 둔다 — 고르개가 곧 사용법이라 접어두면 시작을 못 한다.
+     내 과목이 있으면 알약으로 옮겨다니므로 접은 채로 연다. */
+  let pickPref = null;
+  try{ pickPref = localStorage.getItem(PICK_KEY); }catch(e){}
+  setPick(pickPref ? pickPref === "open" : favs.length === 0);
+  syncPickText();
   out.innerHTML=`<div class="empty">자료를 불러오는 중입니다…</div>`;
   try{
     DB = await loadDB();
