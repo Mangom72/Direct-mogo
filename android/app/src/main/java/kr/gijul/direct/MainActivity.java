@@ -209,18 +209,21 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public String appVersion() { return updater.version(); }
 
-        /* 새 버전 확인은 네트워크를 타므로 결과를 돌려줄 수 없다.
-           페이지는 window.gijulUpdate(state, message)로 받는다. */
+        /**
+         * 새 버전 확인. 실행할 때마다 부르므로 조용해야 한다 — 새 버전이 있을 때만
+         * 페이지에 알린다. announce가 켜져 있으면(사용자가 직접 눌렀으면) 최신이라는
+         * 사실도 알린다. 결과는 네트워크를 타므로 돌려주지 못하고 창구로 넘어간다.
+         */
         @JavascriptInterface
-        public void checkUpdate(boolean force) {
+        public void checkUpdate(boolean announce) {
             io.execute(() -> {
-                String r = updater.check(force);
+                String r = updater.check();
                 try {
                     JSONObject o = new JSONObject(r);
                     if (!"available".equals(o.optString("state"))) {
                         /* 저장 결과 창구(gijulSaveResult)로 보내면 안 된다 — 그쪽은
                            보내기 시트를 되살리고 보관함을 다시 연다. */
-                        if (force) {
+                        if (announce) {
                             boolean bad = "error".equals(o.optString("state"));
                             String js = "window.gijulUpdate && window.gijulUpdate("
                                     + JSONObject.quote(bad ? "error" : "latest") + ","
