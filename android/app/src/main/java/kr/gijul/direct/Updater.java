@@ -1,9 +1,7 @@
 package kr.gijul.direct;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
@@ -49,11 +47,6 @@ class Updater {
 
     private static final String TAG = "기출직행";
     private static final String MANIFEST = "https://mangom72.github.io/Direct-mogo/app/latest.json";
-    private static final String PREFS = "gijul.update";
-    private static final String LAST_CHECK = "lastCheck";
-
-    /** 자동 확인 간격. 갱신이 잦지 않으므로 자주 물어볼 이유가 없다. */
-    private static final long EVERY = 6 * 60 * 60 * 1000L;
     private static final int MAX_APK = 64 * 1024 * 1024;   // 명세가 거짓말을 해도 디스크를 채우지 못하게
 
     private final Activity act;
@@ -64,17 +57,14 @@ class Updater {
     // ── 확인 ────────────────────────────────────────────────────────────
 
     /**
-     * @param force 사용자가 직접 눌렀는지. 자동 실행이면 간격을 지킨다.
+     * 명세를 읽어 새 버전이 있는지 본다. 실행할 때마다 부른다 — 명세가 200바이트
+     * 남짓이라 아낄 것이 없고, 미루면 고쳐둔 것이 며칠씩 사용자에게 닿지 않는다.
+     *
      * @return 페이지에 돌려줄 JSON. state = none|available|error
      */
-    String check(boolean force) {
-        SharedPreferences p = act.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        long now = System.currentTimeMillis();
-        if (!force && now - p.getLong(LAST_CHECK, 0) < EVERY) return state("none");
-
+    String check() {
         try {
             JSONObject m = new JSONObject(get(MANIFEST));
-            p.edit().putLong(LAST_CHECK, now).apply();
 
             long here = installedCode();
             long there = m.getLong("versionCode");
