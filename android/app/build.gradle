@@ -20,8 +20,8 @@ android {
         applicationId 'kr.gijul.direct'
         minSdk 24               // SAF(문서 트리) 지속 권한이 안정적으로 되는 하한
         targetSdk 34
-        versionCode 7
-        versionName '1.6'
+        versionCode 8
+        versionName '1.7'
     }
     signingConfigs {
         release {
@@ -57,4 +57,5 @@ android {
 dependencies {
     implementation 'androidx.core:core:1.13.1'      // FileProvider
     implementation 'androidx.webkit:webkit:1.11.0'  // 다크모드 연동
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'  // 문제지 페이지를 필요한 만큼만 그린다
 }
