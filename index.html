@@ -73,8 +73,10 @@ body{
   padding:11px 14px;margin-bottom:14px;font-size:12.5px;line-height:1.6;
   position:sticky;top:24px;z-index:30;box-shadow:0 7px 20px var(--shadow);
 }
-.notice span{flex:1;min-width:180px}
-.notice .notice-acts{display:flex;gap:6px;flex:none}
+.notice span{flex:1 1 auto;min-width:0}
+/* 버튼은 막대 오른쪽 끝에 붙인다. margin-left:auto로 못박아 두면 글 길이나
+   줄바꿈과 무관하게 늘 오른쪽 여백에 정확히 닿는다. */
+.notice .notice-acts{display:flex;gap:6px;flex:none;margin-left:auto}
 .notice button{
   font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;
   padding:7px 14px;border:1.2px solid var(--ink);border-radius:999px;background:var(--ink);color:var(--card);
