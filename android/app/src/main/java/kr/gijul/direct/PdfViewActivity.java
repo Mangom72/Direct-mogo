@@ -66,6 +66,7 @@ public class PdfViewActivity extends Activity {
     private Stage stage;
     private RecyclerView list;
     private TextView status;
+    private TextView pageLabel;
     private PdfRenderer pdf;
     private ParcelFileDescriptor fd;
     private Bitmap image;               // PNG일 때
@@ -119,6 +120,15 @@ public class PdfViewActivity extends Activity {
         title.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
         bar.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
+        /* 몇 쪽짜리인지, 지금 어디인지. 20쪽 문제지를 위치 감각 없이 넘기게 두면
+           찾던 문항을 지나쳤는지도 모른다. 한 장짜리(정답 이미지)면 숨긴다. */
+        pageLabel = new TextView(this);
+        pageLabel.setTextColor(ink);
+        pageLabel.setTextSize(13);
+        pageLabel.setPadding(0, 0, dp(10), 0);
+        pageLabel.setVisibility(View.GONE);
+        bar.addView(pageLabel);
+
         /* 앱 안에서 읽는 게 기본이지만, 필기 앱이나 인쇄로 넘기고 싶을 때가 있다 */
         Button out = new Button(this);
         out.setText("다른 앱");
@@ -134,6 +144,9 @@ public class PdfViewActivity extends Activity {
         list = new RecyclerView(this);
         list.setLayoutManager(new LinearLayoutManager(this));
         list.setItemViewCacheSize(1);          // 확대 상태에서 비트맵이 쌓이지 않게
+        list.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override public void onScrolled(@NonNull RecyclerView v, int dx, int dy) { showPage(); }
+        });
         stage.addView(list, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
@@ -240,6 +253,18 @@ public class PdfViewActivity extends Activity {
 
     private int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
 
+    /** 화면을 가장 많이 차지한 쪽을 '지금 쪽'으로 본다 */
+    private void showPage() {
+        RecyclerView.Adapter<?> a = list.getAdapter();
+        LinearLayoutManager lm = (LinearLayoutManager) list.getLayoutManager();
+        if (a == null || lm == null || a.getItemCount() <= 1) return;
+        int i = lm.findFirstCompletelyVisibleItemPosition();
+        if (i == RecyclerView.NO_POSITION) i = lm.findFirstVisibleItemPosition();
+        if (i == RecyclerView.NO_POSITION) return;
+        pageLabel.setText((i + 1) + " / " + a.getItemCount());
+        pageLabel.setVisibility(View.VISIBLE);
+    }
+
     // ── 읽어들이기 ──────────────────────────────────────────────────────
 
     private void fetch(String url) {
@@ -301,6 +326,7 @@ public class PdfViewActivity extends Activity {
             runOnUiThread(() -> {
                 status.setVisibility(View.GONE);
                 list.setAdapter(new Pages());
+                list.post(this::showPage);      // 스크롤하기 전에도 '1 / 16'이 보이게
             });
         } catch (Exception e) {
             Log.w(TAG, "열지 못했습니다: " + f, e);
