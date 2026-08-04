@@ -62,12 +62,16 @@ body{
 }
 .wrap{max-width:900px;margin:0 auto}
 
-/* 알림 막대 — 과목 가져오기 / 새 자료 안내에 함께 쓴다 */
+/* 알림 막대 — 과목 가져오기 / 새 자료 안내에 함께 쓴다.
+   sticky라서 흐름 안에 자리를 차지한 채(맨 위에서는 지금까지와 같은 자리) 아래로
+   내려가도 화면 같은 높이에 붙어 있는다. top은 body의 위 여백과 같은 값이어야
+   맨 위에서 보던 위치가 그대로 유지된다. 시트(z-index 50)보다는 아래에 둔다. */
 .notice[hidden]{display:none}
 .notice{
   display:flex;align-items:center;gap:12px;flex-wrap:wrap;
   background:var(--card);border:1.5px solid var(--ink);border-left-width:5px;border-left-color:var(--mark);
   padding:11px 14px;margin-bottom:14px;font-size:12.5px;line-height:1.6;
+  position:sticky;top:24px;z-index:30;box-shadow:0 7px 20px var(--shadow);
 }
 .notice span{flex:1;min-width:180px}
 .notice .notice-acts{display:flex;gap:6px;flex:none}
@@ -1237,7 +1241,13 @@ if(NATIVE && NATIVE.checkUpdate){
     else if(state === "latest") showNotice(message || "이미 최신 버전입니다.", "", null);
     else if(state === "error") showNotice(message || "업데이트하지 못했습니다.", "", null);
   };
+  /* 실행할 때마다 확인한다. 새 버전이 없으면 아무 말도 하지 않는다. */
   addEventListener("load", ()=>{ try{ NATIVE.checkUpdate(false); }catch(e){} });
+  /* 앱을 다시 앞으로 불러왔을 때도 — 며칠씩 띄워둔 채 쓰는 경우가 있다.
+     visibilitychange는 document에서 난다. */
+  document.addEventListener("visibilitychange", ()=>{
+    if(!document.hidden){ try{ NATIVE.checkUpdate(false); }catch(e){} }
+  });
 
   /* 판 정보. 무엇이 깔려 있는지 알아야 문제를 이야기할 수 있다 — 앱에서만 보인다. */
   try{
