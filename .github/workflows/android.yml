@@ -7,6 +7,9 @@ on:
       - 'android/**'
       - '.github/workflows/android.yml'
 
+permissions:
+  contents: write        # 서명된 빌드를 app/ 에 올려 커밋한다
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -63,3 +66,22 @@ jobs:
             android/app/build/outputs/apk/release/app-release.apk
             android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      # 앱은 app/latest.json을 읽어 스스로 새 버전을 찾는다. 서명된 빌드일 때만
+      # 올린다 — 서명이 다른 APK는 기기가 어차피 거부하므로 올려봐야 해롭다.
+      # versionCode가 늘지 않았으면 스크립트가 스스로 멈춘다.
+      - name: 사이트에 올리기
+        if: ${{ env.release == '1' && github.ref == 'refs/heads/main' }}
+        env:
+          NOTES: ${{ github.event.head_commit.message }}
+        run: |
+          # 알림 막대에 들어가므로 커밋 메시지의 첫 줄만 쓴다
+          if python3 tools/publish_apk.py --notes "$(printf %s "$NOTES" | head -1)"; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add app
+            git diff --cached --quiet || git commit -m "Publish the app update manifest"
+            git push
+          else
+            echo "올릴 새 판본이 없습니다 — 넘어갑니다"
+          fi
