@@ -80,6 +80,8 @@ public class PdfViewActivity extends Activity {
     private static final float BASE_SCALE = 0.45f;
     /* 한 장이 가질 수 있는 최대 폭. 넘어가면 비트맵 하나가 힙을 통째로 먹는다. */
     private static final int MAX_PAGE_PX = 2200;
+    /** 밑그림 한 장의 최대 폭. 이건 자리만 채우면 되므로 화면이 커도 키우지 않는다. */
+    private static final int BASE_MAX_PX = 640;
 
     private final ExecutorService io = Executors.newSingleThreadExecutor();
 
@@ -697,7 +699,8 @@ public class PdfViewActivity extends Activity {
             ahead(i);
         }
 
-        void redraw() { if (shown >= 0) show(shown); }
+        /** 다 그려진 비트맵을 그대로 꽂는다. 이 쪽이 아직 이 자리면. */
+        void put(int i, Bitmap b) { if (shown == i) iv.setImageBitmap(b); }
 
         void clear() { iv.setImageDrawable(null); }
     }
@@ -718,10 +721,19 @@ public class PdfViewActivity extends Activity {
                 @Override protected int sizeOf(Integer k, Bitmap b) { return b.getByteCount(); }
             };
 
-    /** 지금 필요한 선명도. 확대한 만큼 올리되 한 장이 감당 못 할 크기가 되기 전에 멈춘다. */
+    /**
+     * 지금 필요한 선명도.
+     *
+     * 확대한 만큼 올리되, 한 장이 캐시의 1/4을 넘지 않게 자른다. 이 한도가 없으면
+     * 큰 화면에서 한 장이 캐시를 거의 다 차지해, 이웃 쪽을 그리는 족족 서로를
+     * 밀어낸다. 그러면 방금 그린 쪽이 화면에 붙기도 전에 사라져 다시 그리게 되고,
+     * 렌더링 스레드가 그 자리를 맴돌면서 정작 넘긴 쪽이 한참을 기다린다.
+     */
     private int wantW() {
         int w = Math.round(renderW * Math.max(1f, Math.min(zoom, 2f)));
-        return Math.min(w, MAX_PAGE_PX);
+        long each = sharp.maxSize() / 4;
+        int fit = (int) Math.sqrt(each / (1.45 * 4));
+        return Math.max(360, Math.min(Math.min(w, MAX_PAGE_PX), fit));
     }
 
     private void askSharp(int i) {
@@ -742,11 +754,17 @@ public class PdfViewActivity extends Activity {
         });
     }
 
-    /** 다 그렸으니 그 쪽이 아직 화면에 있으면 갈아 끼운다 */
+    /**
+     * 다 그렸으니 그 쪽이 아직 화면에 있으면 갈아 끼운다.
+     *
+     * 여기서 show()를 다시 부르면 안 된다. show()는 캐시를 다시 보고 없으면 또
+     * 요청을 거는데, 그 사이 방금 넣은 것이 밀려났으면 같은 요청이 무한히 되풀이된다.
+     * 손에 든 비트맵을 그냥 꽂는다.
+     */
     private void post(int i, Bitmap b) {
         list.post(() -> {
             RecyclerView.ViewHolder h = list.findViewHolderForAdapterPosition(i);
-            if (h instanceof Page) ((Page) h).redraw();
+            if (h instanceof Page) ((Page) h).put(i, b);
         });
     }
 
@@ -793,7 +811,9 @@ public class PdfViewActivity extends Activity {
         long budget = Runtime.getRuntime().maxMemory() / 8;
         int w = renderW;
         if (w <= 0) return;
-        int lowW = Math.round(w * BASE_SCALE);
+        /* 밑그림은 넘길 때 잠깐 보이는 것이라 늘 싸야 한다. 쪽이 적다고 커지면
+           오히려 쪽 적은 자료가 메모리를 더 먹는 거꾸로 된 일이 벌어진다. */
+        int lowW = Math.min(Math.round(w * BASE_SCALE), BASE_MAX_PX);
         /* 한 장 = 폭 * (폭*1.45) * 4바이트. 다 합쳐 몫을 넘으면 그만큼 낮춘다. */
         double each = (double) lowW * lowW * 1.45 * 4;
         if (each * n > budget) lowW = (int) Math.sqrt(budget / (n * 1.45 * 4));
