@@ -1,8 +1,8 @@
 {
-  "versionCode": 13,
-  "versionName": "2.2",
+  "versionCode": 14,
+  "versionName": "2.3",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1836271,
-  "sha256": "ce473389ece29a39a16e4835d0ebf22de6f86e8608e7c9d27aca608fbfe2d591",
-  "notes": "손가락 사이를 중심으로 확대, 축소 시 아랫쪽 미리 그리기"
+  "size": 1836807,
+  "sha256": "af4d15a426d8d7d8644aa785c7b29cd1da486f041ff15133da28c7b21862120c",
+  "notes": "확대 중에는 손가락 우선, 중앙 정렬은 손을 뗀 뒤"
 }
