@@ -119,6 +119,30 @@ public class MainActivity extends Activity {
         web.evaluateJavascript("window.gijulThemeChanged && window.gijulThemeChanged()", null);
     }
 
+    /* ── 창구에서 들어오는 값 검증 ──────────────────────────────────────
+     *
+     * 페이지에서 넘어오는 값은 신뢰 경계를 건너온 것이다. 지금 이 창구를 부르는 게
+     * 우리 페이지뿐이라 해도, 경계에서 확인하지 않으면 그건 경계가 아니다.
+     */
+
+    /** 폴더·파일 이름 한 마디. 경로를 벗어나게 만드는 글자는 전부 막는다. */
+    static String safe(String s) throws Exception {
+        if (s == null || s.isEmpty() || s.equals(".") || s.equals("..")
+                || s.indexOf('/') >= 0 || s.indexOf('\\') >= 0 || s.indexOf('\0') >= 0)
+            throw new Exception("허용되지 않는 이름입니다");
+        return s;
+    }
+
+    /** 자료를 받아올 수 있는 주소인지. EBSi 말고는 받지 않는다. */
+    static String fromEbsi(String url) throws Exception {
+        Uri u = Uri.parse(url == null ? "" : url);
+        String host = u.getHost();
+        if (!"https".equals(u.getScheme()) || host == null
+                || !(host.equals("ebsi.co.kr") || host.endsWith(".ebsi.co.kr")))
+            throw new Exception("허용되지 않는 주소입니다");
+        return url;
+    }
+
     /** 우리가 직접 그릴 수 있는 자료인지 — 문제·해설은 PDF, 정답은 PNG다 */
     private static boolean isPaper(String url) {
         String p = Uri.parse(url).getPath();
@@ -168,7 +192,9 @@ public class MainActivity extends Activity {
         /** 받아둔 파일을 기기의 뷰어로 연다 */
         @JavascriptInterface
         public void openSaved(String folder, String name) {
-            File f = new File(new File(root(), folder), name);
+            File f;
+            try { f = new File(new File(root(), safe(folder)), safe(name)); }
+            catch (Exception e) { report(false, 0, "잘못된 이름입니다"); return; }
             if (!f.isFile()) { report(false, 0, "파일이 없습니다"); return; }
             try {
                 Uri u = FileProvider.getUriForFile(MainActivity.this, AUTHORITY, f);
@@ -186,9 +212,14 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void deleteSaved(String folder) {
             int n = 0;
-            File[] dirs = folder == null || folder.isEmpty()
-                    ? root().listFiles(File::isDirectory)
-                    : new File[]{ new File(root(), folder) };
+            File[] dirs;
+            if (folder == null || folder.isEmpty()) {
+                dirs = root().listFiles(File::isDirectory);
+            } else {
+                /* 여기가 재귀 삭제라 특히 조심한다 */
+                try { dirs = new File[]{ new File(root(), safe(folder)) }; }
+                catch (Exception e) { report(false, 0, "잘못된 이름입니다"); return; }
+            }
             if (dirs != null) for (File d : dirs) if (rmrf(d)) n++;
             report(true, n, n + "개 회차를 지웠습니다");
         }
@@ -270,14 +301,14 @@ public class MainActivity extends Activity {
         try {
             JSONObject o = new JSONObject(json);
             JSONArray files = o.getJSONArray("files");
-            where = o.getString("folder");
+            where = safe(o.getString("folder"));
             File dir = new File(root(), where);
             if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("폴더를 만들지 못했습니다");
 
             for (int i = 0; i < files.length(); i++) {
                 JSONObject f = files.getJSONObject(i);
                 try {
-                    writeOne(dir, f.getString("name"), f.getString("url"));
+                    writeOne(dir, safe(f.getString("name")), fromEbsi(f.getString("url")));
                     ok++;
                 } catch (Exception e) {
                     Log.w(TAG, "파일 저장 실패: " + f.optString("name"), e);
@@ -303,7 +334,7 @@ public class MainActivity extends Activity {
     }
 
     private void download(String url, File to) throws Exception {
-        HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+        HttpURLConnection conn = (HttpURLConnection) new URL(fromEbsi(url)).openConnection();
         conn.setConnectTimeout(20000);
         conn.setReadTimeout(60000);
         conn.setInstanceFollowRedirects(true);
@@ -341,6 +372,7 @@ public class MainActivity extends Activity {
      */
     private void share(String name, String url) {
         try {
+            safe(name);
             File f = findSaved(name);
             if (f == null) {
                 File dir = new File(getCacheDir(), "share");
