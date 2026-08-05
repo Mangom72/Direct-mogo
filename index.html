@@ -746,6 +746,12 @@ function kindOf(title){
   return (title.startsWith("수능") || title.includes("평가원")) ? "gov" : "edu";
 }
 function kindLabel(k){ return k==="gov" ? "평가원" : "교육청"; }
+/* 페이로드는 EBSi에서 긁어온 값이라 우리가 쓴 글이 아니다. 화면에 꽂기 전에
+   막을 것은 여기서 막는다 — 스크래퍼가 무엇을 통과시키든 이 줄에서 멈춘다. */
+const esc = v => String(v == null ? "" : v)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
 function url(code, date){
   if(!code) return null;
   if(code[0]==="!") return BASE + code.slice(1);
@@ -1025,7 +1031,7 @@ window.gijulSaveResult = (ok, count, message)=>{
   sheetAll.disabled = false;
   sheetAll.textContent = ALL_LABEL_NATIVE;
   if(vaultMode){ openVault(); render(); return; }  /* 보관함에서 지운 뒤라면 목록을 다시 그린다 */
-  sheetNote.innerHTML = ok ? `<b>${message}</b>` : message;
+  sheetNote.innerHTML = ok ? `<b>${esc(message)}</b>` : esc(message);
   if(ok) render();                                  /* 방금 담은 회차에 표시가 붙게 */
 };
 
@@ -1266,13 +1272,13 @@ function render(){
 
       html += `<div class="item k-${k}">
         <div>
-          <div class="nm">${title}</div>
+          <div class="nm">${esc(title)}</div>
           <div class="meta"><span class="badge">${kindLabel(k)}</span><span>${date.slice(0,4)}.${date.slice(4,6)}.${date.slice(6,8)}${hak}</span>${inVault?`<span class="kept">담김</span>`:""}</div>
         </div>
         <div class="acts">
-          ${pu?`<a class="q" href="${pu}" target="_blank" rel="noopener">문제</a>`:`<span class="off">문제</span>`}
-          ${au?`<a class="a" href="${au}" target="_blank" rel="noopener">정답</a>`:`<span class="off">정답</span>`}
-          ${hu?`<a href="${hu}" target="_blank" rel="noopener">해설</a>`:`<span class="off">해설</span>`}
+          ${pu?`<a class="q" href="${esc(pu)}" target="_blank" rel="noopener">문제</a>`:`<span class="off">문제</span>`}
+          ${au?`<a class="a" href="${esc(au)}" target="_blank" rel="noopener">정답</a>`:`<span class="off">정답</span>`}
+          ${hu?`<a href="${esc(hu)}" target="_blank" rel="noopener">해설</a>`:`<span class="off">해설</span>`}
           ${send}
         </div>
       </div>`;
@@ -1325,7 +1331,7 @@ if(NATIVE && NATIVE.checkUpdate){
     const v = JSON.parse(NATIVE.appVersion() || "{}");
     if(v.name){
       const box = $("#appInfo");
-      box.innerHTML = `<span>기출 직행 앱 <b>${v.name}</b> (빌드 ${v.code})</span>`;
+      box.innerHTML = `<span>기출 직행 앱 <b>${esc(v.name)}</b> (빌드 ${esc(v.code)})</span>`;
       const btn = document.createElement("button");
       btn.type = "button";
       btn.textContent = "업데이트 확인";
@@ -1374,7 +1380,7 @@ if("serviceWorker" in navigator){
     syncURL();            /* #subs= 였다면 이 시점에 보통 주소로 정리된다 */
     if(incoming) offerImport(incoming);
   }catch(e){
-    out.innerHTML=`<div class="empty">자료를 불러오지 못했습니다. (${e.message})<br>
+    out.innerHTML=`<div class="empty">자료를 불러오지 못했습니다. (${esc(e.message)})<br>
       <a href="https://www.ebsi.co.kr/ebs/xip/xipc/previousPaperList.ebs?targetCd=D300" target="_blank" rel="noopener" style="color:var(--mark);font-weight:700">→ EBSi 기출문제 페이지에서 직접 찾기</a></div>`;
   }
 })();

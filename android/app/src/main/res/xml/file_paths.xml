@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 밖으로 넘길 수 있는 범위. 넓게 열어둘 이유가 없어 실제로 쓰는 곳만 적는다. -->
 <paths>
-    <!-- 앱 데이터 폴더 전체. 받아둔 자료를 뷰어에 넘길 때만 쓴다 -->
+    <!-- 받아둔 자료. 회차별 하위 폴더가 이 아래에 생긴다 -->
     <external-files-path name="saved" path="." />
+    <!-- 외부 저장소가 없는 기기에서 위 경로 대신 쓰인다 -->
     <files-path name="saved_internal" path="." />
-    <cache-path name="share" path="." />
+    <!-- 임시로 받아둔 것들. 캐시 전체가 아니라 이 세 곳만 -->
+    <cache-path name="share" path="share/" />
+    <cache-path name="update" path="update/" />
+    <cache-path name="view" path="view/" />
 </paths>

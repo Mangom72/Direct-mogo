@@ -98,7 +98,9 @@ def parse_rows(html):
             continue
         # '고3 7월 학평(인천)&nbsp;언어와 매체&nbsp;' → 회차명만 남긴다.
         # 구분자가 &nbsp;이므로 공백으로 바꾸기 전에 쪼개야 한다.
-        raw = unescape(re.sub(r"<[^>]+>", "", title.group(1)))
+        # 순서가 중요하다. 태그를 먼저 지우고 엔티티를 되돌리면 &lt;img&gt; 같은 값이
+        # 되돌려지면서 진짜 태그가 되어 그대로 페이로드에 들어간다.
+        raw = re.sub(r"<[^>]+>", "", unescape(title.group(1)))
         head, _, tail = raw.partition("\xa0")
         # '2013 고3 7월 학평(인천)'처럼 연도·학년이 앞에 붙어 오기도 한다
         label = re.sub(r"^\s*(\d{4}\s+)?고[123]\s+", "", head).strip()

@@ -1,8 +1,8 @@
 {
-  "versionCode": 26,
-  "versionName": "3.5",
+  "versionCode": 27,
+  "versionName": "3.6",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1840315,
-  "sha256": "b8f599df48e7618828b9e321c82073924ef6ed3f7829918c1ca76a10f7180bc9",
-  "notes": "정답 이미지가 세로로 눌려 보이던 문제 수정"
+  "size": 1840623,
+  "sha256": "c988978d5893315761164f73d7a60f9f54f1af0cde20ff4e79f05ec814b861ce",
+  "notes": "보안 점검 반영 — 경로·주소 검증, 노출 범위 축소"
 }
