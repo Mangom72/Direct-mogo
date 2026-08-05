@@ -601,9 +601,9 @@ public class PdfViewActivity extends Activity {
 
             File dir = new File(getCacheDir(), "view");
             if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("임시 폴더를 만들지 못했습니다");
-            File to = new File(dir, nameOf(url));
+            File to = new File(dir, MainActivity.safe(nameOf(url)));
             if (!to.isFile() || to.length() == 0) {
-                HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
+                HttpURLConnection c = (HttpURLConnection) new URL(MainActivity.fromEbsi(url)).openConnection();
                 c.setConnectTimeout(20000);
                 c.setReadTimeout(60000);
                 c.setInstanceFollowRedirects(true);
