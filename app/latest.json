@@ -1,8 +1,8 @@
 {
-  "versionCode": 23,
-  "versionName": "3.2",
+  "versionCode": 24,
+  "versionName": "3.3",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1839571,
-  "sha256": "e471e943562268535a4b580115a01a347bdb1cc328cc20afe38dc1769a71d6ef",
-  "notes": "스크롤 막대를 잡아 끌 수 있고, 넘길 때 멈추던 문제 수정"
+  "size": 1840051,
+  "sha256": "239f5cd256e3e0841fff4e904db7794794b368b866f8a4a4f27472a5d2c86eab",
+  "notes": "멈추거나 잡거나 머물면 제 해상도로 — 넘길 때는 가볍게"
 }
