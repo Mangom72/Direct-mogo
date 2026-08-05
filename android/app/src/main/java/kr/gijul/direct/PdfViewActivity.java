@@ -724,7 +724,9 @@ public class PdfViewActivity extends Activity {
                갈아 끼울 때마다 높이가 1px씩 달라지고, 그때마다 배치가 돌면서 넘기던
                손이 멈춘다. 높이는 쪽의 가로세로비로 미리 정해두고 여기서는 안 건드린다. */
             iv.setAdjustViewBounds(false);
-            iv.setScaleType(ImageView.ScaleType.FIT_XY);
+            /* FIT_XY는 칸에 맞춰 잡아늘인다 — 높이 계산이 한 번이라도 어긋나면
+               그림이 찌그러진다. FIT_CENTER는 비율을 지키고 남는 데를 비운다. */
+            iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
             iv.setBackgroundColor(Color.WHITE);        // 문제지는 흰 종이다. 어두운 테마에서도 뒤집지 않는다.
             iv.setLayoutParams(new RecyclerView.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -751,10 +753,16 @@ public class PdfViewActivity extends Activity {
         void show(int i) {
             clear();
             shown = i;
-            if (image != null) { iv.setImageBitmap(image); return; }
-
             measureRender();
-            fixHeight(i);
+            if (image != null) {
+                /* 정답은 한 장짜리 이미지다. 여기서도 높이를 정해줘야 한다 —
+                   빠뜨렸더니 폭만 가득 늘어나고 높이는 원본 픽셀에 머물러
+                   세로로 눌린 그림이 나왔다. */
+                fixHeight(image.getHeight() / (float) image.getWidth());
+                set(image);
+                return;
+            }
+            fixHeight(ratio(i));
             /* 붙는다는 건 화면에 들어온다는 뜻이다. 배치가 끝나야 갱신되는 값을
                기다리면, 방금 넘어온 쪽의 요청이 옛 범위에 걸려 버려질 수 있다. */
             if (i < visFirst) visFirst = i;
@@ -788,10 +796,10 @@ public class PdfViewActivity extends Activity {
 
         private void set(Bitmap b) { shownW = b.getWidth(); iv.setImageBitmap(b); }
 
-        /** 쪽의 가로세로비로 높이를 못박는다. 그림이 바뀌어도 배치는 그대로다. */
-        private void fixHeight(int i) {
+        /** 가로세로비로 높이를 못박는다. 그림이 바뀌어도 배치는 그대로다. */
+        private void fixHeight(float r) {
             int w = renderW > 0 ? renderW : 720;
-            int h = Math.round(w * ratio(i));
+            int h = Math.round(w * r);
             ViewGroup.LayoutParams lp = iv.getLayoutParams();
             if (lp.height != h) { lp.height = h; iv.setLayoutParams(lp); }
         }
