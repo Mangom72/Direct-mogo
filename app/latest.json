@@ -1,8 +1,8 @@
 {
-  "versionCode": 19,
-  "versionName": "2.8",
+  "versionCode": 20,
+  "versionName": "2.9",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1838875,
-  "sha256": "e50b70ffb9faebaab2fe0f2d7b4e64d00b8cc9623fdc50e08f5effd3a6ae1408",
-  "notes": "화면 크기와 1:1로 렌더링 — 뭉개짐 수정"
+  "size": 1838983,
+  "sha256": "b1010c353c27640218eb06d96207f193b19210cc2ac113c9050ebb5e3f1ab829",
+  "notes": "첫 쪽 뭉개짐, 쪽 넘김이 될 때만 되던 문제, 축소 시 뭉개짐 수정"
 }

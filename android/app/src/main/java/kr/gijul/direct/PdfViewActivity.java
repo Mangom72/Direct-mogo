@@ -193,7 +193,7 @@ public class PdfViewActivity extends Activity {
         list.setHasFixedSize(true);
         list.setItemViewCacheSize(3);          // 왔다 갔다 할 때 다시 붙이지 않도록
         list.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override public void onScrolled(@NonNull RecyclerView v, int dx, int dy) { showPage(); }
+            @Override public void onScrolled(@NonNull RecyclerView v, int dx, int dy) { updateVisible(); }
         });
         stage.addView(list, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -221,7 +221,7 @@ public class PdfViewActivity extends Activity {
         topBtn.setVisibility(View.GONE);
         topBtn.setOnClickListener(v -> {
             list.scrollToPosition(0);
-            list.post(this::showPage);      // 배치가 끝나야 몇 쪽인지 제대로 읽힌다
+            list.post(this::resharp);       // 배치가 끝나야 어디에 있는지 제대로 읽힌다
         });
         FrameLayout.LayoutParams tp = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -254,7 +254,7 @@ public class PdfViewActivity extends Activity {
         chrome = on;
         bar.setVisibility(on ? View.VISIBLE : View.GONE);
         zoomPill.setVisibility(on ? View.VISIBLE : View.GONE);
-        topBtn.setVisibility(on && focus > 0 ? View.VISIBLE : View.GONE);
+        topBtn.setVisibility(on && visFirst > 0 ? View.VISIBLE : View.GONE);
         systemBars(on);
         stage.post(this::fitHeight);        // 무대가 커졌으니 목록 높이도 다시 잡는다
     }
@@ -331,7 +331,7 @@ public class PdfViewActivity extends Activity {
                        뒤에 늘리면 그 빈 자리가 눈에 보이므로, 최대로 줄였을 때를 미리
                        잡아둔다. 손짓 내내 재배치가 없고 아래도 비지 않는다. */
                     setListHeight(Math.round(stage.getHeight() / MIN_ZOOM));
-                    ahead(focus);
+                    resharp();
                     return true;
                 }
                 @Override
@@ -513,14 +513,27 @@ public class PdfViewActivity extends Activity {
 
     private int dp(int v) { return Math.round(v * getResources().getDisplayMetrics().density); }
 
-    /** 화면을 가장 많이 차지한 쪽을 '지금 쪽'으로 본다 */
-    private void showPage() {
+    /**
+     * 지금 화면에 무엇이 있는지 다시 잡는다.
+     *
+     * 예전에는 이 값을 항목이 붙을 때 정했는데, 붙는 순서는 화면 순서가 아니라서
+     * 결국 '마지막으로 붙은 쪽'이 기준이 됐다. 그 기준으로 요청을 걸러내니, 정작
+     * 보고 있는 쪽의 요청이 버려지는 일이 생겼다 — 될 때도 있고 안 될 때도 있던
+     * 이유가 이것이다. 기준은 스크롤 위치에서 온다.
+     */
+    private void updateVisible() {
         RecyclerView.Adapter<?> a = list.getAdapter();
         LinearLayoutManager lm = (LinearLayoutManager) list.getLayoutManager();
-        if (a == null || lm == null || a.getItemCount() <= 1) return;
+        if (a == null || lm == null) return;
+        int f = lm.findFirstVisibleItemPosition();
+        int l = lm.findLastVisibleItemPosition();
+        if (f == RecyclerView.NO_POSITION) return;
+        visFirst = f;
+        visLast = l == RecyclerView.NO_POSITION ? f : l;
+
+        if (a.getItemCount() <= 1) return;
         int i = lm.findFirstCompletelyVisibleItemPosition();
-        if (i == RecyclerView.NO_POSITION) i = lm.findFirstVisibleItemPosition();
-        if (i == RecyclerView.NO_POSITION) return;
+        if (i == RecyclerView.NO_POSITION) i = f;
         pageLabel.setText((i + 1) + " / " + a.getItemCount());
         pageLabel.setVisibility(View.VISIBLE);
         topBtn.setVisibility(chrome && i > 0 ? View.VISIBLE : View.GONE);
@@ -589,7 +602,7 @@ public class PdfViewActivity extends Activity {
                 list.setAdapter(new Pages());
                 list.post(() -> {
                     measureRender();
-                    showPage();
+                    updateVisible();
                     /* 첫 쪽은 폭을 재기 전에 붙었을 수 있다. 그때 건 요청은 폭을
                        몰라 그냥 돌아섰으므로, 여기서 한 번 더 건다. */
                     resharp();
@@ -675,6 +688,7 @@ public class PdfViewActivity extends Activity {
     private class Page extends RecyclerView.ViewHolder {
         private final ImageView iv;
         private int shown = -1;
+        private int shownW;        // 지금 붙어 있는 비트맵의 폭. 더 좁은 것으로 바꾸지 않으려고.
 
         Page(ImageView iv) { super(iv); this.iv = iv; }
 
@@ -683,26 +697,38 @@ public class PdfViewActivity extends Activity {
             shown = i;
             if (image != null) { iv.setImageBitmap(image); return; }
 
-            focus = i;
             measureRender();
+            /* 붙는다는 건 화면에 들어온다는 뜻이다. 배치가 끝나야 갱신되는 값을
+               기다리면, 방금 넘어온 쪽의 요청이 옛 범위에 걸려 버려질 수 있다. */
+            if (i < visFirst) visFirst = i;
+            if (i > visLast) visLast = i;
 
             /* 선명한 것이 있으면 그걸로. 없으면 밑그림을 먼저 깔아 빈 종이를 없애고,
                선명한 쪽은 뒤이어 덮어쓴다. */
             Bitmap s = sharp.get(i);
             if (s != null && s.getWidth() >= wantW() * 0.95f) {
-                iv.setImageBitmap(s);
+                set(s);
             } else {
                 Bitmap l = base.get(i);
-                if (l != null) iv.setImageBitmap(l);
+                if (l != null) set(l);
                 askSharp(i);
             }
-            ahead(i);
         }
 
-        /** 다 그려진 비트맵을 그대로 꽂는다. 이 쪽이 아직 이 자리면. */
-        void put(int i, Bitmap b) { if (shown == i) iv.setImageBitmap(b); }
+        /**
+         * 다 그려진 비트맵을 꽂는다.
+         *
+         * 지금 붙어 있는 것보다 좁으면 물린다. 이게 없으면 전 쪽 밑그림이 나중에
+         * 완성되면서 이미 제대로 그려진 쪽을 280px짜리로 덮어쓴다 — 열자마자 첫 쪽이
+         * 뭉개져 보이던 것이 바로 이것이었다.
+         */
+        void put(int i, Bitmap b) {
+            if (shown == i && b.getWidth() >= shownW) set(b);
+        }
 
-        void clear() { iv.setImageDrawable(null); }
+        private void set(Bitmap b) { shownW = b.getWidth(); iv.setImageBitmap(b); }
+
+        void clear() { iv.setImageDrawable(null); shownW = 0; }
     }
 
     /* ── 두 겹으로 그린다 ────────────────────────────────────────────────
@@ -732,14 +758,16 @@ public class PdfViewActivity extends Activity {
      */
     private int wantW() {
         if (renderW <= 0) return 0;
-        float z = Math.max(1f, Math.min(zoom, MAX_RENDER_ZOOM));
+        /* 표시될 크기 그대로. 줄였으면 줄여 그리는 것이 1:1이고, 그래야 여러 쪽이
+           보이는 축소 상태에서도 전부 제대로 그릴 여유가 생긴다. */
+        float z = Math.max(MIN_ZOOM, Math.min(zoom, MAX_RENDER_ZOOM));
         int want = Math.min(Math.round(renderW * z), HARD_MAX_PX);
 
         /* 확대해서 얻는 선명도는 힙이 감당하는 만큼만 가져간다 — 두 장은 들 수 있어야
            앞뒤로 넘길 때 매번 다시 그리지 않는다. 다만 바닥은 renderW다. 1배 화면에서
            표시 폭보다 작게 그리는 일만은 없어야 한다. 그게 뭉개짐이다. */
         int afford = (int) Math.sqrt((sharp.maxSize() / 2.0) / (1.45 * 4));
-        return Math.max(renderW, Math.min(want, afford));
+        return Math.max(Math.round(renderW * MIN_ZOOM), Math.min(want, afford));
     }
 
     private void askSharp(int i) {
@@ -747,7 +775,7 @@ public class PdfViewActivity extends Activity {
         if (!queued.add(i)) return;
         io.execute(() -> {
             try {
-                if (Math.abs(i - focus) > 2) return;   // 그 사이 손가락은 멀리 갔다
+                if (i < visFirst - 1 || i > visLast + 1) return;   // 그 사이 화면이 옮겨갔다
                 int w = wantW();
                 if (w <= 0) return;
                 Bitmap b = sharp.get(i);
@@ -775,24 +803,15 @@ public class PdfViewActivity extends Activity {
     }
 
     /**
-     * 제 해상도로 그리는 것은 보고 있는 쪽과 바로 앞뒤뿐이다.
+     * 화면에 있는 쪽 전부와 바로 앞뒤를 제 해상도로 맞춘다.
      *
-     * 더 멀리까지 미리 그리는 것이 친절해 보이지만, 한 장이 수십 MB인 마당에 그건
-     * 서로를 밀어내는 일밖에 안 된다. 나머지 쪽은 밑그림이 즉시 받아 주므로 빈 종이도
-     * 뜨지 않는다.
+     * 줄이면 한 화면에 여러 쪽이 들어오는데, 그때 보이는 쪽 중 하나만 제대로 그리면
+     * 나머지는 밑그림인 채로 남는다. 대신 줄인 만큼 한 장이 작아지므로(표시 크기와
+     * 1:1) 여러 장을 그려도 비용은 오히려 준다.
      */
-    private void ahead(int i) {
-        askSharp(i + 1);
-        askSharp(i - 1);
-    }
-
-    /** 확대가 끝나면 보이는 쪽을 그 배율에 맞게 다시 그린다 */
     private void resharp() {
-        LinearLayoutManager lm = (LinearLayoutManager) list.getLayoutManager();
-        if (lm == null) return;
-        int a = lm.findFirstVisibleItemPosition(), b = lm.findLastVisibleItemPosition();
-        if (a == RecyclerView.NO_POSITION) return;
-        for (int i = a; i <= b; i++) askSharp(i);
+        updateVisible();
+        for (int i = visFirst - 1; i <= visLast + 1; i++) askSharp(i);
     }
 
     /** 큐에 이미 올라간 쪽. 확대 중에는 요청이 연달아 들어와 같은 쪽이 쌓이기 쉽다. */
@@ -801,7 +820,7 @@ public class PdfViewActivity extends Activity {
     /* 렌더링 스레드에서 list.getWidth()를 읽지 않으려고 들고 있는 값. 배치가 끝난
        뒤 UI 스레드에서만 채운다. */
     private volatile int renderW;
-    private volatile int focus;
+    private volatile int visFirst, visLast;
 
     /** 표시 폭. 그리는 크기의 기준이므로 곱하지 않고 그대로 쓴다. */
     private void measureRender() {
