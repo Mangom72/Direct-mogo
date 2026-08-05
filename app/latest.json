@@ -1,8 +1,8 @@
 {
-  "versionCode": 20,
-  "versionName": "2.9",
+  "versionCode": 21,
+  "versionName": "3.0",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1838983,
-  "sha256": "b1010c353c27640218eb06d96207f193b19210cc2ac113c9050ebb5e3f1ab829",
-  "notes": "첫 쪽 뭉개짐, 쪽 넘김이 될 때만 되던 문제, 축소 시 뭉개짐 수정"
+  "size": 1838763,
+  "sha256": "66664420e85338e148854a0c061ad618d202afa4e4f498210e43d6a8603f1c8a",
+  "notes": "스크롤을 멈추면 그 자리를 제대로 그립니다"
 }
