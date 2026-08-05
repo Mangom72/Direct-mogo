@@ -1,8 +1,8 @@
 {
-  "versionCode": 12,
-  "versionName": "2.1",
+  "versionCode": 13,
+  "versionName": "2.2",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1835875,
-  "sha256": "16f9649d367273068ce6059f343e80cd469f52ae931cca127934935c0b54c85c",
-  "notes": "PDF 앞뒤 쪽 미리 그리기, 축소 범위 확대"
+  "size": 1836271,
+  "sha256": "ce473389ece29a39a16e4835d0ebf22de6f86e8608e7c9d27aca608fbfe2d591",
+  "notes": "손가락 사이를 중심으로 확대, 축소 시 아랫쪽 미리 그리기"
 }
