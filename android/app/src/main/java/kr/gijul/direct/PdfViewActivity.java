@@ -88,6 +88,10 @@ public class PdfViewActivity extends Activity {
             };
 
     private Stage stage;
+    private LinearLayout bar;
+    private TextView zoomPill;
+    private TextView topBtn;
+    private boolean chrome = true;      // 위 막대·떠 있는 단추를 보여줄지
     private RecyclerView list;
     private TextView status;
     private TextView pageLabel;
@@ -132,7 +136,7 @@ public class PdfViewActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(bg);
 
-        LinearLayout bar = new LinearLayout(this);
+        bar = new LinearLayout(this);
         bar.setOrientation(LinearLayout.HORIZONTAL);
         bar.setGravity(Gravity.CENTER_VERTICAL);
         int pad = dp(10);
@@ -154,6 +158,13 @@ public class PdfViewActivity extends Activity {
         pageLabel.setPadding(0, 0, dp(10), 0);
         pageLabel.setVisibility(View.GONE);
         bar.addView(pageLabel);
+
+        Button full = new Button(this);
+        full.setText("가리기");
+        full.setTextSize(13);
+        full.setAllCaps(false);
+        full.setOnClickListener(v -> setChrome(false));
+        bar.addView(full);
 
         /* 앱 안에서 읽는 게 기본이지만, 필기 앱이나 인쇄로 넘기고 싶을 때가 있다 */
         Button out = new Button(this);
@@ -186,9 +197,101 @@ public class PdfViewActivity extends Activity {
         stage.addView(status, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
+        /* 지금 배율. 눌러서 폭 맞춤과 쪽 맞춤을 오간다 — 문항을 읽을 때와 한 쪽을
+           통째로 훑을 때가 서로 다른 배율이라, 그 둘 사이를 한 번에 오가는 게
+           손으로 매번 집어 맞추는 것보다 빠르다. */
+        zoomPill = pill("100%");
+        zoomPill.setOnClickListener(v -> toggleFit());
+        FrameLayout.LayoutParams zp = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        zp.gravity = Gravity.TOP | Gravity.END;
+        zp.setMargins(0, dp(12), dp(12), 0);
+        stage.addView(zoomPill, zp);
+
+        /* 뒤쪽까지 내려갔다가 처음으로 돌아오는 일이 잦다 */
+        topBtn = pill("맨 위로");
+        topBtn.setVisibility(View.GONE);
+        topBtn.setOnClickListener(v -> {
+            list.scrollToPosition(0);
+            list.post(this::showPage);      // 배치가 끝나야 몇 쪽인지 제대로 읽힌다
+        });
+        FrameLayout.LayoutParams tp = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        tp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        tp.setMargins(0, 0, 0, dp(18));
+        stage.addView(topBtn, tp);
+
         root.addView(stage, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         return root;
+    }
+
+    private TextView pill(String text) {
+        TextView t = new TextView(this);
+        t.setText(text);
+        t.setTextColor(0xFFFFFFFF);
+        t.setTextSize(12);
+        t.setPadding(dp(14), dp(8), dp(14), dp(8));
+        android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable();
+        g.setColor(0xCC1A1814);
+        g.setCornerRadius(dp(999));
+        t.setBackground(g);
+        t.setClickable(true);
+        return t;
+    }
+
+    /* 화면을 가리는 것들을 치운다. 문제지는 화면이 넓을수록 읽기 쉽고, 다시 부르는
+       방법이 화면을 한 번 두드리는 것이면 굳이 남겨둘 이유가 없다. */
+    private void setChrome(boolean on) {
+        chrome = on;
+        bar.setVisibility(on ? View.VISIBLE : View.GONE);
+        zoomPill.setVisibility(on ? View.VISIBLE : View.GONE);
+        topBtn.setVisibility(on && focus > 0 ? View.VISIBLE : View.GONE);
+        systemBars(on);
+        stage.post(this::fitHeight);        // 무대가 커졌으니 목록 높이도 다시 잡는다
+    }
+
+    @SuppressWarnings("deprecation")
+    private void systemBars(boolean on) {
+        View d = getWindow().getDecorView();
+        if (Build.VERSION.SDK_INT >= 30) {
+            android.view.WindowInsetsController c = d.getWindowInsetsController();
+            if (c == null) return;
+            if (on) c.show(android.view.WindowInsets.Type.systemBars());
+            else {
+                c.hide(android.view.WindowInsets.Type.systemBars());
+                c.setSystemBarsBehavior(android.view.WindowInsetsController
+                        .BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        } else {
+            d.setSystemUiVisibility(on ? 0
+                    : View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+        }
+    }
+
+    /** 폭 맞춤(화면 너비에 한 쪽 폭) ↔ 쪽 맞춤(한 쪽이 통째로 들어오게) */
+    private void toggleFit() {
+        float target = Math.abs(zoom - 1f) < 0.02f ? pageFit() : 1f;
+        zoomAt(target, stage.getWidth() / 2f, 0f);
+        fitHeight();
+        settlePan();
+        ahead(focus);
+    }
+
+    /** 한 쪽이 화면에 통째로 들어오는 배율. 잴 수 없으면 원래 크기로 둔다. */
+    private float pageFit() {
+        View v = list.getChildAt(0);
+        if (v == null || v.getHeight() <= 0 || stage.getHeight() <= 0) return 1f;
+        return stage.getHeight() / (float) v.getHeight();
+    }
+
+    private void syncPill() {
+        if (zoomPill != null) zoomPill.setText(Math.round(zoom * 100) + "%");
     }
 
     /**
@@ -205,6 +308,7 @@ public class PdfViewActivity extends Activity {
         private final ScaleGestureDetector scale;
         private final GestureDetector tap;
         private boolean cancelled;      // 두 번째 손가락이 닿는 순간 목록의 스크롤을 끊는다
+        private boolean toButton;       // 이번 터치가 떠 있는 단추 몫인지
 
         Stage(PdfViewActivity a) {
             super(a);
@@ -237,6 +341,11 @@ public class PdfViewActivity extends Activity {
             });
             tap = new GestureDetector(a, new GestureDetector.SimpleOnGestureListener() {
                 @Override
+                public boolean onSingleTapConfirmed(MotionEvent e) {
+                    setChrome(!chrome);      // 가려둔 것을 다시 부르는 유일한 길
+                    return true;
+                }
+                @Override
                 public boolean onDoubleTap(MotionEvent e) {
                     zoomAt(zoom > 1.2f ? 1f : 2f, e.getX(), e.getY());
                     fitHeight();
@@ -262,6 +371,17 @@ public class PdfViewActivity extends Activity {
 
         @Override
         public boolean dispatchTouchEvent(MotionEvent e) {
+            /* 떠 있는 단추 위에서 시작한 터치는 손짓 감지기에 넣지 않는다. 넣으면 한 번
+               두드림으로도 세어져, 단추를 누르는 순간 그 단추가 사라진다.
+               판단은 손가락이 닿는 순간에 한 번만 한다 — 매번 다시 보면 손짓 도중에
+               단추 위를 지나가는 것만으로 주인이 바뀐다. */
+            if (e.getActionMasked() == MotionEvent.ACTION_DOWN) toButton = onButton(e);
+            if (toButton) {
+                if (e.getActionMasked() == MotionEvent.ACTION_UP
+                        || e.getActionMasked() == MotionEvent.ACTION_CANCEL) toButton = false;
+                return super.dispatchTouchEvent(e);
+            }
+
             scale.onTouchEvent(e);
             tap.onTouchEvent(e);
 
@@ -284,6 +404,16 @@ public class PdfViewActivity extends Activity {
                 return true;
             }
             return super.dispatchTouchEvent(e);
+        }
+
+        private boolean onButton(MotionEvent e) {
+            return hits(zoomPill, e) || hits(topBtn, e);
+        }
+
+        private boolean hits(View v, MotionEvent e) {
+            if (v == null || v.getVisibility() != View.VISIBLE) return false;
+            return e.getX() >= v.getLeft() && e.getX() <= v.getRight()
+                    && e.getY() >= v.getTop() && e.getY() <= v.getBottom();
         }
     }
 
@@ -365,6 +495,7 @@ public class PdfViewActivity extends Activity {
     }
 
     private void apply() {
+        syncPill();
         list.setPivotX(0f);
         list.setPivotY(0f);
         list.setScaleX(zoom);
@@ -384,6 +515,7 @@ public class PdfViewActivity extends Activity {
         if (i == RecyclerView.NO_POSITION) return;
         pageLabel.setText((i + 1) + " / " + a.getItemCount());
         pageLabel.setVisibility(View.VISIBLE);
+        topBtn.setVisibility(chrome && i > 0 ? View.VISIBLE : View.GONE);
     }
 
     // ── 읽어들이기 ──────────────────────────────────────────────────────
