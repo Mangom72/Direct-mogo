@@ -1,8 +1,8 @@
 {
-  "versionCode": 24,
-  "versionName": "3.3",
+  "versionCode": 25,
+  "versionName": "3.4",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1840051,
-  "sha256": "239f5cd256e3e0841fff4e904db7794794b368b866f8a4a4f27472a5d2c86eab",
-  "notes": "멈추거나 잡거나 머물면 제 해상도로 — 넘길 때는 가볍게"
+  "size": 1840247,
+  "sha256": "f12be529730f58c16a8f53398a4b497ed80a6d2883d6439e9e6b92c5f0e93555",
+  "notes": "화면에 머문 시간을 쪽마다 합산해서 그립니다"
 }

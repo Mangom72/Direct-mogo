@@ -905,20 +905,37 @@ public class PdfViewActivity extends Activity {
     private volatile int visFirst, visLast;
 
     /**
-     * 같은 쪽에 충분히 오래 머물면 그린다.
+     * 화면에 오래 머문 쪽을 그린다.
      *
-     * 멎을 때까지 기다리면, 천천히 훑어보는 동안 내내 밑그림만 보게 된다. 쪽이
-     * 바뀔 때마다 시계를 되감으므로, 빠르게 지나가는 쪽에는 걸리지 않는다.
+     * 기준은 '맨 위 쪽이 안 바뀐 시간'이 아니라 **쪽마다 화면에 머문 시간의 합**이다.
+     * 14·15가 함께 보이다가 15·16이 함께 보이는 식으로 넘어가면 맨 위 쪽은 계속
+     * 바뀌지만 15는 그 내내 화면에 있었다 — 그런 쪽이 실은 제일 오래 보고 있는
+     * 쪽인데, 맨 위 쪽만 보는 기준으로는 한 번도 걸리지 않았다.
+     *
+     * 화면을 벗어나면 0으로 돌아간다. 스쳐 지나간 시간이 쌓여 나중에 엉뚱한 쪽이
+     * 걸리는 일이 없도록.
      */
     private void dwell() {
-        if (visFirst == dwelt) return;
-        dwelt = visFirst;
-        list.removeCallbacks(dwellRun);
-        list.postDelayed(dwellRun, DWELL_MS);
+        if (pdf == null) return;
+        int n = pdf.getPageCount();
+        if (seen == null || seen.length != n) seen = new long[n];
+
+        long now = android.os.SystemClock.uptimeMillis();
+        /* 손을 놓고 한참 뒤에 다시 움직인 공백까지 머문 시간으로 세면 안 된다 —
+           한 프레임 몫으로 자른다. */
+        long dt = tick == 0 ? 0 : Math.min(now - tick, 250);
+        tick = now;
+
+        for (int i = 0; i < n; i++) {
+            if (i < visFirst || i > visLast) { seen[i] = 0; continue; }
+            if (seen[i] < 0) continue;                 // 이미 걸어둔 쪽
+            seen[i] += dt;
+            if (seen[i] >= DWELL_MS) { seen[i] = -1; askSharp(i); }
+        }
     }
 
-    private int dwelt = -1;
-    private final Runnable dwellRun = this::resharp;
+    private long[] seen;       // 쪽마다 화면에 머문 시간(ms). -1이면 이미 요청했다.
+    private long tick;
 
     /**
      * 스크롤 막대를 지금 위치에 맞춘다.
