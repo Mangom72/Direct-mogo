@@ -86,6 +86,7 @@ public class PdfViewActivity extends Activity {
     private TextView zoomPill;
     private TextView topBtn;
     private View scrollbar;
+    private boolean dragging;      // 스크롤 막대를 잡고 있는 중
     private boolean chrome = true;      // 위 막대·떠 있는 단추를 보여줄지
     private RecyclerView list;
     private TextView status;
@@ -187,7 +188,9 @@ public class PdfViewActivity extends Activity {
                물어보는 곳이 없어서 멈춘 자리가 밑그림인 채로 남아 있었다. 확대해야
                제대로 보이던 이유가 이것이다 — 확대만이 다시 요청을 걸었다. */
             @Override public void onScrollStateChanged(@NonNull RecyclerView v, int state) {
-                if (state == RecyclerView.SCROLL_STATE_IDLE) resharp();
+                /* 막대를 끄는 동안에는 매 프레임 IDLE로 떨어진다(scrollBy는 곧바로
+                   멎으므로). 그때마다 다시 그리면 헛일이라, 놓을 때 한 번만 한다. */
+                if (state == RecyclerView.SCROLL_STATE_IDLE && !dragging) resharp();
             }
         });
         stage.addView(list, new FrameLayout.LayoutParams(
@@ -217,11 +220,46 @@ public class PdfViewActivity extends Activity {
         android.graphics.drawable.GradientDrawable sg = new android.graphics.drawable.GradientDrawable();
         sg.setColor(night ? 0x66EDE8DF : 0x55221F1A);
         sg.setCornerRadius(dp(3));
-        scrollbar.setBackground(sg);
+        /* 보이는 굵기는 5dp지만 잡히는 폭은 24dp다. 손가락으로 5dp를 겨누게 하면
+           대개 빗나간다 — 안쪽을 비워 두고 그 위도 이 뷰가 받는다. */
+        scrollbar.setBackground(new android.graphics.drawable.InsetDrawable(sg, dp(16), 0, dp(3), 0));
         scrollbar.setVisibility(View.GONE);
-        FrameLayout.LayoutParams sbp = new FrameLayout.LayoutParams(dp(5), 0);
+        scrollbar.setOnTouchListener(new View.OnTouchListener() {
+            private float grabY;
+            private int grabOffset;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent e) {
+                int range = list.computeVerticalScrollRange();
+                int extent = list.computeVerticalScrollExtent();
+                int room = range - extent;
+                int track = stage.getHeight() - v.getHeight();
+                if (room <= 0 || track <= 0) return false;
+
+                switch (e.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        grabY = e.getRawY();
+                        grabOffset = list.computeVerticalScrollOffset();
+                        dragging = true;
+                        return true;
+                    case MotionEvent.ACTION_MOVE: {
+                        /* 막대가 지나간 거리 : 트랙 = 스크롤한 양 : 전체 */
+                        int want = Math.round(grabOffset + (e.getRawY() - grabY) / track * room);
+                        int now = list.computeVerticalScrollOffset();
+                        list.scrollBy(0, Math.max(-now, Math.min(room - now, want - now)));
+                        return true;
+                    }
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        dragging = false;
+                        resharp();       // 놓은 자리를 제대로 그린다
+                        return true;
+                }
+                return false;
+            }
+        });
+        FrameLayout.LayoutParams sbp = new FrameLayout.LayoutParams(dp(24), 0);
         sbp.gravity = Gravity.TOP | Gravity.END;
-        sbp.rightMargin = dp(3);
         stage.addView(scrollbar, sbp);
 
         /* 뒤쪽까지 내려갔다가 처음으로 돌아오는 일이 잦다 */
@@ -423,7 +461,7 @@ public class PdfViewActivity extends Activity {
         }
 
         private boolean onButton(MotionEvent e) {
-            return hits(zoomPill, e) || hits(topBtn, e);
+            return hits(zoomPill, e) || hits(topBtn, e) || hits(scrollbar, e);
         }
 
         private boolean hits(View v, MotionEvent e) {
@@ -606,6 +644,7 @@ public class PdfViewActivity extends Activity {
             } else {
                 fd = ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_READ_ONLY);
                 pdf = new PdfRenderer(fd);
+                measurePages();      // 높이를 먼저 확정해야 배치가 흔들리지 않는다
             }
             runOnUiThread(() -> {
                 status.setVisibility(View.GONE);
@@ -677,8 +716,11 @@ public class PdfViewActivity extends Activity {
         @Override
         public Page onCreateViewHolder(@NonNull ViewGroup parent, int type) {
             ImageView iv = new ImageView(PdfViewActivity.this);
-            iv.setAdjustViewBounds(true);
-            iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            /* adjustViewBounds를 쓰면 높이가 비트맵에서 나온다. 밑그림을 본그림으로
+               갈아 끼울 때마다 높이가 1px씩 달라지고, 그때마다 배치가 돌면서 넘기던
+               손이 멈춘다. 높이는 쪽의 가로세로비로 미리 정해두고 여기서는 안 건드린다. */
+            iv.setAdjustViewBounds(false);
+            iv.setScaleType(ImageView.ScaleType.FIT_XY);
             iv.setBackgroundColor(Color.WHITE);        // 문제지는 흰 종이다. 어두운 테마에서도 뒤집지 않는다.
             iv.setLayoutParams(new RecyclerView.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -708,6 +750,7 @@ public class PdfViewActivity extends Activity {
             if (image != null) { iv.setImageBitmap(image); return; }
 
             measureRender();
+            fixHeight(i);
             /* 붙는다는 건 화면에 들어온다는 뜻이다. 배치가 끝나야 갱신되는 값을
                기다리면, 방금 넘어온 쪽의 요청이 옛 범위에 걸려 버려질 수 있다. */
             if (i < visFirst) visFirst = i;
@@ -737,6 +780,14 @@ public class PdfViewActivity extends Activity {
         }
 
         private void set(Bitmap b) { shownW = b.getWidth(); iv.setImageBitmap(b); }
+
+        /** 쪽의 가로세로비로 높이를 못박는다. 그림이 바뀌어도 배치는 그대로다. */
+        private void fixHeight(int i) {
+            int w = renderW > 0 ? renderW : 720;
+            int h = Math.round(w * ratio(i));
+            ViewGroup.LayoutParams lp = iv.getLayoutParams();
+            if (lp.height != h) { lp.height = h; iv.setLayoutParams(lp); }
+        }
 
         void clear() { iv.setImageDrawable(null); shownW = 0; }
     }
@@ -868,6 +919,27 @@ public class PdfViewActivity extends Activity {
         if (lp.height != h) { lp.height = h; scrollbar.setLayoutParams(lp); }
         scrollbar.setTranslationY(y);
         scrollbar.setVisibility(View.VISIBLE);
+    }
+
+    /* 쪽마다의 가로세로비. 그리지 않고 크기만 읽으므로 문서를 열 때 한 번에 끝난다.
+       탐구는 A3, 국어는 A4지만 비율은 둘 다 1.41이라 실제로는 거의 같은 값이다. */
+    private volatile float[] ratio;
+
+    private float ratio(int i) {
+        float[] r = ratio;
+        if (r == null || i < 0 || i >= r.length || r[i] <= 0) return 1.414f;
+        return r[i];
+    }
+
+    private void measurePages() {
+        if (pdf == null) return;
+        float[] r = new float[pdf.getPageCount()];
+        for (int i = 0; i < r.length; i++) {
+            try (PdfRenderer.Page p = pdf.openPage(i)) {
+                r[i] = p.getWidth() > 0 ? p.getHeight() / (float) p.getWidth() : 1.414f;
+            } catch (Exception e) { r[i] = 1.414f; }
+        }
+        ratio = r;
     }
 
     /** 표시 폭. 그리는 크기의 기준이므로 곱하지 않고 그대로 쓴다. */
