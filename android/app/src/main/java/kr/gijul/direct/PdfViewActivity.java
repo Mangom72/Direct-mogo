@@ -198,18 +198,26 @@ public class PdfViewActivity extends Activity {
             super(a);
             scale = new ScaleGestureDetector(a, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
                 @Override
-                public boolean onScale(ScaleGestureDetector d) {
-                    setZoom(zoom * d.getScaleFactor());
+                public boolean onScaleBegin(ScaleGestureDetector d) {
+                    /* 줄이면 화면에 여러 쪽이 들어온다. 다 줄이고 나서 그리기 시작하면
+                       아래쪽이 한 박자 늦게 차오른다. 손짓이 시작될 때 미리 건다. */
+                    ahead(focus);
                     return true;
                 }
                 @Override
-                public void onScaleEnd(ScaleGestureDetector d) { fitHeight(); }
+                public boolean onScale(ScaleGestureDetector d) {
+                    zoomAt(zoom * d.getScaleFactor(), d.getFocusX(), d.getFocusY());
+                    return true;
+                }
+                @Override
+                public void onScaleEnd(ScaleGestureDetector d) { fitHeight(); ahead(focus); }
             });
             tap = new GestureDetector(a, new GestureDetector.SimpleOnGestureListener() {
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
-                    setZoom(zoom > 1.2f ? 1f : 2f);
+                    zoomAt(zoom > 1.2f ? 1f : 2f, e.getX(), e.getY());
                     fitHeight();
+                    ahead(focus);
                     return true;
                 }
                 @Override
@@ -220,6 +228,8 @@ public class PdfViewActivity extends Activity {
                     apply();
                     return false;                     // 세로 스크롤은 목록 몫으로 남긴다
                 }
+                @Override
+                public boolean onDown(MotionEvent e) { return true; }
             });
         }
 
@@ -250,34 +260,52 @@ public class PdfViewActivity extends Activity {
         }
     }
 
-    private void setZoom(float z) {
+    /**
+     * 손가락 사이를 중심으로 확대·축소한다.
+     *
+     * 기준점을 뷰의 pivot으로 옮기는 방법은 쓰지 않았다. pivot은 뷰 자신의 좌표계
+     * 값인데 손짓 좌표는 부모 좌표계로 들어와서, 이미 변형된 뷰에서는 둘이 어긋난다.
+     * 대신 pivot을 (0,0)에 못박고 배율과 이동을 직접 계산한다 —
+     * 화면 = 내용*배율 + 이동 이라는 한 줄짜리 모형이라 역산이 어긋날 데가 없다.
+     *
+     * 세로는 이동값을 두지 않고 목록을 그만큼 스크롤한다. 세로 이동을 따로 들면
+     * 목록 스크롤과 둘이 같은 일을 하게 되어 서로 어긋난다.
+     */
+    private void zoomAt(float z, float fx, float fy) {
+        float was = zoom;
         zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
-        if (zoom <= 1f) panX = panY = 0f;      // 줄이면 가로로 움직일 곳이 없다
+        if (zoom == was) return;
+
+        // 손가락 아래 있던 지점이 그 자리에 남도록
+        panX = fx - (fx - panX) * zoom / was;
+        list.scrollBy(0, Math.round(fy * (1f / was - 1f / zoom)));
+
         clampPan();
         apply();
     }
 
     private void clampPan() {
-        /* 확대했을 때만 좌우로 움직일 여지가 있다. 축소 상태에서 이 값을 그대로
-           쓰면 음수가 되어 min/max가 뒤집힌다. */
-        float slack = Math.max(0f, list.getWidth() * (zoom - 1f) / 2f);
-        panX = Math.max(-slack, Math.min(slack, panX));
-        panY = 0f;
+        float shown = list.getWidth() * zoom;
+        float room = stage.getWidth();
+        /* 화면보다 좁아지면 가운데에 세운다 — 양옆에 여백이 생기는 게 이 상태다.
+           넓으면 화면 밖으로 흰 여백이 새지 않는 범위 안에서만 움직인다. */
+        panX = shown <= room
+                ? (room - shown) / 2f
+                : Math.max(room - shown, Math.min(0f, panX));
     }
 
-    /* 축소하면 목록이 화면보다 작게 그려져 아래쪽이 비어버린다. 그만큼 키워두면
-       줄인 뒤에도 화면이 끝까지 채워지고, 그 자리에 다음 쪽들이 들어온다.
-       손짓 도중에 하면 매 프레임 재배치가 되므로 손을 뗀 뒤에만 맞춘다. */
+    /* 배율만큼 목록을 키우거나 줄여, 그려지는 높이가 늘 화면과 같게 맞춘다.
+       축소하면 아래가 비고 확대하면 안 보이는 곳까지 배치하게 되는데 둘 다 이걸로
+       없어진다. 손짓 도중에 하면 매 프레임 재배치가 되므로 손을 뗀 뒤에만 맞춘다. */
     private void fitHeight() {
+        if (stage.getHeight() <= 0) return;
         ViewGroup.LayoutParams lp = list.getLayoutParams();
-        int want = zoom < 1f
-                ? Math.round(stage.getHeight() / zoom)
-                : ViewGroup.LayoutParams.MATCH_PARENT;
-        if (lp.height != want) { lp.height = want; list.setLayoutParams(lp); }
+        int want = Math.round(stage.getHeight() / zoom);
+        if (Math.abs(lp.height - want) > 1) { lp.height = want; list.setLayoutParams(lp); }
     }
 
     private void apply() {
-        list.setPivotX(list.getWidth() / 2f);
+        list.setPivotX(0f);
         list.setPivotY(0f);
         list.setScaleX(zoom);
         list.setScaleY(zoom);
@@ -387,7 +415,9 @@ public class PdfViewActivity extends Activity {
     @Override
     public void onConfigurationChanged(Configuration c) {
         super.onConfigurationChanged(c);
-        setZoom(1f);
+        zoom = 1f; panX = 0f;      // 화면이 바뀌었으니 배율은 원래대로 되돌린다
+        clampPan();
+        apply();
         fitHeight();
         cache.evictAll();        // 화면 너비가 달라졌으니 그려둔 쪽은 크기가 맞지 않는다
         renderW = 0;
@@ -465,19 +495,29 @@ public class PdfViewActivity extends Activity {
        미리 그리기는 그 뒤에 줄을 서므로, 지금 보는 화면을 늦추지 않는다.
        뒤로도 한 장 잡아두는 건 되돌아갈 때가 앞으로 갈 때만큼 잦기 때문이다. */
     private void ahead(int i) {
-        preload(i + 1);
-        preload(i + 2);
+        /* 줄일수록 한 화면에 여러 쪽이 들어오므로 그만큼 더 멀리까지 미리 그린다.
+           1배에서 두 쪽, 0.5배에서 네 쪽. 되돌아가는 일도 잦아 뒤로도 한 쪽. */
+        int span = Math.max(2, Math.round(2f / Math.max(zoom, MIN_ZOOM)));
+        for (int n = 1; n <= span; n++) preload(i + n);
         preload(i - 1);
     }
 
+    /** 큐에 이미 올라간 쪽. 확대 중에는 ahead()가 연달아 불려 같은 쪽이 쌓이기 쉽다. */
+    private final java.util.Set<Integer> queued = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
     private void preload(int i) {
         if (pdf == null || i < 0 || i >= pdf.getPageCount() || cache.get(i) != null) return;
+        if (!queued.add(i)) return;
         io.execute(() -> {
-            /* 빨리 넘기면 미리 그리기 요청이 줄줄이 쌓인다. 그 사이 손가락은 이미
-               멀리 갔는데 지나간 쪽을 그리고 앉아 있으면, 정작 보고 있는 쪽이
-               그만큼 늦는다. 큐에서 꺼낸 시점에 다시 판단해 버린다. */
-            if (Math.abs(i - focus) > 3) return;
-            renderInto(i);
+            try {
+                /* 빨리 넘기면 미리 그리기 요청이 줄줄이 쌓인다. 그 사이 손가락은 이미
+                   멀리 갔는데 지나간 쪽을 그리고 앉아 있으면, 정작 보고 있는 쪽이
+                   그만큼 늦는다. 큐에서 꺼낸 시점에 다시 판단해 버린다. */
+                if (Math.abs(i - focus) > 6) return;
+                renderInto(i);
+            } finally {
+                queued.remove(i);
+            }
         });
     }
 
