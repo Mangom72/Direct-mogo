@@ -67,10 +67,6 @@ public class PdfViewActivity extends Activity {
     static final String EXTRA_NAME = "name";    // 표시할 이름
 
     private static final String TAG = "기출직행";
-    /* 화면 너비 대비 렌더링 배율. 올리면 확대했을 때 선명하지만 비트맵이 그만큼
-       무거워지고, 그 무게가 쪽을 넘길 때의 걸림으로 그대로 나온다 — 1080px 화면에서
-       1.5배면 한 장에 15MB다. 확대는 2.5배까지 가지만 거기서 조금 무른 편이
-       넘길 때마다 걸리는 것보다 낫다. */
     private static final float MAX_ZOOM = 2.5f;
     /* 실제로 그리는 배율의 상한. 이 위로는 이미 그려둔 것을 늘려 쓴다 — 2.5배까지
        진짜 해상도로 그리면 한 장이 수십 MB가 된다. */
@@ -84,16 +80,6 @@ public class PdfViewActivity extends Activity {
     private static final float MIN_ZOOM = 0.5f;
 
     private final ExecutorService io = Executors.newSingleThreadExecutor();
-
-    /* 그려둔 쪽. 미리 그린 것도 여기 들어가고, 되돌아갈 때도 여기서 나온다.
-       비트맵은 한 쪽에 십수 MB라 개수가 아니라 바이트로 한도를 잡아야 한다.
-       비트맵을 직접 recycle하지 않는 이유는, 아직 화면에 걸린 것을 지우면
-       그 자리에서 죽기 때문이다. 한도를 지키는 쪽이 훨씬 안전하다. */
-    private final android.util.LruCache<Integer, Bitmap> cache =
-            new android.util.LruCache<Integer, Bitmap>(
-                    (int) Math.min(Runtime.getRuntime().maxMemory() / 3, Integer.MAX_VALUE)) {
-                @Override protected int sizeOf(Integer k, Bitmap b) { return b.getByteCount(); }
-            };
 
     private Stage stage;
     private LinearLayout bar;
@@ -194,6 +180,14 @@ public class PdfViewActivity extends Activity {
         list.setItemViewCacheSize(3);          // 왔다 갔다 할 때 다시 붙이지 않도록
         list.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override public void onScrolled(@NonNull RecyclerView v, int dx, int dy) { updateVisible(); }
+
+            /* 손을 뗀 자리에서 다시 건다.
+               스크롤 도중에 건 요청은 화면이 지나가 버리면 버려지는데, 그걸 다시
+               물어보는 곳이 없어서 멈춘 자리가 밑그림인 채로 남아 있었다. 확대해야
+               제대로 보이던 이유가 이것이다 — 확대만이 다시 요청을 걸었다. */
+            @Override public void onScrollStateChanged(@NonNull RecyclerView v, int state) {
+                if (state == RecyclerView.SCROLL_STATE_IDLE) resharp();
+            }
         });
         stage.addView(list, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -741,6 +735,9 @@ public class PdfViewActivity extends Activity {
      */
     private final java.util.Map<Integer, Bitmap> base = new java.util.concurrent.ConcurrentHashMap<>();
 
+    /* 제 해상도로 그려둔 쪽. 한 장이 십수 MB라 개수가 아니라 바이트로 한도를 잡는다.
+       비트맵을 직접 recycle하지 않는 이유는, 아직 화면에 걸린 것을 지우면 그 자리에서
+       죽기 때문이다. 한도를 지키는 쪽이 훨씬 안전하다. */
     private final android.util.LruCache<Integer, Bitmap> sharp =
             new android.util.LruCache<Integer, Bitmap>(
                     (int) Math.min(Runtime.getRuntime().maxMemory() / 3, Integer.MAX_VALUE)) {
