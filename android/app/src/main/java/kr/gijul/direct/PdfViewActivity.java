@@ -1,5 +1,6 @@
 package kr.gijul.direct;
 
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -15,6 +16,7 @@ import android.view.Gravity;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.animation.DecelerateInterpolator;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -91,6 +93,8 @@ public class PdfViewActivity extends Activity {
     private String name = "";
 
     private float zoom = 1f, panX = 0f, panY = 0f;
+    private boolean pinching;
+    private ValueAnimator settle;      // 제자리 찾아가는 중. 새 손짓이 오면 양보한다.
 
     @Override
     protected void onCreate(Bundle state) {
@@ -201,6 +205,8 @@ public class PdfViewActivity extends Activity {
                 public boolean onScaleBegin(ScaleGestureDetector d) {
                     /* 줄이면 화면에 여러 쪽이 들어온다. 다 줄이고 나서 그리기 시작하면
                        아래쪽이 한 박자 늦게 차오른다. 손짓이 시작될 때 미리 건다. */
+                    pinching = true;
+                    stopSettle();      // 미끄러지는 중에 다시 잡으면 손이 이긴다
                     ahead(focus);
                     return true;
                 }
@@ -210,7 +216,12 @@ public class PdfViewActivity extends Activity {
                     return true;
                 }
                 @Override
-                public void onScaleEnd(ScaleGestureDetector d) { fitHeight(); ahead(focus); }
+                public void onScaleEnd(ScaleGestureDetector d) {
+                    pinching = false;
+                    fitHeight();
+                    settlePan();
+                    ahead(focus);
+                }
             });
             tap = new GestureDetector(a, new GestureDetector.SimpleOnGestureListener() {
                 @Override
@@ -280,8 +291,17 @@ public class PdfViewActivity extends Activity {
         panX = fx - (fx - panX) * zoom / was;
         list.scrollBy(0, Math.round(fy * (1f / was - 1f / zoom)));
 
-        clampPan();
+        if (pinching) loosePan(); else clampPan();
         apply();
+    }
+
+    /* 손짓 중에는 손가락을 따라가는 것이 우선이다. 여기서 중앙으로 끌어당기면
+       매 프레임 손가락과 반대로 당기는 셈이라 화면이 손에서 미끄러진다.
+       화면 밖으로 완전히 놓치지 않을 만큼만 붙잡아 둔다. */
+    private void loosePan() {
+        float shown = list.getWidth() * zoom;
+        float room = stage.getWidth();
+        panX = Math.max(room * 0.25f - shown, Math.min(room * 0.75f, panX));
     }
 
     private void clampPan() {
@@ -292,6 +312,27 @@ public class PdfViewActivity extends Activity {
         panX = shown <= room
                 ? (room - shown) / 2f
                 : Math.max(room - shown, Math.min(0f, panX));
+    }
+
+    /* 손을 뗀 뒤에 제자리를 찾아간다. 그냥 튀게 두면 마지막 순간에 화면이 한 번
+       덜컥하므로 짧게 미끄러뜨린다. */
+    private void settlePan() {
+        float from = panX;
+        clampPan();
+        float to = panX;
+        if (Math.abs(to - from) < 0.5f) { apply(); return; }
+
+        panX = from;
+        stopSettle();
+        settle = ValueAnimator.ofFloat(from, to);
+        settle.setDuration(160);
+        settle.setInterpolator(new DecelerateInterpolator());
+        settle.addUpdateListener(v -> { panX = (float) v.getAnimatedValue(); apply(); });
+        settle.start();
+    }
+
+    private void stopSettle() {
+        if (settle != null) { settle.cancel(); settle = null; }
     }
 
     /* 배율만큼 목록을 키우거나 줄여, 그려지는 높이가 늘 화면과 같게 맞춘다.
@@ -429,6 +470,7 @@ public class PdfViewActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         io.shutdownNow();
+        stopSettle();
         cache.evictAll();
         try { if (pdf != null) pdf.close(); } catch (Exception ignored) { }
         try { if (fd != null) fd.close(); } catch (Exception ignored) { }
