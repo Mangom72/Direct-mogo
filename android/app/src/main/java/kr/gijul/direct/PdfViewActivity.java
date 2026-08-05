@@ -47,15 +47,16 @@ import java.util.concurrent.Executors;
  * 문제를 열 때마다 앱이 크롬으로 바뀌는 건 이 앱의 요점을 잃는 일이었다. PdfRenderer는
  * API 21부터 있으므로 직접 그린다.
  *
- * 페이지는 RecyclerView로 필요한 것만 그린다 — 국어 문제지처럼 20쪽이 넘는 자료를
- * 통째로 비트맵으로 들고 있으면 메모리가 남아나지 않는다. 대신 화면 너비보다 조금 크게
- * (RENDER_SCALE) 렌더링해 두고 확대는 뷰 변형으로 처리한다. 그 배율까지는 선명하고,
- * 확대할 때마다 다시 그리지 않아 손가락을 따라온다.
+ * 흔한 PDF 뷰어들이 쓰는 두 겹 구조를 따랐다.
  *
- * 문제지는 길어야 스무 쪽 남짓이라 열 때 전 쪽을 낮은 해상도로 한 번 훑어 둔다.
- * 그래서 어디로 넘겨도 빈 종이가 없다. 그 위에 보고 있는 쪽만 제 해상도로 덮어쓰고,
- * 확대하면 그 배율에 맞춰 다시 그린다. 축소는 1배 아래로도 내려가 양옆에 여백이
- * 생기며, 그만큼 여러 쪽이 한눈에 들어온다.
+ *   밑그림  전 쪽을 열 때 한 번, 고정된 작은 폭으로. 어디로 넘겨도 빈 종이가 없다.
+ *   본그림  보고 있는 쪽과 바로 앞뒤만, **화면에 놓일 크기와 1:1로**.
+ *
+ * 두 번째 줄이 중요하다. 표시될 폭보다 작게 그리면 늘려 붙이게 되고 그건 그냥 흐린
+ * 화면이다. 그래서 메모리가 모자랄 때 낮추는 것은 해상도가 아니라 들고 있는 장수다.
+ * 확대는 손짓 도중에는 뷰 변형으로 따라가고, 손을 뗀 뒤 그 배율로 다시 그린다.
+ *
+ * 축소는 1배 아래로도 내려가 양옆에 여백이 생기며, 그만큼 여러 쪽이 한눈에 들어온다.
  *
  * 정답은 PDF가 아니라 PNG라서, 같은 화면에서 한 장짜리로 보여준다.
  */
@@ -70,18 +71,17 @@ public class PdfViewActivity extends Activity {
        무거워지고, 그 무게가 쪽을 넘길 때의 걸림으로 그대로 나온다 — 1080px 화면에서
        1.5배면 한 장에 15MB다. 확대는 2.5배까지 가지만 거기서 조금 무른 편이
        넘길 때마다 걸리는 것보다 낫다. */
-    private static final float RENDER_SCALE = 1.25f;
     private static final float MAX_ZOOM = 2.5f;
+    /* 실제로 그리는 배율의 상한. 이 위로는 이미 그려둔 것을 늘려 쓴다 — 2.5배까지
+       진짜 해상도로 그리면 한 장이 수십 MB가 된다. */
+    private static final float MAX_RENDER_ZOOM = 2f;
+    /** 한 장의 절대 상한. 아주 큰 화면에서 비트맵 하나가 힙을 삼키는 것만 막는다. */
+    private static final int HARD_MAX_PX = 3000;
+    /** 전 쪽 밑그림의 폭. 자리를 채우는 용도라 작고 싸야 한다. */
+    private static final int THUMB_PX = 280;
     /* 1보다 작게도 줄인다 — 양옆에 여백이 생기면서 여러 쪽이 한눈에 들어온다.
        더 줄여봐야 글자를 못 읽으니 여기서 멈춘다. */
     private static final float MIN_ZOOM = 0.5f;
-    /* 밑그림 해상도. 글자를 읽을 정도는 아니지만 어느 쪽인지는 알아볼 수 있고,
-       무엇보다 넘길 때 빈 종이가 뜨지 않는다. */
-    private static final float BASE_SCALE = 0.45f;
-    /* 한 장이 가질 수 있는 최대 폭. 넘어가면 비트맵 하나가 힙을 통째로 먹는다. */
-    private static final int MAX_PAGE_PX = 2200;
-    /** 밑그림 한 장의 최대 폭. 이건 자리만 채우면 되므로 화면이 커도 키우지 않는다. */
-    private static final int BASE_MAX_PX = 640;
 
     private final ExecutorService io = Executors.newSingleThreadExecutor();
 
@@ -91,7 +91,7 @@ public class PdfViewActivity extends Activity {
        그 자리에서 죽기 때문이다. 한도를 지키는 쪽이 훨씬 안전하다. */
     private final android.util.LruCache<Integer, Bitmap> cache =
             new android.util.LruCache<Integer, Bitmap>(
-                    (int) Math.min(Runtime.getRuntime().maxMemory() / 4, Integer.MAX_VALUE)) {
+                    (int) Math.min(Runtime.getRuntime().maxMemory() / 3, Integer.MAX_VALUE)) {
                 @Override protected int sizeOf(Integer k, Bitmap b) { return b.getByteCount(); }
             };
 
@@ -593,7 +593,7 @@ public class PdfViewActivity extends Activity {
                     /* 첫 쪽은 폭을 재기 전에 붙었을 수 있다. 그때 건 요청은 폭을
                        몰라 그냥 돌아섰으므로, 여기서 한 번 더 건다. */
                     resharp();
-                    drawBase();     // 배치가 끝나야 폭을 알고, 폭을 알아야 밑그림을 깐다
+                    drawThumbs();     // 배치가 끝나야 폭을 알고, 폭을 알아야 밑그림을 깐다
                 });
             });
         } catch (Exception e) {
@@ -630,7 +630,7 @@ public class PdfViewActivity extends Activity {
         sharp.evictAll();
         base.clear();
         renderW = 0;
-        list.post(() -> { measureRender(); drawBase(); });
+        list.post(() -> { measureRender(); drawThumbs(); });
         if (list.getAdapter() != null) list.getAdapter().notifyDataSetChanged();
     }
 
@@ -717,23 +717,29 @@ public class PdfViewActivity extends Activity {
 
     private final android.util.LruCache<Integer, Bitmap> sharp =
             new android.util.LruCache<Integer, Bitmap>(
-                    (int) Math.min(Runtime.getRuntime().maxMemory() / 4, Integer.MAX_VALUE)) {
+                    (int) Math.min(Runtime.getRuntime().maxMemory() / 3, Integer.MAX_VALUE)) {
                 @Override protected int sizeOf(Integer k, Bitmap b) { return b.getByteCount(); }
             };
 
     /**
-     * 지금 필요한 선명도.
+     * 지금 그려야 할 폭. 화면에 실제로 놓일 크기와 1:1이다.
      *
-     * 확대한 만큼 올리되, 한 장이 캐시의 1/4을 넘지 않게 자른다. 이 한도가 없으면
-     * 큰 화면에서 한 장이 캐시를 거의 다 차지해, 이웃 쪽을 그리는 족족 서로를
-     * 밀어낸다. 그러면 방금 그린 쪽이 화면에 붙기도 전에 사라져 다시 그리게 되고,
-     * 렌더링 스레드가 그 자리를 맴돌면서 정작 넘긴 쪽이 한참을 기다린다.
+     * 이 값을 캐시 크기로 깎았던 것이 뭉개짐의 원인이었다. 표시될 폭보다 작게 그리면
+     * 늘려서 붙이게 되고, 그건 그냥 흐린 화면이다. 메모리가 모자라면 해상도를 낮출
+     * 게 아니라 **들고 있는 장수**를 줄여야 한다 — 지금 보는 쪽은 언제나 제 크기로.
+     *
+     * 축소했을 때는 1배로 그린다. 줄여 그려봐야 다시 키울 때 흐릴 뿐이다.
      */
     private int wantW() {
-        int w = Math.round(renderW * Math.max(1f, Math.min(zoom, 2f)));
-        long each = sharp.maxSize() / 4;
-        int fit = (int) Math.sqrt(each / (1.45 * 4));
-        return Math.max(360, Math.min(Math.min(w, MAX_PAGE_PX), fit));
+        if (renderW <= 0) return 0;
+        float z = Math.max(1f, Math.min(zoom, MAX_RENDER_ZOOM));
+        int want = Math.min(Math.round(renderW * z), HARD_MAX_PX);
+
+        /* 확대해서 얻는 선명도는 힙이 감당하는 만큼만 가져간다 — 두 장은 들 수 있어야
+           앞뒤로 넘길 때 매번 다시 그리지 않는다. 다만 바닥은 renderW다. 1배 화면에서
+           표시 폭보다 작게 그리는 일만은 없어야 한다. 그게 뭉개짐이다. */
+        int afford = (int) Math.sqrt((sharp.maxSize() / 2.0) / (1.45 * 4));
+        return Math.max(renderW, Math.min(want, afford));
     }
 
     private void askSharp(int i) {
@@ -741,7 +747,7 @@ public class PdfViewActivity extends Activity {
         if (!queued.add(i)) return;
         io.execute(() -> {
             try {
-                if (Math.abs(i - focus) > 6) return;   // 그 사이 손가락은 멀리 갔다
+                if (Math.abs(i - focus) > 2) return;   // 그 사이 손가락은 멀리 갔다
                 int w = wantW();
                 if (w <= 0) return;
                 Bitmap b = sharp.get(i);
@@ -768,10 +774,15 @@ public class PdfViewActivity extends Activity {
         });
     }
 
-    /** 보고 있는 쪽 둘레도 제 해상도로 채워 둔다 */
+    /**
+     * 제 해상도로 그리는 것은 보고 있는 쪽과 바로 앞뒤뿐이다.
+     *
+     * 더 멀리까지 미리 그리는 것이 친절해 보이지만, 한 장이 수십 MB인 마당에 그건
+     * 서로를 밀어내는 일밖에 안 된다. 나머지 쪽은 밑그림이 즉시 받아 주므로 빈 종이도
+     * 뜨지 않는다.
+     */
     private void ahead(int i) {
-        int span = Math.max(2, Math.round(2f / Math.max(zoom, MIN_ZOOM)));
-        for (int n = 1; n <= span; n++) askSharp(i + n);
+        askSharp(i + 1);
         askSharp(i - 1);
     }
 
@@ -792,39 +803,29 @@ public class PdfViewActivity extends Activity {
     private volatile int renderW;
     private volatile int focus;
 
+    /** 표시 폭. 그리는 크기의 기준이므로 곱하지 않고 그대로 쓴다. */
     private void measureRender() {
         int w = list.getWidth();
-        if (w > 0) renderW = Math.round(w * RENDER_SCALE);
+        if (w > 0) renderW = w;
     }
 
     /**
-     * 전 쪽의 밑그림. 한 번만 돈다.
+     * 전 쪽의 밑그림. 문서를 열 때 한 번만 돈다.
      *
-     * 해상도는 쪽수를 보고 정한다 — 쪽이 많을수록 한 장에 쓸 수 있는 몫이 줄어든다.
-     * 이걸 고정값으로 두면 스무 쪽짜리에서 조용히 메모리를 다 먹는다.
+     * 폭이 고정이라 쪽수와 무관하게 한 장에 0.5MB가 채 안 된다. 예전에는 예산을
+     * 쪽수로 나눠 정했는데, 그러면 쪽이 적은 자료일수록 한 장이 커지는 거꾸로 된
+     * 일이 벌어졌다 — 이건 자리를 채우는 용도지 읽으라고 있는 게 아니다.
      */
-    private void drawBase() {
+    private void drawThumbs() {
         if (pdf == null) return;
         int n = pdf.getPageCount();
-        if (n <= 0) return;
+        if (n <= 0 || renderW <= 0) return;
 
-        long budget = Runtime.getRuntime().maxMemory() / 8;
-        int w = renderW;
-        if (w <= 0) return;
-        /* 밑그림은 넘길 때 잠깐 보이는 것이라 늘 싸야 한다. 쪽이 적다고 커지면
-           오히려 쪽 적은 자료가 메모리를 더 먹는 거꾸로 된 일이 벌어진다. */
-        int lowW = Math.min(Math.round(w * BASE_SCALE), BASE_MAX_PX);
-        /* 한 장 = 폭 * (폭*1.45) * 4바이트. 다 합쳐 몫을 넘으면 그만큼 낮춘다. */
-        double each = (double) lowW * lowW * 1.45 * 4;
-        if (each * n > budget) lowW = (int) Math.sqrt(budget / (n * 1.45 * 4));
-        if (lowW < 180) lowW = 180;
-
-        final int width = lowW;
         for (int i = 0; i < n; i++) {
             final int at = i;
             io.execute(() -> {
                 if (base.containsKey(at)) return;
-                Bitmap b = draw(at, width);
+                Bitmap b = draw(at, THUMB_PX);
                 if (b != null) { base.put(at, b); post(at, b); }
             });
         }
