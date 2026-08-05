@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.pdf.PdfRenderer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
@@ -47,9 +48,9 @@ import java.util.concurrent.Executors;
  * API 21부터 있으므로 직접 그린다.
  *
  * 페이지는 RecyclerView로 필요한 것만 그린다 — 국어 문제지처럼 20쪽이 넘는 자료를
- * 통째로 비트맵으로 들고 있으면 메모리가 남아나지 않는다. 대신 화면 너비의 1.5배로
- * 렌더링해 두고 확대는 뷰 변형으로 처리한다. 그 배율까지는 선명하고, 확대할 때마다
- * 다시 그리지 않아 손가락을 따라온다.
+ * 통째로 비트맵으로 들고 있으면 메모리가 남아나지 않는다. 대신 화면 너비보다 조금 크게
+ * (RENDER_SCALE) 렌더링해 두고 확대는 뷰 변형으로 처리한다. 그 배율까지는 선명하고,
+ * 확대할 때마다 다시 그리지 않아 손가락을 따라온다.
  *
  * 보고 있는 쪽 앞뒤로 미리 그려 둔다. 넘길 때마다 흰 종이를 보고 기다리지 않게
  * 하려는 것이고, 그려둔 것은 바이트로 한도를 건 캐시에 담긴다. 축소는 1배 아래로도
@@ -64,7 +65,11 @@ public class PdfViewActivity extends Activity {
     static final String EXTRA_NAME = "name";    // 표시할 이름
 
     private static final String TAG = "기출직행";
-    private static final float RENDER_SCALE = 1.5f;   // 화면 너비 대비 렌더링 배율
+    /* 화면 너비 대비 렌더링 배율. 올리면 확대했을 때 선명하지만 비트맵이 그만큼
+       무거워지고, 그 무게가 쪽을 넘길 때의 걸림으로 그대로 나온다 — 1080px 화면에서
+       1.5배면 한 장에 15MB다. 확대는 2.5배까지 가지만 거기서 조금 무른 편이
+       넘길 때마다 걸리는 것보다 낫다. */
+    private static final float RENDER_SCALE = 1.25f;
     private static final float MAX_ZOOM = 2.5f;
     /* 1보다 작게도 줄인다 — 양옆에 여백이 생기면서 여러 쪽이 한눈에 들어온다.
        더 줄여봐야 글자를 못 읽으니 여기서 멈춘다. */
@@ -164,7 +169,10 @@ public class PdfViewActivity extends Activity {
         stage = new Stage(this);
         list = new RecyclerView(this);
         list.setLayoutManager(new LinearLayoutManager(this));
-        list.setItemViewCacheSize(1);          // 확대 상태에서 비트맵이 쌓이지 않게
+        /* 목록 크기가 내용에 따라 변하지 않는다고 알려주면 항목마다 전체 배치를
+           다시 하지 않는다. 쪽을 넘길 때 도는 일이 그만큼 준다. */
+        list.setHasFixedSize(true);
+        list.setItemViewCacheSize(3);          // 왔다 갔다 할 때 다시 붙이지 않도록
         list.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override public void onScrolled(@NonNull RecyclerView v, int dx, int dy) { showPage(); }
         });
@@ -207,6 +215,10 @@ public class PdfViewActivity extends Activity {
                        아래쪽이 한 박자 늦게 차오른다. 손짓이 시작될 때 미리 건다. */
                     pinching = true;
                     stopSettle();      // 미끄러지는 중에 다시 잡으면 손이 이긴다
+                    /* 줄이는 동안 목록이 화면보다 짧아져 아래가 빈 채로 남는다. 다 줄인
+                       뒤에 늘리면 그 빈 자리가 눈에 보이므로, 최대로 줄였을 때를 미리
+                       잡아둔다. 손짓 내내 재배치가 없고 아래도 비지 않는다. */
+                    setListHeight(Math.round(stage.getHeight() / MIN_ZOOM));
                     ahead(focus);
                     return true;
                 }
@@ -233,6 +245,10 @@ public class PdfViewActivity extends Activity {
                 }
                 @Override
                 public boolean onScroll(MotionEvent a, MotionEvent b, float dx, float dy) {
+                    /* 손가락 두 개일 때도 이 콜백은 계속 불린다. 여기서 clampPan을
+                       돌리면 확대 도중 페이지가 화면 폭을 넘는 순간 잡고 있는데도
+                       가운데로 끌려간다 — 확대는 확대대로 두어야 한다. */
+                    if (pinching) return false;
                     if (zoom <= 1f) return false;    // 원래 크기·축소면 목록이 세로로 스크롤한다
                     panX -= dx;
                     clampPan();
@@ -340,8 +356,11 @@ public class PdfViewActivity extends Activity {
        없어진다. 손짓 도중에 하면 매 프레임 재배치가 되므로 손을 뗀 뒤에만 맞춘다. */
     private void fitHeight() {
         if (stage.getHeight() <= 0) return;
+        setListHeight(Math.round(stage.getHeight() / zoom));
+    }
+
+    private void setListHeight(int want) {
         ViewGroup.LayoutParams lp = list.getLayoutParams();
-        int want = Math.round(stage.getHeight() / zoom);
         if (Math.abs(lp.height - want) > 1) { lp.height = want; list.setLayoutParams(lp); }
     }
 
@@ -612,6 +631,9 @@ public class PdfViewActivity extends Activity {
                 Bitmap b = Bitmap.createBitmap(width, h, Bitmap.Config.ARGB_8888);
                 b.eraseColor(Color.WHITE);            // 투명 배경으로 두면 글자만 떠 보인다
                 p.render(b, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                /* 비트맵은 처음 그려질 때 GPU로 올라간다. 그 일이 UI 스레드에서
+                   일어나면 쪽을 넘기는 순간 그대로 걸림이 된다. 여기서 미리 올린다. */
+                if (Build.VERSION.SDK_INT >= 26) b.prepareToDraw();
                 return b;
             }
         } catch (OutOfMemoryError e) {
