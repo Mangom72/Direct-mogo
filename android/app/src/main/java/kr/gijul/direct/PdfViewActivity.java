@@ -52,9 +52,10 @@ import java.util.concurrent.Executors;
  * (RENDER_SCALE) 렌더링해 두고 확대는 뷰 변형으로 처리한다. 그 배율까지는 선명하고,
  * 확대할 때마다 다시 그리지 않아 손가락을 따라온다.
  *
- * 보고 있는 쪽 앞뒤로 미리 그려 둔다. 넘길 때마다 흰 종이를 보고 기다리지 않게
- * 하려는 것이고, 그려둔 것은 바이트로 한도를 건 캐시에 담긴다. 축소는 1배 아래로도
- * 내려가 양옆에 여백이 생기며, 그만큼 여러 쪽이 한눈에 들어온다.
+ * 문제지는 길어야 스무 쪽 남짓이라 열 때 전 쪽을 낮은 해상도로 한 번 훑어 둔다.
+ * 그래서 어디로 넘겨도 빈 종이가 없다. 그 위에 보고 있는 쪽만 제 해상도로 덮어쓰고,
+ * 확대하면 그 배율에 맞춰 다시 그린다. 축소는 1배 아래로도 내려가 양옆에 여백이
+ * 생기며, 그만큼 여러 쪽이 한눈에 들어온다.
  *
  * 정답은 PDF가 아니라 PNG라서, 같은 화면에서 한 장짜리로 보여준다.
  */
@@ -74,6 +75,11 @@ public class PdfViewActivity extends Activity {
     /* 1보다 작게도 줄인다 — 양옆에 여백이 생기면서 여러 쪽이 한눈에 들어온다.
        더 줄여봐야 글자를 못 읽으니 여기서 멈춘다. */
     private static final float MIN_ZOOM = 0.5f;
+    /* 밑그림 해상도. 글자를 읽을 정도는 아니지만 어느 쪽인지는 알아볼 수 있고,
+       무엇보다 넘길 때 빈 종이가 뜨지 않는다. */
+    private static final float BASE_SCALE = 0.45f;
+    /* 한 장이 가질 수 있는 최대 폭. 넘어가면 비트맵 하나가 힙을 통째로 먹는다. */
+    private static final int MAX_PAGE_PX = 2200;
 
     private final ExecutorService io = Executors.newSingleThreadExecutor();
 
@@ -280,7 +286,7 @@ public class PdfViewActivity extends Activity {
         zoomAt(target, stage.getWidth() / 2f, 0f);
         fitHeight();
         settlePan();
-        ahead(focus);
+        resharp();
     }
 
     /** 한 쪽이 화면에 통째로 들어오는 배율. 잴 수 없으면 원래 크기로 둔다. */
@@ -336,7 +342,7 @@ public class PdfViewActivity extends Activity {
                     pinching = false;
                     fitHeight();
                     settlePan();
-                    ahead(focus);
+                    resharp();      // 확대한 만큼 선명도를 올린다
                 }
             });
             tap = new GestureDetector(a, new GestureDetector.SimpleOnGestureListener() {
@@ -349,7 +355,7 @@ public class PdfViewActivity extends Activity {
                 public boolean onDoubleTap(MotionEvent e) {
                     zoomAt(zoom > 1.2f ? 1f : 2f, e.getX(), e.getY());
                     fitHeight();
-                    ahead(focus);
+                    resharp();
                     return true;
                 }
                 @Override
@@ -579,7 +585,14 @@ public class PdfViewActivity extends Activity {
             runOnUiThread(() -> {
                 status.setVisibility(View.GONE);
                 list.setAdapter(new Pages());
-                list.post(() -> { measureRender(); showPage(); });   // 배치가 끝난 뒤에 폭을 잰다
+                list.post(() -> {
+                    measureRender();
+                    showPage();
+                    /* 첫 쪽은 폭을 재기 전에 붙었을 수 있다. 그때 건 요청은 폭을
+                       몰라 그냥 돌아섰으므로, 여기서 한 번 더 건다. */
+                    resharp();
+                    drawBase();     // 배치가 끝나야 폭을 알고, 폭을 알아야 밑그림을 깐다
+                });
             });
         } catch (Exception e) {
             Log.w(TAG, "열지 못했습니다: " + f, e);
@@ -611,9 +624,11 @@ public class PdfViewActivity extends Activity {
         clampPan();
         apply();
         fitHeight();
-        cache.evictAll();        // 화면 너비가 달라졌으니 그려둔 쪽은 크기가 맞지 않는다
+        // 화면 너비가 달라졌으니 그려둔 쪽은 전부 크기가 맞지 않는다
+        sharp.evictAll();
+        base.clear();
         renderW = 0;
-        list.post(this::measureRender);
+        list.post(() -> { measureRender(); drawBase(); });
         if (list.getAdapter() != null) list.getAdapter().notifyDataSetChanged();
     }
 
@@ -622,7 +637,8 @@ public class PdfViewActivity extends Activity {
         super.onDestroy();
         io.shutdownNow();
         stopSettle();
-        cache.evictAll();
+        sharp.evictAll();
+        base.clear();
         try { if (pdf != null) pdf.close(); } catch (Exception ignored) { }
         try { if (fd != null) fd.close(); } catch (Exception ignored) { }
         if (image != null) image.recycle();
@@ -667,63 +683,91 @@ public class PdfViewActivity extends Activity {
 
             focus = i;
             measureRender();
-            Bitmap have = cache.get(i);
-            if (have != null) { iv.setImageBitmap(have); ahead(i); return; }
 
-            io.execute(() -> {
-                Bitmap b = renderInto(i);
-                if (b == null) return;
-                iv.post(() -> {
-                    if (shown == i) iv.setImageBitmap(b);      // 그리는 사이 다른 쪽으로 넘어갔을 수 있다
-                    ahead(i);
-                });
-            });
+            /* 선명한 것이 있으면 그걸로. 없으면 밑그림을 먼저 깔아 빈 종이를 없애고,
+               선명한 쪽은 뒤이어 덮어쓴다. */
+            Bitmap s = sharp.get(i);
+            if (s != null && s.getWidth() >= wantW() * 0.95f) {
+                iv.setImageBitmap(s);
+            } else {
+                Bitmap l = base.get(i);
+                if (l != null) iv.setImageBitmap(l);
+                askSharp(i);
+            }
+            ahead(i);
         }
+
+        void redraw() { if (shown >= 0) show(shown); }
 
         void clear() { iv.setImageDrawable(null); }
     }
 
-    /* 뒷장을 미리 그려 둔다. 넘길 때마다 흰 종이를 보고 기다리는 게 이 뷰어의
-       유일한 거슬리는 점이었다. 렌더링은 단일 스레드라 보이는 쪽이 먼저 나가고
-       미리 그리기는 그 뒤에 줄을 서므로, 지금 보는 화면을 늦추지 않는다.
-       뒤로도 한 장 잡아두는 건 되돌아갈 때가 앞으로 갈 때만큼 잦기 때문이다. */
-    private void ahead(int i) {
-        /* 줄일수록 한 화면에 여러 쪽이 들어오므로 그만큼 더 멀리까지 미리 그린다.
-           1배에서 두 쪽, 0.5배에서 네 쪽. 되돌아가는 일도 잦아 뒤로도 한 쪽. */
-        int span = Math.max(2, Math.round(2f / Math.max(zoom, MIN_ZOOM)));
-        for (int n = 1; n <= span; n++) preload(i + n);
-        preload(i - 1);
+    /* ── 두 겹으로 그린다 ────────────────────────────────────────────────
+     *
+     * 문제지는 길어야 스무 쪽 남짓이라 전부 미리 그려도 된다. 열 때 모든 쪽을 낮은
+     * 해상도로 한 번 훑어 두면 어디로 넘겨도 빈 종이가 없다. 그 위에 지금 보는 쪽만
+     * 제 해상도로 덮어쓰고, 확대하면 그 배율에 맞춰 다시 그린다.
+     *
+     * 밑그림은 문서를 닫을 때까지 들고 있는다 — 다 합쳐도 선명한 쪽 두 장 값이다.
+     */
+    private final java.util.Map<Integer, Bitmap> base = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private final android.util.LruCache<Integer, Bitmap> sharp =
+            new android.util.LruCache<Integer, Bitmap>(
+                    (int) Math.min(Runtime.getRuntime().maxMemory() / 4, Integer.MAX_VALUE)) {
+                @Override protected int sizeOf(Integer k, Bitmap b) { return b.getByteCount(); }
+            };
+
+    /** 지금 필요한 선명도. 확대한 만큼 올리되 한 장이 감당 못 할 크기가 되기 전에 멈춘다. */
+    private int wantW() {
+        int w = Math.round(renderW * Math.max(1f, Math.min(zoom, 2f)));
+        return Math.min(w, MAX_PAGE_PX);
     }
 
-    /** 큐에 이미 올라간 쪽. 확대 중에는 ahead()가 연달아 불려 같은 쪽이 쌓이기 쉽다. */
-    private final java.util.Set<Integer> queued = java.util.concurrent.ConcurrentHashMap.newKeySet();
-
-    private void preload(int i) {
-        if (pdf == null || i < 0 || i >= pdf.getPageCount() || cache.get(i) != null) return;
+    private void askSharp(int i) {
+        if (pdf == null || i < 0 || i >= pdf.getPageCount()) return;
         if (!queued.add(i)) return;
         io.execute(() -> {
             try {
-                /* 빨리 넘기면 미리 그리기 요청이 줄줄이 쌓인다. 그 사이 손가락은 이미
-                   멀리 갔는데 지나간 쪽을 그리고 앉아 있으면, 정작 보고 있는 쪽이
-                   그만큼 늦는다. 큐에서 꺼낸 시점에 다시 판단해 버린다. */
-                if (Math.abs(i - focus) > 6) return;
-                renderInto(i);
+                if (Math.abs(i - focus) > 6) return;   // 그 사이 손가락은 멀리 갔다
+                int w = wantW();
+                if (w <= 0) return;
+                Bitmap b = sharp.get(i);
+                if (b != null && b.getWidth() >= w * 0.95f) return;
+                b = render(i, w);
+                if (b != null) { sharp.put(i, b); post(i, b); }
             } finally {
                 queued.remove(i);
             }
         });
     }
 
-    /** 캐시에 있으면 그대로, 없으면 그려서 넣는다. 렌더링 스레드에서만 부른다. */
-    private Bitmap renderInto(int i) {
-        Bitmap b = cache.get(i);
-        if (b != null) return b;
-        int w = renderW;
-        if (w <= 0) return null;          // 아직 배치 전 — 크기를 모른 채 그리면 흐릿하게 굳는다
-        b = render(i, w);
-        if (b != null) cache.put(i, b);
-        return b;
+    /** 다 그렸으니 그 쪽이 아직 화면에 있으면 갈아 끼운다 */
+    private void post(int i, Bitmap b) {
+        list.post(() -> {
+            RecyclerView.ViewHolder h = list.findViewHolderForAdapterPosition(i);
+            if (h instanceof Page) ((Page) h).redraw();
+        });
     }
+
+    /** 보고 있는 쪽 둘레도 제 해상도로 채워 둔다 */
+    private void ahead(int i) {
+        int span = Math.max(2, Math.round(2f / Math.max(zoom, MIN_ZOOM)));
+        for (int n = 1; n <= span; n++) askSharp(i + n);
+        askSharp(i - 1);
+    }
+
+    /** 확대가 끝나면 보이는 쪽을 그 배율에 맞게 다시 그린다 */
+    private void resharp() {
+        LinearLayoutManager lm = (LinearLayoutManager) list.getLayoutManager();
+        if (lm == null) return;
+        int a = lm.findFirstVisibleItemPosition(), b = lm.findLastVisibleItemPosition();
+        if (a == RecyclerView.NO_POSITION) return;
+        for (int i = a; i <= b; i++) askSharp(i);
+    }
+
+    /** 큐에 이미 올라간 쪽. 확대 중에는 요청이 연달아 들어와 같은 쪽이 쌓이기 쉽다. */
+    private final java.util.Set<Integer> queued = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     /* 렌더링 스레드에서 list.getWidth()를 읽지 않으려고 들고 있는 값. 배치가 끝난
        뒤 UI 스레드에서만 채운다. */
@@ -735,6 +779,37 @@ public class PdfViewActivity extends Activity {
         if (w > 0) renderW = Math.round(w * RENDER_SCALE);
     }
 
+    /**
+     * 전 쪽의 밑그림. 한 번만 돈다.
+     *
+     * 해상도는 쪽수를 보고 정한다 — 쪽이 많을수록 한 장에 쓸 수 있는 몫이 줄어든다.
+     * 이걸 고정값으로 두면 스무 쪽짜리에서 조용히 메모리를 다 먹는다.
+     */
+    private void drawBase() {
+        if (pdf == null) return;
+        int n = pdf.getPageCount();
+        if (n <= 0) return;
+
+        long budget = Runtime.getRuntime().maxMemory() / 8;
+        int w = renderW;
+        if (w <= 0) return;
+        int lowW = Math.round(w * BASE_SCALE);
+        /* 한 장 = 폭 * (폭*1.45) * 4바이트. 다 합쳐 몫을 넘으면 그만큼 낮춘다. */
+        double each = (double) lowW * lowW * 1.45 * 4;
+        if (each * n > budget) lowW = (int) Math.sqrt(budget / (n * 1.45 * 4));
+        if (lowW < 180) lowW = 180;
+
+        final int width = lowW;
+        for (int i = 0; i < n; i++) {
+            final int at = i;
+            io.execute(() -> {
+                if (base.containsKey(at)) return;
+                Bitmap b = draw(at, width);
+                if (b != null) { base.put(at, b); post(at, b); }
+            });
+        }
+    }
+
     /* PdfRenderer는 페이지를 한 번에 하나만 열 수 있다. 렌더링을 단일 스레드에
        몰아둔 이유가 이것이다 — 여기서만 부른다. */
     private Bitmap render(int index, int width) {
@@ -742,11 +817,11 @@ public class PdfViewActivity extends Activity {
         if (b != null) return b;
         if (!lowMemory) return null;
 
-        /* 미리 그려둔 쪽을 놓아주고 한 번만 다시 시도한다 — 지금 보는 쪽이
-           미리보기보다 급하다. 사전 로딩이 생기면서 여기 닿을 일이 늘었고,
-           대개 이 한 번으로 넘어간다. */
+        /* 선명한 쪽들을 놓아주고 한 번만 다시 시도한다 — 지금 보는 쪽이 미리
+           그려둔 것보다 급하다. 밑그림은 남긴다. 그게 빈 종이를 막는 마지막 보루고,
+           다 합쳐도 선명한 쪽 두 장 값이라 여기서 얻을 것도 별로 없다. */
         lowMemory = false;
-        cache.evictAll();
+        sharp.evictAll();
         b = draw(index, width);
         if (b == null && lowMemory)
             fail("이 자료는 너무 커서 열지 못했습니다 — '다른 앱'으로 열어 보세요");
