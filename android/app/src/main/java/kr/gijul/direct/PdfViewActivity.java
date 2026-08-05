@@ -75,6 +75,8 @@ public class PdfViewActivity extends Activity {
     private static final int HARD_MAX_PX = 3000;
     /** 전 쪽 밑그림의 폭. 자리를 채우는 용도라 작고 싸야 한다. */
     private static final int THUMB_PX = 280;
+    /** 한 쪽에 이만큼 머물면 흘러가는 중이라도 제 해상도로 그린다 */
+    private static final long DWELL_MS = 200;
     /* 1보다 작게도 줄인다 — 양옆에 여백이 생기면서 여러 쪽이 한눈에 들어온다.
        더 줄여봐야 글자를 못 읽으니 여기서 멈춘다. */
     private static final float MIN_ZOOM = 0.5f;
@@ -87,6 +89,7 @@ public class PdfViewActivity extends Activity {
     private TextView topBtn;
     private View scrollbar;
     private boolean dragging;      // 스크롤 막대를 잡고 있는 중
+    private int scrollState = RecyclerView.SCROLL_STATE_IDLE;
     private boolean chrome = true;      // 위 막대·떠 있는 단추를 보여줄지
     private RecyclerView list;
     private TextView status;
@@ -183,14 +186,14 @@ public class PdfViewActivity extends Activity {
         list.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override public void onScrolled(@NonNull RecyclerView v, int dx, int dy) { updateVisible(); }
 
-            /* 손을 뗀 자리에서 다시 건다.
-               스크롤 도중에 건 요청은 화면이 지나가 버리면 버려지는데, 그걸 다시
-               물어보는 곳이 없어서 멈춘 자리가 밑그림인 채로 남아 있었다. 확대해야
-               제대로 보이던 이유가 이것이다 — 확대만이 다시 요청을 걸었다. */
             @Override public void onScrollStateChanged(@NonNull RecyclerView v, int state) {
+                scrollState = state;
                 /* 막대를 끄는 동안에는 매 프레임 IDLE로 떨어진다(scrollBy는 곧바로
                    멎으므로). 그때마다 다시 그리면 헛일이라, 놓을 때 한 번만 한다. */
                 if (state == RecyclerView.SCROLL_STATE_IDLE && !dragging) resharp();
+                /* 흘러가던 중에 손을 대는 것은 멈추려는 것이다. 멎기를 기다리지 않고
+                   그 자리를 바로 그리기 시작한다. */
+                else if (state == RecyclerView.SCROLL_STATE_DRAGGING) resharp();
             }
         });
         stage.addView(list, new FrameLayout.LayoutParams(
@@ -578,6 +581,7 @@ public class PdfViewActivity extends Activity {
         visLast = l == RecyclerView.NO_POSITION ? f : l;
 
         syncScrollbar();
+        dwell();
 
         if (a.getItemCount() <= 1) return;
         int i = lm.findFirstCompletelyVisibleItemPosition();
@@ -764,7 +768,10 @@ public class PdfViewActivity extends Activity {
             } else {
                 Bitmap l = base.get(i);
                 if (l != null) set(l);
-                askSharp(i);
+                /* 흘러가는 중에는 걸지 않는다. 지나갈 쪽을 제 해상도로 그리느라
+                   렌더링 스레드가 붙잡히면 그 무게가 넘기는 손에 그대로 온다.
+                   멎거나, 잡거나, 한자리에 머물면 그때 건다. */
+                if (scrollState == RecyclerView.SCROLL_STATE_IDLE) askSharp(i);
             }
         }
 
@@ -896,6 +903,22 @@ public class PdfViewActivity extends Activity {
        뒤 UI 스레드에서만 채운다. */
     private volatile int renderW;
     private volatile int visFirst, visLast;
+
+    /**
+     * 같은 쪽에 충분히 오래 머물면 그린다.
+     *
+     * 멎을 때까지 기다리면, 천천히 훑어보는 동안 내내 밑그림만 보게 된다. 쪽이
+     * 바뀔 때마다 시계를 되감으므로, 빠르게 지나가는 쪽에는 걸리지 않는다.
+     */
+    private void dwell() {
+        if (visFirst == dwelt) return;
+        dwelt = visFirst;
+        list.removeCallbacks(dwellRun);
+        list.postDelayed(dwellRun, DWELL_MS);
+    }
+
+    private int dwelt = -1;
+    private final Runnable dwellRun = this::resharp;
 
     /**
      * 스크롤 막대를 지금 위치에 맞춘다.
