@@ -49,6 +49,10 @@ import java.util.concurrent.Executors;
  * 렌더링해 두고 확대는 뷰 변형으로 처리한다. 그 배율까지는 선명하고, 확대할 때마다
  * 다시 그리지 않아 손가락을 따라온다.
  *
+ * 보고 있는 쪽 앞뒤로 미리 그려 둔다. 넘길 때마다 흰 종이를 보고 기다리지 않게
+ * 하려는 것이고, 그려둔 것은 바이트로 한도를 건 캐시에 담긴다. 축소는 1배 아래로도
+ * 내려가 양옆에 여백이 생기며, 그만큼 여러 쪽이 한눈에 들어온다.
+ *
  * 정답은 PDF가 아니라 PNG라서, 같은 화면에서 한 장짜리로 보여준다.
  */
 public class PdfViewActivity extends Activity {
@@ -60,8 +64,21 @@ public class PdfViewActivity extends Activity {
     private static final String TAG = "기출직행";
     private static final float RENDER_SCALE = 1.5f;   // 화면 너비 대비 렌더링 배율
     private static final float MAX_ZOOM = 2.5f;
+    /* 1보다 작게도 줄인다 — 양옆에 여백이 생기면서 여러 쪽이 한눈에 들어온다.
+       더 줄여봐야 글자를 못 읽으니 여기서 멈춘다. */
+    private static final float MIN_ZOOM = 0.5f;
 
     private final ExecutorService io = Executors.newSingleThreadExecutor();
+
+    /* 그려둔 쪽. 미리 그린 것도 여기 들어가고, 되돌아갈 때도 여기서 나온다.
+       비트맵은 한 쪽에 십수 MB라 개수가 아니라 바이트로 한도를 잡아야 한다.
+       비트맵을 직접 recycle하지 않는 이유는, 아직 화면에 걸린 것을 지우면
+       그 자리에서 죽기 때문이다. 한도를 지키는 쪽이 훨씬 안전하다. */
+    private final android.util.LruCache<Integer, Bitmap> cache =
+            new android.util.LruCache<Integer, Bitmap>(
+                    (int) Math.min(Runtime.getRuntime().maxMemory() / 4, Integer.MAX_VALUE)) {
+                @Override protected int sizeOf(Integer k, Bitmap b) { return b.getByteCount(); }
+            };
 
     private Stage stage;
     private RecyclerView list;
@@ -185,16 +202,19 @@ public class PdfViewActivity extends Activity {
                     setZoom(zoom * d.getScaleFactor());
                     return true;
                 }
+                @Override
+                public void onScaleEnd(ScaleGestureDetector d) { fitHeight(); }
             });
             tap = new GestureDetector(a, new GestureDetector.SimpleOnGestureListener() {
                 @Override
                 public boolean onDoubleTap(MotionEvent e) {
                     setZoom(zoom > 1.2f ? 1f : 2f);
+                    fitHeight();
                     return true;
                 }
                 @Override
                 public boolean onScroll(MotionEvent a, MotionEvent b, float dx, float dy) {
-                    if (zoom <= 1f) return false;    // 원래 크기면 목록이 세로로 스크롤한다
+                    if (zoom <= 1f) return false;    // 원래 크기·축소면 목록이 세로로 스크롤한다
                     panX -= dx;
                     clampPan();
                     apply();
@@ -231,16 +251,29 @@ public class PdfViewActivity extends Activity {
     }
 
     private void setZoom(float z) {
-        zoom = Math.max(1f, Math.min(MAX_ZOOM, z));
-        if (zoom == 1f) panX = panY = 0f;
+        zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
+        if (zoom <= 1f) panX = panY = 0f;      // 줄이면 가로로 움직일 곳이 없다
         clampPan();
         apply();
     }
 
     private void clampPan() {
-        float slack = list.getWidth() * (zoom - 1f) / 2f;
+        /* 확대했을 때만 좌우로 움직일 여지가 있다. 축소 상태에서 이 값을 그대로
+           쓰면 음수가 되어 min/max가 뒤집힌다. */
+        float slack = Math.max(0f, list.getWidth() * (zoom - 1f) / 2f);
         panX = Math.max(-slack, Math.min(slack, panX));
         panY = 0f;
+    }
+
+    /* 축소하면 목록이 화면보다 작게 그려져 아래쪽이 비어버린다. 그만큼 키워두면
+       줄인 뒤에도 화면이 끝까지 채워지고, 그 자리에 다음 쪽들이 들어온다.
+       손짓 도중에 하면 매 프레임 재배치가 되므로 손을 뗀 뒤에만 맞춘다. */
+    private void fitHeight() {
+        ViewGroup.LayoutParams lp = list.getLayoutParams();
+        int want = zoom < 1f
+                ? Math.round(stage.getHeight() / zoom)
+                : ViewGroup.LayoutParams.MATCH_PARENT;
+        if (lp.height != want) { lp.height = want; list.setLayoutParams(lp); }
     }
 
     private void apply() {
@@ -326,7 +359,7 @@ public class PdfViewActivity extends Activity {
             runOnUiThread(() -> {
                 status.setVisibility(View.GONE);
                 list.setAdapter(new Pages());
-                list.post(this::showPage);      // 스크롤하기 전에도 '1 / 16'이 보이게
+                list.post(() -> { measureRender(); showPage(); });   // 배치가 끝난 뒤에 폭을 잰다
             });
         } catch (Exception e) {
             Log.w(TAG, "열지 못했습니다: " + f, e);
@@ -355,6 +388,10 @@ public class PdfViewActivity extends Activity {
     public void onConfigurationChanged(Configuration c) {
         super.onConfigurationChanged(c);
         setZoom(1f);
+        fitHeight();
+        cache.evictAll();        // 화면 너비가 달라졌으니 그려둔 쪽은 크기가 맞지 않는다
+        renderW = 0;
+        list.post(this::measureRender);
         if (list.getAdapter() != null) list.getAdapter().notifyDataSetChanged();
     }
 
@@ -362,6 +399,7 @@ public class PdfViewActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         io.shutdownNow();
+        cache.evictAll();
         try { if (pdf != null) pdf.close(); } catch (Exception ignored) { }
         try { if (fd != null) fd.close(); } catch (Exception ignored) { }
         if (image != null) image.recycle();
@@ -395,7 +433,6 @@ public class PdfViewActivity extends Activity {
 
     private class Page extends RecyclerView.ViewHolder {
         private final ImageView iv;
-        private Bitmap bmp;
         private int shown = -1;
 
         Page(ImageView iv) { super(iv); this.iv = iv; }
@@ -405,29 +442,87 @@ public class PdfViewActivity extends Activity {
             shown = i;
             if (image != null) { iv.setImageBitmap(image); return; }
 
-            int w = Math.round(Math.max(list.getWidth(), 720) * RENDER_SCALE);
+            focus = i;
+            measureRender();
+            Bitmap have = cache.get(i);
+            if (have != null) { iv.setImageBitmap(have); ahead(i); return; }
+
             io.execute(() -> {
-                Bitmap b = render(i, w);
+                Bitmap b = renderInto(i);
                 if (b == null) return;
                 iv.post(() -> {
-                    if (shown != i) { b.recycle(); return; }   // 그리는 사이 다른 쪽으로 넘어갔다
-                    clear();
-                    bmp = b;
-                    iv.setImageBitmap(b);
+                    if (shown == i) iv.setImageBitmap(b);      // 그리는 사이 다른 쪽으로 넘어갔을 수 있다
+                    ahead(i);
                 });
             });
         }
 
-        void clear() {
-            iv.setImageDrawable(null);
-            if (bmp != null && bmp != image) bmp.recycle();
-            bmp = null;
-        }
+        void clear() { iv.setImageDrawable(null); }
+    }
+
+    /* 뒷장을 미리 그려 둔다. 넘길 때마다 흰 종이를 보고 기다리는 게 이 뷰어의
+       유일한 거슬리는 점이었다. 렌더링은 단일 스레드라 보이는 쪽이 먼저 나가고
+       미리 그리기는 그 뒤에 줄을 서므로, 지금 보는 화면을 늦추지 않는다.
+       뒤로도 한 장 잡아두는 건 되돌아갈 때가 앞으로 갈 때만큼 잦기 때문이다. */
+    private void ahead(int i) {
+        preload(i + 1);
+        preload(i + 2);
+        preload(i - 1);
+    }
+
+    private void preload(int i) {
+        if (pdf == null || i < 0 || i >= pdf.getPageCount() || cache.get(i) != null) return;
+        io.execute(() -> {
+            /* 빨리 넘기면 미리 그리기 요청이 줄줄이 쌓인다. 그 사이 손가락은 이미
+               멀리 갔는데 지나간 쪽을 그리고 앉아 있으면, 정작 보고 있는 쪽이
+               그만큼 늦는다. 큐에서 꺼낸 시점에 다시 판단해 버린다. */
+            if (Math.abs(i - focus) > 3) return;
+            renderInto(i);
+        });
+    }
+
+    /** 캐시에 있으면 그대로, 없으면 그려서 넣는다. 렌더링 스레드에서만 부른다. */
+    private Bitmap renderInto(int i) {
+        Bitmap b = cache.get(i);
+        if (b != null) return b;
+        int w = renderW;
+        if (w <= 0) return null;          // 아직 배치 전 — 크기를 모른 채 그리면 흐릿하게 굳는다
+        b = render(i, w);
+        if (b != null) cache.put(i, b);
+        return b;
+    }
+
+    /* 렌더링 스레드에서 list.getWidth()를 읽지 않으려고 들고 있는 값. 배치가 끝난
+       뒤 UI 스레드에서만 채운다. */
+    private volatile int renderW;
+    private volatile int focus;
+
+    private void measureRender() {
+        int w = list.getWidth();
+        if (w > 0) renderW = Math.round(w * RENDER_SCALE);
     }
 
     /* PdfRenderer는 페이지를 한 번에 하나만 열 수 있다. 렌더링을 단일 스레드에
        몰아둔 이유가 이것이다 — 여기서만 부른다. */
     private Bitmap render(int index, int width) {
+        Bitmap b = draw(index, width);
+        if (b != null) return b;
+        if (!lowMemory) return null;
+
+        /* 미리 그려둔 쪽을 놓아주고 한 번만 다시 시도한다 — 지금 보는 쪽이
+           미리보기보다 급하다. 사전 로딩이 생기면서 여기 닿을 일이 늘었고,
+           대개 이 한 번으로 넘어간다. */
+        lowMemory = false;
+        cache.evictAll();
+        b = draw(index, width);
+        if (b == null && lowMemory)
+            fail("이 자료는 너무 커서 열지 못했습니다 — '다른 앱'으로 열어 보세요");
+        return b;
+    }
+
+    private volatile boolean lowMemory;
+
+    private Bitmap draw(int index, int width) {
         try {
             if (pdf == null || index >= pdf.getPageCount()) return null;
             try (PdfRenderer.Page p = pdf.openPage(index)) {
@@ -438,10 +533,9 @@ public class PdfViewActivity extends Activity {
                 return b;
             }
         } catch (OutOfMemoryError e) {
-            /* OOM은 Exception이 아니라 Error다 — 아래 catch로는 잡히지 않아 앱이 죽는다.
-               쪽수가 많은 문제지를 낮은 사양에서 열 때 실제로 닿을 수 있는 경계다. */
+            // OOM은 Exception이 아니라 Error다 — 아래 catch로는 잡히지 않아 앱이 죽는다
             Log.w(TAG, "메모리가 모자라 페이지를 그리지 못했습니다: " + index, e);
-            fail("이 자료는 너무 커서 열지 못했습니다 — '다른 앱'으로 열어 보세요");
+            lowMemory = true;
             return null;
         } catch (Exception e) {
             Log.w(TAG, "페이지를 그리지 못했습니다: " + index, e);
