@@ -85,6 +85,7 @@ public class PdfViewActivity extends Activity {
     private LinearLayout bar;
     private TextView zoomPill;
     private TextView topBtn;
+    private View scrollbar;
     private boolean chrome = true;      // 위 막대·떠 있는 단추를 보여줄지
     private RecyclerView list;
     private TextView status;
@@ -209,6 +210,19 @@ public class PdfViewActivity extends Activity {
         zp.gravity = Gravity.TOP | Gravity.END;
         zp.setMargins(0, dp(12), dp(12), 0);
         stage.addView(zoomPill, zp);
+
+        /* 스크롤 막대. 목록에 붙은 기본 막대는 확대 변형을 같이 받아 늘어나므로,
+           변형 밖인 무대 위에 따로 둔다. 자리만 알려주면 되니 얇게. */
+        scrollbar = new View(this);
+        android.graphics.drawable.GradientDrawable sg = new android.graphics.drawable.GradientDrawable();
+        sg.setColor(night ? 0x66EDE8DF : 0x55221F1A);
+        sg.setCornerRadius(dp(3));
+        scrollbar.setBackground(sg);
+        scrollbar.setVisibility(View.GONE);
+        FrameLayout.LayoutParams sbp = new FrameLayout.LayoutParams(dp(5), 0);
+        sbp.gravity = Gravity.TOP | Gravity.END;
+        sbp.rightMargin = dp(3);
+        stage.addView(scrollbar, sbp);
 
         /* 뒤쪽까지 내려갔다가 처음으로 돌아오는 일이 잦다 */
         topBtn = pill("맨 위로");
@@ -525,6 +539,8 @@ public class PdfViewActivity extends Activity {
         visFirst = f;
         visLast = l == RecyclerView.NO_POSITION ? f : l;
 
+        syncScrollbar();
+
         if (a.getItemCount() <= 1) return;
         int i = lm.findFirstCompletelyVisibleItemPosition();
         if (i == RecyclerView.NO_POSITION) i = f;
@@ -767,21 +783,30 @@ public class PdfViewActivity extends Activity {
         return Math.max(Math.round(renderW * MIN_ZOOM), Math.min(want, afford));
     }
 
+    /**
+     * 이 쪽을 제 해상도로 맞춘다.
+     *
+     * 같은 쪽의 요청이 이미 큐에 있어도 버리지 않는다. 예전에는 버렸는데, 그러면
+     * 나중에 온 요청이 담고 있던 '지금 화면에 붙여라'라는 뜻까지 같이 사라졌다.
+     * 겹쳐도 손해가 없다 — 먼저 온 쪽이 캐시를 채우고, 나머지는 아래의 적중 경로로
+     * 빠지면서 화면에만 붙인다.
+     */
     private void askSharp(int i) {
         if (pdf == null || i < 0 || i >= pdf.getPageCount()) return;
-        if (!queued.add(i)) return;
         io.execute(() -> {
-            try {
-                if (i < visFirst - 1 || i > visLast + 1) return;   // 그 사이 화면이 옮겨갔다
-                int w = wantW();
-                if (w <= 0) return;
-                Bitmap b = sharp.get(i);
-                if (b != null && b.getWidth() >= w * 0.95f) return;
-                b = render(i, w);
-                if (b != null) { sharp.put(i, b); post(i, b); }
-            } finally {
-                queued.remove(i);
+            if (i < visFirst - 1 || i > visLast + 1) return;   // 그 사이 화면이 옮겨갔다
+            int w = wantW();
+            if (w <= 0) return;
+            Bitmap b = sharp.get(i);
+            if (b != null && b.getWidth() >= w * 0.95f) {
+                /* 캐시에 있다고 그냥 돌아서면 안 된다. 그려둔 것과 화면에 붙어 있는
+                   것은 다른 이야기다 — 캐시에는 선명한 게 있는데 화면은 밑그림인 채로
+                   굳는 자리가 여기서 생겼다. */
+                post(i, b);
+                return;
             }
+            b = render(i, w);
+            if (b != null) { sharp.put(i, b); post(i, b); }
         });
     }
 
@@ -807,17 +832,43 @@ public class PdfViewActivity extends Activity {
      * 1:1) 여러 장을 그려도 비용은 오히려 준다.
      */
     private void resharp() {
-        updateVisible();
-        for (int i = visFirst - 1; i <= visLast + 1; i++) askSharp(i);
+        /* 배치가 끝난 뒤에 읽어야 한다. 목록 높이를 바꾸면 재배치는 다음 차례로
+           미뤄지는데, 그 전에 범위를 읽으면 축소해서 새로 드러난 쪽들이 범위 밖으로
+           판정돼 요청이 통째로 버려진다. */
+        list.post(() -> {
+            updateVisible();
+            for (int i = visFirst - 1; i <= visLast + 1; i++) askSharp(i);
+        });
     }
-
-    /** 큐에 이미 올라간 쪽. 확대 중에는 요청이 연달아 들어와 같은 쪽이 쌓이기 쉽다. */
-    private final java.util.Set<Integer> queued = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     /* 렌더링 스레드에서 list.getWidth()를 읽지 않으려고 들고 있는 값. 배치가 끝난
        뒤 UI 스레드에서만 채운다. */
     private volatile int renderW;
     private volatile int visFirst, visLast;
+
+    /**
+     * 스크롤 막대를 지금 위치에 맞춘다.
+     *
+     * 길이와 위치는 목록이 알려주는 비율로만 정한다 — 목록 좌표가 배율에 따라
+     * 달라져도 '전체 중 어디쯤'은 그대로라서, 확대 상태와 무관하게 맞는다.
+     */
+    private void syncScrollbar() {
+        if (scrollbar == null || stage.getHeight() <= 0) return;
+        int range = list.computeVerticalScrollRange();
+        int extent = list.computeVerticalScrollExtent();
+        if (range <= extent || extent <= 0) { scrollbar.setVisibility(View.GONE); return; }
+
+        int track = stage.getHeight();
+        int h = Math.max(dp(28), Math.round(track * (float) extent / range));
+        int max = range - extent;
+        int y = max <= 0 ? 0
+                : Math.round((track - h) * Math.min(1f, list.computeVerticalScrollOffset() / (float) max));
+
+        ViewGroup.LayoutParams lp = scrollbar.getLayoutParams();
+        if (lp.height != h) { lp.height = h; scrollbar.setLayoutParams(lp); }
+        scrollbar.setTranslationY(y);
+        scrollbar.setVisibility(View.VISIBLE);
+    }
 
     /** 표시 폭. 그리는 크기의 기준이므로 곱하지 않고 그대로 쓴다. */
     private void measureRender() {
