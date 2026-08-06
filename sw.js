@@ -103,8 +103,11 @@ self.addEventListener("fetch", e=>{
 
 self.addEventListener("message", e=>{
   if(e.data !== "check" || !e.source) return;
+  /* 달라진 게 없다는 답도 돌려준다. 페이지가 손으로 확인할 때 앱 쪽 답과 모아서
+     한 번에 말하느라 양쪽을 다 기다리는데, 여기서 입을 다물면 그 기다림이 끝나지
+     않는다. 저절로 도는 확인에서는 페이지가 이 답을 그냥 흘려보낸다. */
   e.waitUntil(Promise.all([
     sweep(),
-    check().then(changed=>{ if(changed) e.source.postMessage({ type:"updated" }); })
+    check().then(changed=> e.source.postMessage({ type: changed ? "updated" : "current" }))
   ]));
 });

@@ -366,6 +366,7 @@ public class PdfViewActivity extends Activity {
         private final GestureDetector tap;
         private boolean cancelled;      // 두 번째 손가락이 닿는 순간 목록의 스크롤을 끊는다
         private boolean toButton;       // 이번 터치가 떠 있는 단추 몫인지
+        private float slideX, slideY;   // 여백에서 시작한 손짓을 목록 안으로 옮겨 놓는 거리
 
         Stage(PdfViewActivity a) {
             super(a);
@@ -399,7 +400,10 @@ public class PdfViewActivity extends Activity {
             tap = new GestureDetector(a, new GestureDetector.SimpleOnGestureListener() {
                 @Override
                 public boolean onSingleTapConfirmed(MotionEvent e) {
-                    setChrome(!chrome);      // 가려둔 것을 다시 부르는 유일한 길
+                    /* 되부르기 전용이다. 켜는 쪽까지 두드림에 맡겼더니 자리를 잡거나
+                       쪽을 넘기다 손이 스치는 것만으로 막대가 사라졌다 — 가리는 것은
+                       '가리기'를 눌렀을 때만, 되부르는 것은 아무 데나 두드려서. */
+                    if (!chrome) setChrome(true);
                     return true;
                 }
                 @Override
@@ -432,7 +436,11 @@ public class PdfViewActivity extends Activity {
                두드림으로도 세어져, 단추를 누르는 순간 그 단추가 사라진다.
                판단은 손가락이 닿는 순간에 한 번만 한다 — 매번 다시 보면 손짓 도중에
                단추 위를 지나가는 것만으로 주인이 바뀐다. */
-            if (e.getActionMasked() == MotionEvent.ACTION_DOWN) toButton = onButton(e);
+            if (e.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                toButton = onButton(e);
+                slideX = toButton ? 0f : into(e.getX(), panX, list.getWidth() * zoom);
+                slideY = toButton ? 0f : into(e.getY(), 0f, list.getHeight() * zoom);
+            }
             if (toButton) {
                 if (e.getActionMasked() == MotionEvent.ACTION_UP
                         || e.getActionMasked() == MotionEvent.ACTION_CANCEL) toButton = false;
@@ -460,17 +468,59 @@ public class PdfViewActivity extends Activity {
                 if (a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_CANCEL) cancelled = false;
                 return true;
             }
-            return super.dispatchTouchEvent(e);
+            return pass(e);
+        }
+
+        /**
+         * 여백에서 시작한 손짓이 목록에 닿게 한다.
+         *
+         * 1배 아래로 줄이면 목록은 가운데에 서고 양옆이 빈다. 그 빈 자리는 어느
+         * 자식의 것도 아니라서, 안드로이드는 거기서 시작한 손짓을 아무도 받지
+         * 않은 것으로 보고 **나머지 손가락 움직임을 이 판에 아예 보내지 않는다.**
+         * 여백에서는 넘기기도 두드리기도 확대도 되지 않던 이유가 이것이다.
+         *
+         * 그래서 두 가지를 한다. 닿는 순간의 좌표를 목록 안쪽으로 당겨 두고(여기),
+         * 무슨 일이 있어도 참을 돌려준다(pass). 당기는 거리는 손짓이 끝날 때까지
+         * 그대로라 통째로 밀기만 하는 셈이고, 움직인 거리는 조금도 달라지지 않는다.
+         *
+         * 세로도 같이 본다. 지금은 목록 높이를 배율에 맞춰 늘려 두므로 아래가 빌
+         * 일이 없지만, 그건 fitHeight가 제때 돌았다는 전제다. 그 전제가 한 번
+         * 어긋나면 화면 아랫동네가 통째로 죽는 종류의 고장이라, 여기서 막는다.
+         *
+         * @param at   손가락이 닿은 자리 (무대 좌표)
+         * @param from 목록이 그려지는 구간의 시작
+         * @param len  그 구간의 길이 (배율까지 반영한 값)
+         */
+        private float into(float at, float from, float len) {
+            if (len < 2f) return 0f;
+            /* 끝 쪽은 '미만'이다 — 안드로이드가 자식 안인지 볼 때 오른쪽·아래 변은
+               치지 않는다. 딱 그 자리에서만 손짓이 새던 것을 여기서 막는다. */
+            if (at < from) return from + 1f - at;
+            if (at >= from + len) return from + len - 1f - at;
+            return 0f;
+        }
+
+        private boolean pass(MotionEvent e) {
+            boolean moved = slideX != 0f || slideY != 0f;
+            if (moved) e.offsetLocation(slideX, slideY);
+            super.dispatchTouchEvent(e);
+            if (moved) e.offsetLocation(-slideX, -slideY);
+            /* 자식이 안 받았어도 참이다 — 거짓을 돌려주면 그 손짓의 나머지가 이
+               판까지 오지 않아 확대도 두드림도 같이 죽는다. */
+            return true;
         }
 
         private boolean onButton(MotionEvent e) {
             return hits(zoomPill, e) || hits(topBtn, e) || hits(scrollbar, e);
         }
 
+        /* 스크롤 막대는 배치 자리가 아니라 translationY로 옮겨 다닌다. 배치 좌표만
+           보면 막대가 아래에 있는데도 위쪽 구석이 막대로 잡히고, 정작 막대 위는
+           단추가 아닌 것으로 새어 나간다. 옮긴 만큼 같이 본다. */
         private boolean hits(View v, MotionEvent e) {
             if (v == null || v.getVisibility() != View.VISIBLE) return false;
-            return e.getX() >= v.getLeft() && e.getX() <= v.getRight()
-                    && e.getY() >= v.getTop() && e.getY() <= v.getBottom();
+            float x = e.getX() - v.getTranslationX(), y = e.getY() - v.getTranslationY();
+            return x >= v.getLeft() && x <= v.getRight() && y >= v.getTop() && y <= v.getBottom();
         }
     }
 
