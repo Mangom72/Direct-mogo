@@ -94,8 +94,33 @@ public class MainActivity extends Activity {
         updater = new Updater(this);
         setContentView(web);
 
-        if (state == null) web.loadUrl(SITE);
+        if (state == null) web.loadUrl(startUrl(getIntent()));
         else web.restoreState(state);
+    }
+
+    /* 이미 떠 있는 채로 링크를 받으면 여기로 온다(launchMode=singleTask) */
+    @Override
+    protected void onNewIntent(Intent i) {
+        super.onNewIntent(i);
+        setIntent(i);
+        String go = startUrl(i);
+        if (!SITE.equals(go)) web.loadUrl(go);
+    }
+
+    /**
+     * 링크로 열렸으면 그 자리로, 아니면 첫 화면으로.
+     *
+     * intent:// 로 넘어온 경우 주소에 조각(#…)을 실을 수 없어 따로 받는다 — 그 형식은
+     * '#Intent;' 를 구분자로 쓰기 때문에 페이지의 해시와 자리를 다툰다.
+     */
+    private String startUrl(Intent i) {
+        String go = SITE;
+        Uri d = i == null ? null : i.getData();
+        if (d != null && d.toString().startsWith(SITE)) go = d.toString();
+
+        String frag = i == null ? null : i.getStringExtra("gijul_frag");
+        if (frag != null && frag.startsWith("#") && go.indexOf('#') < 0) go += frag;
+        return go;
     }
 
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
