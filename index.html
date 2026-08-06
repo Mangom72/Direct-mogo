@@ -322,6 +322,12 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 .empty{background:var(--card);border:1.5px dashed var(--rule);padding:22px;font-size:13px;color:var(--ink2);line-height:1.7;text-align:center}
 footer{max-width:900px;margin:22px auto 0;font-size:11px;color:var(--ink2);line-height:1.85}
 footer b{color:var(--ink)}
+/* 저장소 주소. 어디서 온 자료인지 따라갈 수 있어야 한다. */
+.src{margin-top:10px}
+.src a{color:var(--mark);font-weight:700;text-decoration:none;word-break:break-all}
+.src a:hover{text-decoration:underline}
+.src a:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+
 /* 앱에서만 보이는 판 정보. 웹에서는 hidden 그대로 남는다. */
 .appinfo[hidden]{display:none}
 .appinfo{margin-top:10px;padding-top:9px;border-top:1.5px solid var(--rule);
@@ -455,6 +461,8 @@ footer b{color:var(--ink)}
   · 연도는 <b>시행 연도</b>입니다. 평가원 시험의 학년도는 시행 연도 +1이므로(예: <b>2013년 6월 시행 = 2014학년도 6월 모평</b>) 각 연도에 학년도를 병기했습니다. 교육청 학평은 관례상 시행 연도로만 부릅니다.<br>
   · 문제·해설은 PDF, 정답은 이미지입니다(웹은 새 탭, 앱은 앱 안에서 열립니다). 회차에 따라 일부 자료가 없으면 버튼이 비활성화됩니다.<br>
   · 모든 링크는 EBSi가 공개 제공하는 파일 주소로 직접 연결되며(로그인 불필요), 이 페이지는 어떤 파일도 저장·재배포하지 않습니다. 저작권은 <b>한국교육과정평가원</b> 및 <b>각 시·도교육청</b>에 있습니다.
+  <div class="src">소스와 자료를 모으는 방식은 모두 공개돼 있습니다 —
+    <a href="https://github.com/Mangom72/Direct-mogo" target="_blank" rel="noopener">github.com/Mangom72/Direct-mogo</a></div>
   <div class="appinfo" id="appInfo" hidden></div>
 </footer>
 
