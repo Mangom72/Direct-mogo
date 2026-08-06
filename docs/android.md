@@ -131,32 +131,69 @@ CI에서 빌드하려면 저장소 시크릿에 `KEYSTORE_BASE64`(키를 base64�
 
 ## 링크를 앱으로 받기
 
-사이트 주소를 앱이 받도록 등록해 두었습니다(`AndroidManifest.xml`의 VIEW 인텐트 필터).
-그런데 **안드로이드가 그 등록을 인정하려면 도메인 뿌리에 확인 파일이 있어야 합니다** —
-`https://mangom72.github.io/.well-known/assetlinks.json`. 경로가 아니라 뿌리라서, 프로젝트
-페이지인 이 저장소에서는 그 자리에 파일을 놓을 수 없습니다. 사용자 페이지 저장소
-(`mangom72/mangom72.github.io`)에 놓아야 합니다.
-
-넣을 내용은 [`docs/assetlinks.json`](assetlinks.json)에 만들어 두었습니다. 서명 키의 지문이
-들어 있으므로 **키를 바꾸면 이 파일도 같이 바꿔야 합니다.**
+앱이 사이트 주소를 받도록 등록해 두었습니다(`AndroidManifest.xml`의 VIEW 인텐트 필터).
+그런데 **안드로이드가 그 등록을 인정하려면 도메인 뿌리에 확인 파일이 있어야 합니다.**
 
 ```
-mangom72.github.io/            ← 사용자 페이지 저장소
+https://mangom72.github.io/.well-known/assetlinks.json
+```
+
+경로가 아니라 **뿌리**입니다. 이 저장소는 프로젝트 페이지라 `/Direct-mogo/` 아래에만
+파일을 놓을 수 있어서, 저 자리는 **사용자 페이지 저장소**의 몫입니다.
+
+### 한 번만 하면 되는 절차
+
+**1. `mangom72/mangom72.github.io` 저장소가 있는지 확인합니다.**
+   없으면 새로 만듭니다 — 이름이 정확히 `mangom72.github.io`여야 사용자 페이지가 됩니다.
+   Public, README 하나로 시작해도 됩니다.
+
+**2. 그 저장소에 파일을 놓습니다.** 경로와 이름이 정확해야 합니다.
+
+```
+mangom72.github.io/
   .well-known/
-    assetlinks.json            ← docs/assetlinks.json 을 그대로
+    assetlinks.json      ← 이 저장소의 docs/assetlinks.json 을 그대로 복사
 ```
 
-올린 뒤 확인:
+내용은 [`assetlinks.json`](assetlinks.json)에 서명 지문까지 채워 두었습니다.
+`.well-known` 앞의 점을 빠뜨리지 마세요.
+
+**3. Pages를 켭니다.** Settings → Pages → Source를 `main` / `/ (root)`로.
+   사용자 페이지는 보통 자동으로 켜집니다.
+
+**4. 실제로 내려오는지 봅니다.** 이게 안 되면 아래는 전부 무의미합니다.
 
 ```bash
-curl https://mangom72.github.io/.well-known/assetlinks.json
-adb shell pm verify-app-links --re-verify kr.gijul.direct
-adb shell pm get-app-links kr.gijul.direct        # verified 로 바뀌면 성공
+curl -i https://mangom72.github.io/.well-known/assetlinks.json
 ```
 
-**이 파일이 없어도** 설정 → 앱 → 기출 직행 → **기본으로 열기**에서 켜면 동작합니다.
-확인이 되면 그 과정 없이 링크가 바로 앱으로 갑니다.
+`200`과 JSON 본문이 나와야 합니다. `404`면 경로나 Pages 설정이 틀린 것입니다.
+`Content-Type`은 `application/json`이 아니어도 동작합니다.
 
-페이지 쪽에도 대비가 있습니다 — 앱을 받아 간 적이 있는 기기에서만 `intent:`로 한 번
-두드려 보고, 앱이 없으면 브라우저가 제자리로 돌아옵니다. 앱 링크가 확인되면 페이지가
-뜨기도 전에 OS가 넘기므로 이쪽은 돌지 않습니다.
+**5. 기기에서 다시 확인시킵니다.** 앱을 새로 설치하면 자동으로 하지만, 이미 깔려 있으면:
+
+```bash
+adb shell pm verify-app-links --re-verify kr.gijul.direct
+adb shell pm get-app-links kr.gijul.direct
+```
+
+마지막 줄이 `mangom72.github.io: verified` 로 바뀌면 끝입니다.
+`none`이나 `1024`(확인 실패)면 4번이 제대로 안 된 것입니다.
+
+### 확인이 안 돼도 쓸 수 있습니다
+
+**설정 → 앱 → 기출 직행 → 기본으로 열기 → 지원되는 링크 열기**를 켜면
+확인 없이도 링크가 앱으로 갑니다. 기기마다 한 번씩 해야 합니다.
+
+그리고 페이지 쪽에도 대비가 있어서, 확인 파일이 없어도 안드로이드 브라우저에서
+사이트를 열면 `intent:`로 앱을 한 번 두드립니다 — 있으면 열리고, 없으면 제자리입니다.
+앱 링크가 확인되면 페이지가 뜨기도 전에 OS가 넘기므로 이쪽은 돌지 않습니다.
+
+### 서명 키를 바꾸면
+
+`assetlinks.json`의 지문도 같이 바꿔야 합니다. 안 그러면 확인이 깨지고 링크가
+브라우저로 돌아갑니다. 지금 지문은 이렇게 확인합니다:
+
+```bash
+apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
+```

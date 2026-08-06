@@ -4,6 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>기출 직행 · 모의고사 원본 다운로드</title>
+<script>
+/* 앱이 깔려 있으면 앱으로 넘긴다. 여기가 이 파일에서 가장 이른 자리다 —
+   아래 스타일시트가 늦으면 그 뒤의 스크립트도 다 같이 늦는데(폰트 서버가 느린 곳에서
+   실제로 몇 초씩 벌어진다), 앱으로 갈 사람을 그만큼 붙잡아 둘 이유가 없다.
+
+   웹은 앱이 깔렸는지 물어볼 수 없어서 그냥 두드려 본다. 있으면 열리고, 없으면
+   브라우저가 제자리로 돌아온다. 세션에 한 번만 — 표시를 남기지 않으면 돌아오자마자
+   또 두드려 무한히 오간다. */
+(function(){
+  try{
+    if(typeof GijulNative !== "undefined") return;      // 이미 앱 안이다
+    var ua = navigator.userAgent || "", d = navigator.userAgentData;
+    /* '데스크톱 화면으로 보기'에서는 UA의 Android가 사라지고 데스크톱 리눅스가 된다.
+       남는 단서가 '터치가 되는 리눅스'라서 그걸 쓴다. 크롬북은 제외. */
+    window.__androidWeb = /Android/i.test(ua) || (d && d.platform === "Android")
+      || (/Linux/i.test(ua) && !/CrOS/i.test(ua) && (navigator.maxTouchPoints||0) > 0);
+    if(!window.__androidWeb) return;
+    if(sessionStorage.getItem("gijul.apk.v1")) return;
+    sessionStorage.setItem("gijul.apk.v1", "1");
+    /* 주소에 조각(#…)을 실을 수 없다 — intent: 형식이 '#Intent;'를 구분자로 써서
+       페이지의 해시와 자리를 다툰다. 조각은 별도 항목으로 넘긴다. */
+    location.href = "intent://" + location.host + location.pathname + location.search
+      + "#Intent;scheme=https;package=kr.gijul.direct"
+      + ";S.gijul_frag=" + encodeURIComponent(location.hash)
+      + ";S.browser_fallback_url=" + encodeURIComponent(location.href) + ";end";
+  }catch(e){}
+})();
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#191713">
 <link rel="icon" href="icons/favicon.ico" sizes="32x32">
@@ -1357,47 +1385,8 @@ const APK_KEY = "gijul.apk.v1";
    단서가 '터치가 되는 리눅스'라서 그걸 쓴다. 크롬북은 제외. 터치스크린 달린
    진짜 리눅스 데스크톱이 걸릴 수 있지만, 그래봐야 받아갈 수 있는 링크가 하나
    더 보이는 정도다. */
-function androidWeb(){
-  if(NATIVE) return false;
-  const ua = navigator.userAgent || "";
-  if(/Android/i.test(ua)) return true;
-  const d = navigator.userAgentData;
-  if(d && d.platform === "Android") return true;
-  return /Linux/i.test(ua) && !/CrOS/i.test(ua) && (navigator.maxTouchPoints||0) > 0;
-}
-
-/* 앱이 깔려 있으면 앱으로 넘긴다.
-   웹 페이지는 앱 설치 여부를 알 수 없다 — 물어볼 방법이 없다. 그래서 두 층으로 둔다.
-
-   1) 제대로 된 길은 안드로이드 앱 링크다. 이 주소를 앱이 받도록 등록해 두었으므로,
-      도메인 뿌리에 assetlinks.json이 놓이면(docs/android.md) 페이지가 뜨기도 전에
-      OS가 앱으로 넘긴다. 그게 되면 아래는 돌 일이 없다.
-   2) 그 전까지는 intent:로 한 번 두드려 본다. 깔려 있으면 열리고, 아니면 브라우저가
-      제자리로 돌아온다. 다만 '앱을 받아 간 적이 있는' 사람에게만 시도한다 — 안 깔린
-      사람 모두에게 첫 화면이 한 번 깜빡이게 만들 이유가 없다. */
-/* 주소에 조각(#…)을 실을 수 없다 — intent: 형식이 '#Intent;'를 구분자로 쓰기 때문에
-   페이지의 해시와 자리를 다툰다. 그래서 조각은 별도 항목으로 넘긴다. */
-function appIntent(){
-  return "intent://" + location.host + location.pathname + location.search
-    + "#Intent;scheme=https;package=kr.gijul.direct"
-    + ";S.gijul_frag=" + encodeURIComponent(location.hash)
-    + ";S.browser_fallback_url=" + encodeURIComponent(location.href) + ";end";
-}
-
-function toApp(){
-  let got = null;
-  try{ got = localStorage.getItem(APK_KEY); }catch(e){}
-  if(got !== "got") return false;
-  /* 한 세션에 한 번만. 앱이 없으면 브라우저가 제자리로 돌아오는데, 표시를 남기지
-     않으면 돌아오자마자 또 두드려 무한히 오간다. */
-  try{ if(sessionStorage.getItem(APK_KEY)) return false; sessionStorage.setItem(APK_KEY, "1"); }catch(e){}
-  location.href = appIntent();
-  return true;
-}
-
-function tookApk(){
-  try{ localStorage.setItem(APK_KEY, "got"); }catch(e){}
-}
+/* 판정은 head의 이른 스크립트가 이미 해뒀다. 같은 규칙을 두 벌 두지 않는다. */
+function androidWeb(){ return !NATIVE && !!window.__androidWeb; }
 
 if(androidWeb()){
   /* 늘 있는 자리 — 푸터. 앱에서는 같은 자리에 판 정보가 뜬다. */
@@ -1405,20 +1394,18 @@ if(androidWeb()){
   box.innerHTML = `<span>안드로이드 앱으로 쓰면 문제지를 <b>앱 안에서 바로</b> 읽고, 회차를 통째로 담아 오프라인에서 볼 수 있습니다.</span>`;
   const a = document.createElement("a");
   a.href = APK; a.textContent = "앱 받기"; a.rel = "noopener";
-  a.onclick = tookApk;
   box.appendChild(a);
   box.hidden = false;
 
-  toApp();
 
   /* 알림 막대는 한 번 닫으면 다시 띄우지 않는다. 매번 권하는 건 광고다. */
   let off = null;
   try{ off = localStorage.getItem(APK_KEY); }catch(e){}
   if(off === null){
     addEventListener("load", ()=> showNotice(
-      "안드로이드 앱이 있습니다 — 문제지를 앱에서 바로 읽고 오프라인으로 담아둘 수 있습니다.",
+      "안드로이드 앱을 설치해보세요 — 문제지를 앱에서 바로 읽고 오프라인으로 담아둘 수 있습니다.",
       "앱 받기",
-      ()=>{ tookApk(); location.href = APK; },
+      ()=>{ location.href = APK; },
       ()=>{ try{ localStorage.setItem(APK_KEY, "off"); }catch(e){} }));
   }
 }
