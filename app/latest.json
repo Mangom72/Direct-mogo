@@ -1,8 +1,8 @@
 {
-  "versionCode": 27,
-  "versionName": "3.6",
+  "versionCode": 28,
+  "versionName": "3.7",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1840623,
-  "sha256": "c988978d5893315761164f73d7a60f9f54f1af0cde20ff4e79f05ec814b861ce",
-  "notes": "보안 점검 반영 — 경로·주소 검증, 노출 범위 축소"
+  "size": 1841303,
+  "sha256": "7736d4bb3724c09d78798940ee6211dcf76f71d6d03e8fde06d3049640c884b1",
+  "notes": "사이트 링크를 앱이 받습니다"
 }
