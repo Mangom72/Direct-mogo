@@ -177,6 +177,12 @@ public class PdfViewActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         stage = new Stage(this);
+        /* 배치가 끝난 뒤에 크기를 묻는 유일한 자리. 화면 회전이든 창 크기 조절이든
+           여기로 들어온다 — 무엇이 그것을 일으켰는지는 알 필요가 없다.
+           한 박자 미루는 이유는 아래 onStageResized에 적어뒀다. */
+        stage.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or2, ob) ->
+                stage.post(this::onStageResized));
+
         list = new RecyclerView(this);
         list.setLayoutManager(new LinearLayoutManager(this));
         /* 목록 크기가 내용에 따라 변하지 않는다고 알려주면 항목마다 전체 배치를
@@ -735,19 +741,64 @@ public class PdfViewActivity extends Activity {
         }
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration c) {
-        super.onConfigurationChanged(c);
-        zoom = 1f; panX = 0f;      // 화면이 바뀌었으니 배율은 원래대로 되돌린다
-        clampPan();
-        apply();
-        fitHeight();
-        // 화면 너비가 달라졌으니 그려둔 쪽은 전부 크기가 맞지 않는다
+    private int lastW, lastH;      // 마지막으로 맞춰둔 무대 크기
+
+    /**
+     * 무대 크기가 실제로 달라졌을 때 맞춘다.
+     *
+     * 예전에는 이 일을 onConfigurationChanged에서 했다. 그 시점의 stage는 아직
+     * **돌기 전 크기**다 — 새 배치는 그다음 차례에나 온다. 그래서 세로로 돌리면
+     * 가로 시절의 높이로 목록을 잡아버리고 그 아래가 통째로 빈 채 남았다.
+     * 크기를 묻는 일은 배치가 끝난 뒤에만 해야 한다.
+     *
+     * 폭과 높이는 할 일이 다르다. 그려둔 쪽은 폭에 맞춰 그린 것이라 폭이 바뀌면
+     * 전부 버려야 하지만, 높이만 바뀌는 일은 '가리기'로 막대를 여닫을 때마다
+     * 일어난다 — 거기서 캐시를 비우면 두드릴 때마다 문서를 다시 그리게 된다.
+     *
+     * 배치 콜백에서 곧바로 부르지 않고 한 박자 미룬다. 그 안에서 목록 크기를
+     * 바꾸거나 notifyDataSetChanged를 부르면 배치 도중에 배치를 다시 요구하는
+     * 꼴이라, RecyclerView가 예외를 던진다.
+     */
+    private void onStageResized() {
+        int w = stage.getWidth(), h = stage.getHeight();
+        if (w <= 0 || h <= 0 || (w == lastW && h == lastH)) return;
+        boolean widthChanged = w != lastW;
+        boolean first = lastW == 0;
+        lastW = w; lastH = h;
+
+        boolean turned = screenChanged;
+        screenChanged = false;
+        if (first) return;         // 첫 배치는 load()가 맡는다
+
+        if (turned) { zoom = 1f; panX = 0f; stopSettle(); }
+        if (!widthChanged) { clampPan(); apply(); fitHeight(); return; }
+
+        // 폭이 달라졌으니 그려둔 쪽은 전부 크기가 맞지 않는다
         sharp.evictAll();
         base.clear();
         renderW = 0;
-        list.post(() -> { measureRender(); drawThumbs(); });
+        measureRender();           // 이제 목록도 새 폭으로 배치돼 있다
+        clampPan();
+        apply();
+        fitHeight();
+        /* 다시 붙기 전에 renderW가 채워져 있어야 한다. 비어 있으면 쪽 높이가
+           엉뚱한 기본값으로 잡히고, 그 뒤에 폭을 알아도 이미 늦다. */
         if (list.getAdapter() != null) list.getAdapter().notifyDataSetChanged();
+        drawThumbs();
+        resharp();
+    }
+
+    private boolean screenChanged;
+
+    @Override
+    public void onConfigurationChanged(Configuration c) {
+        super.onConfigurationChanged(c);
+        /* 크기에 딸린 일은 onStageResized가 맡는다 — 여기서 stage는 아직 옛 크기다.
+           다만 '화면이 통째로 바뀌었다'는 사실은 여기서만 알 수 있고, 배율을
+           되돌릴지가 거기에 달렸다. 가로에서 '가리기'로 막대를 여닫으면 내비게이션
+           바가 드나들며 폭도 같이 변하는데, 그걸 회전과 한 묶음으로 보면 두드릴
+           때마다 보던 배율이 1배로 튕긴다. */
+        screenChanged = true;
     }
 
     @Override
