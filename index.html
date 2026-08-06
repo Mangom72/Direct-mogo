@@ -20,15 +20,19 @@
        남는 단서가 '터치가 되는 리눅스'라서 그걸 쓴다. 크롬북은 제외. */
     window.__androidWeb = /Android/i.test(ua) || (d && d.platform === "Android")
       || (/Linux/i.test(ua) && !/CrOS/i.test(ua) && (navigator.maxTouchPoints||0) > 0);
+    /* 주소에 조각(#…)을 실을 수 없다 — intent: 형식이 '#Intent;'를 구분자로 써서
+       페이지의 해시와 자리를 다툰다. 조각은 별도 항목으로 넘긴다.
+       앱이 없을 때 어디로 보낼지(fallback)는 부르는 쪽이 정한다. */
+    window.__appIntent = function(fallback){
+      return "intent://" + location.host + location.pathname + location.search
+        + "#Intent;scheme=https;package=kr.gijul.direct"
+        + ";S.gijul_frag=" + encodeURIComponent(location.hash)
+        + ";S.browser_fallback_url=" + encodeURIComponent(fallback) + ";end";
+    };
     if(!window.__androidWeb) return;
     if(sessionStorage.getItem("gijul.apk.v1")) return;
     sessionStorage.setItem("gijul.apk.v1", "1");
-    /* 주소에 조각(#…)을 실을 수 없다 — intent: 형식이 '#Intent;'를 구분자로 써서
-       페이지의 해시와 자리를 다툰다. 조각은 별도 항목으로 넘긴다. */
-    location.href = "intent://" + location.host + location.pathname + location.search
-      + "#Intent;scheme=https;package=kr.gijul.direct"
-      + ";S.gijul_frag=" + encodeURIComponent(location.hash)
-      + ";S.browser_fallback_url=" + encodeURIComponent(location.href) + ";end";
+    location.href = window.__appIntent(location.href);
   }catch(e){}
 })();
 </script>
@@ -1391,9 +1395,13 @@ function androidWeb(){ return !NATIVE && !!window.__androidWeb; }
 if(androidWeb()){
   /* 늘 있는 자리 — 푸터. 앱에서는 같은 자리에 판 정보가 뜬다. */
   const box = $("#appInfo");
-  box.innerHTML = `<span>안드로이드 앱으로 쓰면 문제지를 <b>앱 안에서 바로</b> 읽고, 회차를 통째로 담아 오프라인에서 볼 수 있습니다.</span>`;
+  box.innerHTML = `<span>안드로이드 앱으로 쓰면 문제지를 <b>앱 안에서 바로</b> 읽고, 회차를 통째로 담아 오프라인에서 볼 수 있습니다 — 앱이 없으면 받습니다.</span>`;
   const a = document.createElement("a");
-  a.href = APK; a.textContent = "앱 받기"; a.rel = "noopener";
+  a.textContent = "앱으로 열기"; a.rel = "noopener";
+  /* 이미 깔려 있으면 열고, 없으면 그때 받는다. 웹은 설치 여부를 물어볼 수 없으니
+     한 번 두드려 보게 하고, 실패했을 때 갈 곳을 APK로 지정한다.
+     자동으로 두드리는 것과 달리 이건 확실한 조작이라 브라우저가 막지 않는다. */
+  a.href = window.__appIntent ? window.__appIntent(APK) : APK;
   box.appendChild(a);
   box.hidden = false;
 
