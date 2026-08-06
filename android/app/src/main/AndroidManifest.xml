@@ -23,6 +23,19 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- 사이트 주소를 앱이 받는다. autoVerify가 실제로 걸리려면 도메인 뿌리에
+                 .well-known/assetlinks.json이 있어야 하는데, 여기는 프로젝트 페이지라
+                 그 자리가 사용자 페이지 저장소에 있다(docs/android.md 참고). 확인이
+                 안 된 상태에서도 설정 > 기본으로 열기에서 켜면 동작한다. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                      android:host="mangom72.github.io"
+                      android:pathPrefix="/Direct-mogo/" />
+            </intent-filter>
         </activity>
 
         <!-- 문제·정답·해설을 앱 안에서 읽는 화면. WebView에 PDF 뷰어가 없어 직접 그린다. -->

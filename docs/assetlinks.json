@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "kr.gijul.direct",
+      "sha256_cert_fingerprints": [
+        "54:37:0E:D9:0C:11:E5:3D:BC:7D:3C:C0:55:58:F4:9D:D1:11:BD:65:78:E4:33:85:0D:6E:83:62:2C:FD:10:C1"
+      ]
+    }
+  }
+]

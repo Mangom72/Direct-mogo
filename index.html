@@ -1366,23 +1366,59 @@ function androidWeb(){
   return /Linux/i.test(ua) && !/CrOS/i.test(ua) && (navigator.maxTouchPoints||0) > 0;
 }
 
+/* 앱이 깔려 있으면 앱으로 넘긴다.
+   웹 페이지는 앱 설치 여부를 알 수 없다 — 물어볼 방법이 없다. 그래서 두 층으로 둔다.
+
+   1) 제대로 된 길은 안드로이드 앱 링크다. 이 주소를 앱이 받도록 등록해 두었으므로,
+      도메인 뿌리에 assetlinks.json이 놓이면(docs/android.md) 페이지가 뜨기도 전에
+      OS가 앱으로 넘긴다. 그게 되면 아래는 돌 일이 없다.
+   2) 그 전까지는 intent:로 한 번 두드려 본다. 깔려 있으면 열리고, 아니면 브라우저가
+      제자리로 돌아온다. 다만 '앱을 받아 간 적이 있는' 사람에게만 시도한다 — 안 깔린
+      사람 모두에게 첫 화면이 한 번 깜빡이게 만들 이유가 없다. */
+/* 주소에 조각(#…)을 실을 수 없다 — intent: 형식이 '#Intent;'를 구분자로 쓰기 때문에
+   페이지의 해시와 자리를 다툰다. 그래서 조각은 별도 항목으로 넘긴다. */
+function appIntent(){
+  return "intent://" + location.host + location.pathname + location.search
+    + "#Intent;scheme=https;package=kr.gijul.direct"
+    + ";S.gijul_frag=" + encodeURIComponent(location.hash)
+    + ";S.browser_fallback_url=" + encodeURIComponent(location.href) + ";end";
+}
+
+function toApp(){
+  let got = null;
+  try{ got = localStorage.getItem(APK_KEY); }catch(e){}
+  if(got !== "got") return false;
+  /* 한 세션에 한 번만. 앱이 없으면 브라우저가 제자리로 돌아오는데, 표시를 남기지
+     않으면 돌아오자마자 또 두드려 무한히 오간다. */
+  try{ if(sessionStorage.getItem(APK_KEY)) return false; sessionStorage.setItem(APK_KEY, "1"); }catch(e){}
+  location.href = appIntent();
+  return true;
+}
+
+function tookApk(){
+  try{ localStorage.setItem(APK_KEY, "got"); }catch(e){}
+}
+
 if(androidWeb()){
   /* 늘 있는 자리 — 푸터. 앱에서는 같은 자리에 판 정보가 뜬다. */
   const box = $("#appInfo");
   box.innerHTML = `<span>안드로이드 앱으로 쓰면 문제지를 <b>앱 안에서 바로</b> 읽고, 회차를 통째로 담아 오프라인에서 볼 수 있습니다.</span>`;
   const a = document.createElement("a");
   a.href = APK; a.textContent = "앱 받기"; a.rel = "noopener";
+  a.onclick = tookApk;
   box.appendChild(a);
   box.hidden = false;
+
+  toApp();
 
   /* 알림 막대는 한 번 닫으면 다시 띄우지 않는다. 매번 권하는 건 광고다. */
   let off = null;
   try{ off = localStorage.getItem(APK_KEY); }catch(e){}
-  if(off !== "off"){
+  if(off === null){
     addEventListener("load", ()=> showNotice(
       "안드로이드 앱이 있습니다 — 문제지를 앱에서 바로 읽고 오프라인으로 담아둘 수 있습니다.",
       "앱 받기",
-      ()=>{ location.href = APK; },
+      ()=>{ tookApk(); location.href = APK; },
       ()=>{ try{ localStorage.setItem(APK_KEY, "off"); }catch(e){} }));
   }
 }
