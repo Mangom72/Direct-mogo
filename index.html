@@ -295,9 +295,11 @@ footer b{color:var(--ink)}
 .appinfo{margin-top:10px;padding-top:9px;border-top:1.5px solid var(--rule);
   display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .appinfo span{color:var(--ink2)}
-.appinfo button{font:inherit;font-size:11px;padding:3px 9px;border-radius:999px;
-  border:1.5px solid var(--rule);background:var(--btn);color:var(--ink2);cursor:pointer}
-.appinfo button:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+.appinfo button,.appinfo a{font:inherit;font-size:11px;padding:3px 9px;border-radius:999px;
+  border:1.5px solid var(--rule);background:var(--btn);color:var(--ink2);cursor:pointer;
+  text-decoration:none;white-space:nowrap;flex:none}
+.appinfo a{border-color:var(--mark);color:var(--mark);font-weight:700}
+.appinfo button:focus-visible,.appinfo a:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 @media (max-width:620px){
   .mast-side{width:88px}
   .mast-title h1{font-size:24px}
@@ -493,14 +495,16 @@ const gradeBox=$("#gradeBox"), grpSel=$("#grp"), subSel=$("#sub"),
       favShare=$("#favShare"), notice=$("#notice"), noticeText=$("#noticeText"),
       noticeYes=$("#noticeYes"), noticeNo=$("#noticeNo");
 
-function showNotice(text, yesLabel, onYes){
+/* onNo는 닫기를 눌렀을 때. 호출한 쪽마다 달라야 해서 여기서 매번 새로 건다 —
+   설치 권유처럼 '한 번 닫으면 다시 안 뜸'이 필요한 알림이 있다. */
+function showNotice(text, yesLabel, onYes, onNo){
   noticeText.textContent = text;
   noticeYes.textContent = yesLabel || "";
   noticeYes.hidden = !yesLabel;
   noticeYes.onclick = ()=>{ notice.hidden=true; if(onYes) onYes(); };
+  noticeNo.onclick = ()=>{ notice.hidden=true; if(onNo) onNo(); };
   notice.hidden = false;
 }
-noticeNo.onclick = ()=>{ notice.hidden = true; };
 
 /* ── 내 과목 ─────────────────────────────────────────────
    저장 형식: [{g:"D300", s:"158"}, …] (학년+과목코드). 과목코드는
@@ -1341,6 +1345,46 @@ if(NATIVE && NATIVE.checkUpdate){
       box.hidden = false;
     }
   }catch(e){}
+}
+
+/* ── 안드로이드 웹에서 앱 권하기 ─────────────────────────────────
+   앱 안에서는 이 코드가 통째로 돌지 않는다(NATIVE가 있으면 이미 앱이다). */
+const APK = "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk";
+const APK_KEY = "gijul.apk.v1";
+
+/* 안드로이드인지 — '데스크톱 화면으로 보기'까지 잡는다.
+   그 모드에서는 UA에서 Android가 사라지고 데스크톱 리눅스(X11)로 바뀐다. 남는
+   단서가 '터치가 되는 리눅스'라서 그걸 쓴다. 크롬북은 제외. 터치스크린 달린
+   진짜 리눅스 데스크톱이 걸릴 수 있지만, 그래봐야 받아갈 수 있는 링크가 하나
+   더 보이는 정도다. */
+function androidWeb(){
+  if(NATIVE) return false;
+  const ua = navigator.userAgent || "";
+  if(/Android/i.test(ua)) return true;
+  const d = navigator.userAgentData;
+  if(d && d.platform === "Android") return true;
+  return /Linux/i.test(ua) && !/CrOS/i.test(ua) && (navigator.maxTouchPoints||0) > 0;
+}
+
+if(androidWeb()){
+  /* 늘 있는 자리 — 푸터. 앱에서는 같은 자리에 판 정보가 뜬다. */
+  const box = $("#appInfo");
+  box.innerHTML = `<span>안드로이드 앱으로 쓰면 문제지를 <b>앱 안에서 바로</b> 읽고, 회차를 통째로 담아 오프라인에서 볼 수 있습니다.</span>`;
+  const a = document.createElement("a");
+  a.href = APK; a.textContent = "앱 받기"; a.rel = "noopener";
+  box.appendChild(a);
+  box.hidden = false;
+
+  /* 알림 막대는 한 번 닫으면 다시 띄우지 않는다. 매번 권하는 건 광고다. */
+  let off = null;
+  try{ off = localStorage.getItem(APK_KEY); }catch(e){}
+  if(off !== "off"){
+    addEventListener("load", ()=> showNotice(
+      "안드로이드 앱이 있습니다 — 문제지를 앱에서 바로 읽고 오프라인으로 담아둘 수 있습니다.",
+      "앱 받기",
+      ()=>{ location.href = APK; },
+      ()=>{ try{ localStorage.setItem(APK_KEY, "off"); }catch(e){} }));
+  }
 }
 
 /* 오프라인 지원. 캐시를 쥐고 있으므로 새 자료는 다음 실행에 보인다 —
