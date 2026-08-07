@@ -266,12 +266,15 @@ public class MainActivity extends Activity {
         return url;
     }
 
-    /** 우리가 직접 그릴 수 있는 자료인지 — 문제·해설은 PDF, 정답은 PNG다 */
+    /** 우리가 직접 그릴 수 있는 형식인지 — 문제·해설은 PDF, 정답은 PNG다 */
+    private static boolean canDraw(String name) {
+        String p = name.toLowerCase();
+        return p.endsWith(".pdf") || p.endsWith(".png") || p.endsWith(".jpg");
+    }
+
     private static boolean isPaper(String url) {
         String p = Uri.parse(url).getPath();
-        if (p == null) return false;
-        p = p.toLowerCase();
-        return p.endsWith(".pdf") || p.endsWith(".png") || p.endsWith(".jpg");
+        return p != null && canDraw(p);
     }
 
     /** 저장 뿌리. 외부 앱 전용 영역이라 권한이 필요 없다. */
@@ -315,13 +318,30 @@ public class MainActivity extends Activity {
             return out.toString();
         }
 
-        /** 받아둔 파일을 기기의 뷰어로 연다 */
+        /**
+         * 받아둔 파일을 앱 안에서 연다.
+         *
+         * 예전에는 곧바로 기기의 PDF 앱으로 넘겼다. 목록의 '문제'는 앱 안 뷰어로
+         * 열리는데 받아둔 자료만 밖으로 나가서, 같은 자료를 어디서 눌렀느냐에 따라
+         * 다른 데로 가는 꼴이었다. 뷰어는 이미 로컬 파일을 열 줄 알았으므로
+         * (EXTRA_FILE) 그리로 보낸다. 밖으로 내보내는 길은 뷰어의 '다른 앱'에
+         * 그대로 남아 있고, 회차의 '보내기'도 예전처럼 공유 시트를 띄운다.
+         */
         @JavascriptInterface
         public void openSaved(String folder, String name) {
             File f;
             try { f = new File(new File(root(), safe(folder)), safe(name)); }
             catch (Exception e) { report(false, 0, "잘못된 이름입니다"); return; }
             if (!f.isFile()) { report(false, 0, "파일이 없습니다"); return; }
+
+            if (canDraw(name)) {
+                Intent i = new Intent(MainActivity.this, PdfViewActivity.class);
+                i.putExtra(PdfViewActivity.EXTRA_FILE, f.getAbsolutePath());
+                i.putExtra(PdfViewActivity.EXTRA_NAME, name);
+                open(i);
+                return;
+            }
+            /* 우리가 그릴 수 없는 형식이면 기기에 맡긴다 */
             try {
                 Uri u = FileProvider.getUriForFile(MainActivity.this, AUTHORITY, f);
                 Intent i = new Intent(Intent.ACTION_VIEW);
@@ -330,7 +350,7 @@ public class MainActivity extends Activity {
                 open(i);
             } catch (Exception e) {
                 Log.w(TAG, "열기 실패: " + name, e);
-                report(false, 0, "열지 못했습니다 — PDF를 볼 앱이 없을 수 있습니다");
+                report(false, 0, "열지 못했습니다 — 이 형식을 볼 앱이 없을 수 있습니다");
             }
         }
 
