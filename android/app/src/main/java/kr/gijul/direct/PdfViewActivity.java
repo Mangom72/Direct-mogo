@@ -32,11 +32,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -128,8 +123,10 @@ public class PdfViewActivity extends Activity {
     private View build() {
         boolean night = (getResources().getConfiguration().uiMode
                 & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-        int bg = night ? 0xFF14120E : 0xFFF3F1EC;
-        int ink = night ? 0xFFEDE8DF : 0xFF221F1A;
+        /* 페이지의 어두운 테마와 같은 잉크색. 뷰어만 다른 검정을 쓰면 앱 안에서
+           화면을 옮길 때마다 바탕색이 튄다. */
+        int bg = night ? 0xFF161A22 : 0xFFF3F1EC;
+        int ink = night ? 0xFFECE7DA : 0xFF221F1A;
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -658,19 +655,15 @@ public class PdfViewActivity extends Activity {
             File dir = new File(getCacheDir(), "view");
             if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("임시 폴더를 만들지 못했습니다");
             File to = new File(dir, MainActivity.safe(nameOf(url)));
-            if (!to.isFile() || to.length() == 0) {
-                HttpURLConnection c = (HttpURLConnection) new URL(MainActivity.fromEbsi(url)).openConnection();
-                c.setConnectTimeout(20000);
-                c.setReadTimeout(60000);
-                c.setInstanceFollowRedirects(true);
-                try {
-                    if (c.getResponseCode() != 200) throw new Exception("HTTP " + c.getResponseCode());
-                    try (InputStream in = c.getInputStream(); OutputStream os = new FileOutputStream(to)) {
-                        byte[] buf = new byte[16384];
-                        int n;
-                        while ((n = in.read(buf)) > 0) os.write(buf, 0, n);
-                    }
-                } finally { c.disconnect(); }
+            /* 받기는 MainActivity가 맡는다 — 다 받은 것만 이 이름에 놓이므로,
+               여기 있다는 것은 온전하다는 뜻이다. 예전에는 이 자리에 직접 썼고,
+               전송이 끊기면 반쪽이 남아 다음부터 '이미 있다'로 걸렸다. 그 회차는
+               앱 저장소를 통째로 지우기 전까지 다시는 열리지 않았다. */
+            if (!to.isFile()) {
+                MainActivity.download(url, to);
+                MainActivity.trimViewCache(getCacheDir());
+            } else {
+                to.setLastModified(System.currentTimeMillis());   // 방금 본 것은 늦게 버린다
             }
             load(to);
         } catch (Exception e) {
