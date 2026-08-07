@@ -96,6 +96,21 @@ public class PdfViewActivity extends Activity {
     private String name = "";
 
     private float zoom = 1f, panX = 0f, panY = 0f;
+
+    /**
+     * 이 화면에서 시작할 배율.
+     *
+     * 가로에서는 1배가 쓸모없다. 문제지는 세로로 긴 종이라, 폭을 화면에 꽉 채우면
+     * 한 쪽의 3분의 1쯤만 보이고 나머지는 계속 굴려야 나온다. 반으로 줄이면 양옆에
+     * 여백이 생기는 대신 훨씬 넓은 범위가 한눈에 들어온다.
+     *
+     * 들어올 때만이 아니라 돌릴 때도 같은 규칙을 쓴다. 회전은 어차피 배율을 되돌리는
+     * 자리인데 거기서만 1배를 고집하면, 가로로 돌릴 때마다 손으로 다시 줄여야 한다.
+     */
+    private float startZoom() {
+        return getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_LANDSCAPE ? MIN_ZOOM : 1f;
+    }
     private boolean pinching;
     private ValueAnimator settle;      // 제자리 찾아가는 중. 새 손짓이 오면 양보한다.
 
@@ -104,6 +119,7 @@ public class PdfViewActivity extends Activity {
         super.onCreate(state);
         String n = getIntent().getStringExtra(EXTRA_NAME);
         name = n == null ? "" : n;
+        zoom = startZoom();        // 가로로 들어오면 반으로 줄여서 시작한다
         setContentView(build());
 
         String path = getIntent().getStringExtra(EXTRA_FILE);
@@ -781,9 +797,12 @@ public class PdfViewActivity extends Activity {
 
         boolean turned = screenChanged;
         screenChanged = false;
-        if (first) return;         // 첫 배치는 load()가 맡는다
+        /* 첫 배치에서 내용을 채우는 일은 load()가 맡지만, 시작 배율을 화면에 거는
+           일은 여기서 해야 한다 — apply()를 부르지 않으면 zoom 값만 있고 목록은
+           1배로 그려진다. */
+        if (first) { clampPan(); apply(); fitHeight(); return; }
 
-        if (turned) { zoom = 1f; panX = 0f; stopSettle(); }
+        if (turned) { zoom = startZoom(); panX = 0f; stopSettle(); }
         if (!widthChanged) { clampPan(); apply(); fitHeight(); return; }
 
         // 폭이 달라졌으니 그려둔 쪽은 전부 크기가 맞지 않는다
