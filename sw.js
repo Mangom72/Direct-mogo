@@ -57,11 +57,17 @@ async function shell(req){
   return res || Response.error();
 }
 
-/* 페이지가 뜬 뒤 명시적으로 물어볼 때만 돈다. 내용이 달라졌으면 캐시를 갈아끼우고 참을 준다. */
+/* 페이지가 뜬 뒤 명시적으로 물어볼 때만 돈다. 내용이 달라졌으면 캐시를 갈아끼우고 참을 준다.
+
+   reload가 아니라 no-cache다. 둘 다 서버에 물어보지만 reload는 HTTP 캐시를 통째로
+   무시하고 무조건 받아 온다 — 바뀐 것이 없어도 실행할 때마다 index.html 190KB를
+   다시 내려받고 있었다. no-cache는 조건부로 물어서, 그대로면 서버가 304만 돌려주고
+   본문은 이미 있는 것을 쓴다. 바뀌었으면 그때만 200으로 새 본문이 온다.
+   아래 비교는 그대로 성립한다 — 어느 쪽이든 res는 지금 서버에 있는 내용이다. */
 async function check(){
   const cache = await caches.open(SHELL);
   const url = new URL("./index.html", self.location).href;
-  const res = await fetch(url, { cache:"reload" }).catch(()=>null);
+  const res = await fetch(url, { cache:"no-cache" }).catch(()=>null);
   if(!res || !res.ok) return false;
   const old = await cache.match(url, { ignoreSearch:true })
            || await cache.match(new URL("./", self.location).href, { ignoreSearch:true });
