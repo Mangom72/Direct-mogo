@@ -3,15 +3,20 @@
    조회·필터는 네트워크 없이 전부 동작한다. 네트워크가 필요한 것은 PDF뿐이다. */
 const VERSION = "v1";
 const SHELL = `gijul-shell-${VERSION}`;
-const FONTS = `gijul-fonts-${VERSION}`;
 const FILES = `gijul-files-${VERSION}`;
-const KEEP = [SHELL, FONTS, FILES];
+const KEEP = [SHELL, FILES];
 
 const SHELL_URLS = [
   "./", "./index.html", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png",
   "./icons/icon-maskable-192.png", "./icons/icon-maskable-512.png",
   "./icons/apple-touch-icon.png", "./icons/favicon.ico", "./icons/favicon-32.png",
+  /* 글꼴도 우리 것이 됐으므로 셸과 함께 미리 받아 둔다 — 첫 방문부터 오프라인에서
+     제 글꼴로 뜨고, 예전처럼 남의 서버가 대답할 때까지 기다릴 일이 없다. */
+  "./fonts/fonts.css",
+  "./fonts/SongMyung-400.woff2",
+  "./fonts/PlexSansKR-400.woff2", "./fonts/PlexSansKR-500.woff2",
+  "./fonts/PlexSansKR-600.woff2", "./fonts/PlexSansKR-700.woff2",
 ];
 
 /* "./"는 빼둔다 — slice로 만든 빈 문자열은 endsWith가 항상 참이라 전부 셸로 빨려든다 */
@@ -19,7 +24,6 @@ const SHELL_PATHS = SHELL_URLS.filter(u => u !== "./").map(u => u.slice(1));
 
 const MAX_FILES = 40;   /* 받아둔 PDF·이미지 보관 개수 */
 
-const isFont = u => u.hostname === "fonts.googleapis.com" || u.hostname === "fonts.gstatic.com";
 const isPaper = u => u.hostname === "wdown.ebsi.co.kr";
 
 self.addEventListener("install", e=>{
@@ -100,7 +104,6 @@ self.addEventListener("fetch", e=>{
   try{ url = new URL(req.url); }catch(err){ return; }
 
   if(req.mode === "navigate"){ e.respondWith(shell(req)); return; }
-  if(isFont(url)){ e.respondWith(cacheFirst(req, FONTS)); return; }
   if(isPaper(url)){ e.respondWith(cacheFirst(req, FILES, trim)); return; }
   if(url.origin === self.location.origin && SHELL_PATHS.some(p=>url.pathname.endsWith(p))){
     e.respondWith(shell(req));

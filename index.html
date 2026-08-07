@@ -63,8 +63,8 @@ addEventListener("securitypolicyviolation", function(e){
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
   script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-pnlkm/DH2BVD4tLfaZ3xt8xSGk4+LKVU9pVw9l40u4M=';
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  font-src 'self' https://fonts.gstatic.com;
+  style-src 'self' 'unsafe-inline';
+  font-src 'self';
   img-src 'self';
   connect-src 'self' https://wdown.ebsi.co.kr;
   worker-src 'self';
@@ -79,12 +79,12 @@ addEventListener("securitypolicyviolation", function(e){
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="기출 직행">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- media="print"로 걸어 두면 받아는 오되 첫 그림을 막지 않는다. 다 오면 아래
-     스크립트가 적용한다 — 이게 없으면 폰트 서버가 대답할 때까지 화면이 하얗다.
-     CSP가 인라인 onload를 막으므로 붙이는 일은 스크립트가 한다. -->
-<link id="webfont" media="print" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- 글꼴은 우리 것을 쓴다. 구글에 맡기면 이 화면 기준으로 118개 요청에 1,699KB가
+     오갔다 — 한글이라 조각이 많다. 화면에 나오는 글자만 잘라 담으면 5개에 424KB다.
+     자르는 일과 새 글자를 채우는 일은 tools/build_fonts.py 가 한다.
+     media="print"로 걸어 두면 받아는 오되 첫 그림을 막지 않는다. 다 오면 아래
+     스크립트가 적용한다. CSP가 인라인 onload를 막으므로 붙이는 일은 스크립트가 한다. -->
+<link id="webfont" media="print" href="fonts/fonts.css" rel="stylesheet">
 <style>
 :root{
   --paper:#EDE8DA;   /* 바탕 종이 */
@@ -163,14 +163,14 @@ body{
 .mast-top{display:flex;align-items:stretch;border-bottom:1.5px solid var(--ink)}
 .mast-title{padding:20px 22px;flex:1}
 .mast-title .kicker{font-size:11px;letter-spacing:3.5px;color:var(--mark);font-weight:600;margin-bottom:7px}
-.mast-title h1{font-family:"Gowun Batang",serif;font-weight:700;margin:0;font-size:31px;letter-spacing:-1px;line-height:1.15}
+.mast-title h1{font-family:"Song Myung",serif;font-weight:700;margin:0;font-size:31px;letter-spacing:-1px;line-height:1.15}
 .mast-title p{margin:8px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.65}
 .mast-side{width:120px;border-left:1.5px solid var(--ink);display:flex;flex-direction:column}
 .mast-side > *{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1px solid var(--rule);padding:6px}
 .mast-side > *:last-child{border-bottom:none}
 .mast-side .theme{font:inherit;background:none;border:none;color:inherit;cursor:pointer;width:100%}
 .mast-side .theme:focus-visible{outline:2.5px solid var(--mark);outline-offset:-3px}
-.mast-side .n{font-family:"Gowun Batang",serif;font-size:21px;font-weight:700;line-height:1}
+.mast-side .n{font-family:"Song Myung",serif;font-size:21px;font-weight:700;line-height:1}
 .mast-side .l{font-size:9.5px;color:var(--ink2);letter-spacing:1px;margin-top:3px}
 
 .panel{background:var(--card);border:1.5px solid var(--ink);border-top:none;padding:20px 22px 22px}
@@ -248,10 +248,10 @@ body{
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 select{width:100%;font:inherit;font-size:14px;padding:10px 11px;border:1.2px solid var(--ink);background:var(--btn);color:var(--ink);border-radius:0}
 select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
-select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
+select#yr{font-family:"Song Myung",serif;font-weight:700;font-size:15px}
 
 .tally{display:flex;align-items:baseline;gap:10px;margin:22px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
-.tally .big{font-family:"Gowun Batang",serif;font-size:23px;font-weight:700}
+.tally .big{font-family:"Song Myung",serif;font-size:23px;font-weight:700}
 .tally .sm{font-size:12px;color:var(--ink2)}
 .tally{flex-wrap:wrap}
 .vault{
@@ -263,7 +263,7 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 
 .yr{margin-bottom:20px}
 .yr-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.yr-head .y{font-family:"Gowun Batang",serif;font-size:19px;font-weight:700;background:var(--ink);color:var(--paper);padding:2px 11px}
+.yr-head .y{font-family:"Song Myung",serif;font-size:19px;font-weight:700;background:var(--ink);color:var(--paper);padding:2px 11px}
 .yr-head .hak{font-size:11.5px;color:var(--ink2)}
 .yr-head .ln{flex:1;height:1px;background:var(--rule)}
 
@@ -274,7 +274,7 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 }
 .item.k-gov{border-left-color:var(--gov)}
 .item.k-edu{border-left-color:var(--edu)}
-.item .nm{font-family:"Gowun Batang",serif;font-size:16.5px;font-weight:700}
+.item .nm{font-family:"Song Myung",serif;font-size:16.5px;font-weight:700}
 .item .meta{font-size:11px;color:var(--ink2);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 /* 앱에 이미 받아둔 회차 */
 .item .meta .kept{font-weight:700;color:var(--edu);border:1px solid var(--edu);border-radius:999px;padding:0 7px;font-size:10px;letter-spacing:.5px}
@@ -307,7 +307,7 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 }
 .sheet-head{display:flex;align-items:flex-start;gap:12px;padding:16px 18px 13px;border-bottom:1.5px solid var(--ink)}
 .sheet-head .t{flex:1;min-width:0}
-.sheet-head .t .nm{font-family:"Gowun Batang",serif;font-size:17px;font-weight:700;line-height:1.3}
+.sheet-head .t .nm{font-family:"Song Myung",serif;font-size:17px;font-weight:700;line-height:1.3}
 .sheet-head .t .sb{font-size:11.5px;color:var(--ink2);margin-top:4px}
 .sheet-x{
   font:inherit;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;flex:none;
@@ -332,7 +332,7 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
 /* 받아둔 자료 — 파일을 따로 늘어놓지 않고 회차로 묶는다 */
 .svault{padding:12px 0;border-bottom:1px solid var(--rule)}
 .svault:last-child{border-bottom:none}
-.svault .nm{font-family:"Gowun Batang",serif;font-size:15.5px;font-weight:700;line-height:1.35}
+.svault .nm{font-family:"Song Myung",serif;font-size:15.5px;font-weight:700;line-height:1.35}
 .svault .sub{font-size:11px;color:var(--ink2);margin-top:3px}
 .svault .row{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
 .svault .row button{

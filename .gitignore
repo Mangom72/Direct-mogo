@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+
+# 서브셋을 뜨려고 받아온 원본 글꼴 — 13MB라 싣지 않는다. build_fonts.py가 다시 받는다.
+fonts/.src/

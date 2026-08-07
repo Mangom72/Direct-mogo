@@ -110,6 +110,15 @@ def main():
         print(f"  서명 SHA-256 {fp}")
         print("  ※ 이 지문이 이전 판본과 다르면 사용자 기기가 업데이트를 거부합니다")
 
+    # 노트는 커밋 메시지가 그대로 들어오는 자리라, 글자가 미리 정해지지 않은 유일한
+    # 통로다. 글꼴에 없는 글자가 섞이면 알림 막대가 네모(□)로 뜬다.
+    check = subprocess.run([sys.executable, str(ROOT / "tools" / "build_fonts.py"), "--check"],
+                           capture_output=True, text=True)
+    if check.returncode != 0:
+        print()
+        print(check.stdout.strip())
+        raise SystemExit("발행을 멈춥니다 — 알림 막대에 네모가 뜹니다")
+
 
 if __name__ == "__main__":
     main()
