@@ -72,9 +72,8 @@ public class PdfViewActivity extends Activity {
     private static final int THUMB_PX = 280;
     /** 한 쪽에 이만큼 머물면 흘러가는 중이라도 제 해상도로 그린다 */
     private static final long DWELL_MS = 200;
-    /* 1보다 작게도 줄인다 — 양옆에 여백이 생기면서 여러 쪽이 한눈에 들어온다.
-       더 줄여봐야 글자를 못 읽으니 여기서 멈춘다. */
-    private static final float MIN_ZOOM = 0.5f;
+    /* 가로에서만 1배 아래로 내려간다. 더 줄여봐야 글자를 못 읽으니 여기서 멈춘다. */
+    private static final float WIDE_MIN_ZOOM = 0.5f;
 
     private final ExecutorService io = Executors.newSingleThreadExecutor();
 
@@ -98,18 +97,25 @@ public class PdfViewActivity extends Activity {
     private float zoom = 1f, panX = 0f, panY = 0f;
 
     /**
-     * 이 화면에서 시작할 배율.
+     * 지금 화면에서 허용하는 가장 작은 배율. 시작 배율이기도 하다.
      *
-     * 가로에서는 1배가 쓸모없다. 문제지는 세로로 긴 종이라, 폭을 화면에 꽉 채우면
-     * 한 쪽의 3분의 1쯤만 보이고 나머지는 계속 굴려야 나온다. 반으로 줄이면 양옆에
-     * 여백이 생기는 대신 훨씬 넓은 범위가 한눈에 들어온다.
+     * 세로와 가로는 사정이 정반대다. 세로에서 1배는 종이 폭이 화면에 꼭 맞는
+     * 상태다 — 그 아래로 내리면 글자만 작아지고 양옆이 빌 뿐, 더 보이는 것이 없다.
+     * 가로에서 1배는 한 쪽의 3분의 1쯤만 보이는 상태라, 줄일 수 있어야 한 쪽이
+     * 눈에 들어온다.
      *
-     * 들어올 때만이 아니라 돌릴 때도 같은 규칙을 쓴다. 회전은 어차피 배율을 되돌리는
-     * 자리인데 거기서만 1배를 고집하면, 가로로 돌릴 때마다 손으로 다시 줄여야 한다.
+     * 그래서 바닥이 곧 시작점이다. 어느 방향에서든 가장 넓게 보이는 자리에서
+     * 시작해 손으로 파고들어 간다. 돌릴 때도 같은 규칙을 쓴다 — 회전은 어차피
+     * 배율을 되돌리는 자리인데 거기서만 다른 값을 고집할 이유가 없다.
+     *
+     * 그리는 쪽(wantW)에서도 읽으므로 방향이 바뀔 때 미리 잡아 둔다. 매번
+     * Configuration을 뒤지면 손짓 한 번에 수십 번 부르게 된다.
      */
-    private float startZoom() {
-        return getResources().getConfiguration().orientation
-                == Configuration.ORIENTATION_LANDSCAPE ? MIN_ZOOM : 1f;
+    private volatile float minZoom = 1f;
+
+    private void syncMinZoom() {
+        minZoom = getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_LANDSCAPE ? WIDE_MIN_ZOOM : 1f;
     }
     private boolean pinching;
     private ValueAnimator settle;      // 제자리 찾아가는 중. 새 손짓이 오면 양보한다.
@@ -119,7 +125,8 @@ public class PdfViewActivity extends Activity {
         super.onCreate(state);
         String n = getIntent().getStringExtra(EXTRA_NAME);
         name = n == null ? "" : n;
-        zoom = startZoom();        // 가로로 들어오면 반으로 줄여서 시작한다
+        syncMinZoom();
+        zoom = minZoom;            // 가로로 들어오면 반으로 줄여서 시작한다
         setContentView(build());
 
         String path = getIntent().getStringExtra(EXTRA_FILE);
@@ -419,7 +426,7 @@ public class PdfViewActivity extends Activity {
                     /* 줄이는 동안 목록이 화면보다 짧아져 아래가 빈 채로 남는다. 다 줄인
                        뒤에 늘리면 그 빈 자리가 눈에 보이므로, 최대로 줄였을 때를 미리
                        잡아둔다. 손짓 내내 재배치가 없고 아래도 비지 않는다. */
-                    setListHeight(Math.round(stage.getHeight() / MIN_ZOOM));
+                    setListHeight(Math.round(stage.getHeight() / minZoom));
                     resharp();
                     return true;
                 }
@@ -576,7 +583,7 @@ public class PdfViewActivity extends Activity {
      */
     private void zoomAt(float z, float fx, float fy) {
         float was = zoom;
-        zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
+        zoom = Math.max(minZoom, Math.min(MAX_ZOOM, z));
         if (zoom == was) return;
 
         // 손가락 아래 있던 지점이 그 자리에 남도록
@@ -760,13 +767,41 @@ public class PdfViewActivity extends Activity {
     private void openElsewhere() {
         if (file == null) return;
         try {
-            Uri u = FileProvider.getUriForFile(this, MainActivity.AUTHORITY, file);
+            File out = named();
+            Uri u = FileProvider.getUriForFile(this, MainActivity.AUTHORITY, out);
             Intent i = new Intent(Intent.ACTION_VIEW);
-            i.setDataAndType(u, file.getName().endsWith(".png") ? "image/png" : "application/pdf");
+            i.setDataAndType(u, out.getName().toLowerCase().endsWith(".png")
+                    ? "image/png" : "application/pdf");
             i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivity(Intent.createChooser(i, name));
         } catch (Exception e) {
             fail("열 수 있는 앱이 없습니다");
+        }
+    }
+
+    /**
+     * 넘겨줄 파일.
+     *
+     * 받는 앱에는 파일 이름이 그대로 보인다. 캐시에 있는 것은 EBSi 파일명이라
+     * 노트앱에 'korA_mun_6IBN939A.pdf'로 꽂혔다 — 화면에는 회차 이름이 떠 있는데
+     * 넘어간 파일만 딴판이었다. 이름이 다르면 그 이름으로 한 벌 떠서 넘긴다.
+     *
+     * 받아둔 자료에서 열었으면 이미 맞는 이름이라 그대로 쓴다. 이름을 맞추다
+     * 실패해도 넘기는 것 자체는 되게 한다 — 이름이 어긋나는 것보다 안 되는 것이
+     * 나쁘다.
+     */
+    private File named() {
+        try {
+            String nice = MainActivity.safe(name);
+            if (nice.equals(file.getName())) return file;
+            File dir = new File(getCacheDir(), "share");
+            if (!dir.isDirectory() && !dir.mkdirs()) return file;
+            File to = new File(dir, nice);
+            if (!to.isFile() || to.length() != file.length()) MainActivity.copy(file, to);
+            return to;
+        } catch (Exception e) {
+            Log.w(TAG, "이름을 맞추지 못했습니다: " + name, e);
+            return file;
         }
     }
 
@@ -802,7 +837,7 @@ public class PdfViewActivity extends Activity {
            1배로 그려진다. */
         if (first) { clampPan(); apply(); fitHeight(); return; }
 
-        if (turned) { zoom = startZoom(); panX = 0f; stopSettle(); }
+        if (turned) { zoom = minZoom; panX = 0f; stopSettle(); }
         if (!widthChanged) { clampPan(); apply(); fitHeight(); return; }
 
         // 폭이 달라졌으니 그려둔 쪽은 전부 크기가 맞지 않는다
@@ -825,6 +860,7 @@ public class PdfViewActivity extends Activity {
     @Override
     public void onConfigurationChanged(Configuration c) {
         super.onConfigurationChanged(c);
+        syncMinZoom();      // 아래 배치가 새 바닥값을 봐야 한다
         /* 크기에 딸린 일은 onStageResized가 맡는다 — 여기서 stage는 아직 옛 크기다.
            다만 '화면이 통째로 바뀌었다'는 사실은 여기서만 알 수 있고, 배율을
            되돌릴지가 거기에 달렸다. 가로에서 '가리기'로 막대를 여닫으면 내비게이션
@@ -972,14 +1008,14 @@ public class PdfViewActivity extends Activity {
         if (renderW <= 0) return 0;
         /* 표시될 크기 그대로. 줄였으면 줄여 그리는 것이 1:1이고, 그래야 여러 쪽이
            보이는 축소 상태에서도 전부 제대로 그릴 여유가 생긴다. */
-        float z = Math.max(MIN_ZOOM, Math.min(zoom, MAX_RENDER_ZOOM));
+        float z = Math.max(minZoom, Math.min(zoom, MAX_RENDER_ZOOM));
         int want = Math.min(Math.round(renderW * z), HARD_MAX_PX);
 
         /* 확대해서 얻는 선명도는 힙이 감당하는 만큼만 가져간다 — 두 장은 들 수 있어야
            앞뒤로 넘길 때 매번 다시 그리지 않는다. 다만 바닥은 renderW다. 1배 화면에서
            표시 폭보다 작게 그리는 일만은 없어야 한다. 그게 뭉개짐이다. */
         int afford = (int) Math.sqrt((sharp.maxSize() / 2.0) / (1.45 * 4));
-        return Math.max(Math.round(renderW * MIN_ZOOM), Math.min(want, afford));
+        return Math.max(Math.round(renderW * minZoom), Math.min(want, afford));
     }
 
     /**

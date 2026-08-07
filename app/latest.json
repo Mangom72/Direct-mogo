@@ -1,8 +1,8 @@
 {
-  "versionCode": 37,
-  "versionName": "4.6",
+  "versionCode": 38,
+  "versionName": "4.7",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1844219,
-  "sha256": "dbedce6376ecdd44ae942b211cc4ffaee2dbfb15102885d82422ffe68a833a33",
-  "notes": "뷰어 제목에 회차 이름이 뜨고, 가로에서는 반으로 줄여 시작합니다"
+  "size": 1844459,
+  "sha256": "7fc6aacd5e3ab15a6e65d9479c9a36831186917675be866c29ce4bb90ec1427d",
+  "notes": "넘기는 파일 이름도 회차 이름으로 맞췄습니다"
 }

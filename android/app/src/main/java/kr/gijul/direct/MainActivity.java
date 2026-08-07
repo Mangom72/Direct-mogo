@@ -221,6 +221,24 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** 한 벌 뜬다. 받는 쪽에 보일 이름을 맞추려고 쓴다 — 임시 이름을 거치는 것은 받기와 같다. */
+    static void copy(File from, File to) throws Exception {
+        File tmp = new File(to.getParentFile(), to.getName() + ".part");
+        try {
+            try (InputStream in = new java.io.FileInputStream(from);
+                 OutputStream os = new FileOutputStream(tmp)) {
+                byte[] buf = new byte[16384];
+                int n;
+                while ((n = in.read(buf)) > 0) os.write(buf, 0, n);
+            }
+            if (to.exists() && !to.delete()) throw new Exception("옛 파일을 지우지 못했습니다");
+            if (!tmp.renameTo(to)) throw new Exception("파일을 옮기지 못했습니다");
+        } catch (Exception e) {
+            tmp.delete();
+            throw e;
+        }
+    }
+
     /** 총량이 상한을 넘으면 오래 안 본 것부터 버린다 */
     static void trim(File dir, long budget) {
         File[] fs = dir.listFiles(File::isFile);
