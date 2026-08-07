@@ -20,8 +20,8 @@ import android.view.ScaleGestureDetector;
 import android.view.animation.DecelerateInterpolator;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -155,20 +155,16 @@ public class PdfViewActivity extends Activity {
         pageLabel.setVisibility(View.GONE);
         bar.addView(pageLabel);
 
-        Button full = new Button(this);
-        full.setText("가리기");
-        full.setTextSize(13);
-        full.setAllCaps(false);
-        full.setOnClickListener(v -> setChrome(false));
-        bar.addView(full);
-
-        /* 앱 안에서 읽는 게 기본이지만, 필기 앱이나 인쇄로 넘기고 싶을 때가 있다 */
-        Button out = new Button(this);
-        out.setText("다른 앱");
-        out.setTextSize(13);
-        out.setAllCaps(false);
+        /* 글자 단추 둘이 나란히 있으면 제목이 설 자리를 그만큼 잡아먹는다. 하는 일이
+           둘 다 한마디로 그려지는 것이라 표로 바꿨다. 오른쪽 끝이 화면 넓히기 —
+           읽는 중에 가장 자주 누르는 것이 손이 닿기 쉬운 자리에 온다. */
+        ImageButton out = iconBtn(R.drawable.ic_share, "다른 앱으로 보내기", ink);
         out.setOnClickListener(v -> openElsewhere());
-        bar.addView(out);
+        bar.addView(out, new LinearLayout.LayoutParams(dp(44), dp(44)));
+
+        ImageButton full = iconBtn(R.drawable.ic_fullscreen, "가리기 — 화면을 넓게", ink);
+        full.setOnClickListener(v -> setChrome(false));
+        bar.addView(full, new LinearLayout.LayoutParams(dp(44), dp(44)));
 
         root.addView(bar, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -284,6 +280,30 @@ public class PdfViewActivity extends Activity {
         root.addView(stage, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         return root;
+    }
+
+    /**
+     * 위 막대의 표 단추.
+     *
+     * 글자가 없으므로 무엇인지 말해줄 자리가 contentDescription뿐이다 — 화면
+     * 낭독기를 쓰는 사람에게는 이것이 단추 이름의 전부다.
+     * 표는 24dp인데 단추는 44dp로 잡는다. 표를 그만큼 키우면 막대가 두꺼워지고,
+     * 표에 맞춰 단추를 줄이면 손가락으로 겨누기 어렵다.
+     */
+    private ImageButton iconBtn(int icon, String label, int tint) {
+        ImageButton b = new ImageButton(this);
+        b.setImageResource(icon);
+        b.setImageTintList(android.content.res.ColorStateList.valueOf(tint));
+        b.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        b.setContentDescription(label);
+        int p = dp(10);
+        b.setPadding(p, p, p, p);
+        /* 테두리 없는 물결만 남긴다. 네모난 회색 판을 두면 종이 위에 단추가
+           얹힌 것처럼 보여, 글자를 뺀 이유가 무색해진다. */
+        android.util.TypedValue tv = new android.util.TypedValue();
+        getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, tv, true);
+        b.setBackgroundResource(tv.resourceId);
+        return b;
     }
 
     private TextView pill(String text) {

@@ -1,0 +1,11 @@
+<!-- 네 귀퉁이를 바깥으로 벌린 표. 화면을 넓게 쓴다는 뜻으로 널리 쓰인다.
+     가로세로가 같은 24 격자라 정사각 단추에 그대로 들어맞는다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M7,14L5,14v5h5v-2L7,17v-3zM5,10h2L7,7h3L10,5L5,5v5zM17,17h-3v2h5v-5h-2v3zM14,5v2h3v3h2L19,5h-5z" />
+</vector>
