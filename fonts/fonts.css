@@ -1,0 +1,6 @@
+/* tools/build_fonts.py 가 만든다. 손으로 고치지 말 것. */
+@font-face{font-family:'Song Myung';font-style:normal;font-weight:400;font-display:swap;src:url('SongMyung-400.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:400;font-display:swap;src:url('PlexSansKR-400.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:500;font-display:swap;src:url('PlexSansKR-500.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:600;font-display:swap;src:url('PlexSansKR-600.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans KR';font-style:normal;font-weight:700;font-display:swap;src:url('PlexSansKR-700.woff2') format('woff2')}
