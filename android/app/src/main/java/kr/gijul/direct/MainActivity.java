@@ -96,6 +96,8 @@ public class MainActivity extends Activity {
 
         if (state == null) web.loadUrl(startUrl(getIntent()));
         else web.restoreState(state);
+
+        io.execute(this::sweep);      // 지난 실행이 남긴 것을 걷는다
     }
 
     /* 이미 떠 있는 채로 링크를 받으면 여기로 온다(launchMode=singleTask) */
@@ -158,6 +160,97 @@ public class MainActivity extends Activity {
         return s;
     }
 
+    /* ── 받기와 캐시 ────────────────────────────────────────────────────
+     *
+     * 두 가지를 여기 한 곳에 모았다. 예전에는 받는 코드가 세 군데에 흩어져 있었고,
+     * 그 셋이 똑같은 두 가지 실수를 나눠 갖고 있었다.
+     *
+     *   반쪽 파일  끊긴 전송이 최종 이름으로 남았다. 다음번에 '이미 있다'로 판정돼
+     *              다시 받지 않으므로, 그 회차는 영영 열리지 않았다.
+     *   무한 캐시  받은 것을 지우는 코드가 아예 없었다. 문제지를 볼수록 앱 용량이
+     *              늘기만 하고 줄지 않았다.
+     */
+
+    /** 한 파일의 상한. 문제지는 길어야 몇 MB라 이 위는 우리 자료가 아니다. */
+    private static final long MAX_FILE = 64L * 1024 * 1024;
+    /* 캐시로 들고 있을 총량. 넘으면 오래 안 본 것부터 버린다.
+       뷰어 쪽을 넉넉히 잡은 것은 그게 다시 열어볼 자료이기 때문이다 — 한 회차가
+       2MB 남짓이니 최근 70회차쯤 남는다. 공유용 사본은 넘겨주고 나면 쓸 일이 없어
+       작게 잡는다. 오래 두고 볼 자료는 '폴더에 담기'로 따로 저장하는 자리가 있다. */
+    private static final long VIEW_BUDGET = 150L * 1024 * 1024;
+    private static final long SHARE_BUDGET = 50L * 1024 * 1024;
+
+    /**
+     * 임시 이름으로 받아 **다 받았을 때만** 최종 이름으로 옮긴다.
+     * 중간에 무엇이 잘못되든 최종 이름 자리에는 아무것도 남지 않는다.
+     */
+    static void download(String url, File out) throws Exception {
+        File tmp = new File(out.getParentFile(), out.getName() + ".part");
+        HttpURLConnection c = (HttpURLConnection) new URL(fromEbsi(url)).openConnection();
+        c.setConnectTimeout(20000);
+        c.setReadTimeout(60000);
+        c.setInstanceFollowRedirects(true);
+        try {
+            int code = c.getResponseCode();
+            if (code != 200) throw new Exception("HTTP " + code);
+            long total = 0;
+            try (InputStream in = c.getInputStream(); OutputStream os = new FileOutputStream(tmp)) {
+                byte[] buf = new byte[16384];
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    total += n;
+                    if (total > MAX_FILE) throw new Exception("파일이 너무 큽니다");
+                    os.write(buf, 0, n);
+                }
+            }
+            if (out.exists() && !out.delete()) throw new Exception("옛 파일을 지우지 못했습니다");
+            if (!tmp.renameTo(out)) throw new Exception("파일을 옮기지 못했습니다");
+        } catch (Exception e) {
+            tmp.delete();          // 반쪽은 남기지 않는다 — 남으면 그 자리가 막힌다
+            throw e;
+        } finally {
+            c.disconnect();
+        }
+    }
+
+    /** 총량이 상한을 넘으면 오래 안 본 것부터 버린다 */
+    static void trim(File dir, long budget) {
+        File[] fs = dir.listFiles(File::isFile);
+        if (fs == null) return;
+        long total = 0;
+        for (File f : fs) total += f.length();
+        if (total <= budget) return;
+        Arrays.sort(fs, Comparator.comparingLong(File::lastModified));
+        for (File f : fs) {
+            if (total <= budget) break;
+            long n = f.length();
+            if (f.delete()) total -= n;
+        }
+    }
+
+    static void trimViewCache(File cacheDir) {
+        trim(new File(cacheDir, "view"), VIEW_BUDGET);
+    }
+
+    /**
+     * 실행할 때마다 한 번 쓸어낸다.
+     *
+     * 설치 파일은 설치 화면으로 넘긴 뒤로는 쓸모가 없는데, 지우는 자리가 없어
+     * 1.8MB가 계속 남아 있었다. 옛 판이 남긴 반쪽 파일(.part)도 여기서 걷는다 —
+     * 그건 보관함 목록에 파일 수와 용량으로만 잡히고 버튼은 생기지 않아서,
+     * 보이지도 지우지도 못한 채 용량만 차지했다.
+     */
+    private void sweep() {
+        rmrf(new File(getCacheDir(), "update"));
+        trim(new File(getCacheDir(), "view"), VIEW_BUDGET);
+        trim(new File(getCacheDir(), "share"), SHARE_BUDGET);
+        File[] dirs = root().listFiles(File::isDirectory);
+        if (dirs != null) for (File d : dirs) {
+            File[] fs = d.listFiles(f -> f.isFile() && f.getName().endsWith(".part"));
+            if (fs != null) for (File f : fs) f.delete();
+        }
+    }
+
     /** 자료를 받아올 수 있는 주소인지. EBSi 말고는 받지 않는다. */
     static String fromEbsi(String url) throws Exception {
         Uri u = Uri.parse(url == null ? "" : url);
@@ -198,7 +291,10 @@ public class MainActivity extends Activity {
             if (dirs != null) {
                 Arrays.sort(dirs, Comparator.comparingLong(File::lastModified).reversed());
                 for (File d : dirs) {
-                    File[] fs = d.listFiles(File::isFile);
+                    /* 받는 중인 반쪽은 목록에 넣지 않는다 — 넣으면 파일 수와 용량에는
+                       잡히는데 종류를 알 수 없어 버튼이 안 생긴다. 보이지도 지우지도
+                       못하는 항목이 그렇게 생겼다. */
+                    File[] fs = d.listFiles(f -> f.isFile() && !f.getName().endsWith(".part"));
                     if (fs == null) continue;
                     Arrays.sort(fs, Comparator.comparing(File::getName));
                     for (File f : fs) {
@@ -333,7 +429,7 @@ public class MainActivity extends Activity {
             for (int i = 0; i < files.length(); i++) {
                 JSONObject f = files.getJSONObject(i);
                 try {
-                    writeOne(dir, safe(f.getString("name")), fromEbsi(f.getString("url")));
+                    download(f.getString("url"), new File(dir, safe(f.getString("name"))));
                     ok++;
                 } catch (Exception e) {
                     Log.w(TAG, "파일 저장 실패: " + f.optString("name"), e);
@@ -348,32 +444,6 @@ public class MainActivity extends Activity {
         report(fail == 0, ok, fail == 0
                 ? "'" + where + "'에 " + ok + "개 담았습니다"
                 : ok + "개 저장, " + fail + "개 실패");
-    }
-
-    private void writeOne(File dir, String name, String url) throws Exception {
-        File out = new File(dir, name);
-        File tmp = new File(dir, name + ".part");   // 중간에 끊겨도 반쪽 파일이 남지 않게
-        download(url, tmp);
-        if (out.exists()) out.delete();
-        if (!tmp.renameTo(out)) { tmp.delete(); throw new Exception("파일을 옮기지 못했습니다"); }
-    }
-
-    private void download(String url, File to) throws Exception {
-        HttpURLConnection conn = (HttpURLConnection) new URL(fromEbsi(url)).openConnection();
-        conn.setConnectTimeout(20000);
-        conn.setReadTimeout(60000);
-        conn.setInstanceFollowRedirects(true);
-        try {
-            int code = conn.getResponseCode();
-            if (code != 200) throw new Exception("HTTP " + code);
-            try (InputStream in = conn.getInputStream(); OutputStream os = new FileOutputStream(to)) {
-                byte[] buf = new byte[16384];
-                int n;
-                while ((n = in.read(buf)) > 0) os.write(buf, 0, n);
-            }
-        } finally {
-            conn.disconnect();
-        }
     }
 
     private static String mimeOf(String name) {
@@ -403,7 +473,9 @@ public class MainActivity extends Activity {
                 File dir = new File(getCacheDir(), "share");
                 if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("임시 폴더를 만들지 못했습니다");
                 f = new File(dir, name);
-                if (!f.isFile() || f.length() == 0) download(url, f);
+                /* 다 받은 것만 최종 이름에 있으므로, 있으면 그대로 쓴다 */
+                if (!f.isFile()) { download(url, f); trim(dir, SHARE_BUDGET); }
+                else f.setLastModified(System.currentTimeMillis());   // 방금 쓴 것은 늦게 버린다
             }
             Uri u = FileProvider.getUriForFile(MainActivity.this, AUTHORITY, f);
             Intent i = new Intent(Intent.ACTION_SEND);

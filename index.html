@@ -59,27 +59,30 @@
   --btn:#fff;        /* 버튼·입력 표면 */
   --onmark:#fff;     /* 강조색 위에 얹는 글자 */
   --sel:#E4DCC6;     /* OMR 선택 */
-  --off:#B5AC98;     /* 비활성 */
+  --off:#7A725F;     /* 비활성 — 자료가 '없음'을 알리는 글자라 읽히기는 해야 한다 */
   --scrim:rgba(25,23,19,.55);
   --shadow:rgba(25,23,19,.3);
 }
-/* 밤에도 신문 결을 유지: 먹빛 지면에 따뜻한 미색 활자.
-   강조색은 어두운 바탕에서 대비가 모자라 밝은 쪽으로 다시 잡았다. */
+/* 밤에 인쇄한 지면.
+   밝은 쪽이 '미색 신문지에 먹'이라면 이쪽은 그 반대말을 쓴다 — 바탕이 잉크가 되고
+   활자만 종이색으로 남는다. 그래서 지면은 검정이 아니라 남색 먹이다(#161A22, 파랑이
+   빨강보다 12 높다). 순흑으로 내리면 색이 사라지면서 이 화면만 주제를 잃는다.
+   따뜻한 미색 활자를 차가운 바탕에 얹는 대비가 이 테마의 특색이다. */
 :root[data-theme="dark"]{
-  --paper:#14120E;
-  --card:#1E1A15;
-  --ink:#EDE7D8;
-  --ink2:#ADA391;
-  --rule:#3E382C;
-  --mark:#E4685C;
-  --gov:#7CB6DA;
-  --edu:#96C47F;
-  --btn:#272219;
-  --onmark:#17140F;
-  --sel:#3B3425;
-  --off:#8A8272;
-  --scrim:rgba(0,0,0,.68);
-  --shadow:rgba(0,0,0,.6);
+  --paper:#161A22;   /* 잉크 */
+  --card:#1F2531;    /* 지면 */
+  --ink:#ECE7DA;     /* 미색 활자 */
+  --ink2:#AEB5C2;    /* 부제 · 저장 안 된 ★ */
+  --rule:#3A4353;    /* 괘선 */
+  --mark:#F08379;    /* 교정 붉은색 */
+  --gov:#8AC6EA;
+  --edu:#A6D48D;
+  --btn:#262E3B;
+  --onmark:#1A1108;
+  --sel:#394354;
+  --off:#9AA5B6;     /* '없음' — 예전 값은 대비 1.4라 사실상 안 보였다 */
+  --scrim:rgba(6,8,12,.74);
+  --shadow:rgba(0,0,0,.55);
 }
 :root{color-scheme:light}
 :root[data-theme="dark"]{color-scheme:dark}
@@ -181,7 +184,10 @@ body{
 .subrow select{flex:1;min-width:0}
 .star{
   font:inherit;font-size:15px;line-height:1;cursor:pointer;flex:none;width:44px;
-  border:1.2px solid var(--ink);background:var(--btn);color:var(--rule);border-radius:0;
+  /* 괘선 색(--rule)을 쓰던 자리다. 머리카락 같은 선에 맞춘 색이라 글자로 쓰니
+     저장 안 된 별이 거의 보이지 않았다(대비 1.4). 눌린 것과 구별되게 죽이되,
+     읽히기는 해야 하므로 부제 색을 쓴다. */
+  border:1.2px solid var(--ink);background:var(--btn);color:var(--ink2);border-radius:0;
 }
 .star[aria-pressed="true"]{background:var(--mark);border-color:var(--mark);color:var(--onmark)}
 .star:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
@@ -300,6 +306,8 @@ select#yr{font-family:"Gowun Batang",serif;font-weight:700;font-size:15px}
   font-size:11.5px;padding:7px 13px;
 }
 .svault .row button:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+/* 한 번 더 물어보는 중. 지우는 색을 입혀, 방금 누른 것이 무엇이었는지 보이게 한다. */
+[data-ask="1"]{background:var(--mark);color:var(--onmark);border-color:var(--mark)}
 .sheet-note{margin:0;padding:12px 18px 16px;font-size:11px;color:var(--ink2);line-height:1.7}
 .sheet-note b{color:var(--mark)}
 .sheet-note button{
@@ -411,16 +419,16 @@ footer b{color:var(--ink)}
       </div>
       <div id="pick">
         <div class="row">
-          <div class="lab">학년</div>
-          <div class="omr" id="gradeBox"></div>
+          <div class="lab" id="labGrade">학년</div>
+          <div class="omr" id="gradeBox" role="group" aria-labelledby="labGrade"></div>
         </div>
         <div class="row grid2">
           <div>
-            <div class="lab">과목군</div>
+            <label class="lab" for="grp">과목군</label>
             <select id="grp"></select>
           </div>
           <div>
-            <div class="lab">과목</div>
+            <label class="lab" for="sub">과목</label>
             <div class="subrow">
               <select id="sub"></select>
               <button type="button" class="star" id="favToggle" aria-pressed="false" aria-label="내 과목에 저장">★</button>
@@ -431,15 +439,15 @@ footer b{color:var(--ink)}
       </div>
       <div class="row grid2">
         <div>
-          <div class="lab">출제 기관</div>
-          <div class="omr" id="kindBox">
+          <div class="lab" id="labKind">출제 기관</div>
+          <div class="omr" id="kindBox" role="group" aria-labelledby="labKind">
             <button type="button" data-k="all" aria-pressed="true"><span class="b"></span>전체</button>
             <button type="button" data-k="gov" aria-pressed="false"><span class="b"></span>평가원</button>
             <button type="button" data-k="edu" aria-pressed="false"><span class="b"></span>교육청</button>
           </div>
         </div>
         <div>
-          <div class="lab">연도 이동</div>
+          <label class="lab" for="yr">연도 이동</label>
           <select id="yr"></select>
         </div>
       </div>
@@ -498,7 +506,7 @@ let sel = { grade:"D300", grp:0, sub:"158", kind:"all", year:"all" };
    테마를 바꿀 때 같이 갱신하지 않으면 어두운 화면 위에 밝은 띠가 남는다. */
 const THEME_KEY="gijul.theme.v1";
 const THEMES=[["auto","◐","자동"],["light","☀","밝게"],["dark","☾","어둡게"]];
-const BAR={ light:"#191713", dark:"#14120E" };
+const BAR={ light:"#191713", dark:"#161A22" };
 let themePref="auto";
 const media = matchMedia("(prefers-color-scheme: dark)");
 
@@ -1094,6 +1102,35 @@ function fmtSize(n){
   return n >= 1048576 ? (n/1048576).toFixed(1)+"MB" : Math.max(1, Math.round(n/1024))+"KB";
 }
 
+/**
+ * 되돌릴 수 없는 단추는 두 번 물어본다.
+ *
+ * 받아둔 자료를 지우는 것이 이 앱에서 유일하게 파괴적인 조작인데 확인이 없었다 —
+ * '모두 지우기'를 잘못 누르면 담아둔 회차가 전부 그 자리에서 사라지고, 되돌릴
+ * 방법이 없다. 시트가 알림 막대를 덮고 있어서 막대로는 물어볼 수 없으므로,
+ * 보내기 단추가 이미 쓰고 있는 '한 번 더 누르기'를 그대로 따른다.
+ *
+ * 물어본 채로 놔둔 것은 4초 뒤에 스스로 물러난다. 확인 상태로 굳어 있으면
+ * 다음에 눌렀을 때 무엇을 누른 것인지 모르게 된다.
+ */
+function askTwice(btn, label, question, run){
+  let timer = null;
+  const reset = ()=>{
+    clearTimeout(timer); timer = null;
+    btn.textContent = label;
+    btn.dataset.ask = "";
+    btn.setAttribute("aria-label", label);
+  };
+  btn.onclick = ()=>{
+    if(btn.dataset.ask){ reset(); run(); return; }
+    btn.textContent = "정말요?";
+    btn.dataset.ask = "1";
+    btn.setAttribute("aria-label", question + " — 한 번 더 누르면 지웁니다");
+    timer = setTimeout(reset, 4000);
+  };
+  reset();
+}
+
 function openVault(opener){
   let items = [];
   try{ items = JSON.parse(NATIVE.listSaved() || "[]"); }catch(e){}
@@ -1138,7 +1175,8 @@ function openVault(opener){
     const del=document.createElement("button");
     del.type="button"; del.className="del"; del.textContent="지우기";
     del.setAttribute("aria-label", `${folder} 지우기`);
-    del.onclick=()=>{ try{ NATIVE.deleteSaved(folder); }catch(e){} };
+    askTwice(del, "지우기", `${folder} 지우기`,
+      ()=>{ try{ NATIVE.deleteSaved(folder); }catch(e){} });
     row.appendChild(del);
 
     el.append(nm, sub, row);
@@ -1151,7 +1189,8 @@ function openVault(opener){
   if(items.length){
     const b=document.createElement("button");
     b.type="button"; b.textContent="모두 지우기";
-    b.onclick=()=>{ try{ NATIVE.deleteSaved(""); }catch(e){} };
+    askTwice(b, "모두 지우기", `받아둔 ${folders.size}개 회차 모두 지우기`,
+      ()=>{ try{ NATIVE.deleteSaved(""); }catch(e){} });
     sheetNote.appendChild(document.createElement("br"));
     sheetNote.appendChild(b);
   }
