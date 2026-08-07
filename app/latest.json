@@ -1,8 +1,8 @@
 {
-  "versionCode": 32,
-  "versionName": "4.1",
+  "versionCode": 33,
+  "versionName": "4.2",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1842479,
-  "sha256": "70c8066e343599a7f8f350eb9b0258b66fe8e939d1d412e6a2e46c0f30dada98",
-  "notes": "캐시가 무한히 쌓이던 문제와 다크 모드를 손봤습니다"
+  "size": 1842523,
+  "sha256": "f85cd7118fec87460fdc2bc40c73065d20962ba2ddaa852b9db21a63fdfc4238",
+  "notes": "화면 두드릴 때 생기던 파란 네모를 없앴습니다"
 }
