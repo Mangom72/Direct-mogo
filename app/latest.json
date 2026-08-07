@@ -1,8 +1,8 @@
 {
-  "versionCode": 33,
-  "versionName": "4.2",
+  "versionCode": 34,
+  "versionName": "4.3",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1842523,
-  "sha256": "f85cd7118fec87460fdc2bc40c73065d20962ba2ddaa852b9db21a63fdfc4238",
-  "notes": "화면 두드릴 때 생기던 파란 네모를 없앴습니다"
+  "size": 1842659,
+  "sha256": "ddd8d52864328486341c41705db97e774955b629e49197e9c7192570bd879d5f",
+  "notes": "받아둔 자료도 앱 안에서 바로 열립니다"
 }

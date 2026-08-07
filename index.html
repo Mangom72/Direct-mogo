@@ -62,7 +62,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-zawqIZp7iqoA5Z8MVm4M5XRUOTFkWHBrAJt0h7l1Nqk=' 'sha256-pmGdUYTgWLhzZYlidaKwqoWs01fWwO7l1MCvyZ3R8s4=';
+  script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-zawqIZp7iqoA5Z8MVm4M5XRUOTFkWHBrAJt0h7l1Nqk=' 'sha256-r888qyFa2vKlTUpYuGj+ltfokAQQSYOFjDL5X8uiFvs=';
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
   img-src 'self';
@@ -1240,7 +1240,7 @@ function openVault(opener){
   });
 
   sheetNote.innerHTML = items.length
-    ? `버튼을 누르면 기기의 PDF 뷰어로 열립니다. 앱을 지우면 함께 사라집니다.`
+    ? `버튼을 누르면 앱 안에서 바로 열립니다. 앱을 지우면 함께 사라집니다.`
     : `회차의 <b>보내기</b> → <b>폴더에 담기</b>로 받아두면 여기 모입니다.`;
   if(items.length){
     const b=document.createElement("button");
@@ -1393,7 +1393,7 @@ function render(){
     total+=rows.length;
     html += `<div class="yr"><div class="yr-head">
         <span class="y">${y}년</span>
-        <span class="hak">평가원 시험은 ${+y+1}학년도</span>
+        <span class="hak">${+y+1}학년도</span>
         <span class="ln"></span></div>`;
     for(const [title,date,p,a,h] of rows){
       const k=kindOf(title);
