@@ -55,6 +55,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        /* 화면을 만들기 전에 건다. 페이지가 뜨고 사용자가 자료를 누르기까지는 몇 초가
+           걸리므로, 쓸어내는 일과 새로 받는 일이 겹칠 틈이 사실상 없어진다. */
+        io.execute(this::sweep);
+
         web = new WebView(this);
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -101,8 +105,6 @@ public class MainActivity extends Activity {
 
         if (state == null) web.loadUrl(startUrl(getIntent()));
         else web.restoreState(state);
-
-        io.execute(this::sweep);      // 지난 실행이 남긴 것을 걷는다
     }
 
     /* 이미 떠 있는 채로 링크를 받으면 여기로 온다(launchMode=singleTask) */
@@ -178,12 +180,13 @@ public class MainActivity extends Activity {
 
     /** 한 파일의 상한. 문제지는 길어야 몇 MB라 이 위는 우리 자료가 아니다. */
     private static final long MAX_FILE = 64L * 1024 * 1024;
-    /* 캐시로 들고 있을 총량. 넘으면 오래 안 본 것부터 버린다.
-       뷰어 쪽을 넉넉히 잡은 것은 그게 다시 열어볼 자료이기 때문이다 — 한 회차가
-       2MB 남짓이니 최근 70회차쯤 남는다. 공유용 사본은 넘겨주고 나면 쓸 일이 없어
-       작게 잡는다. 오래 두고 볼 자료는 '폴더에 담기'로 따로 저장하는 자리가 있다. */
-    private static final long VIEW_BUDGET = 150L * 1024 * 1024;
-    private static final long SHARE_BUDGET = 50L * 1024 * 1024;
+    /* 한 번 실행 안에서만 들고 있으면 되는 양.
+       오래 두고 볼 자료는 '받아둔 자료'가 따로 맡는다 — 뷰어도 캐시보다 그쪽을
+       먼저 보므로(fetch 첫 줄) 이 캐시가 비어도 오프라인으로 잃는 것이 없다.
+       그래서 실행이 끝나면 통째로 버리고(sweep), 여기 한도는 한 번 실행 안에서
+       불어나는 것만 막는다 — 앞뒤로 넘겨보는 데는 30회차면 넉넉하다. */
+    private static final long VIEW_BUDGET = 60L * 1024 * 1024;
+    private static final long SHARE_BUDGET = 20L * 1024 * 1024;
 
     /**
      * 임시 이름으로 받아 **다 받았을 때만** 최종 이름으로 옮긴다.
@@ -238,17 +241,26 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * 실행할 때마다 한 번 쓸어낸다.
+     * 지난 실행이 남긴 것을 통째로 버린다.
      *
-     * 설치 파일은 설치 화면으로 넘긴 뒤로는 쓸모가 없는데, 지우는 자리가 없어
-     * 1.8MB가 계속 남아 있었다. 옛 판이 남긴 반쪽 파일(.part)도 여기서 걷는다 —
-     * 그건 보관함 목록에 파일 수와 용량으로만 잡히고 버튼은 생기지 않아서,
-     * 보이지도 지우지도 못한 채 용량만 차지했다.
+     * 캐시는 한 번 앉은 자리에서 앞뒤로 넘겨보는 동안만 쓸모가 있다. 다시 열어볼
+     * 자료는 '받아둔 자료'가 맡고 뷰어도 그쪽을 먼저 보므로, 실행이 끝난 뒤까지
+     * 들고 있을 이유가 없다.
+     *
+     * 끝날 때가 아니라 **시작할 때** 버리는 이유가 있다. 안드로이드에는 '앱이
+     * 닫힌다'를 확실히 알려주는 자리가 없다 — onDestroy는 불리지 않을 수 있고
+     * 프로세스는 예고 없이 죽는다. 시작할 때 버리면 반드시 돌고, 사용자가 보기에는
+     * '켤 때마다 깨끗하다'로 똑같다.
+     *
+     * 설치 파일도 여기서 걷는다. 설치 화면으로 넘긴 뒤로는 쓸모가 없는데 지우는
+     * 자리가 없어 1.8MB가 계속 남아 있었다. 옛 판이 남긴 반쪽 파일(.part)도
+     * 같이 치운다 — 그건 보관함 목록에 파일 수와 용량으로만 잡히고 버튼은 생기지
+     * 않아서, 보이지도 지우지도 못한 채 용량만 차지했다.
      */
     private void sweep() {
         rmrf(new File(getCacheDir(), "update"));
-        trim(new File(getCacheDir(), "view"), VIEW_BUDGET);
-        trim(new File(getCacheDir(), "share"), SHARE_BUDGET);
+        rmrf(new File(getCacheDir(), "view"));
+        rmrf(new File(getCacheDir(), "share"));
         File[] dirs = root().listFiles(File::isDirectory);
         if (dirs != null) for (File d : dirs) {
             File[] fs = d.listFiles(f -> f.isFile() && f.getName().endsWith(".part"));

@@ -1,8 +1,8 @@
 {
-  "versionCode": 34,
-  "versionName": "4.3",
+  "versionCode": 35,
+  "versionName": "4.4",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1842659,
-  "sha256": "ddd8d52864328486341c41705db97e774955b629e49197e9c7192570bd879d5f",
-  "notes": "받아둔 자료도 앱 안에서 바로 열립니다"
+  "size": 1842591,
+  "sha256": "b0300293805c4827cd532b71a44406577034acff957fd05ee92ac11818319dc4",
+  "notes": "앱을 켤 때마다 임시 파일을 비웁니다"
 }
