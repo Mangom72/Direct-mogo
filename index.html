@@ -62,7 +62,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-zawqIZp7iqoA5Z8MVm4M5XRUOTFkWHBrAJt0h7l1Nqk=' 'sha256-ymuQdGRgAGnwiCVmwQuENhUkvkMeB3kSdMKztrnsnSk=';
+  script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-pnlkm/DH2BVD4tLfaZ3xt8xSGk4+LKVU9pVw9l40u4M=';
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
   img-src 'self';
@@ -81,7 +81,10 @@ addEventListener("securitypolicyviolation", function(e){
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- media="print"로 걸어 두면 받아는 오되 첫 그림을 막지 않는다. 다 오면 아래
+     스크립트가 적용한다 — 이게 없으면 폰트 서버가 대답할 때까지 화면이 하얗다.
+     CSP가 인라인 onload를 막으므로 붙이는 일은 스크립트가 한다. -->
+<link id="webfont" media="print" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --paper:#EDE8DA;   /* 바탕 종이 */
@@ -420,6 +423,13 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
 }
 </style>
 <script>
+/* 폰트가 도착하면 그때 적용한다. 위 link를 media="print"로 둔 짝이다. */
+(function(){
+  var f = document.getElementById("webfont");
+  if(!f) return;
+  var use = function(){ f.media = "all"; };
+  if(f.sheet) use(); else f.addEventListener("load", use);
+})();
 /* 첫 페인트 전에 테마를 정해야 어두운 화면에서 흰 섬광이 없다 */
 (function(){
   var t="light";
@@ -862,6 +872,20 @@ function kindOf(title){
 function kindLabel(k){ return k==="gov" ? "평가원" : "교육청"; }
 /* 페이로드는 EBSi에서 긁어온 값이라 우리가 쓴 글이 아니다. 화면에 꽂기 전에
    막을 것은 여기서 막는다 — 스크래퍼가 무엇을 통과시키든 이 줄에서 멈춘다. */
+/**
+ * 화면이 다 그려진 뒤에 할 일.
+ *
+ * window.load에 그냥 걸면 폰트 같은 남의 서버 자원까지 다 기다린다. 그게 늦으면
+ * 오프라인 준비(워커 등록)와 업데이트 확인이 통째로 늦어진다 — 폰트가 늦는 것과
+ * 오프라인이 준비되는 것은 아무 상관이 없는데도. 먼저 오는 쪽을 따른다.
+ */
+function afterPaint(fn){
+  let done = false;
+  const go = ()=>{ if(done) return; done = true; fn(); };
+  addEventListener("load", go);
+  setTimeout(go, 2000);
+}
+
 const esc = v => String(v == null ? "" : v)
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
   .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -1142,6 +1166,7 @@ async function sendFile(f, btn){
 const NATIVE = typeof GijulNative !== "undefined" && GijulNative;
 
 window.gijulSaveResult = (ok, count, message)=>{
+  savedCache = null;                 /* 담기거나 지워졌다 — 다음에 다시 물어본다 */
   sheetAll.disabled = false;
   sheetAll.textContent = ALL_LABEL_NATIVE;
   if(vaultMode){ openVault(); render(); return; }  /* 보관함에서 지운 뒤라면 목록을 다시 그린다 */
@@ -1266,11 +1291,19 @@ function folderName(y, title, sub){
     .replace(/[\/\\:*?"<>|\x00-\x1f]/g, "").replace(/\s+/g, " ").trim();
 }
 
-/* 받아둔 회차 폴더 이름들. 앱이 아니면 늘 빈 집합이다. */
+/* 받아둔 회차 폴더 이름들. 앱이 아니면 늘 빈 집합이다.
+
+   기억해 둔다. 이 값은 render()가 항목마다 '담김' 표시를 붙이려고 쓰는데,
+   창구를 부를 때마다 앱이 저장 폴더를 통째로 훑고 파일 크기를 하나씩 잰다.
+   화면을 그릴 때마다 그 일을 시킬 이유가 없다 — 담거나 지웠을 때만 달라지고,
+   그 두 자리는 모두 gijulSaveResult로 돌아온다. */
+let savedCache = null;
 function savedFolders(){
   if(!NATIVE) return new Set();
-  try{ return new Set(JSON.parse(NATIVE.listSaved() || "[]").map(x=>x.folder)); }
-  catch(e){ return new Set(); }
+  if(savedCache) return savedCache;
+  try{ savedCache = new Set(JSON.parse(NATIVE.listSaved() || "[]").map(x=>x.folder)); }
+  catch(e){ savedCache = new Set(); }
+  return savedCache;
 }
 
 function saveViaNative(){
@@ -1555,7 +1588,7 @@ if(NATIVE && NATIVE.checkUpdate){
     else if(state === "error") showNotice(message || "업데이트하지 못했습니다.", "", null);
   };
   /* 실행할 때마다 확인한다. 새 버전이 없으면 아무 말도 하지 않는다. */
-  addEventListener("load", ()=>{ try{ NATIVE.checkUpdate(false); }catch(e){} });
+  afterPaint(()=>{ try{ NATIVE.checkUpdate(false); }catch(e){} });
   /* 앱을 다시 앞으로 불러왔을 때도 — 며칠씩 띄워둔 채 쓰는 경우가 있다.
      visibilitychange는 document에서 난다. */
   document.addEventListener("visibilitychange", ()=>{
@@ -1611,7 +1644,7 @@ if(androidWeb()){
   let off = null;
   try{ off = localStorage.getItem(APK_KEY); }catch(e){}
   if(off === null){
-    addEventListener("load", ()=> showNotice(
+    afterPaint(()=> showNotice(
       "안드로이드 앱을 설치해보세요 — 문제지를 앱에서 바로 읽고 오프라인으로 담아둘 수 있습니다.",
       "앱 받기",
       ()=>{ location.href = APK; },
@@ -1640,7 +1673,7 @@ if("serviceWorker" in navigator){
     if(t === "updated"){ if(!settle("web", true)) tellWeb(); }
     else if(t === "current") settle("web", false);
   });
-  addEventListener("load", async ()=>{
+  afterPaint(async ()=>{
     try{
       await navigator.serviceWorker.register("sw.js");
       await navigator.serviceWorker.ready;
