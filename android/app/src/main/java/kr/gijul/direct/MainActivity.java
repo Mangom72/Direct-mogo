@@ -76,6 +76,11 @@ public class MainActivity extends Activity {
                 Uri u = r.getUrl();
                 String s = u.toString();
                 if (s.startsWith(SITE)) return false;          // 사이트 안은 그대로
+                /* 여기서 하는 일은 '이 창을 다른 앱에 넘긴다'이다. 그건 사용자가 링크를
+                   눌렀을 때 할 일이지, 페이지 안에 박힌 틀(iframe)이 스스로 할 일이
+                   아니다. 지금 이 페이지에 틀이 없더라도, 넘길지 말지를 누가 요청했는지
+                   보지 않으면 그건 판단이 아니다. 틀에서 온 것은 그냥 막는다. */
+                if (!r.isForMainFrame()) return true;
                 /* 문제·정답·해설은 앱 안에서 읽는다. WebView에 PDF 뷰어가 없어 예전에는
                    브라우저로 넘겼는데, 자료를 열 때마다 앱이 바뀌는 건 이 앱의 요점을
                    잃는 일이었다. 그 밖의 주소(EBSi 사이트 등)는 여전히 브라우저 몫이다. */
