@@ -1,8 +1,8 @@
 {
-  "versionCode": 36,
-  "versionName": "4.5",
+  "versionCode": 37,
+  "versionName": "4.6",
   "url": "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk",
-  "size": 1844003,
-  "sha256": "a8e31e036c46f39ced13020eb1f2fdacc73af3b8dd4fd04b2f28491d3525a9e2",
-  "notes": "뷰어 위 막대를 표 단추로 바꿨습니다"
+  "size": 1844219,
+  "sha256": "dbedce6376ecdd44ae942b211cc4ffaee2dbfb15102885d82422ffe68a833a33",
+  "notes": "뷰어 제목에 회차 이름이 뜨고, 가로에서는 반으로 줄여 시작합니다"
 }

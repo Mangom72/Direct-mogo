@@ -382,6 +382,34 @@ public class MainActivity extends Activity {
             report(true, n, n + "개 회차를 지웠습니다");
         }
 
+        /**
+         * 목록의 문제·정답·해설을 뷰어로 연다.
+         *
+         * 주소만 넘어오면 앱이 알 수 있는 이름은 EBSi 파일명뿐이라, 제목에
+         * 'g_bio1_mun_3WDW7H97.pdf'가 걸렸다. 무엇을 보고 있는지 알 수 없는
+         * 이름이다. 사람이 읽는 이름은 페이지가 이미 만들고 있으므로(보내기와
+         * 받아둔 자료가 쓰는 그 이름) 여기서 같이 받는다.
+         *
+         * 이름은 화면에 쓸 뿐 파일을 만드는 데는 쓰지 않는다 — 받아 둘 자리는
+         * 여전히 주소에서 뽑는다. 그래도 경계를 건너온 값이라 확인은 한다.
+         */
+        @JavascriptInterface
+        public void openPaper(String url, String name) {
+            String title;
+            try {
+                fromEbsi(url);
+                title = safe(name);
+            } catch (Exception e) {
+                Log.w(TAG, "열 수 없는 자료: " + url, e);
+                report(false, 0, "열 수 없는 자료입니다");
+                return;
+            }
+            Intent i = new Intent(MainActivity.this, PdfViewActivity.class);
+            i.putExtra(PdfViewActivity.EXTRA_URL, url);
+            i.putExtra(PdfViewActivity.EXTRA_NAME, title);
+            open(i);
+        }
+
         /** 파일 하나를 시스템 공유 시트로 넘긴다 */
         @JavascriptInterface
         public void shareFile(String name, String url) { io.execute(() -> share(name, url)); }
