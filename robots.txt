@@ -11,4 +11,4 @@ Allow: /
 #   https://mangom72.github.io/Direct-mogo/data/index.json   과목 목록
 # 목록 정보와 코드는 MIT입니다. 화면을 긁지 마시고 JSON을 그대로 가져가세요 — 더 빠릅니다.
 
-Sitemap: https://mangom72.github.io/Direct-mogo/sitemap.xml
+Sitemap: https://mangom72.github.io/sitemap.xml
