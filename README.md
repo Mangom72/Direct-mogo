@@ -84,8 +84,8 @@ Claude Desktop은 `claude_desktop_config.json`에:
   EBSi가 공개하여 별도의 인증 없이 접근 가능한 주소로 직접 연결됩니다.
 - **권리자의 요청** — 권리자 또는 정당한 대리인의 요청이 확인되는 경우, 해당
   내용을 지체 없이 삭제하거나 저장소 전부를 비공개로 전환합니다. 요청은
-  [GitHub 이슈](https://github.com/Mangom72/Direct-mogo/issues) 또는 저장소
-  소유자 [@Mangom72](https://github.com/Mangom72) 를 통하여 접수합니다.
+  전자우편 <direct.mogo.dev@gmail.com> 또는
+  [GitHub 이슈](https://github.com/Mangom72/Direct-mogo/issues)로 접수합니다.
 - **글꼴** — `fonts/` 의 글꼴은 SIL Open Font License 1.1에 따릅니다.
 
 이용 조건의 전문은 [NOTICE.md](NOTICE.md) 에 정리되어 있습니다.
