@@ -1,15 +1,24 @@
 /* tools/build_pages.py 가 쓰는 과목 페이지용 스타일.
    앱 화면(index.html)과 같은 규칙 — 명조는 지면(제호·표제·연도·회차 이름),
-   고딕은 조작과 설명. 스크립트가 없으므로 테마는 기기 설정을 그대로 따른다. */
+   고딕은 조작과 설명.
+
+   테마는 세 갈래다. 아무것도 고르지 않았으면 기기 설정을 따르고(가운데 블록),
+   앱 화면에서 밝게·어둡게를 골라 뒀으면 그것을 따른다(data-theme, site.js가 건다).
+   기기가 어둡더라도 사람이 밝게를 골랐으면 밝아야 하므로, 가운데 블록은
+   :not([data-theme="light"])로 막아 둔다. */
 :root{
   --paper:#F5F1E6; --card:#FBF9F3; --ink:#191713; --ink2:#5C5747; --rule:#CFC6AC;
   --mark:#B4342A; --gov:#1F4E79; --edu:#2E6B3E; --btn:#FFFDF7; --off:#7A725F;
 }
 @media (prefers-color-scheme: dark){
-  :root{
+  :root:not([data-theme="light"]){
     --paper:#161A22; --card:#1F2531; --ink:#ECE7DA; --ink2:#AEB5C2; --rule:#3A4353;
     --mark:#F08379; --gov:#8AC6EA; --edu:#A6D48D; --btn:#262E3B; --off:#9AA5B6;
   }
+}
+:root[data-theme="dark"]{
+  --paper:#161A22; --card:#1F2531; --ink:#ECE7DA; --ink2:#AEB5C2; --rule:#3A4353;
+  --mark:#F08379; --gov:#8AC6EA; --edu:#A6D48D; --btn:#262E3B; --off:#9AA5B6;
 }
 *{box-sizing:border-box}
 body{
