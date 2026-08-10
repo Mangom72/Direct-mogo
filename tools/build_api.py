@@ -28,6 +28,14 @@ DIRS = ["go3", "go2", "go1", "mobile"]
 SITE = "https://mangom72.github.io/Direct-mogo/"
 GRADE_LABEL = {"D300": "고3·N수", "D200": "고2", "D100": "고1"}
 
+# 이 자료를 잘못 읽는 자리는 여기 하나뿐이라, 내보내는 파일마다 같은 말을 싣는다.
+YEAR_NOTE = (
+    "year는 시험을 본 해(시행 연도)입니다. schoolYear는 학년도이며 시행 연도 + 1로, "
+    "평가원 시험(수능·6월·9월 모의평가)에만 있습니다. 흔히 '2021학년도 6월 모평'이라 "
+    "부르는 것은 year 2020 · schoolYear 2021인 회차입니다 — year로 찾으면 한 해 "
+    "어긋납니다. 교육청 전국연합학력평가는 학년도를 쓰지 않습니다."
+)
+
 
 def url(code, date_str):
     if not code:
@@ -116,7 +124,14 @@ def main():
                 (out / rel).write_text(json.dumps({
                     "grade": grade, "gradeLabel": gnode["label"],
                     "group": group["name"], "subject": name, "subjectId": sid,
-                    "count": len(papers), "papers": papers,
+                    "count": len(papers),
+                    # 이 설명이 index.json에만 있었다. 읽는 쪽이 색인을 거치지 않고
+                    # 과목 파일로 곧장 들어오는 일이 흔한데(저장소에서 파일 이름으로
+                    # 찾는 경우가 그렇다) 그러면 연도가 두 가지라는 사실을 못 본 채
+                    # year만 보고 한 해 어긋난 회차를 집는다. 실제로 그렇게 틀린
+                    # 답을 봤다. 파일마다 한 줄이면 어디로 들어오든 눈에 걸린다.
+                    "note": YEAR_NOTE,
+                    "papers": papers,
                 }, ensure_ascii=False, indent=1), encoding="utf-8")
                 subs.append({
                     "id": sid, "name": name, "count": len(papers),
@@ -139,9 +154,7 @@ def main():
         # 커밋하지 않는다'는 판정도 늘 참이 되어 무의미했다.
         "updated": latest,
         "count": total,
-        "note": ("연도(year)는 모두 시행 연도입니다. 평가원 시험(수능·6/9월 모의평가)의 "
-                 "학년도는 시행 연도 + 1이며 schoolYear로 함께 넣었습니다. "
-                 "교육청 학력평가는 관례상 시행 연도로만 부르므로 schoolYear가 없습니다."),
+        "note": YEAR_NOTE,
         "fields": {
             "problem": "문제지 PDF 주소 (없으면 null)",
             "answer": "정답 이미지 주소 (없으면 null)",
