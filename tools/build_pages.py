@@ -89,10 +89,81 @@ def foot(depth, extra=""):
 
 
 def crumbs(depth, here):
+    """화면에 보이는 빵부스러기와, 그것을 그대로 옮긴 구조화 데이터.
+
+    구글은 BreadcrumbList를 리치 결과로 지원해서, 검색 결과에 주소 대신 이
+    길이 뜬다. 주소가 /s/D300/158.html 처럼 번호로 된 우리에게는 이게 곧
+    '주소에 낱말을 넣는' 일을 대신한다 — 구글 문서도 주소 속 낱말은
+    '빵부스러기에 뜨는 것 말고는 거의 효과가 없다'고 못박는다.
+
+    구조화 데이터 지침이 요구하는 두 가지를 지킨다 — 보이지 않는 것을
+    적지 말 것(아래 nav와 글자가 같다), 주소 구조가 아니라 사람이 실제로
+    지나온 길을 적을 것(홈 → 전체 과목 → 이 과목).
+    """
     up = "../" * depth
-    return (f'<nav class="crumb" aria-label="위치"><a href="{up}">기출 직행</a>'
+    trail = [("기출 직행", SITE), ("전체 과목", SITE + "s/"), (here, None)]
+    items = []
+    for i, (nm, href) in enumerate(trail, 1):
+        one = {"@type": "ListItem", "position": i, "name": nm}
+        if href:
+            one["item"] = href
+        items.append(one)
+    ld = json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList",
+                     "itemListElement": items}, ensure_ascii=False)
+    return (f'<script type="application/ld+json">{ld}</script>\n'
+            f'<nav class="crumb" aria-label="위치"><a href="{up}">기출 직행</a>'
             f' <span aria-hidden="true">›</span> <a href="{up}s/">전체 과목</a>'
             f' <span aria-hidden="true">›</span> <b>{E(here)}</b></nav>')
+
+
+def crumbs_top():
+    """색인 페이지 — 두 칸짜리 (구조화 데이터는 두 칸 이상이라야 한다)"""
+    ld = json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList",
+                     "itemListElement": [
+                         {"@type": "ListItem", "position": 1, "name": "기출 직행",
+                          "item": SITE},
+                         {"@type": "ListItem", "position": 2, "name": "전체 과목"}]},
+                    ensure_ascii=False)
+    return (f'<script type="application/ld+json">{ld}</script>\n'
+            f'<nav class="crumb" aria-label="위치"><a href="../">기출 직행</a>'
+            f' <span aria-hidden="true">›</span> <b>전체 과목</b></nav>')
+
+
+def facts(meta):
+    """이 과목에서만 참인 사실 몇 줄.
+
+    49장이 같은 틀에서 나오다 보니 본문이 이름과 숫자만 바뀐 같은 글이었다.
+    구글이 '값을 더하지 않고 찍어낸 페이지'로 보는 자리가 정확히 거기다.
+    그래서 자료에서 이 과목에만 해당하는 것을 뽑아 적는다 — 사람에게도
+    표를 세어 보지 않으면 알 수 없는 것들이다.
+    """
+    ps = meta["papers"]
+    gov = sum(1 for p in ps if p["source"] == "평가원")
+    suneung = sum(1 for p in ps if p["title"].startswith("수능"))
+    no_sol = sum(1 for p in ps if not p.get("solution"))
+    no_ans = sum(1 for p in ps if not p.get("answer"))
+    years = sorted({p["year"] for p in ps})
+    out = []
+    if gov:
+        out.append(f"평가원 <b>{gov}회</b>(수능 {suneung}회 포함) · "
+                   f"교육청 <b>{len(ps) - gov}회</b>")
+    else:
+        out.append(f"전부 교육청 전국연합학력평가 <b>{len(ps)}회</b> — "
+                   "평가원 시험에는 없는 과목입니다")
+    # 연도가 끊긴 적이 있으면 그것도 사실이다 (교육과정이 바뀐 자리)
+    gaps = [y for y in range(years[0], years[-1]) if y not in years]
+    if gaps:
+        out.append("자료가 없는 해: <b>" + ", ".join(f"{y}년" for y in gaps[:6])
+                   + ("…" if len(gaps) > 6 else "") + "</b>")
+    if no_sol or no_ans:
+        miss = []
+        if no_sol:
+            miss.append(f"해설 {no_sol}회")
+        if no_ans:
+            miss.append(f"정답 {no_ans}회")
+        out.append("자료가 빠진 회차: <b>" + " · ".join(miss) + "</b>")
+    out.append(f"가장 최근 회차: <b>{E(ps[0]['title'])}</b> ({E(ps[0]['date'])} 시행)")
+    return "".join(f"<li>{x}</li>" for x in out)
 
 
 def subject_page(meta, sub):
@@ -108,10 +179,11 @@ def subject_page(meta, sub):
 
     out = [head(title, desc, canon, 2), crumbs(2, f"{gl} {name}")]
     out.append(f"""<header class="pg">
-  <p class="kicker">{E(meta['group'])} · {E(gl)}</p>
-  <h1>{E(name)} 기출문제</h1>
+  <p class="kicker">{E(meta['group'])}</p>
+  <h1>{E(gl)} {E(name)} 기출문제</h1>
   <p class="lead">{E(gl)} <b>{E(name)}</b> 전 회차 <b>{n}개</b> ({E(span)}).
   아래 표의 문제·정답·해설은 EBSi 원본 파일로 바로 갑니다.</p>
+  <ul class="facts">{facts(meta)}</ul>
   <p class="go"><a class="app" href="../../#/{g}/{sid}/all/all">앱 화면에서 보기</a>
      <a href="../../data/{g}/{sid}.json">JSON으로 받기</a></p>
 </header>
@@ -157,9 +229,7 @@ def index_page(index):
     desc = (f"고1·고2·고3 {n}개 과목의 수능·모의평가·전국연합학력평가 기출 문제지 "
             f"{index['count']:,}회차. 과목을 고르면 전 회차의 문제·정답·해설 원본 "
             "PDF 주소가 나옵니다.")
-    out = [head(title, desc, canon, 1),
-           f'<nav class="crumb" aria-label="위치"><a href="../">기출 직행</a>'
-           f' <span aria-hidden="true">›</span> <b>전체 과목</b></nav>',
+    out = [head(title, desc, canon, 1), crumbs_top(),
            f"""<header class="pg">
   <p class="kicker">문 제 지 원 본 직 행</p>
   <h1>과목별 기출문제</h1>
@@ -182,16 +252,17 @@ def index_page(index):
     return "".join(out)
 
 
-def sitemap(index, updated):
-    urls = [(SITE, "1.0"), (f"{SITE}s/", "0.9")]
-    for gr in index["grades"]:
-        for g in gr["groups"]:
-            for s in g["subjects"]:
-                urls.append((f"{SITE}s/{gr['code']}/{s['id']}.html", "0.8"))
-    body = "".join(
-        f"  <url><loc>{E(u)}</loc><lastmod>{updated}</lastmod>"
-        f"<changefreq>monthly</changefreq><priority>{pr}</priority></url>\n"
-        for u, pr in urls)
+def sitemap(pages):
+    """주소마다 그 페이지가 실제로 마지막으로 바뀐 날을 적는다.
+
+    구글은 <priority>와 <changefreq>를 아예 무시한다고 문서에 적어 두었으므로
+    넣지 않는다. <lastmod>는 '한결같이 정확할 때만' 쓴다고 했는데, 예전에는
+    51개 주소에 전부 같은 날짜(사이트 전체의 최신 시행일)를 박아 두어서
+    바뀌지 않은 과목까지 매달 새 날짜를 달고 있었다. 그건 부정확한 신호라
+    쓰이지 않느니만 못하다. 이제 과목 페이지는 그 과목의 최신 시행일을 단다.
+    """
+    body = "".join(f"  <url><loc>{E(u)}</loc><lastmod>{d}</lastmod></url>\n"
+                   for u, d in pages)
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
             + body + "</urlset>\n")
@@ -238,6 +309,9 @@ a:focus-visible,.dl a:focus-visible{outline:2.5px solid var(--mark);outline-offs
 .pg h1{font-family:"Song Myung",serif;font-size:27px;font-weight:700;margin:0;
   letter-spacing:-.5px;line-height:1.2}
 .pg .lead{margin:9px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.65}
+.pg .facts{margin:11px 0 0;padding:0 0 0 17px;font-size:12px;color:var(--ink2);line-height:1.75}
+.pg .facts li{margin:0}
+.pg .facts b{color:var(--ink);font-weight:700}
 .pg .go{margin:13px 0 0;display:flex;gap:7px;flex-wrap:wrap}
 .pg .go a{font-size:12.5px;font-weight:600;text-decoration:none;padding:8px 13px;
   border:1.2px solid var(--ink);background:var(--btn)}
@@ -383,7 +457,7 @@ def main():
     (out / "paper.css").write_text(CSS, encoding="utf-8")
     (out / "site.js").write_text(JS, encoding="utf-8")
 
-    n = 0
+    n, pages = 0, []
     for gr in index["grades"]:
         (out / gr["code"]).mkdir(exist_ok=True)
         for g in gr["groups"]:
@@ -397,10 +471,15 @@ def main():
                                   .read_text(encoding="utf-8"))
                 page = subject_page(meta, s).replace("{SIBLINGS}", sibs[s["id"]])
                 (out / gr["code"] / f'{s["id"]}.html').write_text(page, encoding="utf-8")
+                # 이 페이지가 실제로 바뀌는 날은 이 과목에 새 회차가 붙는 날이다
+                pages.append((f'{SITE}s/{gr["code"]}/{s["id"]}.html',
+                              meta["papers"][0]["date"]))
                 n += 1
 
     (out / "index.html").write_text(index_page(index), encoding="utf-8")
-    (ROOT / "sitemap.xml").write_text(sitemap(index, index["updated"]), encoding="utf-8")
+    pages.insert(0, (SITE, index["updated"]))
+    pages.insert(1, (f"{SITE}s/", index["updated"]))
+    (ROOT / "sitemap.xml").write_text(sitemap(pages), encoding="utf-8")
 
     kb = sum(f.stat().st_size for f in out.rglob("*")) / 1024
     print(f"s/ 과목 페이지 {n}장 + 색인 ({kb:,.0f}KB), sitemap.xml", file=sys.stderr)
