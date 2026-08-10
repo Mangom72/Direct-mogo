@@ -48,10 +48,20 @@ addEventListener("securitypolicyviolation", function(e){
         + ";S.gijul_frag=" + encodeURIComponent(location.hash)
         + ";S.browser_fallback_url=" + encodeURIComponent(fallback) + ";end";
     };
-    if(!window.__androidWeb) return;
-    if(sessionStorage.getItem("gijul.apk.v1")) return;
-    sessionStorage.setItem("gijul.apk.v1", "1");
-    location.href = window.__appIntent(location.href);
+    /* 여기서 자동으로 앱에 넘기지 않는다. 예전에는 안드로이드로 보이면 곧장
+       intent: 로 이동했는데, 그 판정에 걸리는 것은 사람만이 아니었다. 검색엔진의
+       렌더러도 측정 도구도 UA에 Android를 달고 오지만 정작 intent: 는 다룰 줄
+       모르는 리눅스 크롬이라, 이동하려는 순간 문서가 통째로 사라졌다 —
+       재현해 보니 document.body 조차 남지 않았다. 빈 화면이 색인되고, 성능
+       측정은 '한 번도 그리지 않았다'로 끝났다.
+
+       UA로 크롤러를 골라내는 길도 있지만 그러지 않는다. 이름을 대지 않는
+       크롤러는 못 거르고, 느린 회선에서는 그마저 새는 것을 확인했다. 무엇보다
+       사람과 기계에 다르게 굴 이유가 없다.
+
+       밖에서 온 링크는 App Links가 이미 브라우저를 거치지 않고 앱을 연다
+       (assetlinks.json + autoVerify). 브라우저에서 직접 연 사람에게는 푸터의
+       '앱으로 열기'가 있다 — 누를 때만 넘어가므로 아무것도 깨뜨리지 않는다. */
   }catch(e){}
 })();
 </script>
@@ -64,7 +74,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-4BWMRrhWm91VtcycGAYlvVQ4ldATYBs07KYXuBNBC5s=';
+  script-src 'self' 'sha256-iqAzMK1b5MWrS7VqQlSF0bfCiRXifpEMVAo1YZDBJWA=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-Ov+xAFDOHRzQSyYL3VsVooYHmDVbAzXeqPNsrdNPvGA=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -428,10 +438,17 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 }
 
 .empty{background:var(--card);border:1.5px dashed var(--rule);padding:22px;font-size:13px;color:var(--ink2);line-height:1.7;text-align:center}
-/* 자료를 푸는 동안만 쓰는 자리. 높이를 미리 잡아 두지 않으면 첫 그림에 바닥글이
-   화면 안에 들어왔다가, 목록이 채워지는 순간 통째로 밀려나 화면이 크게 흔들린다.
-   (측정해 보니 CLS 0.28이 여기서 나왔다.) 목록이 들어설 만큼만 비워 둔다. */
-.empty.boot{min-height:100vh}
+/* 목록 자리는 비어 있을 때도 한 화면을 차지한다.
+
+   자리를 잡아 두지 않으면 첫 그림에 바닥글이 화면 안에 들어왔다가, 목록이
+   채워지는 순간 통째로 밀려나 화면이 크게 흔들린다. 처음엔 스크립트가 자리를
+   잡게 했는데, 느린 회선에서 재 보니 소용이 없었다 — 첫 그림은 0.65초에
+   나오는데 스크립트는 3.3초에야 돌아서, 그 사이 흔들릴 것은 이미 다 흔들린
+   뒤였다(CLS 0.59). CSS로 박아야 첫 그림부터 듣는다.
+
+   회차가 몇 개뿐인 조합에서는 아래가 좀 비지만, 그건 바닥글이 오르내리는 것보다
+   낫다. 자리가 비는 것은 눈에 안 거슬리고, 글이 뛰는 것은 거슬린다. */
+#out{min-height:100vh}
 footer{max-width:900px;margin:22px auto 0;font-size:11px;color:var(--ink2);line-height:1.85}
 footer b{color:var(--ink)}
 /* 각주 속 링크. 기본 파란 밑줄은 이 자리에서 너무 튄다. */
@@ -1867,7 +1884,7 @@ if("serviceWorker" in navigator){
   try{ pickPref = localStorage.getItem(PICK_KEY); }catch(e){}
   setPick(pickPref ? pickPref === "open" : favs.length === 0);
   syncPickText();
-  out.innerHTML=`<div class="empty boot">자료를 불러오는 중입니다…</div>`;
+  out.innerHTML=`<div class="empty">자료를 불러오는 중입니다…</div>`;
   try{
     DB = await loadDB();
     fillYears();          /* 자료 없는 연도를 가리켰다면 여기서 '전체'로 내려앉는다 */
