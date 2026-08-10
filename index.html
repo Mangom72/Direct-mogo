@@ -64,7 +64,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-Ov+xAFDOHRzQSyYL3VsVooYHmDVbAzXeqPNsrdNPvGA=';
+  script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-4BWMRrhWm91VtcycGAYlvVQ4ldATYBs07KYXuBNBC5s=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -106,7 +106,17 @@ addEventListener("securitypolicyviolation", function(e){
      오갔다 — 한글이라 조각이 많다. 화면에 나오는 글자만 잘라 담으면 5개에 424KB다.
      자르는 일과 새 글자를 채우는 일은 tools/build_fonts.py 가 한다.
      media="print"로 걸어 두면 받아는 오되 첫 그림을 막지 않는다. 다 오면 아래
-     스크립트가 적용한다. CSP가 인라인 onload를 막으므로 붙이는 일은 스크립트가 한다. -->
+     스크립트가 적용한다. CSP가 인라인 onload를 막으므로 붙이는 일은 스크립트가 한다.
+
+     preload를 같이 거는 이유: media="print"만 두면 글꼴 파일은 스타일시트가
+     적용된 뒤에야 받기 시작한다. 그 사이 대체 글꼴로 줄바꿈이 한 번 잡혔다가
+     늦게 도착한 글꼴로 다시 잡히면서 화면이 흔들린다(CLS). preload는 파싱하는
+     그 자리에서 내려받기를 띄우므로 교체가 첫 그림에 붙는다.
+     여기 적은 넷은 첫 화면에 실제로 쓰이는 것들이다 — 500은 뒤에 나오므로 뺀다. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/SongMyung-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/GijulSans-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/GijulSans-600.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/GijulSans-700.woff2">
 <link id="webfont" media="print" href="fonts/fonts.css" rel="stylesheet">
 <style>
 :root{
@@ -418,6 +428,10 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 }
 
 .empty{background:var(--card);border:1.5px dashed var(--rule);padding:22px;font-size:13px;color:var(--ink2);line-height:1.7;text-align:center}
+/* 자료를 푸는 동안만 쓰는 자리. 높이를 미리 잡아 두지 않으면 첫 그림에 바닥글이
+   화면 안에 들어왔다가, 목록이 채워지는 순간 통째로 밀려나 화면이 크게 흔들린다.
+   (측정해 보니 CLS 0.28이 여기서 나왔다.) 목록이 들어설 만큼만 비워 둔다. */
+.empty.boot{min-height:100vh}
 footer{max-width:900px;margin:22px auto 0;font-size:11px;color:var(--ink2);line-height:1.85}
 footer b{color:var(--ink)}
 /* 각주 속 링크. 기본 파란 밑줄은 이 자리에서 너무 튄다. */
@@ -1853,7 +1867,7 @@ if("serviceWorker" in navigator){
   try{ pickPref = localStorage.getItem(PICK_KEY); }catch(e){}
   setPick(pickPref ? pickPref === "open" : favs.length === 0);
   syncPickText();
-  out.innerHTML=`<div class="empty">자료를 불러오는 중입니다…</div>`;
+  out.innerHTML=`<div class="empty boot">자료를 불러오는 중입니다…</div>`;
   try{
     DB = await loadDB();
     fillYears();          /* 자료 없는 연도를 가리켰다면 여기서 '전체'로 내려앉는다 */

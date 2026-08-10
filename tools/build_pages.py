@@ -63,6 +63,13 @@ def head(title, desc, canon, depth, alt=""):
 <link rel="alternate" type="text/plain" href="{up}llms.txt" title="AI·프로그램용 안내">
 <link rel="alternate" type="text/plain" href="{up}llms-full.txt" title="AI·프로그램용 자세한 안내">
 <link rel="alternate" type="application/json" href="{up}data/index.json" title="과목 목록 (JSON)">{alt}
+<!-- 글꼴을 미리 받아 둔다. 스타일시트만 걸어 두면 파일은 그것을 읽고 나서야
+     받기 시작해, 대체 글꼴로 한 번 잡힌 줄바꿈이 나중에 다시 잡히면서 화면이
+     흔들린다(CLS). 여기 넷은 이 페이지가 실제로 쓰는 굵기다. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{up}fonts/SongMyung-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{up}fonts/GijulSans-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{up}fonts/GijulSans-600.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="{up}fonts/GijulSans-700.woff2">
 <link rel="stylesheet" href="{up}fonts/fonts.css">
 <link rel="stylesheet" href="{up}s/paper.css">
 <meta name="theme-color" content="#191713">
