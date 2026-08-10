@@ -173,7 +173,10 @@ def subject_page(meta, sub):
     canon = f"{SITE}s/{g}/{sid}.html"
     years = sorted({p["year"] for p in meta["papers"]}, reverse=True)
     span = f"{years[-1]}~{years[0]}년" if len(years) > 1 else f"{years[0]}년"
-    title = f"{gl} {name} 기출문제 {n}회차 — 기출 직행"
+    # 제목은 좁은 화면에서 픽셀 너비로 잘린다. 한글은 폭이 넓어 20자쯤에서
+    # 끊기므로 짧게 간다. 회차 수는 설명과 본문에 있으니 제목에서 뺐다 —
+    # 매달 바뀌는 값이라 두면 제목이 달마다 요동치기도 한다.
+    title = f"{gl} {name} 기출문제 — 기출 직행"
     desc = (f"{gl} {name} 수능·모의평가·전국연합학력평가 기출 문제지 {n}회차 "
             f"({span}). 문제·정답·해설 원본 PDF로 바로 이동합니다.")
 
@@ -225,7 +228,7 @@ def subject_page(meta, sub):
 def index_page(index):
     canon = f"{SITE}s/"
     n = sum(len(g["subjects"]) for gr in index["grades"] for g in gr["groups"])
-    title = f"과목별 기출문제 목록 ({n}과목 · {index['count']:,}회차) — 기출 직행"
+    title = f"과목별 기출문제 {n}과목 — 기출 직행"
     desc = (f"고1·고2·고3 {n}개 과목의 수능·모의평가·전국연합학력평가 기출 문제지 "
             f"{index['count']:,}회차. 과목을 고르면 전 회차의 문제·정답·해설 원본 "
             "PDF 주소가 나옵니다.")
