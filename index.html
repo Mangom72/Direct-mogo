@@ -62,7 +62,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-pnlkm/DH2BVD4tLfaZ3xt8xSGk4+LKVU9pVw9l40u4M=';
+  script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-Qo4hJqg8gG5c4A90tNDqPt6LzstydbNLGjhJiHGNSBE=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -157,12 +157,22 @@ body{
 }
 .notice button.no{background:var(--btn);color:var(--ink2);border-color:var(--rule)}
 .notice button[hidden]{display:none}
+/* 복사가 막혔을 때 내주는 주소 칸. 글자가 작아도 전체가 잡히는 게 중요하다. */
+.notice .linkbox{
+  display:block;width:100%;margin-top:7px;font:inherit;font-size:11.5px;
+  padding:6px 8px;border:1.2px solid var(--rule);background:var(--paper);color:var(--ink);
+  border-radius:0;
+}
+.notice .linkbox:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 .notice button:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 
 .masthead{background:var(--card);border:1.5px solid var(--ink)}
 .mast-top{display:flex;align-items:stretch;border-bottom:1.5px solid var(--ink)}
 .mast-title{padding:20px 22px;flex:1}
-.mast-title .kicker{font-size:11px;letter-spacing:3.5px;color:var(--mark);font-weight:600;margin-bottom:7px}
+/* 제호 웃머리. 제호와 한 덩어리이므로 같은 명조로 짠다 — 여기만 고딕이면 두 줄이
+   따로 논다. 자간을 크게 벌려 놓아 굵기는 700이라야 제 무게가 나온다. */
+.mast-title .kicker{font-family:"Song Myung",serif;font-size:11px;letter-spacing:3.5px;
+  color:var(--mark);font-weight:700;margin-bottom:7px}
 .mast-title h1{font-family:"Song Myung",serif;font-weight:700;margin:0;font-size:31px;letter-spacing:-1px;line-height:1.15}
 .mast-title p{margin:8px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.65}
 .mast-side{width:120px;border-left:1.5px solid var(--ink);display:flex;flex-direction:column}
@@ -248,7 +258,9 @@ body{
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 select{width:100%;font:inherit;font-size:14px;padding:10px 11px;border:1.2px solid var(--ink);background:var(--btn);color:var(--ink);border-radius:0}
 select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
-select#yr{font-family:"Song Myung",serif;font-weight:700;font-size:15px}
+/* 연도 드롭다운도 다른 드롭다운과 같은 얼굴이다. 여기만 명조로 세워 뒀더니 바로
+   옆 과목·과목군과 글꼴이 달라, 같은 일을 하는 칸 셋이 제각각으로 보였다.
+   명조는 지면 쪽(제호·표제·연도 머리·회차 이름)에만 두고 조작 칸에는 쓰지 않는다. */
 
 .tally{display:flex;align-items:baseline;gap:10px;margin:22px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
 .tally .big{font-family:"Song Myung",serif;font-size:23px;font-weight:700}
@@ -989,7 +1001,8 @@ function parseSubs(){
   const m = /^#subs=(.+)$/.exec(decodeURIComponent(location.hash));
   if(!m) return null;
   const seen = new Set(), list = [];
-  m[1].split(",").forEach(tok=>{
+  /* 쉼표도 계속 받는다 — 예전에 나간 링크가 살아 있다 (아래 favShare 주석 참고) */
+  m[1].split(/[-,]/).forEach(tok=>{
     const [g,s] = tok.split(".");
     const k = g+"/"+s;
     if(g && s && SUBINDEX[k] && !seen.has(k)){ seen.add(k); list.push({ g, s }); }
@@ -1025,17 +1038,38 @@ addEventListener("hashchange", ()=>{
   if(st){ applyState(st); fillYears(); render(); syncFav(); }
 });
 
+/* 과목을 잇는 글자가 쉼표였는데, 그것 때문에 과목 하나만 건너가는 일이 있었다.
+   메신저·문자는 글에 섞인 주소를 스스로 찾아 누를 수 있게 만드는데, 쉼표는 문장
+   부호로 훨씬 자주 쓰이므로 거기서 주소가 끝났다고 보고 자른다. 여섯 과목을 보내도
+   받는 쪽에는 첫 과목까지만 링크가 걸린다. 붙임표는 어느 검출기도 주소의 일부로
+   보므로 잘리지 않는다. 예전 링크는 parseSubs가 그대로 받아 준다. */
+function subsLink(list){
+  return location.origin + location.pathname
+       + "#subs=" + list.map(f=>f.g+"."+f.s).join("-");
+}
+/* 복사가 막히면 주소를 글로 보여 주는데, 그냥 글로 두면 손으로 긁다가 끝이 잘린다.
+   고를 수 있는 칸에 담고 미리 전체를 선택해 둔다 — 그대로 복사하면 온전하다. */
+function showLink(url){
+  showNotice("이 주소를 복사해 다른 기기에서 여세요.", "", null);
+  const f = document.createElement("input");
+  f.type="text"; f.readOnly = true; f.value = url; f.className = "linkbox";
+  f.setAttribute("aria-label", "내 과목 공유 주소");
+  f.onfocus = ()=>f.select();
+  noticeText.appendChild(f);
+  f.focus();
+}
+
 favShare.onclick = async ()=>{
-  const url = location.origin + location.pathname + "#subs=" + favs.map(f=>f.g+"."+f.s).join(",");
+  const url = subsLink(favs);
   if(navigator.share){
     try{ await navigator.share({ title:"기출 직행 — 내 과목", url }); return; }
     catch(e){ if(e && e.name==="AbortError") return; }
   }
   try{
     await navigator.clipboard.writeText(url);
-    showNotice("링크를 복사했습니다. 다른 기기에서 열면 이 과목들이 추가됩니다.", "", null);
+    showNotice(`링크를 복사했습니다. 다른 기기에서 열면 과목 ${favs.length}개가 추가됩니다.`, "", null);
   }catch(e){
-    showNotice(url, "", null);
+    showLink(url);
   }
 };
 
