@@ -198,6 +198,9 @@ def subject_page(meta, sub):
   <h1>{E(gl)} {E(name)} 기출문제</h1>
   <p class="lead">{E(gl)} <b>{E(name)}</b> 전 회차 <b>{n}개</b> ({E(span)}).
   아래 표의 문제·정답·해설은 EBSi 원본 파일로 바로 갑니다.</p>
+  <p class="yrnote"><b>연도는 시행 연도입니다.</b> 평가원 시험(수능·6·9월 모평)은
+  학년도가 한 해 뒤라 함께 적었습니다 — <b>2025년 11월 시행 = 2026학년도 수능</b>.
+  교육청 전국연합학력평가는 학년도를 쓰지 않습니다.</p>
   <ul class="facts">{facts(meta)}</ul>
   <p class="go"><a class="app" href="../../#/{g}/{sid}/all/all">앱 화면에서 보기</a>
      <a href="../../data/{g}/{sid}.json">JSON으로 받기</a></p>
@@ -254,6 +257,9 @@ def index_page(index):
   <p class="lead">2006년 시행분부터 <b>{index['count']:,}회차 · {n}과목</b>.
   과목을 고르면 그 과목의 전 회차가 연도별로 나오고, 문제·정답·해설은 EBSi 원본
   파일로 바로 갑니다. 수록된 가장 최근 시행일은 {E(index['updated'])}입니다.</p>
+  <p class="yrnote"><b>연도는 시행 연도입니다.</b> 평가원 시험(수능·6·9월 모평)은
+  학년도가 한 해 뒤라 함께 적었습니다 — <b>2025년 11월 시행 = 2026학년도 수능</b>.
+  교육청 전국연합학력평가는 학년도를 쓰지 않습니다.</p>
   <p class="go"><a class="app" href="../">앱 화면에서 보기</a>
      <a href="../data/index.json">전 과목 JSON</a>
      <a href="../llms.txt">llms.txt</a></p>
@@ -331,6 +337,11 @@ a:focus-visible,.dl a:focus-visible{outline:2.5px solid var(--mark);outline-offs
 .pg h1{font-family:"Song Myung",serif;font-size:27px;font-weight:700;margin:0;
   letter-spacing:-.5px;line-height:1.2}
 .pg .lead{margin:9px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.65}
+/* 연도 안내. 이 자료를 잘못 읽는 자리가 여기 하나뿐이라 표보다 먼저 읽혀야 한다 —
+   각주에만 두었더니 회차가 170개인 과목에서는 표를 다 지나야 닿았다. */
+.pg .yrnote{margin:11px 0 0;padding:8px 11px;font-size:12px;line-height:1.7;
+  color:var(--ink2);background:var(--paper);border-left:3px solid var(--mark)}
+.pg .yrnote b{color:var(--ink);font-weight:700}
 .pg .facts{margin:11px 0 0;padding:0 0 0 17px;font-size:12px;color:var(--ink2);line-height:1.75}
 .pg .facts li{margin:0}
 .pg .facts b{color:var(--ink);font-weight:700}

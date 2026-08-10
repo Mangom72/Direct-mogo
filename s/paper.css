@@ -41,6 +41,11 @@ a:focus-visible,.dl a:focus-visible{outline:2.5px solid var(--mark);outline-offs
 .pg h1{font-family:"Song Myung",serif;font-size:27px;font-weight:700;margin:0;
   letter-spacing:-.5px;line-height:1.2}
 .pg .lead{margin:9px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.65}
+/* 연도 안내. 이 자료를 잘못 읽는 자리가 여기 하나뿐이라 표보다 먼저 읽혀야 한다 —
+   각주에만 두었더니 회차가 170개인 과목에서는 표를 다 지나야 닿았다. */
+.pg .yrnote{margin:11px 0 0;padding:8px 11px;font-size:12px;line-height:1.7;
+  color:var(--ink2);background:var(--paper);border-left:3px solid var(--mark)}
+.pg .yrnote b{color:var(--ink);font-weight:700}
 .pg .facts{margin:11px 0 0;padding:0 0 0 17px;font-size:12px;color:var(--ink2);line-height:1.75}
 .pg .facts li{margin:0}
 .pg .facts b{color:var(--ink);font-weight:700}
