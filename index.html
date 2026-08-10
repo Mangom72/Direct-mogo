@@ -163,6 +163,10 @@ body{
    sticky라서 흐름 안에 자리를 차지한 채(맨 위에서는 지금까지와 같은 자리) 아래로
    내려가도 화면 같은 높이에 붙어 있는다. top은 body의 위 여백과 같은 값이어야
    맨 위에서 보던 위치가 그대로 유지된다. 시트(z-index 50)보다는 아래에 둔다. */
+/* 스크립트가 없을 때만 나오는 안내. 알림 막대와 같은 결로 그린다. */
+.noscript{max-width:900px;margin:0 auto 16px;padding:12px 15px;font-size:12.5px;line-height:1.7;
+  background:var(--card);border:1.5px solid var(--ink);border-left-width:5px;border-left-color:var(--mark)}
+.noscript a{color:var(--ink)}
 .notice[hidden]{display:none}
 .notice{
   display:flex;align-items:center;gap:12px;flex-wrap:wrap;
@@ -498,6 +502,20 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
 </script>
 </head>
 <body>
+<!-- 이 화면은 자료를 눌러 담아 두고 스크립트로 편다. 그래서 스크립트를 돌리지
+     않고 받아 가는 쪽(검색엔진, 자료를 읽으러 온 프로그램, 페이지를 글로 바꿔
+     읽는 AI)에게는 빈 껍데기로 보인다. noscript는 정확히 그 경우에만 나오고
+     스크립트가 도는 브라우저에서는 그려지지도 않으므로, 사람 화면은 그대로 둔 채
+     그쪽에만 길을 알려 줄 수 있다. -->
+<noscript>
+  <div class="noscript">
+    <b>이 화면은 자바스크립트로 자료를 펼칩니다.</b>
+    스크립트 없이 보시려면 <a href="s/">과목별 기출문제 목록</a>으로 가세요 —
+    49과목 3,844회차가 문제·정답·해설 원본 주소와 함께 그대로 적혀 있습니다.
+    프로그램으로 읽으신다면 <a href="llms.txt">llms.txt</a>(읽는 법)와
+    <a href="data/index.json">data/index.json</a>(과목 목록)이 시작점입니다.
+  </div>
+</noscript>
 <div class="wrap">
 
   <!-- role=status 는 '정중하게 알린다'는 뜻이다. 화면을 못 보는 사람에게 이 막대는
@@ -596,7 +614,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
   · 연도는 <b>시행 연도</b>입니다. 평가원 시험의 학년도는 시행 연도 +1이므로(예: <b>2013년 6월 시행 = 2014학년도 6월 모평</b>) 각 연도에 학년도를 병기했습니다. 교육청 학평은 관례상 시행 연도로만 부릅니다.<br>
   · 문제·해설은 PDF, 정답은 이미지입니다(웹은 새 탭, 앱은 앱 안에서 열립니다). 회차에 따라 일부 자료가 없으면 버튼이 비활성화됩니다.<br>
   · 모든 링크는 EBSi가 공개 제공하는 파일 주소로 직접 연결되며(로그인 불필요), 이 페이지는 어떤 파일도 저장·재배포하지 않습니다. 저작권은 <b>한국교육과정평가원</b> 및 <b>각 시·도교육청</b>에 있습니다. 권리자 또는 정당한 대리인의 게시중단 요청은 확인 즉시 이행합니다 — <a class="doc" href="mailto:direct.mogo.dev@gmail.com">direct.mogo.dev@gmail.com</a> 또는 <a class="doc" href="https://github.com/Mangom72/Direct-mogo/issues" target="_blank" rel="noopener">GitHub 이슈</a>. 자세한 것은 <a class="doc" href="https://github.com/Mangom72/Direct-mogo/blob/main/NOTICE.md" target="_blank" rel="noopener">이용 안내</a>에 있습니다.<br>
-  · 이 화면은 자료를 눌러 담아 두고 그때그때 풀어 쓰므로 검색엔진에는 빈 장으로 보입니다. 그래서 같은 자료를 그냥 읽히는 <a class="doc" href="s/">과목별 목록</a>으로도 깔아 두었습니다.
+  · 이 화면은 자료를 눌러 담아 두고 그때그때 풀어 쓰므로 검색엔진에는 빈 장으로 보입니다. 그래서 같은 자료를 <a class="doc" href="s/">과목별 목록</a>(그냥 읽히는 HTML) · <a class="doc" href="data/index.json">data/index.json</a>(과목 목록) · <a class="doc" href="llms.txt">llms.txt</a>(프로그램으로 읽는 법)로도 깔아 두었습니다.
   <div class="src"><a href="https://github.com/Mangom72/Direct-mogo" target="_blank" rel="noopener"
     aria-label="GitHub 저장소 — 소스와 자료 수집 방식"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>GitHub</a></div>
   <div class="appinfo" id="appInfo" hidden></div>

@@ -254,6 +254,9 @@ def index_page(index):
   <p class="lead">2006년 시행분부터 <b>{index['count']:,}회차 · {n}과목</b>.
   과목을 고르면 그 과목의 전 회차가 연도별로 나오고, 문제·정답·해설은 EBSi 원본
   파일로 바로 갑니다. 수록된 가장 최근 시행일은 {E(index['updated'])}입니다.</p>
+  <p class="go"><a class="app" href="../">앱 화면에서 보기</a>
+     <a href="../data/index.json">전 과목 JSON</a>
+     <a href="../llms.txt">llms.txt</a></p>
 </header>
 """]
     for gr in index["grades"]:
