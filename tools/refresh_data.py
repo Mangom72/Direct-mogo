@@ -16,6 +16,7 @@ EBSi가 마크업을 바꾸면 파서가 조용히 빈손이 되어 "변경 없�
 import argparse
 import base64
 import gzip
+import io
 import json
 import re
 import sys
@@ -187,6 +188,20 @@ def build(session, pause):
     return db
 
 
+def squeeze(raw):
+    """같은 자료면 같은 바이트가 나오게 눌러 담는다.
+
+    gzip은 머리에 '압축한 시각'을 적는다. gzip.compress()를 그냥 쓰면 자료가
+    한 글자도 안 바뀌어도 결과 바이트가 매번 달라진다. 한 달에 한 번 돌 때는
+    티가 안 났는데, 매일 돌게 되자 **새 회차가 없는 날에도 index.html이
+    바뀐 것으로 잡혀** 커밋과 배포가 날마다 나갔다. 시각을 0으로 박아 둔다.
+    """
+    buf = io.BytesIO()
+    with gzip.GzipFile(fileobj=buf, mode="wb", compresslevel=9, mtime=0) as f:
+        f.write(raw)
+    return buf.getvalue()
+
+
 def merge(current, scraped, known):
     """기존 기록은 손대지 않고, 아직 없는 시행일의 회차만 덧붙인다.
 
@@ -328,8 +343,8 @@ def main():
         print(f"참고: GROUPS에 없어 담지 않은 과목 {len(skipped)}개 — "
               f"{', '.join(skipped[:12])}{' …' if len(skipped) > 12 else ''}", file=sys.stderr)
 
-    blob = base64.b64encode(gzip.compress(
-        json.dumps(current, ensure_ascii=False, separators=(",", ":")).encode(), 9)).decode()
+    blob = base64.b64encode(squeeze(
+        json.dumps(current, ensure_ascii=False, separators=(",", ":")).encode())).decode()
     new = PAYLOAD_RE.sub(lambda m: m.group(1) + blob + m.group(3), text, count=1)
 
     if new == text:

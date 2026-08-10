@@ -132,8 +132,7 @@ def build(chars):
         subprocess.run(
             ["pyftsubset", str(ttf), f"--text-file={chars_file}", "--flavor=woff2",
              "--layout-features=*", f"--output-file={OUT / name}"], check=True)
-        if family != source:
-            rename(OUT / name, family, weight)
+        finalize(OUT / name, family, weight, family != source)
         kb = (OUT / name).stat().st_size / 1024
         total += kb
         print(f"  {family} {weight:<4} {kb:7.1f}KB  {name}"
@@ -146,11 +145,18 @@ def build(chars):
     print(f"  {'합계':<22}{total:7.1f}KB · 글자 {len(chars)}자")
 
 
-def rename(path, family, weight):
-    """글꼴 안의 이름표를 갈아 끼운다.
+def finalize(path, family, weight, rename):
+    """만들어진 글꼴을 마무리한다 — 이름표를 갈고, 날짜 도장을 지운다.
 
-    CSS에서만 다른 이름을 쓰고 파일 속은 그대로 두면 이름을 바꿨다고 할 수 없다.
-    OFL이 막는 것은 '사용자에게 보이는 주된 이름'이라 이름표를 고쳐야 한다.
+    이름을 바꾸는 이유: CSS에서만 다른 이름을 쓰고 파일 속은 그대로 두면 이름을
+    바꿨다고 할 수 없다. OFL이 막는 것은 '사용자에게 보이는 주된 이름'이다.
+
+    날짜를 박아 두는 이유: 글꼴의 head 표에는 '고친 시각'이 들어가는데 저장할
+    때마다 지금 시각으로 갱신된다. 그러면 글자가 하나도 안 바뀌어도 파일
+    바이트가 달라져, 매일 도는 갱신이 날마다 글꼴 다섯 개를 새로 커밋한다.
+    만든 시각(created)으로 맞춰 두면 같은 글자에서 같은 파일이 나온다.
+    값을 넣는 것만으로는 부족하다 — save() 가 저장 직전에 다시 계산하므로
+    recalcTimestamp 를 꺼야 넣은 값이 남는다.
     """
     from fontTools.ttLib import TTFont
 
@@ -158,13 +164,16 @@ def rename(path, family, weight):
     full = f"{family} {style}"
     ps = f"{family.replace(' ', '')}-{style}"
     font = TTFont(path)
-    for rec in font["name"].names:
-        if rec.nameID in (1, 16):       # 가족 이름
-            rec.string = family
-        elif rec.nameID == 4:           # 전체 이름
-            rec.string = full
-        elif rec.nameID == 6:           # PostScript 이름
-            rec.string = ps
+    font.recalcTimestamp = False        # 이게 없으면 save()가 modified 를 '지금'으로 되돌린다
+    if rename:
+        for rec in font["name"].names:
+            if rec.nameID in (1, 16):       # 가족 이름
+                rec.string = family
+            elif rec.nameID == 4:           # 전체 이름
+                rec.string = full
+            elif rec.nameID == 6:           # PostScript 이름
+                rec.string = ps
+    font["head"].modified = font["head"].created
     font.flavor = "woff2"
     font.save(path)
 
