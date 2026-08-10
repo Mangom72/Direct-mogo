@@ -153,5 +153,5 @@ print(p["title"], p["date"], p["problem"])
 
 https://github.com/Mangom72/Direct-mogo/blob/main/NOTICE.md
 
-권리자께서 내려 달라고 하시면 확인 즉시 내립니다. direct.mogo.dev@gmail.com 또는
+권리자 또는 정당한 대리인의 게시중단 요청은 확인 즉시 이행합니다. direct.mogo.dev@gmail.com 또는
 https://github.com/Mangom72/Direct-mogo/issues 로 연락 주세요.
