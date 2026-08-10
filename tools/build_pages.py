@@ -61,6 +61,7 @@ def head(title, desc, canon, depth, alt=""):
      아무것도 늘지 않는다. 화면에 적어 두고 CSS로 감추는 길도 있지만 그건
      사람에게 감추고 검색엔진에만 보이는 짓이라 구글이 클로킹으로 다룬다. -->
 <link rel="alternate" type="text/plain" href="{up}llms.txt" title="AI·프로그램용 안내">
+<link rel="alternate" type="text/plain" href="{up}llms-full.txt" title="AI·프로그램용 자세한 안내">
 <link rel="alternate" type="application/json" href="{up}data/index.json" title="과목 목록 (JSON)">{alt}
 <link rel="stylesheet" href="{up}fonts/fonts.css">
 <link rel="stylesheet" href="{up}s/paper.css">

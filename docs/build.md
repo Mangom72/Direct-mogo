@@ -9,7 +9,7 @@
 |---|---|
 | `index.html` | 앱 전체. 자료 3,844회차가 gzip+base64로 안에 들어 있습니다 (154KB) |
 | `sw.js` | 서비스 워커. 앱 셸·글꼴·받아둔 PDF를 캐시합니다 |
-| `data/`, `llms.txt` | AI·프로그램용 정적 JSON과 사용 안내 |
+| `data/`, `llms.txt`, `llms-full.txt` | AI·프로그램용 정적 JSON과 사용 안내 |
 | `s/`, `sitemap.xml` | 검색엔진과 사람이 읽는 과목별 정적 페이지 |
 | `robots.txt` | 크롤러 안내 ([아래](#robotstxt는-이-저장소에서-효력이-없습니다) 참고) |
 | `fonts/` | 화면에 나오는 글자만 담은 웹폰트 |
@@ -18,7 +18,6 @@
 | `tools/build_pages.py` | `data/`를 `s/` 정적 페이지와 `sitemap.xml`로 내보냅니다 |
 | `tools/build_fonts.py` | 저장소 안의 글자를 모아 웹폰트를 잘라 만듭니다 |
 | `tools/check_csp.py` | 인라인 스크립트 해시가 CSP와 맞는지 봅니다 |
-| `mcp/gijul_server.py` | Claude에 도구로 붙이는 MCP 서버 |
 | `android/` | WebView 앱 ([docs/android.md](android.md)) |
 | `.github/workflows/refresh-data.yml` | 매일 23시(KST) 자동 실행 |
 

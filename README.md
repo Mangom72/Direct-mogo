@@ -41,31 +41,17 @@ EBSi를 헤매지 않고 학년 → 과목 → 연도만 고르면 문제·정�
 같은 자료를 **정적 JSON으로도 함께 배포**합니다. 서버도 인증도 키도 필요 없습니다.
 
 ```
-https://mangom72.github.io/Direct-mogo/llms.txt           AI용 사용 안내
+https://mangom72.github.io/Direct-mogo/llms.txt           AI용 안내 (llmstxt.org 규격)
+https://mangom72.github.io/Direct-mogo/llms-full.txt      같은 내용을 자세히 — 예제·오류 대응
 https://mangom72.github.io/Direct-mogo/data/index.json    과목 목록과 각 과목 JSON 주소
 https://mangom72.github.io/Direct-mogo/data/D300/158.json 고3 생명과학Ⅰ 전 회차
 ```
 
 각 회차에 문제·정답·해설 **절대 주소**가 들어 있어 경로 규칙을 몰라도 바로 열립니다.
-아무 AI에게든 `llms.txt` 주소를 주면 나머지는 알아서 합니다.
+받아서 다시 올릴 필요 없이 그 주소를 그대로 건네면 됩니다.
 
-### Claude에 도구로 붙이기 (MCP)
-
-```bash
-pip install "mcp[cli]" httpx
-claude mcp add 기출직행 -- python3 "$PWD/mcp/gijul_server.py"
-```
-
-Claude Desktop은 `claude_desktop_config.json`에:
-
-```json
-{ "mcpServers": {
-    "기출직행": { "command": "python3", "args": ["/절대/경로/mcp/gijul_server.py"] }
-} }
-```
-
-붙이고 나면 이렇게 물으면 됩니다 — *"2026학년도 수능 생명과학Ⅰ 문제 찾아줘"*.
-배포된 JSON을 읽으므로 저장소를 클론하지 않아도 되고, 월간 갱신도 그대로 따라옵니다.
+**아무 AI에게든 `llms.txt` 주소를 주면 나머지는 알아서 합니다.** 짧게 읽는 쪽은
+그것만 보고, 더 필요하면 거기 걸린 `llms-full.txt`를 따라갑니다.
 
 ## 연도 표기
 

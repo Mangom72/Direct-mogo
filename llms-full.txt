@@ -1,0 +1,134 @@
+# 기출 직행 — 자세한 사용 안내
+
+이 파일은 [llms.txt](https://mangom72.github.io/Direct-mogo/llms.txt)가 가리키는 자세한 안내입니다. 짧은 요약만
+필요하면 그쪽을 읽으세요.
+
+## 자료 상태
+
+| | |
+|---|---|
+| 총 회차 | 3,844 |
+| 과목 수 | 49 (고3·N수 / 고2 / 고1) |
+| 수록 범위 | 2006년 시행분 ~ 2026-07-08 |
+| 자료 기준일 | 2026-07-08 — 수록된 **가장 최근 시행일**입니다. 파일을 만든 날이 아닙니다 |
+| 갱신 주기 | 매일 23시(KST) 자동. 시험 당일 저녁이면 대개 그날 회차가 실립니다 |
+
+갱신은 이미 있는 값을 고치지 않습니다. 새 시행일을 덧붙이고, EBSi가 뒤늦게 올린
+자료로 비어 있던 칸만 채웁니다. 따라서 한번 받아 둔 주소는 계속 유효합니다.
+
+## 경로 규칙
+
+```
+https://mangom72.github.io/Direct-mogo/data/index.json                    과목 목록 (여기서 시작)
+https://mangom72.github.io/Direct-mogo/data/<학년코드>/<과목ID>.json       그 과목의 전 회차
+https://mangom72.github.io/Direct-mogo/s/<학년코드>/<과목ID>.html          같은 내용을 사람이 읽는 페이지
+
+학년코드  D300 = 고3·N수 | D200 = 고2 | D100 = 고1
+과목ID    index.json 안의 문자열 그대로. 규칙을 추측하지 마세요 —
+          같은 과목이라도 학년마다 다른 번호를 씁니다
+```
+
+## 회차 하나의 생김새
+
+```json
+{
+  "title": "6월 모평(평가원)",
+  "date": "2026-06-04",
+  "year": 2026,
+  "schoolYear": 2027,
+  "source": "평가원",
+  "problem": "https://wdown.ebsi.co.kr/.../g_bio1_mun_....pdf",
+  "answer": "https://wdown.ebsi.co.kr/.../h3_m_g_bio1_ans_....png",
+  "solution": "https://wdown.ebsi.co.kr/.../g_bio1_hsj_....pdf"
+}
+```
+
+| 칸 | 뜻 | 비고 |
+|---|---|---|
+| `title` | 회차 이름 | `수능` / `6월 모평(평가원)` / `7월 학평(인천)` 꼴 |
+| `date` | 시행일 `YYYY-MM-DD` | 정렬은 이것으로 하세요 |
+| `year` | **시행 연도** | 아래 「연도」 절을 꼭 보세요 |
+| `schoolYear` | **학년도** | 평가원 시험에만 있습니다 |
+| `source` | `평가원` 또는 `교육청` | 제목으로 가릅니다 |
+| `problem` | **문제지** PDF | 시험지 원본. 없으면 `null` |
+| `answer` | **정답표** PNG 이미지 | PDF가 아니라 그림입니다. 없으면 `null` |
+| `solution` | **해설지** PDF | 풀이. 없으면 `null` |
+
+셋 다 `null`인 회차는 없습니다. 다만 **하나씩 빠진 회차는 흔합니다** — 지금 자료에서
+`answer` 1,412건, `solution` 37건, `problem` 0건이 비어 있습니다.
+가장 자주 빠지는 것은 `answer` — 전체의 37%입니다. **쓰기 전에 `null`을 확인하세요.**
+
+## 연도 — 여기서 가장 많이 틀립니다
+
+한국 시험은 **시행 연도**와 **학년도**가 다릅니다. 이 자료는 전부 시행 연도 기준입니다.
+
+- `year` = 시험을 **본 해**. 2025년 11월에 본 수능은 `year: 2025`
+- `schoolYear` = 그 시험의 **학년도** = 시행 연도 + 1. 위 수능은 `schoolYear: 2026`
+- 흔히 "2026 수능"이라고 부르는 것은 **2025년 11월에 시행된** 시험입니다
+- 교육청 학력평가는 관례상 시행 연도로만 부르므로 `schoolYear`가 **없습니다**
+
+사용자가 "2026 수능"이라고 하면 학년도를 말하는 것일 가능성이 높습니다.
+답할 때는 **"2025년 11월 시행(2026학년도) 수능"처럼 어느 쪽인지 밝혀 주세요.**
+
+## 자주 하는 일
+
+**특정 시험 하나 찾기 — 2026학년도 수능 생명과학Ⅰ**
+
+```python
+import json, urllib.request
+def get(u): return json.load(urllib.request.urlopen(u))
+
+idx = get("https://mangom72.github.io/Direct-mogo/data/index.json")
+sid = next(s for g in idx["grades"] if g["code"] == "D300"
+             for gr in g["groups"] for s in gr["subjects"]
+             if s["name"] == "생명과학Ⅰ")
+sub = get("https://mangom72.github.io/Direct-mogo/" + sid["data"])
+p = next(p for p in sub["papers"]
+         if p["source"] == "평가원" and p.get("schoolYear") == 2026
+         and p["title"].startswith("수능"))
+print(p["title"], p["date"], p["problem"])
+```
+
+**한 과목의 수능만 모으기** — `papers`에서 `title.startswith("수능")`
+
+**최근 3년치만** — `papers`는 이미 시행일 내림차순입니다. 앞에서부터 자르세요
+
+**과목 이름으로 찾기** — `index.json`의 `grades[].groups[].subjects[].name`을 훑습니다.
+과목명은 `생명과학Ⅰ`처럼 **로마 숫자(U+2160)** 를 씁니다. `생명과학1`(아라비아 1)이나
+`생명과학 I`(라틴 대문자 I)로는 맞지 않습니다
+
+**전 과목을 다 받기** — 하지 마세요. 과목 하나가 중앙값 26KB인데 전부는 1,391KB입니다.
+필요한 과목만 받는 편이 언제나 빠릅니다
+
+**사용자에게 파일 건네기** — `problem`·`answer`·`solution`은 그대로 열리는 주소입니다.
+받아서 다시 올리지 말고 주소를 그대로 주세요. 어느 회차인지 함께 밝히면
+(`2025년 11월 시행(2026학년도) 수능 생명과학Ⅰ 문제`) 사용자가 확인하기 쉽습니다
+
+## 안 될 때
+
+| 증상 | 볼 곳 |
+|---|---|
+| 과목 JSON이 404 | 과목ID를 지어내지 않았는지. `index.json`에 있는 값만 존재합니다 |
+| 학년 경로가 404 | `D300`/`D200`/`D100` 셋뿐입니다. `go3`·`3`·`high3` 아닙니다 |
+| 과목을 못 찾겠음 | 과목명의 로마 숫자(Ⅰ Ⅱ)를 확인하세요. 학년이 다르면 ID도 다릅니다 |
+| PDF 주소가 404 | 원본이 EBSi에서 내려간 것입니다. 이쪽에서는 알 수 없습니다 |
+| 연도가 한 해씩 어긋남 | `year`(시행)와 `schoolYear`(학년도)를 섞어 쓴 것입니다 |
+| 회차가 기대보다 적음 | 그 과목이 그 해에 시행되지 않았거나 EBSi에 자료가 없는 것입니다 |
+
+이 파일과 `index.json`이 다르면 **`index.json`이 맞습니다** — 자료가 먼저 만들어지고
+이 안내문은 그 결과를 옮겨 적습니다.
+
+## 출처 및 이용 조건
+
+모든 주소는 EBSi가 공개하여 별도의 인증 없이 접근 가능한 파일로 직접 연결됩니다.
+본 사이트는 문제 자료를 저장하거나 재배포하지 아니하며, 회차 명칭·시행일·파일 주소 등
+목록 정보만을 보유합니다. 문제 자료에 대한 저작권은 한국교육과정평가원 및 각
+시·도교육청에 귀속됩니다.
+
+여기 배포되는 목록 정보(JSON)와 이를 만드는 코드는 MIT 라이선스에 따라 자유로이
+이용할 수 있습니다. 이용 조건의 전문은 다음에 따릅니다.
+
+https://github.com/Mangom72/Direct-mogo/blob/main/NOTICE.md
+
+권리자 또는 정당한 대리인의 게시중단 요청은 확인 즉시 이행합니다. direct.mogo.dev@gmail.com 또는
+https://github.com/Mangom72/Direct-mogo/issues 로 연락 주세요.

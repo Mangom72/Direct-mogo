@@ -156,9 +156,12 @@ def main():
         json.dumps(index, ensure_ascii=False, indent=1), encoding="utf-8")
 
     nsub = sum(len(g["subjects"]) for gr in grades for g in gr["groups"])
-    Path("llms.txt").write_text(llms_txt(index, nsub, weigh(out)), encoding="utf-8")
+    w = weigh(out)
+    Path("llms.txt").write_text(llms_txt(index, nsub, w), encoding="utf-8")
+    Path("llms-full.txt").write_text(llms_full(index, nsub, w), encoding="utf-8")
 
-    print(f"data/index.json + 과목 {nsub}개 ({total}회차), llms.txt", file=sys.stderr)
+    print(f"data/index.json + 과목 {nsub}개 ({total}회차), llms.txt, llms-full.txt",
+          file=sys.stderr)
     return 0
 
 
@@ -189,43 +192,92 @@ def weigh(out):
 
 
 def llms_txt(index, nsub, w):
-    """AI가 이 사이트를 어떻게 읽으면 되는지 알려주는 안내문 (llms.txt 관례)."""
-    def pick(grade, sid):
+    """llms.txt — llmstxt.org 규격에 맞춘 짧은 안내문.
+
+    규격은 이렇게 못박는다: H1 하나(유일한 필수), 그 아래 인용문 한 덩이로 요약,
+    제목 없는 산문 몇 줄, 그다음 H2마다 **파일 목록**을 `- [이름](주소): 설명`
+    꼴로. 'Optional' 절은 '문맥이 좁을 때 건너뛰어도 되는 것'이라는 뜻이 정해져
+    있다.
+
+    예전에는 이 파일 하나에 표·예제 코드·오류 대응을 다 욱여넣었다. 규격이
+    말하는 모양이 아니었고, 무엇보다 짧게 읽고 링크를 따라가려는 쪽에게는
+    7KB가 통째로 부담이었다. 자세한 것은 llms-full.txt로 옮기고 여기서는
+    링크로만 가리킨다.
+
+    산문 자리에는 '이걸 모르면 반드시 틀리는 것'만 남긴다 — 연도가 두 가지라는
+    사실, 그리고 세 파일이 무엇인지. 나머지는 따라가면 나온다.
+    """
+    def data_link(grade, sid):
         for gr in index["grades"]:
             if gr["code"] != grade:
                 continue
             for g in gr["groups"]:
                 for s in g["subjects"]:
                     if s["id"] == sid:
-                        return f"- [{gr['label']} {s['name']}]({SITE}{s['data']}) — {s['count']}회차"
+                        return (f"- [{gr['label']} {s['name']}]({SITE}{s['data']}): "
+                                f"{s['count']}회차, 시행일 내림차순")
         return ""
-    return f"""# 기출 직행 (Gijul Jikhaeng)
+    return f"""# 기출 직행
 
-> 한국 수능·모의평가·전국연합학력평가 **기출 문제지 원본 PDF** 목록입니다.
-> Korean college-entrance mock/past exam papers — an index of publicly hosted PDFs.
-> 2006년 시행분부터 {index['count']:,}회차 · {nsub}과목 · 자료 기준 {index['updated']}.
+> 한국 수능·모의평가·전국연합학력평가 **기출 문제지 원본 PDF 목록**입니다.
+> An index of Korean college-entrance exam papers — problem sheets, answer keys
+> and solutions, each as a public URL. 2006년 시행분부터 {index['count']:,}회차 ·
+> {nsub}과목 · 자료 기준 {index['updated']}. 인증도 API 키도 서버도 없는 정적 JSON입니다.
 
-## 30초 요약 / Quick start
+`data/index.json` 하나에서 시작합니다. 거기 각 과목의 `data` 경로가 있고, 그 파일을
+받으면 그 과목의 전 회차가 `papers` 배열로 나옵니다. 회차마다 세 개의 절대 주소가
+들어 있습니다 — `problem`(문제지 PDF) · `answer`(정답표 **이미지**) ·
+`solution`(해설 PDF). 로그인 없이 바로 열리므로 그대로 사용자에게 건네면 됩니다.
+셋 중 하나가 없는 회차가 흔하니(`answer` {w['gap']['answer']:,}건, `solution` {w['gap']['solution']:,}건이 비어 있습니다)
+쓰기 전에 `null`을 확인하세요.
 
-이 파일 말고 **이 주소 하나만** 가져가면 됩니다. 인증도 API 키도 서버도 없습니다.
+**연도가 두 가지입니다. 여기서 가장 많이 틀립니다.** `year`는 시험을 본 해(시행
+연도)이고, `schoolYear`는 학년도로 시행 연도 + 1입니다. 흔히 "2026 수능"이라 부르는
+것은 **2025년 11월에 시행된** 시험입니다. 교육청 학력평가는 관례상 시행 연도로만
+부르므로 `schoolYear`가 없습니다. 사용자에게 답할 때는 "2025년 11월 시행(2026학년도)
+수능"처럼 어느 쪽인지 밝혀 주세요.
 
-    {SITE}data/index.json
+경로 규칙은 `{SITE}data/<학년코드>/<과목ID>.json` 이고 학년코드는 D300(고3·N수) ·
+D200(고2) · D100(고1) 셋뿐입니다. 과목ID는 지어내지 말고 `index.json`에 있는 값만
+쓰세요 — 같은 과목이라도 학년마다 번호가 다릅니다.
 
-거기 각 과목의 `data` 경로가 있습니다. 그 파일을 받으면 그 과목의 전 회차가 나오고,
-회차마다 `problem`(문제지 PDF) · `answer`(정답 이미지) · `solution`(해설 PDF)이
-**로그인 없이 바로 열리는 절대 주소**로 들어 있습니다. 그게 전부입니다.
+## 시작점
 
-```
-curl -s {SITE}data/D300/158.json | head -40     # 고3 생명과학Ⅰ 143회차
-```
+- [과목 목록]({SITE}data/index.json): 학년·과목군·{nsub}개 과목과 각 과목의 데이터 경로. 여기서 시작하세요
+- [자세한 사용 안내]({SITE}llms-full.txt): 필드별 설명, 돌아가는 예제 코드, 404가 날 때 볼 것
 
-One JSON index at the URL above lists every subject and its data file. Each paper
-carries three absolute, public PDF/PNG links — `problem`, `answer`, `solution`.
-No auth, no rate limit, CORS open. Everything below is detail.
+## 과목 자료 (예시)
 
-사람이 읽는 화면: {SITE} · 과목별 목록: {SITE}s/
+{data_link('D300','158')}
+{data_link('D300','140117')}
+{data_link('D300','80003')}
 
-## 자료 상태 / Freshness
+## 사람이 읽는 화면
+
+- [기출 직행]({SITE}): 학년 → 과목 → 연도로 고르는 화면. 사용자에게 안내할 주소입니다
+- [과목별 기출문제 목록]({SITE}s/): 같은 자료를 스크립트 없이 펼쳐 놓은 {nsub}과목 색인
+
+## Optional
+
+- [이용 조건](https://github.com/Mangom72/Direct-mogo/blob/main/NOTICE.md): 목록 정보와 코드는 MIT. 문제 자료의 저작권은 한국교육과정평가원 및 각 시·도교육청에 있으며 이 사이트는 어떤 파일도 저장·재배포하지 않습니다
+- [저장소](https://github.com/Mangom72/Direct-mogo): 이 목록을 만드는 코드
+- [게시중단·문의](mailto:direct.mogo.dev@gmail.com): 권리자 또는 정당한 대리인의 게시중단 요청은 확인 즉시 이행합니다
+"""
+
+
+def llms_full(index, nsub, w):
+    """llms-full.txt — 규격에 정의된 이름은 아니고 널리 쓰이는 관례다.
+
+    llms.txt가 짧아야 한다는 규격을 지키려면 자세한 것을 둘 자리가 필요하다.
+    예제·필드 설명·오류 대응처럼 '따라가서 읽을 것'이 여기 있고, llms.txt는
+    파일 목록에서 이 파일을 가리킨다.
+    """
+    return f"""# 기출 직행 — 자세한 사용 안내
+
+이 파일은 [llms.txt]({SITE}llms.txt)가 가리키는 자세한 안내입니다. 짧은 요약만
+필요하면 그쪽을 읽으세요.
+
+## 자료 상태
 
 | | |
 |---|---|
@@ -235,8 +287,8 @@ No auth, no rate limit, CORS open. Everything below is detail.
 | 자료 기준일 | {index['updated']} — 수록된 **가장 최근 시행일**입니다. 파일을 만든 날이 아닙니다 |
 | 갱신 주기 | 매일 23시(KST) 자동. 시험 당일 저녁이면 대개 그날 회차가 실립니다 |
 
-갱신은 **덧붙이기만** 합니다 — 이미 있는 회차는 고치지 않고 새 시행일만 채웁니다.
-따라서 한번 받아 둔 회차의 주소는 계속 유효합니다.
+갱신은 이미 있는 값을 고치지 않습니다. 새 시행일을 덧붙이고, EBSi가 뒤늦게 올린
+자료로 비어 있던 칸만 채웁니다. 따라서 한번 받아 둔 주소는 계속 유효합니다.
 
 ## 경로 규칙
 
@@ -322,6 +374,10 @@ print(p["title"], p["date"], p["problem"])
 **전 과목을 다 받기** — 하지 마세요. 과목 하나가 중앙값 {w['median']:.0f}KB인데 전부는 {w['all']:,.0f}KB입니다.
 필요한 과목만 받는 편이 언제나 빠릅니다
 
+**사용자에게 파일 건네기** — `problem`·`answer`·`solution`은 그대로 열리는 주소입니다.
+받아서 다시 올리지 말고 주소를 그대로 주세요. 어느 회차인지 함께 밝히면
+(`2025년 11월 시행(2026학년도) 수능 생명과학Ⅰ 문제`) 사용자가 확인하기 쉽습니다
+
 ## 안 될 때
 
 | 증상 | 볼 곳 |
@@ -335,12 +391,6 @@ print(p["title"], p["date"], p["problem"])
 
 이 파일과 `index.json`이 다르면 **`index.json`이 맞습니다** — 자료가 먼저 만들어지고
 이 안내문은 그 결과를 옮겨 적습니다.
-
-## 예시 과목
-
-{pick('D300','158')}
-{pick('D300','140117')}
-{pick('D300','80003')}
 
 ## 출처 및 이용 조건
 
