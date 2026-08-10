@@ -35,7 +35,7 @@ REPO = "https://github.com/Mangom72/Direct-mogo"
 E = lambda s: html.escape(str(s), quote=True)
 
 
-def head(title, desc, canon, depth):
+def head(title, desc, canon, depth, alt=""):
     """페이지 머리. depth는 사이트 뿌리까지 거슬러 올라갈 칸 수."""
     up = "../" * depth
     return f"""<!DOCTYPE html>
@@ -56,6 +56,12 @@ def head(title, desc, canon, depth):
 <meta property="og:image" content="{SITE}icons/icon-512.png">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="{up}icons/favicon.ico" sizes="32x32">
+<!-- 기계만 읽으면 되는 것은 화면이 아니라 여기 둔다. rel=alternate 는 '같은
+     내용의 다른 표현'이라는 뜻이라 안내문과 JSON에 그대로 맞고, 사람 눈에는
+     아무것도 늘지 않는다. 화면에 적어 두고 CSS로 감추는 길도 있지만 그건
+     사람에게 감추고 검색엔진에만 보이는 짓이라 구글이 클로킹으로 다룬다. -->
+<link rel="alternate" type="text/plain" href="{up}llms.txt" title="AI·프로그램용 안내">
+<link rel="alternate" type="application/json" href="{up}data/index.json" title="과목 목록 (JSON)">{alt}
 <link rel="stylesheet" href="{up}fonts/fonts.css">
 <link rel="stylesheet" href="{up}s/paper.css">
 <meta name="theme-color" content="#191713">
@@ -80,7 +86,6 @@ def foot(depth, extra=""):
   교육청 학력평가는 관례상 시행 연도로만 부릅니다.</p>
   <p class="ln"><a href="{up}">기출 직행</a> ·
      <a href="{up}s/">전체 과목</a> ·
-     <a href="{up}llms.txt">llms.txt</a> ·
      <a href="{REPO}">GitHub</a></p>
 </footer>
 </body>
@@ -180,7 +185,9 @@ def subject_page(meta, sub):
     desc = (f"{gl} {name} 수능·모의평가·전국연합학력평가 기출 문제지 {n}회차 "
             f"({span}). 문제·정답·해설 원본 PDF로 바로 이동합니다.")
 
-    out = [head(title, desc, canon, 2), crumbs(2, f"{gl} {name}")]
+    mine = (f'\n<link rel="alternate" type="application/json" '
+            f'href="../../data/{g}/{sid}.json" title="{E(name)} 전 회차 (JSON)">')
+    out = [head(title, desc, canon, 2, mine), crumbs(2, f"{gl} {name}")]
     out.append(f"""<header class="pg">
   <p class="kicker">{E(meta['group'])}</p>
   <h1>{E(gl)} {E(name)} 기출문제</h1>
@@ -250,8 +257,7 @@ def index_page(index):
                            f'<span class="cnt">{s["count"]}회차</span></li>\n')
             out.append("</ul>\n")
         out.append("</section>\n")
-    out.append(foot(1, '<p>기계로 읽으실 분은 <a href="../llms.txt">llms.txt</a>와 '
-                       '<a href="../data/index.json">data/index.json</a>을 보세요.</p>'))
+    out.append(foot(1))
     return "".join(out)
 
 
