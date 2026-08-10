@@ -68,12 +68,14 @@ def head(title, desc, canon, depth, alt=""):
 <script src="{up}s/site.js"></script>
 </head>
 <body>
+<main>
 """
 
 
 def foot(depth, extra=""):
     up = "../" * depth
     return f"""
+</main>
 <footer>
   {extra}
   <p>모든 링크는 EBSi가 공개하여 별도의 인증 없이 접근 가능한 파일 주소로 직접
@@ -202,10 +204,13 @@ def subject_page(meta, sub):
     for y in years:
         rows = [p for p in meta["papers"] if p["year"] == y]
         hak = next((p.get("schoolYear") for p in rows if p.get("schoolYear")), None)
-        out.append(f'<section class="yr"><h2>{y}년'
+        # 한 장에 연도별 표가 스무 개씩 있는데 이름이 없으면, 소리로 읽는 사람은
+        # 지금 어느 해의 표를 지나는지 알 수 없다. 바로 위 연도 제목을 가리킨다.
+        out.append(f'<section class="yr"><h2 id="y{y}">{y}년'
                    + (f' <span class="hak">{hak}학년도</span>' if hak else "")
-                   + "</h2>\n<table>\n<thead><tr><th>회차</th><th>시행일</th>"
-                   "<th>출제</th><th>자료</th></tr></thead>\n<tbody>\n")
+                   + f'</h2>\n<table aria-labelledby="y{y}">\n'
+                   '<thead><tr><th scope="col">회차</th><th scope="col">시행일</th>'
+                   '<th scope="col">출제</th><th scope="col">자료</th></tr></thead>\n<tbody>\n')
         for p in rows:
             links = []
             for key, label in (("problem", "문제"), ("answer", "정답"), ("solution", "해설")):
@@ -287,7 +292,7 @@ CSS = """/* tools/build_pages.py 가 쓰는 과목 페이지용 스타일.
    :not([data-theme="light"])로 막아 둔다. */
 :root{
   --paper:#F5F1E6; --card:#FBF9F3; --ink:#191713; --ink2:#5C5747; --rule:#CFC6AC;
-  --mark:#B4342A; --gov:#1F4E79; --edu:#2E6B3E; --btn:#FFFDF7; --off:#7A725F;
+  --mark:#B4342A; --gov:#1F4E79; --edu:#2E6B3E; --btn:#FFFDF7; --off:#6E6754;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -309,8 +314,10 @@ body{
 a{color:var(--ink)}
 a:focus-visible,.dl a:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 
-.crumb{font-size:11.5px;color:var(--ink2);margin:0 0 14px}
+.crumb{font-size:11.5px;color:var(--ink2);margin:0 0 8px}
 .crumb b{color:var(--ink)}
+/* 글줄 안이라 높이가 17px였다. 줄 간격은 그대로 두고 닿는 넓이만 넓힌다. */
+.crumb a,footer .ln a{display:inline-block;padding:4px 0;min-height:24px}
 
 .pg{border:1.5px solid var(--ink);background:var(--card);padding:18px 20px;margin-bottom:22px}
 .pg .kicker{font-family:"Song Myung",serif;font-size:11px;letter-spacing:3.5px;

@@ -8,7 +8,7 @@
    :not([data-theme="light"])로 막아 둔다. */
 :root{
   --paper:#F5F1E6; --card:#FBF9F3; --ink:#191713; --ink2:#5C5747; --rule:#CFC6AC;
-  --mark:#B4342A; --gov:#1F4E79; --edu:#2E6B3E; --btn:#FFFDF7; --off:#7A725F;
+  --mark:#B4342A; --gov:#1F4E79; --edu:#2E6B3E; --btn:#FFFDF7; --off:#6E6754;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -30,8 +30,10 @@ body{
 a{color:var(--ink)}
 a:focus-visible,.dl a:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 
-.crumb{font-size:11.5px;color:var(--ink2);margin:0 0 14px}
+.crumb{font-size:11.5px;color:var(--ink2);margin:0 0 8px}
 .crumb b{color:var(--ink)}
+/* 글줄 안이라 높이가 17px였다. 줄 간격은 그대로 두고 닿는 넓이만 넓힌다. */
+.crumb a,footer .ln a{display:inline-block;padding:4px 0;min-height:24px}
 
 .pg{border:1.5px solid var(--ink);background:var(--card);padding:18px 20px;margin-bottom:22px}
 .pg .kicker{font-family:"Song Myung",serif;font-size:11px;letter-spacing:3.5px;

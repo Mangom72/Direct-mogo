@@ -64,7 +64,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-4dWX6YOitHPsc7GVxfyw2dCRP41nXuS4/goBucvlcM0=';
+  script-src 'self' 'sha256-GMWqu0RuMR0drKA59VJMm9OcaksTJ51AVvZUwXpW5KY=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-Ov+xAFDOHRzQSyYL3VsVooYHmDVbAzXeqPNsrdNPvGA=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -417,7 +417,10 @@ footer{max-width:900px;margin:22px auto 0;font-size:11px;color:var(--ink2);line-
 footer b{color:var(--ink)}
 /* 각주 속 링크. 기본 파란 밑줄은 이 자리에서 너무 튄다. */
 footer a.doc{color:var(--ink);text-decoration:underline;text-underline-offset:2px;
-  text-decoration-color:var(--rule)}
+  text-decoration-color:var(--rule);
+  /* 글줄 안에 있어 높이가 17px였다. 손가락으로는 작다 — 줄 간격을 건드리지 않고
+     닿는 넓이만 넓힌다. */
+  display:inline-block;padding:4px 0;min-height:24px}
 footer a.doc:hover{text-decoration-color:var(--ink)}
 footer a.doc:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px;border-radius:3px}
 /* 저장소로 가는 단추. 어디서 온 자료인지 따라갈 수 있어야 한다. */
@@ -496,7 +499,12 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
 <body>
 <div class="wrap">
 
-  <div class="notice" id="notice" hidden>
+  <!-- role=status 는 '정중하게 알린다'는 뜻이다. 화면을 못 보는 사람에게 이 막대는
+       유일한 통로인데(새 자료·과목 받기·업데이트가 전부 여기로 나간다) 예전에는
+       조용히 나타났다 사라져서 아무 일도 없는 것과 같았다.
+       glyph: paintNotice가 숨김을 먼저 풀고 글을 나중에 넣는 것과 짝이다 —
+       숨겨진 동안 바뀐 글자는 읽어 주지 않는다. -->
+  <div class="notice" id="notice" role="status" aria-live="polite" aria-atomic="true" hidden>
     <span id="noticeText"></span>
     <span class="notice-acts">
       <button type="button" id="noticeYes"></button>
@@ -566,7 +574,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
     </div>
   </div>
 
-  <div id="out"></div>
+  <main id="out"></main>
 </div>
 
 <div class="sheet" id="sheet" hidden>
@@ -679,6 +687,11 @@ let showingNotice = null, noticeSeq = 0;
 
 function paintNotice(n){
   showingNotice = n;
+  /* 숨김을 먼저 푼다. 소리로 읽어 주는 영역은 화면에 올라와 있는 동안 글자가
+     바뀌어야 읽히는데, 예전처럼 숨긴 채로 글을 넣고 나중에 보이면 그 변화를
+     놓친다. 한 덩이 안에서 일어나므로 옛 글자가 비치는 일은 없다. */
+  noticeText.textContent = "";
+  notice.hidden = false;
   noticeText.textContent = n.text;
   if(n.field){
     /* 복사가 막혔을 때 내주는 주소 칸. 그냥 글로 두면 손으로 긁다가 끝이 잘리므로
@@ -692,7 +705,6 @@ function paintNotice(n){
   }
   noticeYes.textContent = n.yesLabel || "";
   noticeYes.hidden = !n.yesLabel;
-  notice.hidden = false;
 }
 
 /* pick: "yes" | "no" | null(답 없이 거둔다 — 설치 화면이 화면을 가져가는 경우) */
@@ -1613,7 +1625,7 @@ function render(){
   const hasPage = Object.keys(yearsOf).some(y => (yearsOf[y] || []).length);
   const onePage = hasPage
     ? `<a class="onepage" href="s/${sel.grade}/${sel.sub}.html"
-         aria-label="${esc(subName)} 전 회차를 한 장에 — 찾기·인쇄에 좋습니다">한 장으로</a>`
+         aria-label="${esc(subName)} 전 회차를 한 장에 — 연도를 오가지 않고 찾을 수 있습니다">한 장으로</a>`
     : "";
   const acts = (onePage || vaultBtn)
     ? `<span class="tally-acts">${onePage}${vaultBtn}</span>` : "";
