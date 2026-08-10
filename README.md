@@ -28,8 +28,11 @@ EBSi를 헤매지 않고 학년 → 과목 → 연도만 고르면 문제·정�
 | `index.html` | 앱 전체. 자료 3,844회차가 gzip+base64로 안에 들어 있습니다 (154KB) |
 | `sw.js` | 서비스 워커. 앱 셸·폰트·받아둔 PDF를 캐시합니다 |
 | `data/`, `llms.txt` | AI·프로그램용 정적 JSON과 사용 안내 |
+| `s/`, `sitemap.xml` | 검색엔진과 사람이 읽는 과목별 정적 페이지 |
+| `robots.txt` | 크롤러 안내 (아래 참고 — 여기 두면 효력이 없습니다) |
 | `tools/refresh_data.py` | EBSi에서 새 회차를 긁어 페이로드를 갱신합니다 |
 | `tools/build_api.py` | 페이로드를 `data/` JSON과 `llms.txt`로 내보냅니다 |
+| `tools/build_pages.py` | `data/`를 `s/` 정적 페이지와 `sitemap.xml`로 내보냅니다 |
 | `mcp/gijul_server.py` | Claude에 도구로 붙이는 MCP 서버 |
 | `android/` | 앱 폴더에 담고 앱에서 여는 WebView 앱 (안드로이드) |
 | `.github/workflows/refresh-data.yml` | 매월 5일 자동 실행 |
@@ -38,6 +41,31 @@ EBSi를 헤매지 않고 학년 → 과목 → 연도만 고르면 문제·정�
 
 PDF는 EBSi가 `Access-Control-Allow-Origin: *`를 주기 때문에 페이지가 직접 받아
 `navigator.share()`로 넘길 수 있습니다. 그래서 설치형 앱에서도 노트앱으로 보내집니다.
+
+## 검색에서 찾아지게
+
+`index.html`은 자료를 압축해 품고 JS로 풉니다. 사람에게는 빠르지만 검색엔진에는
+**빈 페이지 한 장**입니다 — 3,844회차가 통째로 안 보입니다. 그래서 같은 자료를
+스크립트 없이 그냥 읽히는 HTML로도 깔아 둡니다.
+
+```
+/s/                     과목 색인 49과목
+/s/D300/158.html        고3·N수 생명과학Ⅰ 전 회차 (문제·정답·해설 직접 링크)
+/sitemap.xml            위 51장
+```
+
+회차별 페이지는 만들지 않습니다. 3,844장이 되는데 한 장에 링크 세 개뿐이라
+검색엔진이 알맹이 없는 페이지로 보고 오히려 깎습니다. 과목 페이지 한 장이 그 과목의
+링크를 전부 담으므로 잃는 것도 없습니다.
+
+앱 화면과 과목 페이지는 서로 오갑니다(`앱 화면에서 보기` ↔ 빵부스러기). 둘 다
+canonical로 자기 자신을 가리켜 중복으로 잡히지 않습니다.
+
+**`robots.txt`는 여기 두면 효력이 없습니다.** 크롤러는 도메인 뿌리의 robots.txt
+하나만 읽는데(`mangom72.github.io/robots.txt`), 여기는 프로젝트 페이지라 그 자리가
+사용자 페이지 저장소에 있습니다. 이 저장소의 `robots.txt`는 **그 원본**이니 거기에
+같은 내용을 두세요. `sitemap.xml`은 그것과 무관하게 Search Console에 직접
+제출할 수 있습니다.
 
 ## AI·프로그램에서 쓰기
 
@@ -97,7 +125,14 @@ Claude Desktop은 `claude_desktop_config.json`에:
 pip install requests
 python3 tools/refresh_data.py --dry-run   # 무엇이 늘어나는지만 확인
 python3 tools/refresh_data.py             # index.html 갱신
+python3 tools/build_api.py                # → data/, llms.txt
+python3 tools/build_pages.py              # → s/, sitemap.xml
+python3 tools/build_fonts.py              # → fonts/ (새 글자가 생겼을 수 있음)
 ```
+
+순서가 있습니다. `build_fonts.py`는 화면에 실제로 나오는 글자만 담으므로
+**맨 나중**에 돌아야 새 회차 제목과 새 과목 페이지의 글자를 함께 봅니다.
+워크플로도 같은 순서로 돕니다.
 
 기존 기록은 고치지 않고 **아직 없는 시행일만 덧붙입니다.** 수집량이 기존의 80%에
 못 미치면 EBSi 구조가 바뀐 것으로 보고 파일을 건드리지 않은 채 실패합니다.

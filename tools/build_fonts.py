@@ -84,6 +84,13 @@ def wanted():
     for f in list(src.rglob("*.java")) + list(src.rglob("*.xml")):
         chars |= hangul(f.read_text(encoding="utf-8"))
 
+    # 과목 페이지(s/)도 같은 글꼴을 쓴다. 만들어진 HTML을 그대로 읽는다 — 틀에 적힌
+    # 글과 자료에서 온 글이 섞여 있어, 만드는 쪽 소스만 봐서는 놓치는 것이 생긴다.
+    # 그래서 워크플로에서 build_pages.py 를 먼저 돌리고 이 스크립트를 나중에 돌린다.
+    pages = list((ROOT / "s").rglob("*.html")) or [ROOT / "tools/build_pages.py"]
+    for f in pages:
+        chars |= hangul(f.read_text(encoding="utf-8"))
+
     # 릴리스 노트 — 커밋 메시지가 그대로 들어와 알림 막대에 뜬다
     latest = ROOT / "app/latest.json"
     if latest.is_file():

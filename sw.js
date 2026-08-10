@@ -19,8 +19,12 @@ const SHELL_URLS = [
   "./fonts/GijulSans-600.woff2", "./fonts/GijulSans-700.woff2",
 ];
 
-/* "./"는 빼둔다 — slice로 만든 빈 문자열은 endsWith가 항상 참이라 전부 셸로 빨려든다 */
-const SHELL_PATHS = SHELL_URLS.filter(u => u !== "./").map(u => u.slice(1));
+/* 주소를 통째로 풀어 두고 정확히 맞는 것만 셸에서 낸다.
+   전에는 경로 끝만 비교했는데, 과목 페이지 s/index.html 이 './index.html' 로 끝나는
+   바람에 앱 화면이 대신 나갈 뻔했다. 끝자리 비교는 이런 식으로 조용히 어긋난다. */
+const SHELL_SET = new Set(SHELL_URLS.map(u => new URL(u, self.location).href));
+const ROOT = new URL("./", self.location).href;
+const HOME = new URL("./index.html", self.location).href;
 
 const MAX_FILES = 40;   /* 받아둔 PDF·이미지 보관 개수 */
 
@@ -103,11 +107,16 @@ self.addEventListener("fetch", e=>{
   let url;
   try{ url = new URL(req.url); }catch(err){ return; }
 
-  if(req.mode === "navigate"){ e.respondWith(shell(req)); return; }
-  if(isPaper(url)){ e.respondWith(cacheFirst(req, FILES, trim)); return; }
-  if(url.origin === self.location.origin && SHELL_PATHS.some(p=>url.pathname.endsWith(p))){
-    e.respondWith(shell(req));
+  /* 셸이 대신 나갈 수 있는 문서는 앱 화면 하나뿐이다. 과목 페이지(s/…)는 검색이나
+     링크로 들어오는 별개의 문서라, 여기서 가로채면 주소는 그대로인데 내용만 앱으로
+     바뀐다. 우리 것이 아닌 문서는 손대지 않고 브라우저에 맡긴다. */
+  if(req.mode === "navigate"){
+    const at = url.origin + url.pathname;
+    if(at === ROOT || at === HOME) e.respondWith(shell(req));
+    return;
   }
+  if(isPaper(url)){ e.respondWith(cacheFirst(req, FILES, trim)); return; }
+  if(SHELL_SET.has(url.origin + url.pathname)) e.respondWith(shell(req));
 });
 
 self.addEventListener("message", e=>{

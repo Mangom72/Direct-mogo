@@ -1,0 +1,89 @@
+/* tools/build_pages.py 가 쓰는 과목 페이지용 스타일.
+   앱 화면(index.html)과 같은 규칙 — 명조는 지면(제호·표제·연도·회차 이름),
+   고딕은 조작과 설명. 스크립트가 없으므로 테마는 기기 설정을 그대로 따른다. */
+:root{
+  --paper:#F5F1E6; --card:#FBF9F3; --ink:#191713; --ink2:#5C5747; --rule:#CFC6AC;
+  --mark:#B4342A; --gov:#1F4E79; --edu:#2E6B3E; --btn:#FFFDF7; --off:#7A725F;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#161A22; --card:#1F2531; --ink:#ECE7DA; --ink2:#AEB5C2; --rule:#3A4353;
+    --mark:#F08379; --gov:#8AC6EA; --edu:#A6D48D; --btn:#262E3B; --off:#9AA5B6;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0 auto;max-width:900px;padding:20px 16px 40px;
+  background:var(--paper);color:var(--ink);
+  font-family:"Gijul Sans",sans-serif;font-size:14px;line-height:1.7;
+  -webkit-text-size-adjust:100%;
+}
+a{color:var(--ink)}
+a:focus-visible,.dl a:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+
+.crumb{font-size:11.5px;color:var(--ink2);margin:0 0 14px}
+.crumb b{color:var(--ink)}
+
+.pg{border:1.5px solid var(--ink);background:var(--card);padding:18px 20px;margin-bottom:22px}
+.pg .kicker{font-family:"Song Myung",serif;font-size:11px;letter-spacing:3.5px;
+  color:var(--mark);font-weight:700;margin:0 0 7px}
+.pg h1{font-family:"Song Myung",serif;font-size:27px;font-weight:700;margin:0;
+  letter-spacing:-.5px;line-height:1.2}
+.pg .lead{margin:9px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.65}
+.pg .go{margin:13px 0 0;display:flex;gap:7px;flex-wrap:wrap}
+.pg .go a{font-size:12.5px;font-weight:600;text-decoration:none;padding:8px 13px;
+  border:1.2px solid var(--ink);background:var(--btn)}
+.pg .go a.app{background:var(--ink);color:var(--card)}
+
+.yr{margin:0 0 26px}
+.yr h2{font-family:"Song Myung",serif;font-size:19px;font-weight:700;margin:0 0 9px;
+  padding-bottom:6px;border-bottom:2px solid var(--ink)}
+.yr h3{font-size:12px;font-weight:700;color:var(--ink2);margin:16px 0 6px;
+  letter-spacing:1px}
+.hak{font-family:"Gijul Sans",sans-serif;font-size:11px;font-weight:400;color:var(--ink2)}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{text-align:left;font-size:10.5px;letter-spacing:.5px;color:var(--ink2);
+  font-weight:700;padding:0 8px 6px;border-bottom:1px solid var(--rule)}
+tbody th{font-family:"Song Myung",serif;font-size:15px;font-weight:700;text-align:left}
+tbody th,tbody td{padding:9px 8px;border-bottom:1px solid var(--rule);vertical-align:middle}
+tbody tr:hover{background:var(--card)}
+td:nth-child(2){white-space:nowrap;color:var(--ink2);font-size:11.5px}
+.src{font-size:10px;font-weight:600;letter-spacing:.5px;padding:1px 7px;
+  border:1px solid currentColor;white-space:nowrap}
+.s-gov{color:var(--gov)} .s-edu{color:var(--edu)}
+.dl{text-align:right;white-space:nowrap}
+.dl a{display:inline-block;text-decoration:none;font-weight:600;font-size:11.5px;
+  padding:5px 10px;margin-left:4px;border:1.2px solid var(--ink);background:var(--btn)}
+.dl .off{display:inline-block;font-size:11.5px;padding:5px 10px;margin-left:4px;
+  border:1.2px dashed var(--rule);color:var(--off)}
+
+.subs{list-style:none;margin:0 0 4px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.subs li{flex:0 0 auto}
+.subs a{display:inline-block;text-decoration:none;font-size:13px;padding:7px 13px;
+  border:1.2px solid var(--rule);background:var(--card)}
+.subs a:hover{border-color:var(--ink)}
+.subs .cnt{font-size:10.5px;color:var(--ink2);margin-left:5px}
+
+.also h2{font-family:"Song Myung",serif;font-size:15px;margin:0 0 8px;
+  padding-bottom:5px;border-bottom:1px solid var(--rule)}
+.chips{margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.chips a{text-decoration:none;font-size:12px;padding:5px 11px;
+  border:1.2px solid var(--rule);background:var(--card)}
+.chips a:hover{border-color:var(--ink)}
+
+footer{margin-top:28px;padding-top:14px;border-top:1.5px solid var(--ink);
+  font-size:11px;color:var(--ink2);line-height:1.8}
+footer p{margin:0 0 7px}
+footer b{color:var(--ink)}
+footer .ln{font-weight:600}
+
+/* 좁은 화면에서는 표를 카드처럼 편다 — 가로로 흐르면 링크를 누르기 어렵다 */
+@media (max-width:560px){
+  thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  tbody tr{display:block;border-bottom:1px solid var(--rule);padding:9px 0}
+  tbody th,tbody td{display:inline-block;border:0;padding:2px 6px}
+  tbody th{display:block;font-size:16px}
+  .dl{display:block;text-align:left;margin-top:5px}
+  .dl a,.dl .off{margin:0 4px 0 0}
+}
