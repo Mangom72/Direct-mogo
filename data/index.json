@@ -2,7 +2,7 @@
  "name": "기출 직행",
  "site": "https://mangom72.github.io/Direct-mogo/",
  "description": "수능·모의평가·전국연합학력평가 기출 문제지 원본 PDF 목록",
- "updated": "2026-08-05",
+ "updated": "2026-08-10",
  "count": 3844,
  "note": "연도(year)는 모두 시행 연도입니다. 평가원 시험(수능·6/9월 모의평가)의 학년도는 시행 연도 + 1이며 schoolYear로 함께 넣었습니다. 교육청 학력평가는 관례상 시행 연도로만 부르므로 schoolYear가 없습니다.",
  "fields": {

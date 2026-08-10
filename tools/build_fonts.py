@@ -29,13 +29,25 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "fonts"
 
 # 제목은 명조(신문 지면), 본문은 고딕. 굵기는 CSS가 쓰는 것만.
+#
+# 세 번째 칸이 우리가 쓰는 이름이다. IBM Plex 는 OFL에 Reserved Font Name "Plex"가
+# 걸려 있고, 3항이 "수정본은 그 이름을 쓸 수 없다"고 못박는다. 글자를 잘라내는 것도
+# 수정이므로 이름을 바꿔야 한다 — 원본을 그대로 쓰는 것이 아니라는 표시이기도 하다.
+# Song Myung 에는 예약 이름이 없어 그대로 둔다.
 FACES = [
-    ("Song Myung", "400", "SongMyung-400.woff2", "serif"),
-    ("IBM Plex Sans KR", "400", "PlexSansKR-400.woff2", "sans-serif"),
-    ("IBM Plex Sans KR", "500", "PlexSansKR-500.woff2", "sans-serif"),
-    ("IBM Plex Sans KR", "600", "PlexSansKR-600.woff2", "sans-serif"),
-    ("IBM Plex Sans KR", "700", "PlexSansKR-700.woff2", "sans-serif"),
+    ("Song Myung",       "Song Myung", "400", "SongMyung-400.woff2"),
+    ("IBM Plex Sans KR", "Gijul Sans", "400", "GijulSans-400.woff2"),
+    ("IBM Plex Sans KR", "Gijul Sans", "500", "GijulSans-500.woff2"),
+    ("IBM Plex Sans KR", "Gijul Sans", "600", "GijulSans-600.woff2"),
+    ("IBM Plex Sans KR", "Gijul Sans", "700", "GijulSans-700.woff2"),
 ]
+
+# OFL 2항 — 사본마다 저작권 표시와 라이선스 원문을 함께 실어야 한다
+OFL_SOURCES = {
+    "songmyung": "https://raw.githubusercontent.com/google/fonts/main/ofl/songmyung/OFL.txt",
+    "ibmplexsanskr":
+        "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsanskr/OFL.txt",
+}
 
 # 자료가 넓어질 수 있는 방향만 미리 넣어 둔다. 지금 화면에 없더라도 EBSi가 다른
 # 교육청 시행분을 올리거나 과목이 늘면 바로 필요해지는 글자들이다.
@@ -106,25 +118,55 @@ def build(chars):
     chars_file.write_text("".join(sorted(chars)), encoding="utf-8")
 
     total = 0
-    for family, weight, name, _ in FACES:
-        ttf = tmp / f"{family.replace(' ', '')}-{weight}.ttf"
+    for source, family, weight, name in FACES:
+        ttf = tmp / f"{source.replace(' ', '')}-{weight}.ttf"
         if not ttf.is_file():
-            source_ttf(family, weight, ttf)
+            source_ttf(source, weight, ttf)
         subprocess.run(
             ["pyftsubset", str(ttf), f"--text-file={chars_file}", "--flavor=woff2",
              "--layout-features=*", f"--output-file={OUT / name}"], check=True)
+        if family != source:
+            rename(OUT / name, family, weight)
         kb = (OUT / name).stat().st_size / 1024
         total += kb
-        print(f"  {family} {weight:<4} {kb:7.1f}KB  {name}")
+        print(f"  {family} {weight:<4} {kb:7.1f}KB  {name}"
+              + (f"  ← {source}" if family != source else ""))
 
+    for slug, url in OFL_SOURCES.items():
+        subprocess.run(["curl", "-fsS", "-m", "60", url,
+                        "-o", str(OUT / f"OFL-{slug}.txt")], check=True)
     (OUT / "fonts.css").write_text(css_text(), encoding="utf-8")
     print(f"  {'합계':<22}{total:7.1f}KB · 글자 {len(chars)}자")
 
 
+def rename(path, family, weight):
+    """글꼴 안의 이름표를 갈아 끼운다.
+
+    CSS에서만 다른 이름을 쓰고 파일 속은 그대로 두면 이름을 바꿨다고 할 수 없다.
+    OFL이 막는 것은 '사용자에게 보이는 주된 이름'이라 이름표를 고쳐야 한다.
+    """
+    from fontTools.ttLib import TTFont
+
+    style = "Regular" if weight == "400" else weight
+    full = f"{family} {style}"
+    ps = f"{family.replace(' ', '')}-{style}"
+    font = TTFont(path)
+    for rec in font["name"].names:
+        if rec.nameID in (1, 16):       # 가족 이름
+            rec.string = family
+        elif rec.nameID == 4:           # 전체 이름
+            rec.string = full
+        elif rec.nameID == 6:           # PostScript 이름
+            rec.string = ps
+    font.flavor = "woff2"
+    font.save(path)
+
+
 def css_text():
     """@font-face 만. 어느 글꼴을 어디에 쓸지는 index.html이 정한다."""
-    out = ["/* tools/build_fonts.py 가 만든다. 손으로 고치지 말 것. */"]
-    for family, weight, name, fallback in FACES:
+    out = ["/* tools/build_fonts.py 가 만든다. 손으로 고치지 말 것.",
+           "   글꼴 라이선스는 같은 폴더의 OFL-*.txt 를 보라. */"]
+    for _, family, weight, name in FACES:
         out.append(
             f"@font-face{{font-family:'{family}';font-style:normal;font-weight:{weight};"
             f"font-display:swap;src:url('{name}') format('woff2')}}")
@@ -136,7 +178,7 @@ def check(chars):
     from fontTools.ttLib import TTFont
 
     bad = False
-    for family, weight, name, _ in FACES:
+    for _, family, weight, name in FACES:
         path = OUT / name
         if not path.is_file():
             print(f"★ {name} 이 없습니다 — build_fonts.py 를 먼저 돌리세요")

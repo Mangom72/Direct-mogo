@@ -130,7 +130,7 @@ html,body{margin:0}
 body{
   background:var(--paper);
   color:var(--ink);
-  font-family:"IBM Plex Sans KR",sans-serif;
+  font-family:"Gijul Sans",sans-serif;
   padding:24px 14px 70px;
   -webkit-text-size-adjust:100%;
 }
@@ -374,6 +374,11 @@ select#yr{font-family:"Song Myung",serif;font-weight:700;font-size:15px}
 .empty{background:var(--card);border:1.5px dashed var(--rule);padding:22px;font-size:13px;color:var(--ink2);line-height:1.7;text-align:center}
 footer{max-width:900px;margin:22px auto 0;font-size:11px;color:var(--ink2);line-height:1.85}
 footer b{color:var(--ink)}
+/* 각주 속 링크. 기본 파란 밑줄은 이 자리에서 너무 튄다. */
+footer a.doc{color:var(--ink);text-decoration:underline;text-underline-offset:2px;
+  text-decoration-color:var(--rule)}
+footer a.doc:hover{text-decoration-color:var(--ink)}
+footer a.doc:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px;border-radius:3px}
 /* 저장소로 가는 단추. 어디서 온 자료인지 따라갈 수 있어야 한다. */
 .src{margin-top:10px}
 .src a{
@@ -540,7 +545,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
   · <b>평가원</b> = 11월 수능 + 6·9월 모의평가(한국교육과정평가원). <b>교육청</b> = 3·4·5·7·10·11월 전국연합학력평가(서울·부산·인천·경기교육청).<br>
   · 연도는 <b>시행 연도</b>입니다. 평가원 시험의 학년도는 시행 연도 +1이므로(예: <b>2013년 6월 시행 = 2014학년도 6월 모평</b>) 각 연도에 학년도를 병기했습니다. 교육청 학평은 관례상 시행 연도로만 부릅니다.<br>
   · 문제·해설은 PDF, 정답은 이미지입니다(웹은 새 탭, 앱은 앱 안에서 열립니다). 회차에 따라 일부 자료가 없으면 버튼이 비활성화됩니다.<br>
-  · 모든 링크는 EBSi가 공개 제공하는 파일 주소로 직접 연결되며(로그인 불필요), 이 페이지는 어떤 파일도 저장·재배포하지 않습니다. 저작권은 <b>한국교육과정평가원</b> 및 <b>각 시·도교육청</b>에 있습니다.
+  · 모든 링크는 EBSi가 공개 제공하는 파일 주소로 직접 연결되며(로그인 불필요), 이 페이지는 어떤 파일도 저장·재배포하지 않습니다. 저작권은 <b>한국교육과정평가원</b> 및 <b>각 시·도교육청</b>에 있습니다. 권리자께서 요청하시면 지체 없이 내립니다 — <a class="doc" href="https://github.com/Mangom72/Direct-mogo/blob/main/NOTICE.md" target="_blank" rel="noopener">이용 안내</a>.
   <div class="src"><a href="https://github.com/Mangom72/Direct-mogo" target="_blank" rel="noopener"
     aria-label="GitHub 저장소 — 소스와 자료 수집 방식"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>GitHub</a></div>
   <div class="appinfo" id="appInfo" hidden></div>

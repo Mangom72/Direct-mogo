@@ -15,8 +15,8 @@ const SHELL_URLS = [
      제 글꼴로 뜨고, 예전처럼 남의 서버가 대답할 때까지 기다릴 일이 없다. */
   "./fonts/fonts.css",
   "./fonts/SongMyung-400.woff2",
-  "./fonts/PlexSansKR-400.woff2", "./fonts/PlexSansKR-500.woff2",
-  "./fonts/PlexSansKR-600.woff2", "./fonts/PlexSansKR-700.woff2",
+  "./fonts/GijulSans-400.woff2", "./fonts/GijulSans-500.woff2",
+  "./fonts/GijulSans-600.woff2", "./fonts/GijulSans-700.woff2",
 ];
 
 /* "./"는 빼둔다 — slice로 만든 빈 문자열은 endsWith가 항상 참이라 전부 셸로 빨려든다 */
