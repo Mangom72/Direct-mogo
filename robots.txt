@@ -1,19 +1,14 @@
-# 기출 직행 — https://mangom72.github.io/Direct-mogo/
+# mangom72.github.io — 크롤러 안내
 #
-# 크롤러는 도메인 뿌리의 robots.txt 하나만 읽습니다. 여기는 프로젝트 페이지라
-# 이 파일이 놓이는 자리는 /Direct-mogo/robots.txt 이고, 그 주소는 아무도 보지
-# 않습니다. 실제로 효력을 가지려면 같은 내용이 사용자 페이지 저장소
-# (mangom72.github.io) 뿌리에 있어야 합니다. 여기 둔 것은 그 원본입니다.
-#
-# 막을 것이 없습니다. 이 저장소가 담는 것은 EBSi가 이미 공개한 파일의 주소뿐이고,
-# 널리 읽히라고 만든 자료입니다.
+# 막을 것이 없습니다. 여기 있는 것은 이미 공개된 자료이고, 널리 읽히라고
+# 만들었습니다. 이 파일이 하는 일은 사실상 아래 Sitemap 한 줄입니다.
 
 User-agent: *
 Allow: /
 
-# 기계로 읽으실 분께:
-#   https://mangom72.github.io/Direct-mogo/llms.txt          읽는 법 안내
+# 기출 직행 (수능·모평·학평 기출 문제지 목록)
+#   https://mangom72.github.io/Direct-mogo/llms.txt          기계로 읽는 법
 #   https://mangom72.github.io/Direct-mogo/data/index.json   과목 목록
-# 목록 정보와 코드는 MIT입니다. 긁지 마시고 JSON을 그대로 가져가세요 — 더 빠릅니다.
+# 목록 정보와 코드는 MIT입니다. 화면을 긁지 마시고 JSON을 그대로 가져가세요 — 더 빠릅니다.
 
 Sitemap: https://mangom72.github.io/Direct-mogo/sitemap.xml

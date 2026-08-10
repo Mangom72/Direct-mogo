@@ -61,11 +61,24 @@ PDF는 EBSi가 `Access-Control-Allow-Origin: *`를 주기 때문에 페이지가
 앱 화면과 과목 페이지는 서로 오갑니다(`앱 화면에서 보기` ↔ 빵부스러기). 둘 다
 canonical로 자기 자신을 가리켜 중복으로 잡히지 않습니다.
 
-**`robots.txt`는 여기 두면 효력이 없습니다.** 크롤러는 도메인 뿌리의 robots.txt
-하나만 읽는데(`mangom72.github.io/robots.txt`), 여기는 프로젝트 페이지라 그 자리가
-사용자 페이지 저장소에 있습니다. 이 저장소의 `robots.txt`는 **그 원본**이니 거기에
-같은 내용을 두세요. `sitemap.xml`은 그것과 무관하게 Search Console에 직접
-제출할 수 있습니다.
+### robots.txt는 이 저장소에서 효력이 없습니다
+
+크롤러는 **도메인 뿌리의 robots.txt 하나만** 읽습니다 —
+`https://mangom72.github.io/robots.txt`. 여기는 프로젝트 페이지라 이 저장소의
+파일이 놓이는 자리는 `/Direct-mogo/robots.txt`이고, 그 주소는 아무도 보지 않습니다.
+
+이 저장소의 `robots.txt`는 **그 자리에 둘 원본**입니다. 그대로 복사해
+[mangom72.github.io](https://github.com/Mangom72/mangom72.github.io) 저장소
+뿌리(`main` 브랜치)에 `robots.txt`로 올리면 됩니다. 그 저장소는 이미 앱 딥링크용
+`.well-known/assetlinks.json`을 같은 방식으로 서비스하고 있습니다.
+
+한 가지 알아 둘 것: 뿌리의 robots.txt는 **그 계정의 모든 프로젝트 페이지**에
+적용됩니다. 다만 내용이 `Allow: /`라 기본 동작과 같으므로 실제로 달라지는 것은
+`Sitemap:` 한 줄뿐입니다.
+
+`sitemap.xml`은 robots.txt와 무관하게 Google Search Console →
+사이트맵에 `Direct-mogo/sitemap.xml`로 직접 제출할 수 있고, 그쪽이 색인에
+더 빨리 반영됩니다.
 
 ## AI·프로그램에서 쓰기
 
