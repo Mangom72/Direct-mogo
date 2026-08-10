@@ -2,9 +2,11 @@
 """EBSi 기출문제 목록을 긁어 index.html의 페이로드를 갱신한다.
 
 자료가 index.html 안에 구워져 있어 새 회차가 나와도 자동으로 반영되지 않는다.
-이 스크립트가 그 간극을 메운다. 월 1회 GitHub Actions에서 돌린다.
+이 스크립트가 그 간극을 메운다. 매일 23시(KST) GitHub Actions에서 돌린다.
 
-갱신은 덧붙이기만 한다 — 기존 기록은 고치지도 지우지도 않고, 아직 없는 시행일만 채운다.
+갱신은 덧붙이기만 한다 — 기존 기록의 **있는 값**은 고치지도 지우지도 않는다.
+새 시행일을 담고, 이미 있는 회차는 비어 있는 칸만 뒤늦게 채운다(top_up 참고).
+EBSi가 한 회차를 며칠에 걸쳐 올리기 때문에 필요한 일이다.
 안전장치: 수집량이 기존 페이로드의 80%에 못 미치면 아무것도 쓰지 않고 실패한다.
 EBSi가 마크업을 바꾸면 파서가 조용히 빈손이 되어 "변경 없음"으로 넘어갈 수 있기 때문이다.
 
@@ -196,7 +198,7 @@ def merge(current, scraped, known):
     같은 형태로 재현하지 못한다. 파일 경로를 열쇠로 삼으면 이미 있는 회차가 다른
     이름을 달고 한 번 더 들어간다. 새 시행일만 받는 편이 안전하다.
     """
-    added, skipped = 0, set()
+    added, filled, skipped = 0, 0, set()
     for g in scraped:
         for s in scraped[g]:
             if s not in known.get(g, ()):
@@ -205,14 +207,56 @@ def merge(current, scraped, known):
             for y in scraped[g][s]:
                 bucket = current.setdefault(g, {}).setdefault(s, {}).setdefault(y, [])
                 dates = {r[1] for r in bucket}
+                late = {}
                 for row in scraped[g][s][y]:
-                    if not any(row[2:5]) or row[1] in dates:
+                    if not any(row[2:5]):
+                        continue
+                    if row[1] in dates:
+                        late.setdefault(row[1], []).append(row)
                         continue
                     dates.add(row[1])
                     bucket.append(row)
                     added += 1
+                filled += top_up(bucket, late)
                 bucket.sort(key=lambda r: r[1], reverse=True)
-    return added, sorted(skipped)
+    return added, filled, sorted(skipped)
+
+
+def top_up(bucket, late):
+    """이미 있는 회차의 **빈 칸만** 채운다. 있는 값은 절대 건드리지 않는다.
+
+    EBSi는 한 회차를 한 번에 올리지 않는다. 재보니 정답은 시행 당일 낮,
+    문제는 당일 저녁이 보통인데 해설은 평가원 시험의 경우 다음 날 오후,
+    늦으면 나흘 뒤에 올라온다. 문제조차 엿새 늦은 회차가 있었다.
+
+    갱신이 한 달에 한 번일 때는 다 올라온 뒤에 보므로 상관없었다. 매일 보게
+    되면 반드시 반쪽만 잡히는 날이 생기는데, 예전처럼 '이미 있는 시행일은
+    통째로 건너뛰기'만 하면 그 빈칸이 영영 빈칸으로 남는다.
+
+    있는 값을 덮어쓰지 않는 원칙은 그대로다 — 파일 이름이 과목과 어긋난
+    회차들(2015년 시행 수능 등)을 지켜 주는 것이 그 원칙이라, 빈 칸을 메우는
+    일과는 상관이 없다.
+
+    같은 날 같은 과목에 홀·짝형이 따로 있을 수 있어 어느 줄에 넣을지가
+    문제인데, 이미 들어 있는 코드가 하나라도 같은 줄을 짝으로 본다. 그렇게
+    가려지지 않으면 양쪽이 한 줄씩일 때만 채우고, 아니면 손대지 않는다.
+    """
+    n = 0
+    for row in bucket:
+        rows = late.get(row[1])
+        if not rows or all(row[2:5]):
+            continue
+        same = [r for r in rows
+                if any(r[i] and row[i] and r[i] == row[i] for i in (2, 3, 4))]
+        if len(same) != 1:
+            if len(rows) != 1 or sum(1 for r in bucket if r[1] == row[1]) != 1:
+                continue                      # 어느 줄의 것인지 가릴 수 없다
+            same = rows
+        for i in (2, 3, 4):
+            if not row[i] and same[0][i]:
+                row[i] = same[0][i]
+                n += 1
+    return n
 
 
 def count(db):
@@ -276,9 +320,10 @@ def main():
             f"수집량이 기존의 80%에 못 미칩니다({reachable} < {have}). "
             "EBSi 페이지 구조가 바뀌었을 수 있어 파일을 건드리지 않습니다.")
 
-    added, skipped = merge(current, scraped, known)
+    added, filled, skipped = merge(current, scraped, known)
     got = count(current)
-    print(f"새 회차 {added}건 추가 → {got}건", file=sys.stderr)
+    print(f"새 회차 {added}건 추가 → {got}건"
+          + (f", 늦게 올라온 자료 {filled}칸 채움" if filled else ""), file=sys.stderr)
     if skipped:
         print(f"참고: GROUPS에 없어 담지 않은 과목 {len(skipped)}개 — "
               f"{', '.join(skipped[:12])}{' …' if len(skipped) > 12 else ''}", file=sys.stderr)
@@ -291,7 +336,7 @@ def main():
         print("변경 없음", file=sys.stderr)
         return 0
     if args.dry_run:
-        print(f"[dry-run] {added}건 증가, 쓰지 않음", file=sys.stderr)
+        print(f"[dry-run] {added}건 증가 · {filled}칸 채움, 쓰지 않음", file=sys.stderr)
         return 0
     path.write_text(new, encoding="utf-8")
     print(f"갱신 완료: {have} → {got}건", file=sys.stderr)
