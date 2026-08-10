@@ -19,92 +19,40 @@ EBSi를 헤매지 않고 학년 → 과목 → 연도만 고르면 문제·정�
 - **다크 모드** — 자동 / 밝게 / 어둡게
 - **주소로 공유** — `#/D300/158/2024/gov` 처럼 화면 그대로 북마크·공유
 
-## 어떻게 동작하나
+## 과목별 목록
 
-빌드 도구도 서버도 없습니다. GitHub Pages에 정적 파일만 올라갑니다.
+검색으로 바로 들어오셔도 되도록, 과목마다 전 회차를 한 장에 펼친 페이지가 따로
+있습니다. 문제·정답·해설이 EBSi 원본으로 바로 걸려 있어 앱을 거치지 않아도 됩니다.
 
-| 파일 | 역할 |
-|---|---|
-| `index.html` | 앱 전체. 자료 3,844회차가 gzip+base64로 안에 들어 있습니다 (154KB) |
-| `sw.js` | 서비스 워커. 앱 셸·폰트·받아둔 PDF를 캐시합니다 |
-| `data/`, `llms.txt` | AI·프로그램용 정적 JSON과 사용 안내 |
-| `s/`, `sitemap.xml` | 검색엔진과 사람이 읽는 과목별 정적 페이지 |
-| `robots.txt` | 크롤러 안내 (아래 참고 — 여기 두면 효력이 없습니다) |
-| `tools/refresh_data.py` | EBSi에서 새 회차를 긁어 페이로드를 갱신합니다 |
-| `tools/build_api.py` | 페이로드를 `data/` JSON과 `llms.txt`로 내보냅니다 |
-| `tools/build_pages.py` | `data/`를 `s/` 정적 페이지와 `sitemap.xml`로 내보냅니다 |
-| `mcp/gijul_server.py` | Claude에 도구로 붙이는 MCP 서버 |
-| `android/` | 앱 폴더에 담고 앱에서 여는 WebView 앱 (안드로이드) |
-| `.github/workflows/refresh-data.yml` | 매월 5일 자동 실행 |
+**→ [과목별 기출문제 목록](https://mangom72.github.io/Direct-mogo/s/)**
 
-자료를 `index.html` 안에 넣어둔 덕분에, **이 파일 하나만 캐시하면 조회·필터가 네트워크 없이 전부 동작합니다.** 네트워크가 필요한 건 PDF를 받을 때뿐입니다.
+## 안드로이드 앱
 
-PDF는 EBSi가 `Access-Control-Allow-Origin: *`를 주기 때문에 페이지가 직접 받아
-`navigator.share()`로 넘길 수 있습니다. 그래서 설치형 앱에서도 노트앱으로 보내집니다.
+문제지를 **앱 안에서 바로 읽고**, 회차를 통째로 담아 연결 없이 볼 수 있습니다.
+스토어에 없어서 APK를 직접 받습니다 — 한 번 넣으면 새 판은 앱이 알아서 알려줍니다.
 
-## 검색에서 찾아지게
+**→ [앱 받기](https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk)**
 
-`index.html`은 자료를 압축해 품고 JS로 풉니다. 사람에게는 빠르지만 검색엔진에는
-**빈 페이지 한 장**입니다 — 3,844회차가 통째로 안 보입니다. 그래서 같은 자료를
-스크립트 없이 그냥 읽히는 HTML로도 깔아 둡니다.
-
-```
-/s/                     과목 색인 49과목
-/s/D300/158.html        고3·N수 생명과학Ⅰ 전 회차 (문제·정답·해설 직접 링크)
-/sitemap.xml            위 51장
-```
-
-회차별 페이지는 만들지 않습니다. 3,844장이 되는데 한 장에 링크 세 개뿐이라
-검색엔진이 알맹이 없는 페이지로 보고 오히려 깎습니다. 과목 페이지 한 장이 그 과목의
-링크를 전부 담으므로 잃는 것도 없습니다.
-
-앱 화면과 과목 페이지는 서로 오갑니다(`앱 화면에서 보기` ↔ 빵부스러기). 둘 다
-canonical로 자기 자신을 가리켜 중복으로 잡히지 않습니다.
-
-### robots.txt는 이 저장소에서 효력이 없습니다
-
-크롤러는 **도메인 뿌리의 robots.txt 하나만** 읽습니다 —
-`https://mangom72.github.io/robots.txt`. 여기는 프로젝트 페이지라 이 저장소의
-파일이 놓이는 자리는 `/Direct-mogo/robots.txt`이고, 그 주소는 아무도 보지 않습니다.
-
-이 저장소의 `robots.txt`는 **그 자리에 둘 원본**입니다. 그대로 복사해
-[mangom72.github.io](https://github.com/Mangom72/mangom72.github.io) 저장소
-뿌리(`main` 브랜치)에 `robots.txt`로 올리면 됩니다. 그 저장소는 이미 앱 딥링크용
-`.well-known/assetlinks.json`을 같은 방식으로 서비스하고 있습니다.
-
-한 가지 알아 둘 것: 뿌리의 robots.txt는 **그 계정의 모든 프로젝트 페이지**에
-적용됩니다. 다만 내용이 `Allow: /`라 기본 동작과 같으므로 실제로 달라지는 것은
-`Sitemap:` 한 줄뿐입니다.
-
-`sitemap.xml`은 robots.txt와 무관하게 Google Search Console →
-사이트맵에 `Direct-mogo/sitemap.xml`로 직접 제출할 수 있고, 그쪽이 색인에
-더 빨리 반영됩니다.
+받은 자료가 어디에 쌓이는지, 뷰어와 자체 업데이트가 어떻게 도는지는
+[docs/android.md](docs/android.md)에 있습니다.
 
 ## AI·프로그램에서 쓰기
 
-화면용 HTML은 자료가 압축돼 있어 AI가 읽어도 소용없습니다. 같은 자료를
-**정적 JSON으로도 함께 배포**합니다. 서버도 인증도 키도 필요 없습니다.
+같은 자료를 **정적 JSON으로도 함께 배포**합니다. 서버도 인증도 키도 필요 없습니다.
 
 ```
-https://mangom72.github.io/Direct-mogo/llms.txt          AI용 사용 안내
-https://mangom72.github.io/Direct-mogo/data/index.json   과목 목록과 각 과목 JSON 주소
+https://mangom72.github.io/Direct-mogo/llms.txt           AI용 사용 안내
+https://mangom72.github.io/Direct-mogo/data/index.json    과목 목록과 각 과목 JSON 주소
 https://mangom72.github.io/Direct-mogo/data/D300/158.json 고3 생명과학Ⅰ 전 회차
 ```
 
-과목 하나가 평균 26KB라 필요한 과목만 받아 가면 됩니다. 각 회차에 문제·정답·해설
-**절대 주소**가 들어 있어 경로 규칙을 몰라도 바로 열립니다.
-
+각 회차에 문제·정답·해설 **절대 주소**가 들어 있어 경로 규칙을 몰라도 바로 열립니다.
 아무 AI에게든 `llms.txt` 주소를 주면 나머지는 알아서 합니다.
 
 ### Claude에 도구로 붙이기 (MCP)
 
-`mcp/gijul_server.py`가 위 JSON을 읽어 Claude에 도구로 노출합니다 —
-`list_subjects`, `find_papers`, `site_info`.
-
 ```bash
 pip install "mcp[cli]" httpx
-
-# Claude Code
 claude mcp add 기출직행 -- python3 "$PWD/mcp/gijul_server.py"
 ```
 
@@ -119,45 +67,11 @@ Claude Desktop은 `claude_desktop_config.json`에:
 붙이고 나면 이렇게 물으면 됩니다 — *"2026학년도 수능 생명과학Ⅰ 문제 찾아줘"*.
 배포된 JSON을 읽으므로 저장소를 클론하지 않아도 되고, 월간 갱신도 그대로 따라옵니다.
 
-## 안드로이드 앱
+## 연도 표기
 
-문제지를 **앱 안에서 바로 읽고**, 회차를 통째로 담아 연결 없이 볼 수 있습니다.
-스토어에 없어서 APK를 직접 받습니다 — 한 번 넣으면 새 판은 앱이 알아서 알려줍니다.
-
-**→ [앱 받기](https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk)**
-
-앱은 사이트를 그대로 불러오므로, 페이지를 고쳐도 APK를 다시 만들 필요가 없습니다.
-받은 자료가 어디에 쌓이는지, 뷰어와 자체 업데이트가 어떻게 도는지, 빌드와 서명은
-[docs/android.md](docs/android.md)에 있습니다.
-
-## 자료 갱신
-
-새 회차는 워크플로가 알아서 채웁니다. 직접 돌리려면:
-
-```bash
-pip install requests
-python3 tools/refresh_data.py --dry-run   # 무엇이 늘어나는지만 확인
-python3 tools/refresh_data.py             # index.html 갱신
-python3 tools/build_api.py                # → data/, llms.txt
-python3 tools/build_pages.py              # → s/, sitemap.xml
-python3 tools/build_fonts.py              # → fonts/ (새 글자가 생겼을 수 있음)
-```
-
-순서가 있습니다. `build_fonts.py`는 화면에 실제로 나오는 글자만 담으므로
-**맨 나중**에 돌아야 새 회차 제목과 새 과목 페이지의 글자를 함께 봅니다.
-워크플로도 같은 순서로 돕니다.
-
-기존 기록은 고치지 않고 **아직 없는 시행일만 덧붙입니다.** 수집량이 기존의 80%에
-못 미치면 EBSi 구조가 바뀐 것으로 보고 파일을 건드리지 않은 채 실패합니다.
-
-## 로컬에서 보기
-
-```bash
-python3 -m http.server 8000
-```
-
-서비스 워커는 `localhost`에서도 동작합니다. 캐시 때문에 변경이 안 보이면
-개발자도구 → Application → Service Workers에서 Unregister 하세요.
+연도는 **시행 연도** 기준입니다. 평가원 시험의 학년도는 시행 연도 + 1이므로
+(2013년 6월 시행 = 2014학년도 6월 모평) 화면에 학년도를 함께 표기합니다.
+교육청 학력평가는 관례상 시행 연도로만 부릅니다.
 
 ## 출처와 저작권
 
@@ -176,5 +90,7 @@ python3 -m http.server 8000
 
 이용 조건의 전문은 [NOTICE.md](NOTICE.md) 에 정리되어 있습니다.
 
-연도는 **시행 연도** 기준입니다. 평가원 시험의 학년도는 시행 연도 + 1이므로
-(2013년 시행 = 2014학년도 6월 모평) 화면에 학년도를 함께 표기합니다.
+---
+
+이 저장소를 고치실 분은 [docs/build.md](docs/build.md)를 보세요 — 파일 구성, 자료
+갱신 순서, 검색 노출 구조, 로컬 실행이 정리돼 있습니다.
