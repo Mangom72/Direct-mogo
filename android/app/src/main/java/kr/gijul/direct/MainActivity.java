@@ -5,12 +5,15 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
 import androidx.webkit.WebSettingsCompat;
@@ -134,9 +137,44 @@ public class MainActivity extends Activity {
 
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
 
+    /* 뒤로가기.
+
+       예전에는 한 번 누르면 곧장 앱이 닫혔다. 시트나 크게 보기를 열어 둔 채로
+       눌러도 마찬가지여서, 닫으려던 사람이 앱을 껐다.
+
+       이제 순서가 있다. 화면에 열어 둔 것이 있으면 그것부터 하나씩 닫고(페이지의
+       gijulBack이 무엇을 닫았는지 알려준다), 그다음 방문 기록을 되짚고, 더 되짚을
+       것이 없을 때에만 종료로 넘어간다. 종료는 두 번 눌러야 한다 — 마지막 한 번이
+       실수이기 쉬운 자리다.
+
+       무엇이든 닫았거나 되짚었으면 '한 번 더' 대기를 푼다. 그러지 않으면 시트를
+       닫은 다음 눌린 뒤로가기가 종료로 이어져, 닫는 동작이 종료 수를 대신 세는
+       꼴이 된다. */
+    private boolean exitArmed = false;
+    private final Handler ui = new Handler(Looper.getMainLooper());
+    private final Runnable disarm = () -> exitArmed = false;
+
     @Override
     public void onBackPressed() {
-        if (web.canGoBack()) web.goBack(); else super.onBackPressed();
+        /* 페이지가 자기 것을 먼저 닫는다. 답은 비동기로 오지만, 그 사이 다른 일이
+           끼어들 여지가 없어(같은 UI 스레드로 돌아온다) 순서가 어긋나지 않는다. */
+        web.evaluateJavascript(
+                "(function(){try{return !!(window.gijulBack&&window.gijulBack())}"
+                + "catch(e){return false}})()",
+                value -> {
+                    if ("true".equals(value)) { rearm(); return; }
+                    if (web.canGoBack()) { web.goBack(); rearm(); return; }
+                    if (exitArmed) { finish(); return; }
+                    exitArmed = true;
+                    Toast.makeText(this, "한 번 더 누르면 종료합니다", Toast.LENGTH_SHORT).show();
+                    ui.postDelayed(disarm, 2000);
+                });
+    }
+
+    /** 무언가 닫혔다 — 종료 대기를 푼다. */
+    private void rearm() {
+        exitArmed = false;
+        ui.removeCallbacks(disarm);
     }
 
     /** 시스템이 지금 야간 모드인가 */

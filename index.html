@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-F4QPg8eTdFNJ8f7gA6OCyGiANjT1ciOlggbS9ilcaOo=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-iat1dqVrWcI5/wDYaZOJ8pCtYMZIWnCD0ncCP31Zarw=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -1911,6 +1911,23 @@ async function openLog(opener){
   });
 }
 $("#logBtn").onclick = e => openLog(e.currentTarget);
+
+/* 앱의 뒤로가기가 부른다. 화면에 열려 있는 것 하나를 닫고 true를 돌려준다.
+   닫을 것이 없으면 false 를 돌려주고, 그때만 앱이 '한 번 더 누르면 종료'로 넘어간다.
+   위에 덮인 것부터 닫는다 — 크게 보기 → 시트 → 알림 막대 → 내 과목 편집.
+
+   알림 막대는 답 없이 거둔다(null). 뒤로가기는 '지금은 됐다'는 뜻이지 '아니오'가
+   아니다 — '아니오'로 처리하면 앱 설치 권유를 뒤로가기로 넘긴 사람에게 다시는
+   묻지 않게 된다. */
+window.gijulBack = function(){
+  try{
+    if(closeLens()) return true;
+    if(!sheet.hidden){ closeSheet(); return true; }
+    if(!notice.hidden){ closeNotice(null); return true; }
+    if(editing){ favEdit.click(); return true; }
+  }catch(e){}
+  return false;
+};
 
 function closeSheet(){
   if(sheet.hidden) return;
