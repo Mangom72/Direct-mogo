@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-GDAn86s14Kb1JP4/QkVMi7Hi2EU8jSAl3+vXSZOutws=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-RneGsenzj9l5PpJtdR8xxEM97l5MgHF9DOlHWMJsUsM=' 'sha256-StjYn9j9i4iwUDhnIFzgnDtph8XfJ1kGaPY3QLMA/po=';
+  script-src 'self' 'sha256-GDAn86s14Kb1JP4/QkVMi7Hi2EU8jSAl3+vXSZOutws=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-RneGsenzj9l5PpJtdR8xxEM97l5MgHF9DOlHWMJsUsM=' 'sha256-yyxJlX/p0Wv+wA6UQRLYhZyIBMcLCJ7BXkivXsOR7pw=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -1756,6 +1756,18 @@ function render(){
    말한다 — 둘 다 알림 막대를 쓰기 때문에 그냥 두면 서로 덮어쓴다. */
 let pending = null;      // 손으로 시작한 확인. {web, app}이 둘 다 차면 결론을 낸다.
 
+/* 이 화면이 옛 껍데기 위에서 돌고 있다는 표시.
+
+   워커의 check()는 서버 것과 캐시 것을 견준 뒤 **캐시를 새것으로 갱신한다**.
+   그래서 한 번 '새 자료가 있습니다'가 뜬 뒤 새로고침하지 않고 닫으면, 다음
+   확인은 이미 갱신된 캐시와 서버를 견주므로 '같다'가 나온다 — 화면은 여전히
+   옛 것인데 최신이라고 말하게 된다. 실제로 그런 신고를 받았다.
+
+   낡은 쪽은 캐시가 아니라 **지금 떠 있는 이 문서**다. 그것은 워커가 알 수 없고
+   이 페이지만 아는 사실이므로 여기서 기억한다. 새로고침하면 이 값도 함께
+   사라지므로 따로 지울 일이 없다. */
+let webStale = false;
+
 function tellApp(u){
   const mb = u.size ? ` (${(u.size/1048576).toFixed(1)}MB)` : "";
   showNotice(`새 버전 ${u.versionName}이 있습니다${mb}.${u.notes ? " " + u.notes : ""}`,
@@ -1813,7 +1825,10 @@ function checkNow(){
     try{ NATIVE.checkUpdate(true); asked = true; }catch(e){}
   }
   if(!asked) settle("app", false);
-  if(!askWeb()) settle("web", "skip");
+  /* 이미 뒤처진 것을 아는 화면은 워커에게 물을 것이 없다 — 물어봐야 캐시는
+     벌써 새것이라 '같다'는 답이 온다. */
+  if(webStale) settle("web", true);
+  else if(!askWeb()) settle("web", "skip");
 }
 
 if(NATIVE && NATIVE.checkUpdate){
@@ -1927,8 +1942,10 @@ if("serviceWorker" in navigator){
     const t = e.data && e.data.type;
     /* 'current'는 손으로 확인할 때만 쓸모가 있다 — 저절로 도는 확인에서는
        달라진 게 없다는 말을 굳이 화면에 띄우지 않는다(settle이 거짓을 준다). */
-    if(t === "updated"){ if(!settle("web", true)) tellWeb(); }
-    else if(t === "current") settle("web", false);
+    if(t === "updated"){ webStale = true; if(!settle("web", true)) tellWeb(); }
+    /* 'current'는 캐시 기준의 답이다. 이 문서가 이미 뒤처진 것을 알고 있으면
+       그 답으로 덮어쓰지 않는다 — 덮으면 '최신입니다'라고 거짓을 말하게 된다. */
+    else if(t === "current") settle("web", webStale);
   });
   afterPaint(async ()=>{
     try{
