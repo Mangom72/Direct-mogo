@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-GDAn86s14Kb1JP4/QkVMi7Hi2EU8jSAl3+vXSZOutws=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-RneGsenzj9l5PpJtdR8xxEM97l5MgHF9DOlHWMJsUsM=' 'sha256-rVZUHgFM739x4Dfb6OTKgs8lG9GmtoP+W45uRwjtGPs=';
+  script-src 'self' 'sha256-GDAn86s14Kb1JP4/QkVMi7Hi2EU8jSAl3+vXSZOutws=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-RneGsenzj9l5PpJtdR8xxEM97l5MgHF9DOlHWMJsUsM=' 'sha256-StjYn9j9i4iwUDhnIFzgnDtph8XfJ1kGaPY3QLMA/po=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -457,17 +457,18 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 }
 
 .empty{background:var(--card);border:1.5px dashed var(--rule);padding:22px;font-size:13px;color:var(--ink2);line-height:1.7;text-align:center}
-/* 목록 자리는 비어 있을 때도 한 화면을 차지한다.
+/* 목록이 들어서기 전까지만 한 화면을 잡아 둔다.
 
    자리를 잡아 두지 않으면 첫 그림에 바닥글이 화면 안에 들어왔다가, 목록이
    채워지는 순간 통째로 밀려나 화면이 크게 흔들린다. 처음엔 스크립트가 자리를
    잡게 했는데, 느린 회선에서 재 보니 소용이 없었다 — 첫 그림은 0.65초에
    나오는데 스크립트는 3.3초에야 돌아서, 그 사이 흔들릴 것은 이미 다 흔들린
-   뒤였다(CLS 0.59). CSS로 박아야 첫 그림부터 듣는다.
+   뒤였다(CLS 0.59). 그래서 HTML에 class="boot"으로 박아 첫 그림부터 듣게 한다.
 
-   회차가 몇 개뿐인 조합에서는 아래가 좀 비지만, 그건 바닥글이 오르내리는 것보다
-   낫다. 자리가 비는 것은 눈에 안 거슬리고, 글이 뛰는 것은 거슬린다. */
-#out{min-height:100vh}
+   대신 그리고 나면 곧바로 뗀다. 계속 걸어 두었더니 회차가 몇 개뿐인 조합에서
+   목록 아래로 한 화면이 통째로 비어, 바닥글이 저 멀리 떨어져 보였다. 흔들림을
+   막자고 늘 빈 자리를 남겨 둘 이유는 없다 — 필요한 것은 첫 그림 한 번이다. */
+#out.boot{min-height:100vh}
 footer{max-width:900px;margin:22px auto 0;font-size:11px;color:var(--ink2);line-height:1.85}
 footer b{color:var(--ink)}
 /* 각주 속 링크. 기본 파란 밑줄은 이 자리에서 너무 튄다. */
@@ -674,8 +675,10 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
   </div>
 
   <!-- tabindex="-1" 는 건너뛰기 링크가 여기로 초점을 옮길 수 있게 하는 것이다.
-       없으면 주소만 바뀌고 초점은 고르개에 남아, 다음 Tab이 도로 위로 간다. -->
-  <main id="out" tabindex="-1"></main>
+       없으면 주소만 바뀌고 초점은 고르개에 남아, 다음 Tab이 도로 위로 간다.
+       class="boot" 은 목록이 들어설 자리를 첫 그림부터 잡아 두는 표시다.
+       render()가 처음 그릴 때 뗀다. -->
+  <main id="out" class="boot" tabindex="-1"></main>
 </div>
 
 <div class="sheet" id="sheet" hidden>
@@ -1736,6 +1739,10 @@ function render(){
     ? `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · ${total}개 회차</span>${acts}</div>` + html
     : `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · 0개 회차</span>${acts}</div>
        <div class="empty">해당 조건으로 수록된 회차가 없습니다.<br>선택한 학년에서 그 과목이 시행되지 않았거나, 연도·기관 필터를 좁게 잡았을 수 있습니다.</div>`;
+
+  /* 자리를 잡아 두던 표시를 뗀다. 그리기 전까지만 필요한 것이라, 그대로 두면
+     회차가 몇 개뿐일 때 목록 아래로 한 화면이 통째로 비어 버린다. */
+  out.classList.remove("boot");
 }
 
 /* ── 업데이트 ────────────────────────────────────────────────────
