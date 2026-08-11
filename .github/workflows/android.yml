@@ -35,6 +35,10 @@ jobs:
       # 러너 이미지에 Android SDK가 이미 깔려 있어 ANDROID_HOME을 따로 잡을 필요가 없다
       - uses: gradle/actions/setup-gradle@v4
 
+      # publish_apk.py 가 알림 문구의 글자가 글꼴에 있는지 확인하는데, 그
+      # 확인이 fontTools 를 쓴다. 없으면 확인이 깨지고 발행이 통째로 멈춘다.
+      - run: pip install "fonttools[woff]" brotli
+
       # 저장소 시크릿에 키를 넣어두면 릴리스 서명으로, 없으면 디버그로 빌드한다.
       # secrets 컨텍스트는 스텝의 if에서 쓸 수 없다 — 넣으면 워크플로 자체가
       # 시작 전에 실패한다(잡 0개). 그래서 env로 받아 셸에서 판단한다.
@@ -125,10 +129,18 @@ jobs:
           [ -n "$NOTES" ] || NOTES="앱을 새로 고쳤습니다"
           echo "알림 문구: $NOTES"
 
-          if ! python3 tools/publish_apk.py --notes "$NOTES"; then
+          # 3은 '올릴 것이 없다'(versionCode 그대로)뿐이다. 다른 코드는 진짜
+          # 고장이므로 그대로 실패시킨다 — 전에는 전부 넘겨서, 글꼴 검사가
+          # 깨져 아무것도 안 올라간 실행이 초록불로 끝났다.
+          set +e
+          python3 tools/publish_apk.py --notes "$NOTES"
+          rc=$?
+          set -e
+          if [ "$rc" = 3 ]; then
             echo "올릴 새 판본이 없습니다 — 넘어갑니다"
             exit 0
           fi
+          [ "$rc" = 0 ] || exit "$rc"
 
           python3 - <<'PY'
           import hashlib, json, os, sys, urllib.error, urllib.request

@@ -91,9 +91,13 @@ def main():
     old = {}
     if MANIFEST.is_file():
         old = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    # 종료 코드 3은 '올릴 것이 없다'는 뜻으로만 쓴다. 부르는 쪽(워크플로)이
+    # 이것만 조용히 넘기고 나머지 실패는 빨갛게 띄운다 — 전에는 어떤 이유로
+    # 멈추든 '새 판본 없음'으로 뭉뚱그려, 진짜 고장이 초록불로 지나갔다.
     if code <= old.get("versionCode", 0):
-        sys.exit(f"versionCode가 늘지 않았습니다 ({old.get('versionCode')} → {code}). "
-                 "build.gradle을 먼저 올리세요.")
+        print(f"versionCode가 늘지 않았습니다 ({old.get('versionCode')} → {code}). "
+              "build.gradle을 먼저 올리세요.", file=sys.stderr)
+        raise SystemExit(3)
 
     # APK 자체는 저장소에 두지 않는다 — 판본마다 1.8MB가 히스토리에 영구히 쌓인다.
     # 여기서는 명세만 쓰고, 파일은 부르는 쪽(워크플로)이 릴리스 자산으로 올린다.
