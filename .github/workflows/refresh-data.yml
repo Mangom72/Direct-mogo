@@ -36,7 +36,7 @@ jobs:
       # 스크립트는 수집량이 기존의 80%에 못 미치면 스스로 실패한다.
       # EBSi 구조가 바뀌면 조용히 빈손이 되는 대신 여기서 빨갛게 떠야 한다.
       - name: 새 회차 수집
-        run: python3 tools/refresh_data.py
+        run: python3 tools/refresh_data.py --note "$RUNNER_TEMP/note.txt"
 
       # 하루에 한 번 도는데 새 자료가 있는 날은 한 달에 며칠뿐이다. 나머지 날에
       # 정적 JSON·과목 페이지·글꼴을 다시 만드는 것은 통째로 헛일이다 — 특히
@@ -96,5 +96,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html data llms.txt llms-full.txt fonts s sitemap.xml
-          git commit -m "Refresh exam data from EBSi"
+          # 무엇이 늘었는지 메시지에 남긴다. 화면의 '자료 갱신 내역'이 이 괄호
+          # 안을 읽어 그날 무슨 일이 있었는지 보여준다.
+          NOTE=$(cat "$RUNNER_TEMP/note.txt" 2>/dev/null || true)
+          git commit -m "Refresh exam data from EBSi${NOTE:+ ($NOTE)}"
           git push

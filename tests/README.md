@@ -2,7 +2,7 @@
 
 ```bash
 pip install playwright "fonttools[woff]" brotli && playwright install chromium
-python3 tests/run.py              # 전부 (3분 남짓, 24종)
+python3 tests/run.py              # 전부 (3분 남짓, 25종)
 python3 tests/run.py sw stale     # 이름에 그 말이 든 것만
 python3 tests/run.py -v           # 출력까지 그대로
 ```
@@ -50,6 +50,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 | `test_stable` | 같은 자료면 같은 파일이 나오는가 (매일 도는 갱신이 헛커밋을 내지 않도록) |
 | `test_kept` | 이미 받아둔 회차의 저장 단추가 잠기는가 |
 | `test_footer` | 각주가 어디서 끊기는지 눈에 보이는가 |
+| `test_log` | 자료 갱신 내역에 **0건인 날과 실패한 날**이 보이는가 |
 
 ## 왜 `test_glyphs`가 따로 있는가
 

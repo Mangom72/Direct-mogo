@@ -310,6 +310,9 @@ def main():
     ap.add_argument("--index", default="index.html")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--pause", type=float, default=0.4, help="요청 간 간격(초)")
+    # 무엇이 늘었는지 한 줄로 적어 둔다. 워크플로가 이것을 커밋 메시지에 넣고,
+    # 화면의 '자료 갱신 내역'이 그 메시지를 읽어 그날 무슨 일이 있었는지 보여준다.
+    ap.add_argument("--note", metavar="파일", help="바뀐 내용을 한 줄로 적을 곳")
     args = ap.parse_args()
 
     path = Path(args.index)
@@ -355,6 +358,10 @@ def main():
         return 0
     path.write_text(new, encoding="utf-8")
     print(f"갱신 완료: {have} → {got}건", file=sys.stderr)
+    if args.note:
+        Path(args.note).write_text(
+            f"새 회차 {added}건" + (f", 늦게 올라온 자료 {filled}칸" if filled else ""),
+            encoding="utf-8")
     return 0
 
 
