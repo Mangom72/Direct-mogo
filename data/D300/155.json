@@ -8,7 +8,9 @@
  "note": "year는 시험을 본 해(시행 연도)입니다. schoolYear는 학년도이며 시행 연도 + 1로, 평가원 시험(수능·6월·9월 모의평가)에만 있습니다. 흔히 '2021학년도 6월 모평'이라 부르는 것은 year 2020 · schoolYear 2021인 회차입니다 — year로 찾으면 한 해 어긋납니다. 교육청 전국연합학력평가는 학년도를 쓰지 않습니다.",
  "papers": [
   {
+   "id": "D300-155-20260708",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2026-07-08",
    "year": 2026,
    "source": "교육청",
@@ -17,7 +19,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260708/go3/g_ear2_hsj_VGO94TLA.pdf"
   },
   {
+   "id": "D300-155-20260604",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2026-06-04",
    "year": 2026,
    "source": "평가원",
@@ -27,7 +31,9 @@
    "schoolYear": 2027
   },
   {
+   "id": "D300-155-20260507",
    "title": "5월 학평(경기)",
+   "type": "학평",
    "date": "2026-05-07",
    "year": 2026,
    "source": "교육청",
@@ -36,7 +42,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260507/go3/g_ear2_hsj_3BH3QA86.pdf"
   },
   {
+   "id": "D300-155-20251113",
    "title": "수능",
+   "type": "수능",
    "date": "2025-11-13",
    "year": 2025,
    "source": "평가원",
@@ -46,7 +54,9 @@
    "schoolYear": 2026
   },
   {
+   "id": "D300-155-20251014",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2025-10-14",
    "year": 2025,
    "source": "교육청",
@@ -55,7 +65,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/go3/g_ear2_hsj_X6NP3UJ2.pdf"
   },
   {
+   "id": "D300-155-20250903",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2025-09-03",
    "year": 2025,
    "source": "평가원",
@@ -65,7 +77,9 @@
    "schoolYear": 2026
   },
   {
+   "id": "D300-155-20250710",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2025-07-10",
    "year": 2025,
    "source": "교육청",
@@ -74,7 +88,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250710/go3/g_ear2_hsj_42ETPA171.pdf"
   },
   {
+   "id": "D300-155-20250604",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2025-06-04",
    "year": 2025,
    "source": "평가원",
@@ -84,7 +100,9 @@
    "schoolYear": 2026
   },
   {
+   "id": "D300-155-20250430",
    "title": "5월 학평(경기)",
+   "type": "학평",
    "date": "2025-04-30",
    "year": 2025,
    "source": "교육청",
@@ -93,7 +111,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250430/go3/g_ear2_hsj_QPLYWDPN.pdf"
   },
   {
+   "id": "D300-155-20241114",
    "title": "수능",
+   "type": "수능",
    "date": "2024-11-14",
    "year": 2024,
    "source": "평가원",
@@ -103,7 +123,9 @@
    "schoolYear": 2025
   },
   {
+   "id": "D300-155-20241015",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2024-10-15",
    "year": 2024,
    "source": "교육청",
@@ -112,7 +134,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/go3/g_ear2_hsj_42Y3ZQPA.pdf"
   },
   {
+   "id": "D300-155-20240904",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2024-09-04",
    "year": 2024,
    "source": "평가원",
@@ -122,7 +146,9 @@
    "schoolYear": 2025
   },
   {
+   "id": "D300-155-20240711",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2024-07-11",
    "year": 2024,
    "source": "교육청",
@@ -131,7 +157,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240711/go3/g_ear2_hsj_29HLAH6Y.pdf"
   },
   {
+   "id": "D300-155-20240604",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2024-06-04",
    "year": 2024,
    "source": "평가원",
@@ -141,7 +169,9 @@
    "schoolYear": 2025
   },
   {
+   "id": "D300-155-20240430",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2024-04-30",
    "year": 2024,
    "source": "교육청",
@@ -150,7 +180,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240430/go3/g_ear2_hsj_2EG7LKF5.pdf"
   },
   {
+   "id": "D300-155-20231116",
    "title": "수능",
+   "type": "수능",
    "date": "2023-11-16",
    "year": 2023,
    "source": "평가원",
@@ -160,7 +192,9 @@
    "schoolYear": 2024
   },
   {
+   "id": "D300-155-20231012",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2023-10-12",
    "year": 2023,
    "source": "교육청",
@@ -169,7 +203,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20231012/go3/g_ear2_hsj_4886Y652.pdf"
   },
   {
+   "id": "D300-155-20230906",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2023-09-06",
    "year": 2023,
    "source": "평가원",
@@ -179,7 +215,9 @@
    "schoolYear": 2024
   },
   {
+   "id": "D300-155-20230711",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2023-07-11",
    "year": 2023,
    "source": "교육청",
@@ -188,7 +226,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230711/go3/g_ear2_hsj_29N1ZU5J.pdf"
   },
   {
+   "id": "D300-155-20230601",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2023-06-01",
    "year": 2023,
    "source": "평가원",
@@ -198,7 +238,9 @@
    "schoolYear": 2024
   },
   {
+   "id": "D300-155-20230430",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2023-04-30",
    "year": 2023,
    "source": "교육청",
@@ -207,7 +249,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230430/go3/g_ear2_hsj_D5Y1Y3F2.pdf"
   },
   {
+   "id": "D300-155-20221117",
    "title": "수능",
+   "type": "수능",
    "date": "2022-11-17",
    "year": 2022,
    "source": "평가원",
@@ -217,7 +261,9 @@
    "schoolYear": 2023
   },
   {
+   "id": "D300-155-20221012",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2022-10-12",
    "year": 2022,
    "source": "교육청",
@@ -226,7 +272,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20221012/go3/g_ear2_hsj_G6DX5X66.pdf"
   },
   {
+   "id": "D300-155-20220901",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2022-09-01",
    "year": 2022,
    "source": "평가원",
@@ -236,7 +284,9 @@
    "schoolYear": 2023
   },
   {
+   "id": "D300-155-20220706",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2022-07-06",
    "year": 2022,
    "source": "교육청",
@@ -245,7 +295,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220706/go3/g_ear2_hsj_R35384WP.pdf"
   },
   {
+   "id": "D300-155-20220609",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2022-06-09",
    "year": 2022,
    "source": "평가원",
@@ -255,7 +307,9 @@
    "schoolYear": 2023
   },
   {
+   "id": "D300-155-20220413",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2022-04-13",
    "year": 2022,
    "source": "교육청",
@@ -264,7 +318,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220413/go3/g_ear2_hsj_R3336SCZ.pdf"
   },
   {
+   "id": "D300-155-20211118",
    "title": "수능",
+   "type": "수능",
    "date": "2021-11-18",
    "year": 2021,
    "source": "평가원",
@@ -274,7 +330,9 @@
    "schoolYear": 2022
   },
   {
+   "id": "D300-155-20211012",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2021-10-12",
    "year": 2021,
    "source": "교육청",
@@ -283,7 +341,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20211012/go3/g_ear2_hsj_3358HN57.pdf"
   },
   {
+   "id": "D300-155-20210901",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2021-09-01",
    "year": 2021,
    "source": "평가원",
@@ -293,7 +353,9 @@
    "schoolYear": 2022
   },
   {
+   "id": "D300-155-20210707",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2021-07-07",
    "year": 2021,
    "source": "교육청",
@@ -302,7 +364,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210707/go3/g_ear2_hsj_8H1DD644.pdf"
   },
   {
+   "id": "D300-155-20210603",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2021-06-03",
    "year": 2021,
    "source": "평가원",
@@ -312,7 +376,9 @@
    "schoolYear": 2022
   },
   {
+   "id": "D300-155-20210414",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2021-04-14",
    "year": 2021,
    "source": "교육청",
@@ -321,7 +387,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210414/go3/g_ear2_hsj_4Q387D1H.pdf"
   },
   {
+   "id": "D300-155-20201203",
    "title": "수능_12.3 시행",
+   "type": "수능",
    "date": "2020-12-03",
    "year": 2020,
    "source": "평가원",
@@ -331,7 +399,9 @@
    "schoolYear": 2021
   },
   {
+   "id": "D300-155-20201027",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2020-10-27",
    "year": 2020,
    "source": "교육청",
@@ -340,7 +410,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20201027/go3/g_ear2_hsj_A196W65O.pdf"
   },
   {
+   "id": "D300-155-20200916",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2020-09-16",
    "year": 2020,
    "source": "평가원",
@@ -350,7 +422,9 @@
    "schoolYear": 2021
   },
   {
+   "id": "D300-155-20200722",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2020-07-22",
    "year": 2020,
    "source": "교육청",
@@ -359,7 +433,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200722/go3/g_ear2_hsj_536189G7.pdf"
   },
   {
+   "id": "D300-155-20200618",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2020-06-18",
    "year": 2020,
    "source": "평가원",
@@ -369,7 +445,9 @@
    "schoolYear": 2021
   },
   {
+   "id": "D300-155-20200512",
    "title": "4월 학평(경기)_5.21 시행",
+   "type": "학평",
    "date": "2020-05-12",
    "year": 2020,
    "source": "교육청",
@@ -378,7 +456,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200512/go3/g_ear2_hsj_G4FXG66Y.pdf"
   },
   {
+   "id": "D300-155-20191114",
    "title": "수능",
+   "type": "수능",
    "date": "2019-11-14",
    "year": 2019,
    "source": "평가원",
@@ -388,7 +468,9 @@
    "schoolYear": 2020
   },
   {
+   "id": "D300-155-20191015",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2019-10-15",
    "year": 2019,
    "source": "교육청",
@@ -397,7 +479,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20191015/go3/g_ear2_hsj_2X7Z96QZ_10.pdf"
   },
   {
+   "id": "D300-155-20190904",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2019-09-04",
    "year": 2019,
    "source": "평가원",
@@ -407,7 +491,9 @@
    "schoolYear": 2020
   },
   {
+   "id": "D300-155-20190710",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2019-07-10",
    "year": 2019,
    "source": "교육청",
@@ -416,7 +502,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190710/go3/g_ear2_hsj_1965F5KA_10.pdf"
   },
   {
+   "id": "D300-155-20190604",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2019-06-04",
    "year": 2019,
    "source": "평가원",
@@ -426,7 +514,9 @@
    "schoolYear": 2020
   },
   {
+   "id": "D300-155-20190410",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2019-04-10",
    "year": 2019,
    "source": "교육청",
@@ -435,7 +525,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190410/go3/g_ear2_hsj_nyeKzGZu_10.pdf"
   },
   {
+   "id": "D300-155-20181115",
    "title": "수능",
+   "type": "수능",
    "date": "2018-11-15",
    "year": 2018,
    "source": "평가원",
@@ -445,7 +537,9 @@
    "schoolYear": 2019
   },
   {
+   "id": "D300-155-20181016",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2018-10-16",
    "year": 2018,
    "source": "교육청",
@@ -454,7 +548,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20181016/go3/g_ear2_hsj_AGZ9XZOF_10.pdf"
   },
   {
+   "id": "D300-155-20180905",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2018-09-05",
    "year": 2018,
    "source": "평가원",
@@ -464,7 +560,9 @@
    "schoolYear": 2019
   },
   {
+   "id": "D300-155-20180711",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2018-07-11",
    "year": 2018,
    "source": "교육청",
@@ -473,7 +571,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180711/go3/g_ear2_hsj_EIXq2gEI_10.pdf"
   },
   {
+   "id": "D300-155-20180607",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2018-06-07",
    "year": 2018,
    "source": "평가원",
@@ -483,7 +583,9 @@
    "schoolYear": 2019
   },
   {
+   "id": "D300-155-20180411",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2018-04-11",
    "year": 2018,
    "source": "교육청",
@@ -492,7 +594,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180411/go3/g_ear2_hsj_tsQztQoP_10.pdf"
   },
   {
+   "id": "D300-155-20171116",
    "title": "수능",
+   "type": "수능",
    "date": "2017-11-16",
    "year": 2017,
    "source": "평가원",
@@ -502,7 +606,9 @@
    "schoolYear": 2018
   },
   {
+   "id": "D300-155-20171017",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2017-10-17",
    "year": 2017,
    "source": "교육청",
@@ -511,7 +617,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20171017/go3/g_ear2_hsj_7Ur5qWn3.pdf"
   },
   {
+   "id": "D300-155-20170906",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2017-09-06",
    "year": 2017,
    "source": "평가원",
@@ -521,7 +629,9 @@
    "schoolYear": 2018
   },
   {
+   "id": "D300-155-20170712",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2017-07-12",
    "year": 2017,
    "source": "교육청",
@@ -530,7 +640,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170712/go3/g_ear2_hsj_5XsCj1d4.pdf"
   },
   {
+   "id": "D300-155-20170601",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2017-06-01",
    "year": 2017,
    "source": "평가원",
@@ -540,7 +652,9 @@
    "schoolYear": 2018
   },
   {
+   "id": "D300-155-20170412",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2017-04-12",
    "year": 2017,
    "source": "교육청",
@@ -549,7 +663,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170412/go3/g_ear2_hsj_BpcXCXWt.pdf"
   },
   {
+   "id": "D300-155-20161117",
    "title": "수능",
+   "type": "수능",
    "date": "2016-11-17",
    "year": 2016,
    "source": "평가원",
@@ -559,7 +675,9 @@
    "schoolYear": 2017
   },
   {
+   "id": "D300-155-20161011",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2016-10-11",
    "year": 2016,
    "source": "교육청",
@@ -568,7 +686,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20161011/go3/g_ear2_hsj_hQdOgl4r.pdf"
   },
   {
+   "id": "D300-155-20160901",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2016-09-01",
    "year": 2016,
    "source": "평가원",
@@ -578,7 +698,9 @@
    "schoolYear": 2017
   },
   {
+   "id": "D300-155-20160706",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2016-07-06",
    "year": 2016,
    "source": "교육청",
@@ -587,7 +709,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160706/go3/g_ear2_hsj_N4CxpAOA.pdf"
   },
   {
+   "id": "D300-155-20160602",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2016-06-02",
    "year": 2016,
    "source": "평가원",
@@ -597,7 +721,9 @@
    "schoolYear": 2017
   },
   {
+   "id": "D300-155-20160406",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2016-04-06",
    "year": 2016,
    "source": "교육청",
@@ -606,7 +732,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160406/go3/g_ear2_hsj_V6uPDVni.pdf"
   },
   {
+   "id": "D300-155-20151112",
    "title": "수능",
+   "type": "수능",
    "date": "2015-11-12",
    "year": 2015,
    "source": "평가원",
@@ -616,7 +744,9 @@
    "schoolYear": 2016
   },
   {
+   "id": "D300-155-20151013",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2015-10-13",
    "year": 2015,
    "source": "교육청",
@@ -625,7 +755,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20151013/go3/WAFsTmIC_g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20150902",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2015-09-02",
    "year": 2015,
    "source": "평가원",
@@ -635,7 +767,9 @@
    "schoolYear": 2016
   },
   {
+   "id": "D300-155-20150709",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2015-07-09",
    "year": 2015,
    "source": "교육청",
@@ -644,7 +778,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150709/go3/aYY61LEd_g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20150604",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2015-06-04",
    "year": 2015,
    "source": "평가원",
@@ -654,7 +790,9 @@
    "schoolYear": 2016
   },
   {
+   "id": "D300-155-20150409",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2015-04-09",
    "year": 2015,
    "source": "교육청",
@@ -663,7 +801,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150409/go3/e2U8QVjp_g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201411133",
    "title": "수능",
+   "type": "수능",
    "date": "2014-11-13",
    "year": 2014,
    "source": "평가원",
@@ -673,7 +813,9 @@
    "schoolYear": 2015
   },
   {
+   "id": "D300-155-201410073",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2014-10-07",
    "year": 2014,
    "source": "교육청",
@@ -682,7 +824,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201410073/0aGltFBN_h3_g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201409033",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2014-09-03",
    "year": 2014,
    "source": "평가원",
@@ -692,7 +836,9 @@
    "schoolYear": 2015
   },
   {
+   "id": "D300-155-201407103",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2014-07-10",
    "year": 2014,
    "source": "교육청",
@@ -701,7 +847,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201407103/yd6eiCdL_g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201406123",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2014-06-12",
    "year": 2014,
    "source": "평가원",
@@ -711,7 +859,9 @@
    "schoolYear": 2015
   },
   {
+   "id": "D300-155-201404103",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2014-04-10",
    "year": 2014,
    "source": "교육청",
@@ -720,7 +870,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201404103/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201311073",
    "title": "수능",
+   "type": "수능",
    "date": "2013-11-07",
    "year": 2013,
    "source": "평가원",
@@ -730,7 +882,9 @@
    "schoolYear": 2014
   },
   {
+   "id": "D300-155-201310083",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2013-10-08",
    "year": 2013,
    "source": "교육청",
@@ -739,7 +893,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201310083/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201309033",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2013-09-03",
    "year": 2013,
    "source": "평가원",
@@ -749,7 +905,9 @@
    "schoolYear": 2014
   },
   {
+   "id": "D300-155-201307123",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2013-07-12",
    "year": 2013,
    "source": "교육청",
@@ -758,7 +916,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201307123/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201306053",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2013-06-05",
    "year": 2013,
    "source": "평가원",
@@ -768,7 +928,9 @@
    "schoolYear": 2014
   },
   {
+   "id": "D300-155-201304113",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2013-04-11",
    "year": 2013,
    "source": "교육청",
@@ -777,7 +939,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201304113/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201211083",
    "title": "수능",
+   "type": "수능",
    "date": "2012-11-08",
    "year": 2012,
    "source": "평가원",
@@ -787,7 +951,9 @@
    "schoolYear": 2013
   },
   {
+   "id": "D300-155-201210093",
    "title": "10월 학력평가(서울)",
+   "type": "학평",
    "date": "2012-10-09",
    "year": 2012,
    "source": "교육청",
@@ -796,7 +962,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201210093/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201209043",
    "title": "9월 모의평가(평가원)",
+   "type": "모평",
    "date": "2012-09-04",
    "year": 2012,
    "source": "평가원",
@@ -806,7 +974,9 @@
    "schoolYear": 2013
   },
   {
+   "id": "D300-155-201207113",
    "title": "7월 학력평가(인천)",
+   "type": "학평",
    "date": "2012-07-11",
    "year": 2012,
    "source": "교육청",
@@ -815,7 +985,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201207113/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201206073",
    "title": "6월 모의평가(평가원)",
+   "type": "모평",
    "date": "2012-06-07",
    "year": 2012,
    "source": "평가원",
@@ -825,7 +997,9 @@
    "schoolYear": 2013
   },
   {
+   "id": "D300-155-201204103",
    "title": "4월 학력평가 (경기)",
+   "type": "학평",
    "date": "2012-04-10",
    "year": 2012,
    "source": "교육청",
@@ -834,7 +1008,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201204103/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201111103",
    "title": "수능",
+   "type": "수능",
    "date": "2011-11-10",
    "year": 2011,
    "source": "평가원",
@@ -844,7 +1020,9 @@
    "schoolYear": 2012
   },
   {
+   "id": "D300-155-201110123",
    "title": "10월 학력평가(서울)",
+   "type": "학평",
    "date": "2011-10-12",
    "year": 2011,
    "source": "교육청",
@@ -853,7 +1031,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201110123/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201109013",
    "title": "9월 모의평가(평가원)",
+   "type": "모평",
    "date": "2011-09-01",
    "year": 2011,
    "source": "평가원",
@@ -863,7 +1043,9 @@
    "schoolYear": 2012
   },
   {
+   "id": "D300-155-201107133",
    "title": "7월 학력평가(인천)",
+   "type": "학평",
    "date": "2011-07-13",
    "year": 2011,
    "source": "교육청",
@@ -872,7 +1054,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201107133/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-201106023",
    "title": "6월 모의평가(평가원)",
+   "type": "모평",
    "date": "2011-06-02",
    "year": 2011,
    "source": "평가원",
@@ -882,7 +1066,9 @@
    "schoolYear": 2012
   },
   {
+   "id": "D300-155-201104123",
    "title": "4월 학력평가 (경기)",
+   "type": "학평",
    "date": "2011-04-12",
    "year": 2011,
    "source": "교육청",
@@ -891,7 +1077,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201104123/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20101118",
    "title": "수능",
+   "type": "수능",
    "date": "2010-11-18",
    "year": 2010,
    "source": "평가원",
@@ -901,7 +1089,9 @@
    "schoolYear": 2011
   },
   {
+   "id": "D300-155-20101012",
    "title": "10월 학력평가(서울시)",
+   "type": "학평",
    "date": "2010-10-12",
    "year": 2010,
    "source": "교육청",
@@ -910,7 +1100,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20101012/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20100902",
    "title": "9월 모의평가(평가원)",
+   "type": "모평",
    "date": "2010-09-02",
    "year": 2010,
    "source": "평가원",
@@ -920,7 +1112,9 @@
    "schoolYear": 2011
   },
   {
+   "id": "D300-155-20100708",
    "title": "7월 학력평가(인천)",
+   "type": "학평",
    "date": "2010-07-08",
    "year": 2010,
    "source": "교육청",
@@ -929,7 +1123,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100708/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20100610",
    "title": "6월 모의평가(평가원)",
+   "type": "모평",
    "date": "2010-06-10",
    "year": 2010,
    "source": "평가원",
@@ -939,7 +1135,9 @@
    "schoolYear": 2011
   },
   {
+   "id": "D300-155-20100413",
    "title": "4월 학력평가 (경기)",
+   "type": "학평",
    "date": "2010-04-13",
    "year": 2010,
    "source": "교육청",
@@ -948,7 +1146,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100413/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20091112",
    "title": "수능",
+   "type": "수능",
    "date": "2009-11-12",
    "year": 2009,
    "source": "평가원",
@@ -958,7 +1158,9 @@
    "schoolYear": 2010
   },
   {
+   "id": "D300-155-20091015",
    "title": "10월 학력평가(서울)",
+   "type": "학평",
    "date": "2009-10-15",
    "year": 2009,
    "source": "교육청",
@@ -967,7 +1169,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20091015/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20090903",
    "title": "9월 모의평가(평가원)",
+   "type": "모평",
    "date": "2009-09-03",
    "year": 2009,
    "source": "평가원",
@@ -977,7 +1181,9 @@
    "schoolYear": 2010
   },
   {
+   "id": "D300-155-20090714",
    "title": "7월 학력평가(인천)",
+   "type": "학평",
    "date": "2009-07-14",
    "year": 2009,
    "source": "교육청",
@@ -986,7 +1192,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090714/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20090604",
    "title": "6월 모의평가(평가원)",
+   "type": "모평",
    "date": "2009-06-04",
    "year": 2009,
    "source": "평가원",
@@ -996,7 +1204,9 @@
    "schoolYear": 2010
   },
   {
+   "id": "D300-155-20090415",
    "title": "4월 학력평가(경기)",
+   "type": "학평",
    "date": "2009-04-15",
    "year": 2009,
    "source": "교육청",
@@ -1005,7 +1215,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090415/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20081113",
    "title": "수능",
+   "type": "수능",
    "date": "2008-11-13",
    "year": 2008,
    "source": "평가원",
@@ -1015,7 +1227,9 @@
    "schoolYear": 2009
   },
   {
+   "id": "D300-155-20081016",
    "title": "10월 학력평가(서울)",
+   "type": "학평",
    "date": "2008-10-16",
    "year": 2008,
    "source": "교육청",
@@ -1024,7 +1238,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20081016/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20080904",
    "title": "9월 모의평가(평가원)",
+   "type": "모평",
    "date": "2008-09-04",
    "year": 2008,
    "source": "평가원",
@@ -1034,7 +1250,9 @@
    "schoolYear": 2009
   },
   {
+   "id": "D300-155-20080715",
    "title": "7월 학력평가(인천)",
+   "type": "학평",
    "date": "2008-07-15",
    "year": 2008,
    "source": "교육청",
@@ -1043,7 +1261,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080715/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20080604",
    "title": "6월 모의평가(평가원)",
+   "type": "모평",
    "date": "2008-06-04",
    "year": 2008,
    "source": "평가원",
@@ -1053,7 +1273,9 @@
    "schoolYear": 2009
   },
   {
+   "id": "D300-155-20080415",
    "title": "4월 학력평가(경기)",
+   "type": "학평",
    "date": "2008-04-15",
    "year": 2008,
    "source": "교육청",
@@ -1062,7 +1284,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080415/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20071115",
    "title": "수능",
+   "type": "수능",
    "date": "2007-11-15",
    "year": 2007,
    "source": "평가원",
@@ -1072,7 +1296,9 @@
    "schoolYear": 2008
   },
   {
+   "id": "D300-155-20071010",
    "title": "10월 학력평가(서울)",
+   "type": "학평",
    "date": "2007-10-10",
    "year": 2007,
    "source": "교육청",
@@ -1081,7 +1307,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20071010/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20070906",
    "title": "9월 모의평가(평가원)",
+   "type": "모평",
    "date": "2007-09-06",
    "year": 2007,
    "source": "평가원",
@@ -1091,7 +1319,9 @@
    "schoolYear": 2008
   },
   {
+   "id": "D300-155-20070712",
    "title": "7월 학력평가(인천)",
+   "type": "학평",
    "date": "2007-07-12",
    "year": 2007,
    "source": "교육청",
@@ -1100,7 +1330,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070712/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20070607",
    "title": "6월 모의평가(평가원)",
+   "type": "모평",
    "date": "2007-06-07",
    "year": 2007,
    "source": "평가원",
@@ -1110,7 +1342,9 @@
    "schoolYear": 2008
   },
   {
+   "id": "D300-155-20070418",
    "title": "4월 학력평가(경기)",
+   "type": "학평",
    "date": "2007-04-18",
    "year": 2007,
    "source": "교육청",
@@ -1119,7 +1353,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070418/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20061116",
    "title": "수능",
+   "type": "수능",
    "date": "2006-11-16",
    "year": 2006,
    "source": "평가원",
@@ -1129,7 +1365,9 @@
    "schoolYear": 2007
   },
   {
+   "id": "D300-155-20061012",
    "title": "10월 학력평가(서울)",
+   "type": "학평",
    "date": "2006-10-12",
    "year": 2006,
    "source": "교육청",
@@ -1138,7 +1376,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20061012/g_ear2_hsj.pdf"
   },
   {
+   "id": "D300-155-20060906",
    "title": "9월 모의평가(평가원)",
+   "type": "모평",
    "date": "2006-09-06",
    "year": 2006,
    "source": "평가원",
@@ -1148,7 +1388,9 @@
    "schoolYear": 2007
   },
   {
+   "id": "D300-155-20060603",
    "title": "6월 모의평가(평가원)",
+   "type": "모평",
    "date": "2006-06-03",
    "year": 2006,
    "source": "평가원",
@@ -1158,7 +1400,9 @@
    "schoolYear": 2007
   },
   {
+   "id": "D300-155-20060419",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2006-04-19",
    "year": 2006,
    "source": "교육청",

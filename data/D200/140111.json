@@ -8,7 +8,9 @@
  "note": "year는 시험을 본 해(시행 연도)입니다. schoolYear는 학년도이며 시행 연도 + 1로, 평가원 시험(수능·6월·9월 모의평가)에만 있습니다. 흔히 '2021학년도 6월 모평'이라 부르는 것은 year 2020 · schoolYear 2021인 회차입니다 — year로 찾으면 한 해 어긋납니다. 교육청 전국연합학력평가는 학년도를 쓰지 않습니다.",
  "papers": [
   {
+   "id": "D200-140111-20260604",
    "title": "6월 학평(부산)",
+   "type": "학평",
    "date": "2026-06-04",
    "year": 2026,
    "source": "교육청",
@@ -17,7 +19,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260604/go2/math_hsj_322HZ5AE.pdf"
   },
   {
+   "id": "D200-140111-20260324",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2026-03-24",
    "year": 2026,
    "source": "교육청",
@@ -26,7 +30,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260324/go2/math_hsj_Y2JA7LIE.pdf"
   },
   {
+   "id": "D200-140111-20251014",
    "title": "10월 학평(경기)",
+   "type": "학평",
    "date": "2025-10-14",
    "year": 2025,
    "source": "교육청",
@@ -35,7 +41,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/go2/math_hsj_3SUP9KMO.pdf"
   },
   {
+   "id": "D200-140111-20250903",
    "title": "9월 학평(인천)",
+   "type": "학평",
    "date": "2025-09-03",
    "year": 2025,
    "source": "교육청",
@@ -44,7 +52,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250903/go2/math_hsj_45UVE2A9_1.pdf"
   },
   {
+   "id": "D200-140111-20250604",
    "title": "6월 학평(부산)",
+   "type": "학평",
    "date": "2025-06-04",
    "year": 2025,
    "source": "교육청",
@@ -53,7 +63,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250604/go2/math_hsj_KH388PFK.pdf"
   },
   {
+   "id": "D200-140111-20250326",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2025-03-26",
    "year": 2025,
    "source": "교육청",
@@ -62,7 +74,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250326/go2/math_hsj_JAO8KFRU.pdf"
   },
   {
+   "id": "D200-140111-20241015",
    "title": "10월 학평(경기)",
+   "type": "학평",
    "date": "2024-10-15",
    "year": 2024,
    "source": "교육청",
@@ -71,7 +85,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/go2/math_hsj_Z59J87FB.pdf"
   },
   {
+   "id": "D200-140111-20240904",
    "title": "9월 학평(인천)",
+   "type": "학평",
    "date": "2024-09-04",
    "year": 2024,
    "source": "교육청",
@@ -80,7 +96,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240904/go2/math_hsj_C52AP42O.pdf"
   },
   {
+   "id": "D200-140111-20240604",
    "title": "6월 학평(부산)",
+   "type": "학평",
    "date": "2024-06-04",
    "year": 2024,
    "source": "교육청",
@@ -89,7 +107,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240604/go2/math_hsj_5AI5S4KX.pdf"
   },
   {
+   "id": "D200-140111-20240328",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2024-03-28",
    "year": 2024,
    "source": "교육청",
@@ -98,7 +118,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240328/go2/math_hsj_SOANMMVV.pdf"
   },
   {
+   "id": "D200-140111-20231219",
    "title": "11월 학평(경기)_12.19 시행",
+   "type": "학평",
    "date": "2023-12-19",
    "year": 2023,
    "source": "교육청",
@@ -107,7 +129,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/go2/math_hsj_R4628G5Z.pdf"
   },
   {
+   "id": "D200-140111-20230906",
    "title": "9월 학평(인천)",
+   "type": "학평",
    "date": "2023-09-06",
    "year": 2023,
    "source": "교육청",
@@ -116,7 +140,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230906/go2/math_hsj_N2DV1J9H.pdf"
   },
   {
+   "id": "D200-140111-20230601",
    "title": "6월 학평(부산)",
+   "type": "학평",
    "date": "2023-06-01",
    "year": 2023,
    "source": "교육청",
@@ -125,7 +151,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230601/go2/math_hsj_3K35451G.pdf"
   },
   {
+   "id": "D200-140111-20230323",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2023-03-23",
    "year": 2023,
    "source": "교육청",
@@ -134,7 +162,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230323/go2/math_hsj_P18AH3N1.pdf"
   },
   {
+   "id": "D200-140111-20221123",
    "title": "11월 학평(경기)",
+   "type": "학평",
    "date": "2022-11-23",
    "year": 2022,
    "source": "교육청",
@@ -143,7 +173,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/go2/math_hsj_A94S4H65.pdf"
   },
   {
+   "id": "D200-140111-20220901",
    "title": "9월 학평(인천)",
+   "type": "학평",
    "date": "2022-09-01",
    "year": 2022,
    "source": "교육청",
@@ -152,7 +184,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220901/go2/math_hsj_3K3UR436.pdf"
   },
   {
+   "id": "D200-140111-20220609",
    "title": "6월 학평(부산)",
+   "type": "학평",
    "date": "2022-06-09",
    "year": 2022,
    "source": "교육청",
@@ -161,7 +195,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220609/go2/math_hsj_P54XUK52.pdf"
   },
   {
+   "id": "D200-140111-20220324",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2022-03-24",
    "year": 2022,
    "source": "교육청",
@@ -170,7 +206,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220324/go2/math_hsj_EPZ665H8.pdf"
   },
   {
+   "id": "D200-140111-20211124",
    "title": "11월 학평(경기)",
+   "type": "학평",
    "date": "2021-11-24",
    "year": 2021,
    "source": "교육청",
@@ -179,7 +217,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/go2/math_hsj_AGOH726N.pdf"
   },
   {
+   "id": "D200-140111-20210831",
    "title": "9월 학평(인천)",
+   "type": "학평",
    "date": "2021-08-31",
    "year": 2021,
    "source": "교육청",
@@ -188,7 +228,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210831/go2/math_hsj_JM1T28AU.pdf"
   },
   {
+   "id": "D200-140111-20210603",
    "title": "6월 학평(부산)",
+   "type": "학평",
    "date": "2021-06-03",
    "year": 2021,
    "source": "교육청",
@@ -197,7 +239,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210603/go2/math_hsj_S9X66MOH.pdf"
   },
   {
+   "id": "D200-140111-20210325",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2021-03-25",
    "year": 2021,
    "source": "교육청",
@@ -206,7 +250,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210325/go2/math_hsj_7438T4PM.pdf"
   },
   {
+   "id": "D200-140111-20201118",
    "title": "11월 학평(경기)",
+   "type": "학평",
    "date": "2020-11-18",
    "year": 2020,
    "source": "교육청",
@@ -215,7 +261,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/go2/math_hsj_P8N9QXBA.pdf"
   },
   {
+   "id": "D200-140111-20200916",
    "title": "9월 학평(인천)",
+   "type": "학평",
    "date": "2020-09-16",
    "year": 2020,
    "source": "교육청",
@@ -224,7 +272,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200916/go2/math_hsj_S28872N9.pdf"
   },
   {
+   "id": "D200-140111-20200618",
    "title": "6월 학평(부산)",
+   "type": "학평",
    "date": "2020-06-18",
    "year": 2020,
    "source": "교육청",
@@ -233,7 +283,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200618/go2/math_hsj_PIVI3ICA.pdf"
   },
   {
+   "id": "D200-140111-20200312",
    "title": "3월 학평(서울)_4.24 시행",
+   "type": "학평",
    "date": "2020-03-12",
    "year": 2020,
    "source": "교육청",
@@ -242,639 +294,851 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200312/go2/math_hsj_94AXV97Q.pdf"
   },
   {
+   "id": "D200-140111-20191120-가형",
    "title": "11월 학평(경기) 가형",
+   "type": "학평",
    "date": "2019-11-20",
    "year": 2019,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/matha_mun_KJ7MBA4J_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/mobile/h2_m_matha_hsj_N38WT11W.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/matha_hsj_UY5U6YV6_10.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/matha_hsj_UY5U6YV6_10.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20191120-나형",
    "title": "11월 학평(경기) 나형",
+   "type": "학평",
    "date": "2019-11-20",
    "year": 2019,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/mathb_mun_JY52N22Z_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/mobile/h2_m_mathb_hsj_94XO659B.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/mathb_hsj_C3A84ALA_10.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/mathb_hsj_C3A84ALA_10.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20190904-가형",
    "title": "9월 학평(인천) 가형",
+   "type": "학평",
    "date": "2019-09-04",
    "year": 2019,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/go2/matha_mun_8C5HN993_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/mobile/h2_m_matha_hsj_T381279L.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/go2/matha_hsj_81FO34T5_10.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/go2/matha_hsj_81FO34T5_10.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20190904-나형",
    "title": "9월 학평(인천) 나형",
+   "type": "학평",
    "date": "2019-09-04",
    "year": 2019,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/go2/mathb_mun_3R2RHAQ9_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/mobile/h2_m_mathb_hsj_24J421RN.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/go2/mathb_hsj_7L3226WY_10.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190904/go2/mathb_hsj_7L3226WY_10.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20190604-가형",
    "title": "6월 학평(부산) 가형",
+   "type": "학평",
    "date": "2019-06-04",
    "year": 2019,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/go2/matha_mun_6pkNzPZr_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/mobile/h2_m_matha_hsj_wY0VnkB4_02.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/go2/matha_hsj_Xf2LTrpw_03_11.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/go2/matha_hsj_Xf2LTrpw_03_11.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20190604-나형",
    "title": "6월 학평(부산) 나형",
+   "type": "학평",
    "date": "2019-06-04",
    "year": 2019,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/go2/mathb_mun_IkyPzGNs_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/mobile/h2_m_mathb_hsj_ltFlmmlQ.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/go2/mathb_hsj_ACkWHZqY_11.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190604/go2/mathb_hsj_ACkWHZqY_11.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20190307-가형",
    "title": "3월 학평(서울) 가형",
+   "type": "학평",
    "date": "2019-03-07",
    "year": 2019,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/go2/matha_mun_fHsmyBWD_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/mobile/h2_m_matha_2N0t1Yk3.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/go2/matha_hsj_row00GGV_11_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/go2/matha_hsj_row00GGV_11_1.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20190307-나형",
    "title": "3월 학평(서울) 나형",
+   "type": "학평",
    "date": "2019-03-07",
    "year": 2019,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/go2/mathb_mun_Yp21opxT_1_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/mobile/h2_m_mathb_zp2IZuST.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/go2/mathb_hsj_Q5AqolVR_11_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/go2/mathb_hsj_Q5AqolVR_11_1.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20181121-가형",
    "title": "11월 학평(경기) 가형",
+   "type": "학평",
    "date": "2018-11-21",
    "year": 2018,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/go2/matha_mun_8O7TRURq_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/mobile/h2_m_matha_xLkxxUOk.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/go2/matha_hsj_YYrX0cIU_12.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/go2/matha_hsj_YYrX0cIU_12.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20181121-나형",
    "title": "11월 학평(경기) 나형",
+   "type": "학평",
    "date": "2018-11-21",
    "year": 2018,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/go2/mathb_mun_P3Vkifff_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/mobile/h2_m_mathb_a09NmXyY.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/go2/mathb_hsj_EkZNrSCl_12.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/go2/mathb_hsj_EkZNrSCl_12.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20180905-가형",
    "title": "9월 학평(인천) 가형",
+   "type": "학평",
    "date": "2018-09-05",
    "year": 2018,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20180905/go2/matha_mun_2DszTvHP_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20180905/mobile/h2_m_matha_ks3NozOE.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180905/go2/matha_hsj_0J3lTTJN_11.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180905/go2/matha_hsj_0J3lTTJN_11.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20180905-나형",
    "title": "9월 학평(인천) 나형",
+   "type": "학평",
    "date": "2018-09-05",
    "year": 2018,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20180905/go2/mathb_mun_JEKrX0tZ_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20180905/mobile/h2_m_mathb_7MJZmFG4.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180905/go2/mathb_hsj_iluFzROo_11.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180905/go2/mathb_hsj_iluFzROo_11.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20180607-가형",
    "title": "6월 학평(부산) 가형",
+   "type": "학평",
    "date": "2018-06-07",
    "year": 2018,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20180607/go2/matha_mun_RtUvh18c_01_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20180607/mobile/h2_m_matha_eR9eJjt8.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180607/go2/matha_hsj_bKTrRVXR_01_10.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180607/go2/matha_hsj_bKTrRVXR_01_10.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20180607-나형",
    "title": "6월 학평(부산) 나형",
+   "type": "학평",
    "date": "2018-06-07",
    "year": 2018,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20180607/go2/mathb_mun_08ies8J_02_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20180607/mobile/h2_m_mathb_gsVWDKpz.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180607/go2/mathb_hsj_nCR34XtF_01_10.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180607/go2/mathb_hsj_nCR34XtF_01_10.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20180308-가형",
    "title": "3월 학평(서울) 가형",
+   "type": "학평",
    "date": "2018-03-08",
    "year": 2018,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/go2/matha_mun_bjKoMFYs_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/mobile/h2_m_matha_aBJjvmZp.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/go2/matha_hsj_DSzhxRz3_11.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/go2/matha_hsj_DSzhxRz3_11.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20180308-나형",
    "title": "3월 학평(서울) 나형",
+   "type": "학평",
    "date": "2018-03-08",
    "year": 2018,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/go2/mathb_mun_s2gu59Vv_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/mobile/h2_m_mathb_0mmhQZiC.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/go2/mathb_hsj_jvxo6AmX_11.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/go2/mathb_hsj_jvxo6AmX_11.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20171122-가형",
    "title": "11월 학평(경기) 가형",
+   "type": "학평",
    "date": "2017-11-22",
    "year": 2017,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/go2/matha_mun_MJOtd3rO.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/mobile/h2_m_matha_8x96PnPl.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/go2/matha_hsj_E9TuHZnc.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/go2/matha_hsj_E9TuHZnc.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20171122-나형",
    "title": "11월 학평(경기) 나형",
+   "type": "학평",
    "date": "2017-11-22",
    "year": 2017,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/go2/mathb_mun_JfKHmj9n.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/mobile/h2_m_mathb_pNvHXspr.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/go2/mathb_hsj_1xxWn9R6.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/go2/mathb_hsj_1xxWn9R6.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20170906-가형",
    "title": "9월 학평(인천) 가형",
+   "type": "학평",
    "date": "2017-09-06",
    "year": 2017,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20170906/go2/matha_mun_uXCpU6q5.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20170906/mobile/h2_m_matha_AzdaQYrV.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170906/go2/matha_hsj_ijb1u2ZN.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170906/go2/matha_hsj_ijb1u2ZN.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20170906-나형",
    "title": "9월 학평(인천) 나형",
+   "type": "학평",
    "date": "2017-09-06",
    "year": 2017,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20170906/go2/mathb_mun_9KAy4MoS.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20170906/mobile/h2_m_mathb_jYKtWfN3.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170906/go2/mathb_hsj_n03t3Z4d.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170906/go2/mathb_hsj_n03t3Z4d.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20170601-가형",
    "title": "6월 학평(부산) 가형",
+   "type": "학평",
    "date": "2017-06-01",
    "year": 2017,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20170601/go2/matha_mun_813LlkHT.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20170601/mobile/h2_m_matha_3praZfBG.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170601/go2/matha_hsj_9UaEI8Rv.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170601/go2/matha_hsj_9UaEI8Rv.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20170601-나형",
    "title": "6월 학평(부산) 나형",
+   "type": "학평",
    "date": "2017-06-01",
    "year": 2017,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20170601/go2/mathb_mun_Txjoay0q.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20170601/mobile/h2_m_mathb_agwiIqNB.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170601/go2/mathb_hsj_0NTY9agv.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170601/go2/mathb_hsj_0NTY9agv.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20170309-가형",
    "title": "3월 학평(서울) 가형",
+   "type": "학평",
    "date": "2017-03-09",
    "year": 2017,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/go2/matha_mun_4mF1IT18_1.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/mobile/h2_m_matha_NY30kkZI.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/go2/matha_hsj_olkDTM9w_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/go2/matha_hsj_olkDTM9w_1.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20170309-나형",
    "title": "3월 학평(서울) 나형",
+   "type": "학평",
    "date": "2017-03-09",
    "year": 2017,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/go2/mathb_mun_GmAf0Mjk_1.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/mobile/h2_m_mathb_hTrBoe2U.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/go2/mathb_hsj_atwD43oF_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/go2/mathb_hsj_atwD43oF_1.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20161123-가형",
    "title": "11월 학평(경기) 가형",
+   "type": "학평",
    "date": "2016-11-23",
    "year": 2016,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/go2/matha_mun_Fur2iz2M.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/mobile/h2_m_matha_Hy9Ngv2L.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/go2/matha_hsj_b1s7nlT2.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/go2/matha_hsj_b1s7nlT2.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20161123-나형",
    "title": "11월 학평(경기) 나형",
+   "type": "학평",
    "date": "2016-11-23",
    "year": 2016,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/go2/mathb_mun_NqFJ3sl3.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/mobile/h2_m_mathb_HD3n2f7G.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/go2/mathb_hsj_xbYiMCIq.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/go2/mathb_hsj_xbYiMCIq.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20160901-가형",
    "title": "9월 학평(인천) 가형",
+   "type": "학평",
    "date": "2016-09-01",
    "year": 2016,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20160901/go2/matha_mun_jCRGryWt.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20160901/mobile/h2_m_matha_6pkNzPZr.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160901/go2/matha_hsj_IIZS2TRq.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160901/go2/matha_hsj_IIZS2TRq.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20160901-나형",
    "title": "9월 학평(인천) 나형",
+   "type": "학평",
    "date": "2016-09-01",
    "year": 2016,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20160901/go2/mathb_mun_f69aZbLA.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20160901/mobile/h2_m_mathb_IkyPzGNs.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160901/go2/mathb_hsj_X3cf3edn.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160901/go2/mathb_hsj_X3cf3edn.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20160602-가형",
    "title": "6월 학평(부산) 가형",
+   "type": "학평",
    "date": "2016-06-02",
    "year": 2016,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20160602/go2/matha_mun_qljWwY0V.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20160602/mobile/h2_m_matha_uNePJgzg.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160602/go2/matha_hsj_nkB4ltFl.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160602/go2/matha_hsj_nkB4ltFl.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20160602-나형",
    "title": "6월 학평(부산) 나형",
+   "type": "학평",
    "date": "2016-06-02",
    "year": 2016,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20160602/go2/mathb_mun_mmlQ080G.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20160602/mobile/h2_m_mathb_8MTbQpYt.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160602/go2/mathb_hsj_xw8Zw5V6.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160602/go2/mathb_hsj_xw8Zw5V6.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20160310-가형",
    "title": "3월 학평(서울) 가형",
+   "type": "학평",
    "date": "2016-03-10",
    "year": 2016,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/go2/matha_mun_pQq5pnee.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/mobile/h2_m_matha_EaJswFCH.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/go2/matha_hsj_FUtLch9w.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/go2/matha_hsj_FUtLch9w.pdf",
+   "form": "가형"
   },
   {
+   "id": "D200-140111-20160310-나형",
    "title": "3월 학평(서울) 나형",
+   "type": "학평",
    "date": "2016-03-10",
    "year": 2016,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/go2/mathb_mun_PiyAphwF.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/mobile/h2_m_mathb_Ozyfyz5b.jpg",
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/go2/mathb_hsj_utJLtosJ.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/go2/mathb_hsj_utJLtosJ.pdf",
+   "form": "나형"
   },
   {
+   "id": "D200-140111-20151117-A형",
    "title": "11월 학평(경기) A",
+   "type": "학평",
    "date": "2015-11-17",
    "year": 2015,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20151117/go2/jCRGryWt_matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20151117/go2/IIZS2TRq_matha_jdj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20151117/go2/IIZS2TRq_matha_jdj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-20151117-B형",
    "title": "11월 학평(경기) B",
+   "type": "학평",
    "date": "2015-11-17",
    "year": 2015,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20151117/go2/f69aZbLA_mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20151117/go2/X3cf3edn_mathb_jdj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20151117/go2/X3cf3edn_mathb_jdj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-20150902-A형",
    "title": "9월 학평(인천) A",
+   "type": "학평",
    "date": "2015-09-02",
    "year": 2015,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20150902/go2/ppShRKbp_h2_matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150902/go2/G1KireNd_h2_matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150902/go2/G1KireNd_h2_matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-20150902-B형",
    "title": "9월 학평(인천) B",
+   "type": "학평",
    "date": "2015-09-02",
    "year": 2015,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20150902/go2/tqTF4ir6_h2_mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150902/go2/prz8rpiZ_h2_mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150902/go2/prz8rpiZ_h2_mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-20150604-A형",
    "title": "6월 학평(부산) A",
+   "type": "학평",
    "date": "2015-06-04",
    "year": 2015,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20150604/go2/WwSoRKbp_h2_matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150604/go2/G1Kiaexd_h2_matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150604/go2/G1Kiaexd_h2_matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-20150604-B형",
    "title": "6월 학평(부산) B",
+   "type": "학평",
    "date": "2015-06-04",
    "year": 2015,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20150604/go2/tMTF4ia5_h2_mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150604/go2/wAz8AWiZ_h2_mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150604/go2/wAz8AWiZ_h2_mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-20150311-A형",
    "title": "3월 학평(서울) A",
+   "type": "학평",
    "date": "2015-03-11",
    "year": 2015,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20150311/go2/c6pT0giS_h2_matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150311/go2/ftNtzsG0_h2_matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150311/go2/ftNtzsG0_h2_matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-20150311-B형",
    "title": "3월 학평(서울) B",
+   "type": "학평",
    "date": "2015-03-11",
    "year": 2015,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20150311/go2/6vdGg1fD_h2_mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150311/go2/c5DYge2Q_h2_mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150311/go2/c5DYge2Q_h2_mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201411182-A형",
    "title": "11월 학평(경기) A",
+   "type": "학평",
    "date": "2014-11-18",
    "year": 2014,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201411182/c6pT0giS_h2_matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201411182/ftNtzsG0_h2_matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201411182/ftNtzsG0_h2_matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-201411182-B형",
    "title": "11월 학평(경기) B",
+   "type": "학평",
    "date": "2014-11-18",
    "year": 2014,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201411182/6vdGg1fD_h2_mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201411182/c5DYge2Q_h2_mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201411182/c5DYge2Q_h2_mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201409032-A형",
    "title": "9월 학평(인천) A",
+   "type": "학평",
    "date": "2014-09-03",
    "year": 2014,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201409032/c6pT0giS_h2_matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201409032/ftNtzsG0_h2_matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201409032/ftNtzsG0_h2_matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-201409032-B형",
    "title": "9월 학평(인천) B",
+   "type": "학평",
    "date": "2014-09-03",
    "year": 2014,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201409032/6vdGg1fD_h2_mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201409032/c5DYge2Q_h2_mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201409032/c5DYge2Q_h2_mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201406122-A형",
    "title": "6월 학평(부산) A",
+   "type": "학평",
    "date": "2014-06-12",
    "year": 2014,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201406122/matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201406122/matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201406122/matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-201406122-B형",
    "title": "6월 학평(부산) B",
+   "type": "학평",
    "date": "2014-06-12",
    "year": 2014,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201406122/mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201406122/mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201406122/mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201403122-A형",
    "title": "3월 학평(서울) A",
+   "type": "학평",
    "date": "2014-03-12",
    "year": 2014,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201403122/matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201403122/matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201403122/matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-201403122-B형",
    "title": "3월 학평(서울) B",
+   "type": "학평",
    "date": "2014-03-12",
    "year": 2014,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201403122/mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201403122/mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201403122/mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201311142-A형",
    "title": "11월 학평(경기) A",
+   "type": "학평",
    "date": "2013-11-14",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201311142/matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201311142/matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201311142/matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-201311142-B형",
    "title": "11월 학평(경기) B",
+   "type": "학평",
    "date": "2013-11-14",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201311142/mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201311142/mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201311142/mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201309032-A형",
    "title": "9월 학평(인천) A",
+   "type": "학평",
    "date": "2013-09-03",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201309032/matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201309032/matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201309032/matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-201309032-B형",
    "title": "9월 학평(인천) B",
+   "type": "학평",
    "date": "2013-09-03",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201309032/mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201309032/mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201309032/mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201306052-A형",
    "title": "6월 학평(서울) A",
+   "type": "학평",
    "date": "2013-06-05",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201306052/matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201306052/matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201306052/matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-201306052-B형",
    "title": "6월 학평(서울) B",
+   "type": "학평",
    "date": "2013-06-05",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201306052/mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201306052/mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201306052/mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201303132-A형",
    "title": "3월 학평(부산) A",
+   "type": "학평",
    "date": "2013-03-13",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201303132/matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201303132/matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201303132/matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-201303132-B형",
    "title": "3월 학평(부산) B",
+   "type": "학평",
    "date": "2013-03-13",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201303132/mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201303132/mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201303132/mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201211142-A형",
    "title": "11월 학력평가(경기) A",
+   "type": "학평",
    "date": "2012-11-14",
    "year": 2012,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201211142/matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201211142/matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201211142/matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-201211142-B형",
    "title": "11월 학력평가(경기) B",
+   "type": "학평",
    "date": "2012-11-14",
    "year": 2012,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201211142/mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201211142/mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201211142/mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201209042-A형",
    "title": "9월 학력평가(인천) A",
+   "type": "학평",
    "date": "2012-09-04",
    "year": 2012,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201209042/matha_mun_1.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201209042/matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201209042/matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-201209042-B형",
    "title": "9월 학력평가(인천) B",
+   "type": "학평",
    "date": "2012-09-04",
    "year": 2012,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201209042/mathb_mun_1.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201209042/mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201209042/mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201206072-A형",
    "title": "6월 학력평가(서울) A",
+   "type": "학평",
    "date": "2012-06-07",
    "year": 2012,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201206072/matha_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201206072/matha_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201206072/matha_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D200-140111-201206072-B형",
    "title": "6월 학력평가(서울) B",
+   "type": "학평",
    "date": "2012-06-07",
    "year": 2012,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201206072/mathb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201206072/mathb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201206072/mathb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D200-140111-201205172-A형",
    "title": "수능 예비시행(평가원) A",
+   "type": "수능",
    "date": "2012-05-17",
    "year": 2012,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201205172/matha1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201205172/matha1_hsj.pdf",
+   "form": "A형",
    "schoolYear": 2013
   },
   {
+   "id": "D200-140111-201205172-B형",
    "title": "수능 예비시행(평가원) B",
+   "type": "수능",
    "date": "2012-05-17",
    "year": 2012,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201205172/mathb1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201205172/mathb1_hsj.pdf",
+   "form": "B형",
    "schoolYear": 2013
   },
   {
+   "id": "D200-140111-201111152-수리나형",
    "title": "11월 학력평가(경기) 수리나형",
+   "type": "학평",
    "date": "2011-11-15",
    "year": 2011,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201111152/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201111152/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201111152/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-201111152-수리가형",
    "title": "11월 학력평가(경기) 수리가형",
+   "type": "학평",
    "date": "2011-11-15",
    "year": 2011,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201111152/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201111152/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201111152/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-201109012-수리나형",
    "title": "9월 학력평가(인천) 수리나형",
+   "type": "학평",
    "date": "2011-09-01",
    "year": 2011,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201109012/mathna_mun_1.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201109012/mathna_hsj_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201109012/mathna_hsj_1.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-201109012-수리가형",
    "title": "9월 학력평가(인천) 수리가형",
+   "type": "학평",
    "date": "2011-09-01",
    "year": 2011,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201109012/mathga_mun_1.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201109012/mathga_hsj_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201109012/mathga_hsj_1.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-201106152-수리나형",
    "title": "6월 학력평가(서울) 수리나형",
+   "type": "학평",
    "date": "2011-06-15",
    "year": 2011,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201106152/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201106152/mathna_hsj_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201106152/mathna_hsj_1.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-201106152-수리가형",
    "title": "6월 학력평가(서울) 수리가형",
+   "type": "학평",
    "date": "2011-06-15",
    "year": 2011,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201106152/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201106152/mathga_hsj_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201106152/mathga_hsj_1.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-201103102",
    "title": "3월 학력평가(부산)",
+   "type": "학평",
    "date": "2011-03-10",
    "year": 2011,
    "source": "교육청",
@@ -883,310 +1147,412 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201103102/math_hsj.pdf"
   },
   {
+   "id": "D200-140111-20101124-수리가형",
    "title": "11월 학력평가(경기) 수리가형",
+   "type": "학평",
    "date": "2010-11-24",
    "year": 2010,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20101124/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20101124/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20101124/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20101124-수리나형",
    "title": "11월 학력평가(경기) 수리나형",
+   "type": "학평",
    "date": "2010-11-24",
    "year": 2010,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20101124/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20101124/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20101124/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20100917-수리가형",
    "title": "9월 학력평가(인천) 수리가형",
+   "type": "학평",
    "date": "2010-09-17",
    "year": 2010,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20100917/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100917/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100917/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20100917-수리나형",
    "title": "9월 학력평가(인천) 수리나형",
+   "type": "학평",
    "date": "2010-09-17",
    "year": 2010,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20100917/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100917/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100917/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20100617-수리가형",
    "title": "6월 학력평가(부산) 수리가형",
+   "type": "학평",
    "date": "2010-06-17",
    "year": 2010,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20100617/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100617/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100617/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20100617-수리나형",
    "title": "6월 학력평가(부산) 수리나형",
+   "type": "학평",
    "date": "2010-06-17",
    "year": 2010,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20100617/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100617/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100617/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20100311-수리가형",
    "title": "3월 학력평가(서울) 수리가형",
+   "type": "학평",
    "date": "2010-03-11",
    "year": 2010,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20100311/math_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100311/math_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100311/math_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20091117-수리가형",
    "title": "11월 학력평가(경기) 수리가형",
+   "type": "학평",
    "date": "2009-11-17",
    "year": 2009,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20091117/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20091117/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20091117/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20091117-수리나형",
    "title": "11월 학력평가(경기) 수리나형",
+   "type": "학평",
    "date": "2009-11-17",
    "year": 2009,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20091117/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20091117/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20091117/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20090918-수리가형",
    "title": "9월 학력평가(부산) 수리가형",
+   "type": "학평",
    "date": "2009-09-18",
    "year": 2009,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20090918/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090918/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090918/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20090918-수리나형",
    "title": "9월 학력평가(부산) 수리나형",
+   "type": "학평",
    "date": "2009-09-18",
    "year": 2009,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20090918/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090918/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090918/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20090618-수리가형",
    "title": "6월 학력평가(인천) 수리가형",
+   "type": "학평",
    "date": "2009-06-18",
    "year": 2009,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20090618/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090618/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090618/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20090618-수리나형",
    "title": "6월 학력평가(인천) 수리나형",
+   "type": "학평",
    "date": "2009-06-18",
    "year": 2009,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20090618/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090618/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090618/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20090312-수리가형",
    "title": "3월 학력평가(서울) 수리가형",
+   "type": "학평",
    "date": "2009-03-12",
    "year": 2009,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20090312/math_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090312/math_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090312/math_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20081119-수리가형",
    "title": "11월 학력평가(경기) 수리가형",
+   "type": "학평",
    "date": "2008-11-19",
    "year": 2008,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20081119/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20081119/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20081119/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20081119-수리나형",
    "title": "11월 학력평가(경기) 수리나형",
+   "type": "학평",
    "date": "2008-11-19",
    "year": 2008,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20081119/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20081119/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20081119/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20080919-수리가형",
    "title": "9월 학력평가(서울) 수리가형",
+   "type": "학평",
    "date": "2008-09-19",
    "year": 2008,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20080919/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080919/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080919/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20080919-수리나형",
    "title": "9월 학력평가(서울) 수리나형",
+   "type": "학평",
    "date": "2008-09-19",
    "year": 2008,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20080919/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080919/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080919/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20080612-수리가형",
    "title": "6월 학력평가(인천) 수리가형",
+   "type": "학평",
    "date": "2008-06-12",
    "year": 2008,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20080612/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080612/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080612/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20080612-수리나형",
    "title": "6월 학력평가(인천) 수리나형",
+   "type": "학평",
    "date": "2008-06-12",
    "year": 2008,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20080612/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080612/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080612/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20080313-수리가형",
    "title": "3월 학력평가(서울) 수리가형",
+   "type": "학평",
    "date": "2008-03-13",
    "year": 2008,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20080313/math_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080313/math_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080313/math_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20071123-수리가형",
    "title": "11월 학력평가(경기) 수리가형",
+   "type": "학평",
    "date": "2007-11-23",
    "year": 2007,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20071123/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20071123/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20071123/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20071123-수리나형",
    "title": "11월 학력평가(경기) 수리나형",
+   "type": "학평",
    "date": "2007-11-23",
    "year": 2007,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20071123/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20071123/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20071123/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20070921-수리가형",
    "title": "9월 학력평가(서울) 수리가형",
+   "type": "학평",
    "date": "2007-09-21",
    "year": 2007,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20070921/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070921/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070921/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20070921-수리나형",
    "title": "9월 학력평가(서울) 수리나형",
+   "type": "학평",
    "date": "2007-09-21",
    "year": 2007,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20070921/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070921/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070921/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20070614-수리가형",
    "title": "6월 학력평가(인천) 수리가형",
+   "type": "학평",
    "date": "2007-06-14",
    "year": 2007,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20070614/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070614/mathga_hsj_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070614/mathga_hsj_1.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20070614-수리나형",
    "title": "6월 학력평가(인천) 수리나형",
+   "type": "학평",
    "date": "2007-06-14",
    "year": 2007,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20070614/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070614/mathna_hsj_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070614/mathna_hsj_1.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20061122-수리가형",
    "title": "11월 학력평가(경기) 수리가형",
+   "type": "학평",
    "date": "2006-11-22",
    "year": 2006,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20061122/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20061122/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20061122/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20061122-수리나형",
    "title": "11월 학력평가(경기) 수리나형",
+   "type": "학평",
    "date": "2006-11-22",
    "year": 2006,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20061122/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20061122/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20061122/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20060922-수리가형",
    "title": "9월 학력평가(서울) 수리가형",
+   "type": "학평",
    "date": "2006-09-22",
    "year": 2006,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20060922/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060922/mathga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060922/mathga_hsj.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20060922-수리나형",
    "title": "9월 학력평가(서울) 수리나형",
+   "type": "학평",
    "date": "2006-09-22",
    "year": 2006,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20060922/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060922/mathna_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060922/mathna_hsj.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20060602-수리가형",
    "title": "6월 학력평가(인천) 수리가형",
+   "type": "학평",
    "date": "2006-06-02",
    "year": 2006,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20060602/mathga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060602/mathga_hsj_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060602/mathga_hsj_1.pdf",
+   "form": "수리가형"
   },
   {
+   "id": "D200-140111-20060602-수리나형",
    "title": "6월 학력평가(인천) 수리나형",
+   "type": "학평",
    "date": "2006-06-02",
    "year": 2006,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20060602/mathna_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060602/mathna_hsj_1.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060602/mathna_hsj_1.pdf",
+   "form": "수리나형"
   },
   {
+   "id": "D200-140111-20060310-수리가형",
    "title": "3월 학력평가(서울) 수리가형",
+   "type": "학평",
    "date": "2006-03-10",
    "year": 2006,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20060310/math_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060310/math_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060310/math_hsj.pdf",
+   "form": "수리가형"
   }
  ]
 }

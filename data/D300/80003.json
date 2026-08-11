@@ -8,7 +8,9 @@
  "note": "year는 시험을 본 해(시행 연도)입니다. schoolYear는 학년도이며 시행 연도 + 1로, 평가원 시험(수능·6월·9월 모의평가)에만 있습니다. 흔히 '2021학년도 6월 모평'이라 부르는 것은 year 2020 · schoolYear 2021인 회차입니다 — year로 찾으면 한 해 어긋납니다. 교육청 전국연합학력평가는 학년도를 쓰지 않습니다.",
  "papers": [
   {
+   "id": "D300-80003-20260708",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2026-07-08",
    "year": 2026,
    "source": "교육청",
@@ -17,7 +19,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260708/go3/eng_hsj_1T4E89N4.pdf"
   },
   {
+   "id": "D300-80003-20260604",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2026-06-04",
    "year": 2026,
    "source": "평가원",
@@ -27,7 +31,9 @@
    "schoolYear": 2027
   },
   {
+   "id": "D300-80003-20260507",
    "title": "5월 학평(경기)",
+   "type": "학평",
    "date": "2026-05-07",
    "year": 2026,
    "source": "교육청",
@@ -36,7 +42,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260507/go3/eng_hsj_O231D3FY.pdf"
   },
   {
+   "id": "D300-80003-20260324",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2026-03-24",
    "year": 2026,
    "source": "교육청",
@@ -45,27 +53,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260324/go3/eng_hsj_29D21S43.pdf"
   },
   {
+   "id": "D300-80003-20251113-홀수형",
    "title": "수능 홀수형",
+   "type": "수능",
    "date": "2025-11-13",
    "year": 2025,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20251113/go3/eng_1_mun_9VSFX7CB.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20251113/mobile/h3_m_eng_1_ans_UP5L2L99.png",
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20251113/go3/eng_1_hsj_J63ZOH64.pdf",
+   "form": "홀수형",
    "schoolYear": 2026
   },
   {
+   "id": "D300-80003-20251113-짝수형",
    "title": "수능 짝수형",
+   "type": "수능",
    "date": "2025-11-13",
    "year": 2025,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20251113/go3/eng_2_mun_2P15E974.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20251113/mobile/h3_m_eng_2_ans_9R45AVYY.png",
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2026
   },
   {
+   "id": "D300-80003-20251014",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2025-10-14",
    "year": 2025,
    "source": "교육청",
@@ -74,7 +90,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/go3/eng_1_hsj_2Q85S79Z.pdf"
   },
   {
+   "id": "D300-80003-20250903",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2025-09-03",
    "year": 2025,
    "source": "평가원",
@@ -84,7 +102,9 @@
    "schoolYear": 2026
   },
   {
+   "id": "D300-80003-20250710",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2025-07-10",
    "year": 2025,
    "source": "교육청",
@@ -93,7 +113,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250710/go3/eng_1_hsj_7GURW85A_2.pdf"
   },
   {
+   "id": "D300-80003-20250604",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2025-06-04",
    "year": 2025,
    "source": "평가원",
@@ -103,7 +125,9 @@
    "schoolYear": 2026
   },
   {
+   "id": "D300-80003-20250430",
    "title": "5월 학평(경기)",
+   "type": "학평",
    "date": "2025-04-30",
    "year": 2025,
    "source": "교육청",
@@ -112,7 +136,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250430/go3/eng_hsj_645814PV.pdf"
   },
   {
+   "id": "D300-80003-20250326",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2025-03-26",
    "year": 2025,
    "source": "교육청",
@@ -121,27 +147,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20250326/go3/eng_hsj_WIR8GP5N.pdf"
   },
   {
+   "id": "D300-80003-20241114-홀수형",
    "title": "수능 홀수형",
+   "type": "수능",
    "date": "2024-11-14",
    "year": 2024,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20241114/go3/eng_1_mun_ZAJ67FV9_1.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20241114/mobile/h3_m_eng_1_ans_721ALOVS.png",
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20241114/go3/eng_1_hsj_A2H869V6_3.pdf",
+   "form": "홀수형",
    "schoolYear": 2025
   },
   {
+   "id": "D300-80003-20241114-짝수형",
    "title": "수능 짝수형",
+   "type": "수능",
    "date": "2024-11-14",
    "year": 2024,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20241114/go3/eng_2_mun_416P587T_1.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20241114/mobile/h3_m_eng_2_ans_6OHFW558.png",
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2025
   },
   {
+   "id": "D300-80003-20241015",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2024-10-15",
    "year": 2024,
    "source": "교육청",
@@ -150,7 +184,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/go3/eng_1_hsj_G47J6RU2.pdf"
   },
   {
+   "id": "D300-80003-20240904",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2024-09-04",
    "year": 2024,
    "source": "평가원",
@@ -160,7 +196,9 @@
    "schoolYear": 2025
   },
   {
+   "id": "D300-80003-20240711",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2024-07-11",
    "year": 2024,
    "source": "교육청",
@@ -169,7 +207,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240711/go3/eng_1_hsj_89D7I7RL.pdf"
   },
   {
+   "id": "D300-80003-20240604",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2024-06-04",
    "year": 2024,
    "source": "평가원",
@@ -179,7 +219,9 @@
    "schoolYear": 2025
   },
   {
+   "id": "D300-80003-20240430",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2024-04-30",
    "year": 2024,
    "source": "교육청",
@@ -188,7 +230,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240430/go3/eng_hsj_8BHI52ON.pdf"
   },
   {
+   "id": "D300-80003-20240328",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2024-03-28",
    "year": 2024,
    "source": "교육청",
@@ -197,27 +241,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20240328/go3/eng_hsj_3AK79UG6.pdf"
   },
   {
+   "id": "D300-80003-20231116-홀수형",
    "title": "수능 홀수형",
+   "type": "수능",
    "date": "2023-11-16",
    "year": 2023,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20231116/go3/eng_1_mun_A3KO1N22.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20231116/mobile/h3_m_eng_1_ans_UO3A2YAF.png",
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20231116/go3/eng_1_hsj_YANDRG8A_3.pdf",
+   "form": "홀수형",
    "schoolYear": 2024
   },
   {
+   "id": "D300-80003-20231116-짝수형",
    "title": "수능 짝수형",
+   "type": "수능",
    "date": "2023-11-16",
    "year": 2023,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20231116/go3/eng_2_mun_H8WR278Z.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20231116/mobile/h3_m_eng_2_ans_9N7PV91Y.png",
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2024
   },
   {
+   "id": "D300-80003-20231012",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2023-10-12",
    "year": 2023,
    "source": "교육청",
@@ -226,7 +278,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20231012/go3/eng_hsj_M95KNA9J.pdf"
   },
   {
+   "id": "D300-80003-20230906",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2023-09-06",
    "year": 2023,
    "source": "평가원",
@@ -236,7 +290,9 @@
    "schoolYear": 2024
   },
   {
+   "id": "D300-80003-20230711",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2023-07-11",
    "year": 2023,
    "source": "교육청",
@@ -245,7 +301,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230711/go3/eng_hsj_A84473C5.pdf"
   },
   {
+   "id": "D300-80003-20230601",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2023-06-01",
    "year": 2023,
    "source": "평가원",
@@ -255,7 +313,9 @@
    "schoolYear": 2024
   },
   {
+   "id": "D300-80003-20230430",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2023-04-30",
    "year": 2023,
    "source": "교육청",
@@ -264,7 +324,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230430/go3/eng_hsj_26P5DAG3.pdf"
   },
   {
+   "id": "D300-80003-20230323",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2023-03-23",
    "year": 2023,
    "source": "교육청",
@@ -273,27 +335,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20230323/go3/eng_hsj_Q7724W1J.pdf"
   },
   {
+   "id": "D300-80003-20221117-홀수형",
    "title": "수능 홀수형",
+   "type": "수능",
    "date": "2022-11-17",
    "year": 2022,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20221117/go3/eng_mun_31646247.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20221117/mobile/h3_m_eng_ans_V985P515.png",
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20221117/go3/eng_hsj_8A583AK8_1.pdf",
+   "form": "홀수형",
    "schoolYear": 2023
   },
   {
+   "id": "D300-80003-20221117-짝수형",
    "title": "수능 짝수형",
+   "type": "수능",
    "date": "2022-11-17",
    "year": 2022,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20221117/go3/eng_mun_72NII5H1.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20221117/mobile/h3_m_eng_ans_5LA1I4H3.png",
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2023
   },
   {
+   "id": "D300-80003-20221012",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2022-10-12",
    "year": 2022,
    "source": "교육청",
@@ -302,7 +372,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20221012/go3/eng_hsj_6WZ2ED19.pdf"
   },
   {
+   "id": "D300-80003-20220901",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2022-09-01",
    "year": 2022,
    "source": "평가원",
@@ -312,7 +384,9 @@
    "schoolYear": 2023
   },
   {
+   "id": "D300-80003-20220706",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2022-07-06",
    "year": 2022,
    "source": "교육청",
@@ -321,7 +395,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220706/go3/eng_hsj_5HNP14A6.pdf"
   },
   {
+   "id": "D300-80003-20220609",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2022-06-09",
    "year": 2022,
    "source": "평가원",
@@ -331,7 +407,9 @@
    "schoolYear": 2023
   },
   {
+   "id": "D300-80003-20220413",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2022-04-13",
    "year": 2022,
    "source": "교육청",
@@ -340,7 +418,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220413/go3/eng_hsj_482254AG.pdf"
   },
   {
+   "id": "D300-80003-20220324",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2022-03-24",
    "year": 2022,
    "source": "교육청",
@@ -349,27 +429,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20220324/go3/eng_hsj_I92599LM.pdf"
   },
   {
+   "id": "D300-80003-20211118-홀수형",
    "title": "수능 홀수형",
+   "type": "수능",
    "date": "2021-11-18",
    "year": 2021,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20211118/go3/eng_mun_LMP621U2.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20211118/mobile/h3_m_eng_ans_4EVI2VA4.png",
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20211118/go3/eng_hsj_G2ZP4G8M_1.pdf",
+   "form": "홀수형",
    "schoolYear": 2022
   },
   {
+   "id": "D300-80003-20211118-짝수형",
    "title": "수능 짝수형",
+   "type": "수능",
    "date": "2021-11-18",
    "year": 2021,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20211118/go3/eng_mun_NM24P2VE.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20211118/mobile/h3_m_eng_ans_661FI2IV.png",
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2022
   },
   {
+   "id": "D300-80003-20211012",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2021-10-12",
    "year": 2021,
    "source": "교육청",
@@ -378,7 +466,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20211012/go3/eng_hsj_W97CIL75.pdf"
   },
   {
+   "id": "D300-80003-20210901",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2021-09-01",
    "year": 2021,
    "source": "평가원",
@@ -388,7 +478,9 @@
    "schoolYear": 2022
   },
   {
+   "id": "D300-80003-20210707",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2021-07-07",
    "year": 2021,
    "source": "교육청",
@@ -397,7 +489,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210707/go3/eng_hsj_54TWP26Y.pdf"
   },
   {
+   "id": "D300-80003-20210603",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2021-06-03",
    "year": 2021,
    "source": "평가원",
@@ -407,7 +501,9 @@
    "schoolYear": 2022
   },
   {
+   "id": "D300-80003-20210414",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2021-04-14",
    "year": 2021,
    "source": "교육청",
@@ -416,7 +512,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210414/go3/eng_hsj_85GWV6RO.pdf"
   },
   {
+   "id": "D300-80003-20210325",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2021-03-25",
    "year": 2021,
    "source": "교육청",
@@ -425,27 +523,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210325/go3/eng_hsj_2PKLCP7E_3.pdf"
   },
   {
+   "id": "D300-80003-20201203-홀수형",
    "title": "수능_12.3 시행 홀수형",
+   "type": "수능",
    "date": "2020-12-03",
    "year": 2020,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20201203/go3/eng_mun_8JGC8T6P.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20201203/mobile/h3_m_eng_ans_A2117MYA.png",
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20201203/go3/eng_hsj_P1H5NJC3_3.pdf",
+   "form": "홀수형",
    "schoolYear": 2021
   },
   {
+   "id": "D300-80003-20201203-짝수형",
    "title": "수능_12.3 시행 짝수형",
+   "type": "수능",
    "date": "2020-12-03",
    "year": 2020,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20201203/go3/eng_mun_39XA6KP6.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20201203/mobile/h3_m_eng_ans_3W577MR5_1.png",
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2021
   },
   {
+   "id": "D300-80003-20201027",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2020-10-27",
    "year": 2020,
    "source": "교육청",
@@ -454,7 +560,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20201027/go3/eng_hsj_4ZDT79NP.pdf"
   },
   {
+   "id": "D300-80003-20200916",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2020-09-16",
    "year": 2020,
    "source": "평가원",
@@ -464,7 +572,9 @@
    "schoolYear": 2021
   },
   {
+   "id": "D300-80003-20200722",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2020-07-22",
    "year": 2020,
    "source": "교육청",
@@ -473,7 +583,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200722/go3/eng_hsj_2O2O6LFO.pdf"
   },
   {
+   "id": "D300-80003-20200618",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2020-06-18",
    "year": 2020,
    "source": "평가원",
@@ -483,7 +595,9 @@
    "schoolYear": 2021
   },
   {
+   "id": "D300-80003-20200512",
    "title": "4월 학평(경기)_5.21 시행",
+   "type": "학평",
    "date": "2020-05-12",
    "year": 2020,
    "source": "교육청",
@@ -492,7 +606,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200512/go3/eng_hsj_5ZA9677L.pdf"
   },
   {
+   "id": "D300-80003-20200312",
    "title": "3월 학평(서울)_4.24 시행",
+   "type": "학평",
    "date": "2020-03-12",
    "year": 2020,
    "source": "교육청",
@@ -501,27 +617,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20200312/go3/eng_hsj_NB64Y68X.pdf"
   },
   {
+   "id": "D300-80003-20191114-홀수형",
    "title": "수능 홀수형",
+   "type": "수능",
    "date": "2019-11-14",
    "year": 2019,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20191114/go3/eng_mun_D76AAM3H_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20191114/mobile/h3_m_eng_hsj_8RFJ756V.jpg",
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20191114/go3/eng_hsj_5I29RAO6_11.pdf",
+   "form": "홀수형",
    "schoolYear": 2020
   },
   {
+   "id": "D300-80003-20191114-짝수형",
    "title": "수능 짝수형",
+   "type": "수능",
    "date": "2019-11-14",
    "year": 2019,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20191114/go3/eng_mun_75TTP6HI_10.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20191114/mobile/h3_m_eng_hsj_6Q7N95F3.jpg",
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2020
   },
   {
+   "id": "D300-80003-20191015",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2019-10-15",
    "year": 2019,
    "source": "교육청",
@@ -530,7 +654,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20191015/go3/eng_hsj_551T82X9_10_1.pdf"
   },
   {
+   "id": "D300-80003-20190904",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2019-09-04",
    "year": 2019,
    "source": "평가원",
@@ -540,7 +666,9 @@
    "schoolYear": 2020
   },
   {
+   "id": "D300-80003-20190710",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2019-07-10",
    "year": 2019,
    "source": "교육청",
@@ -549,7 +677,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190710/go3/eng_hsj_C9U93T7N_10.pdf"
   },
   {
+   "id": "D300-80003-20190604",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2019-06-04",
    "year": 2019,
    "source": "평가원",
@@ -559,7 +689,9 @@
    "schoolYear": 2020
   },
   {
+   "id": "D300-80003-20190410",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2019-04-10",
    "year": 2019,
    "source": "교육청",
@@ -568,7 +700,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190410/go3/eng_hsj_RKLpgTFu_10.pdf"
   },
   {
+   "id": "D300-80003-20190307",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2019-03-07",
    "year": 2019,
    "source": "교육청",
@@ -577,27 +711,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20190307/go3/eng_hsj_hZDnrasn_10.pdf"
   },
   {
+   "id": "D300-80003-20181115-홀수형",
    "title": "수능 홀수형",
+   "type": "수능",
    "date": "2018-11-15",
    "year": 2018,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20181115/go3/eng1_mun_4xOjIL2j_11.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20181115/mobile/h3_e_eng1_FRaqbC8w.jpg",
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20181115/go3/eng1_hsj_pWkfb81I_11.pdf",
+   "form": "홀수형",
    "schoolYear": 2019
   },
   {
+   "id": "D300-80003-20181115-짝수형",
    "title": "수능 짝수형",
+   "type": "수능",
    "date": "2018-11-15",
    "year": 2018,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20181115/go3/eng2_mun_NjWOiy54_11.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20181115/mobile/h3_e_eng2_CnJ711HZ.jpg",
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2019
   },
   {
+   "id": "D300-80003-20181016",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2018-10-16",
    "year": 2018,
    "source": "교육청",
@@ -606,7 +748,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20181016/go3/eng_hsj_HLvsqi8V_10.pdf"
   },
   {
+   "id": "D300-80003-20180905",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2018-09-05",
    "year": 2018,
    "source": "평가원",
@@ -616,7 +760,9 @@
    "schoolYear": 2019
   },
   {
+   "id": "D300-80003-20180711",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2018-07-11",
    "year": 2018,
    "source": "교육청",
@@ -625,7 +771,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180711/go3/eng_hsj_wGzADBJW_10.pdf"
   },
   {
+   "id": "D300-80003-20180607",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2018-06-07",
    "year": 2018,
    "source": "평가원",
@@ -635,7 +783,9 @@
    "schoolYear": 2019
   },
   {
+   "id": "D300-80003-20180411",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2018-04-11",
    "year": 2018,
    "source": "교육청",
@@ -644,7 +794,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180411/go3/eng_hsj_39x6HHGN_10.pdf"
   },
   {
+   "id": "D300-80003-20180308",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2018-03-08",
    "year": 2018,
    "source": "교육청",
@@ -653,27 +805,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20180308/go3/eng_hsj_l4maEqxG_11_1.pdf"
   },
   {
+   "id": "D300-80003-20171116-홀수형",
    "title": "수능 홀수형",
+   "type": "수능",
    "date": "2017-11-16",
    "year": 2017,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20171116/go3/eng1_mun_aFc3leDM.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20171116/mobile/h3_e_eng1_U781HieY.jpg",
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20171116/go3/eng1_hsj_Lh9FrKAt_02.pdf",
+   "form": "홀수형",
    "schoolYear": 2018
   },
   {
+   "id": "D300-80003-20171116-짝수형",
    "title": "수능 짝수형",
+   "type": "수능",
    "date": "2017-11-16",
    "year": 2017,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20171116/go3/eng2_mun_UpODGHVH.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20171116/mobile/h3_e_eng2_6EUOHEma.jpg",
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2018
   },
   {
+   "id": "D300-80003-20171017",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2017-10-17",
    "year": 2017,
    "source": "교육청",
@@ -682,7 +842,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20171017/go3/eng_hsj_LFQG101s.pdf"
   },
   {
+   "id": "D300-80003-20170906",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2017-09-06",
    "year": 2017,
    "source": "평가원",
@@ -692,7 +854,9 @@
    "schoolYear": 2018
   },
   {
+   "id": "D300-80003-20170712",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2017-07-12",
    "year": 2017,
    "source": "교육청",
@@ -701,7 +865,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170712/go3/eng_hsj_7cfJiY9Z.pdf"
   },
   {
+   "id": "D300-80003-20170601",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2017-06-01",
    "year": 2017,
    "source": "평가원",
@@ -711,7 +877,9 @@
    "schoolYear": 2018
   },
   {
+   "id": "D300-80003-20170412",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2017-04-12",
    "year": 2017,
    "source": "교육청",
@@ -720,7 +888,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170412/go3/eng_hsj_vjrRZ1Ub.pdf"
   },
   {
+   "id": "D300-80003-20170309",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2017-03-09",
    "year": 2017,
    "source": "교육청",
@@ -729,27 +899,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20170309/go3/eng_hsj_lT2NqFJ3_1.pdf"
   },
   {
+   "id": "D300-80003-20161117-홀수형",
    "title": "수능 홀수형",
+   "type": "수능",
    "date": "2016-11-17",
    "year": 2016,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20161117/go3/eng1_mun_HfKsp3MS.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20161117/mobile/h3_e_eng1_Q6on7gz3.jpg",
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20161117/go3/eng1_hsj_i6xzmeWg1.pdf",
+   "form": "홀수형",
    "schoolYear": 2017
   },
   {
+   "id": "D300-80003-20161117-짝수형",
    "title": "수능 짝수형",
+   "type": "수능",
    "date": "2016-11-17",
    "year": 2016,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20161117/go3/eng2_mun_GCIFoPkG.pdf",
    "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20161117/mobile/h3_e_eng2_i8XKPl5G.jpg",
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2017
   },
   {
+   "id": "D300-80003-20161011",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2016-10-11",
    "year": 2016,
    "source": "교육청",
@@ -758,7 +936,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20161011/go3/eng_hsj_H71yEXUI.pdf"
   },
   {
+   "id": "D300-80003-20160901",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2016-09-01",
    "year": 2016,
    "source": "평가원",
@@ -768,7 +948,9 @@
    "schoolYear": 2017
   },
   {
+   "id": "D300-80003-20160706",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2016-07-06",
    "year": 2016,
    "source": "교육청",
@@ -777,7 +959,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160706/go3/eng_hsj_SnRMWuLn.pdf"
   },
   {
+   "id": "D300-80003-20160602",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2016-06-02",
    "year": 2016,
    "source": "평가원",
@@ -787,7 +971,9 @@
    "schoolYear": 2017
   },
   {
+   "id": "D300-80003-20160406",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2016-04-06",
    "year": 2016,
    "source": "교육청",
@@ -796,7 +982,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160406/go3/eng_hsj_WpSWerOc.pdf"
   },
   {
+   "id": "D300-80003-20160310",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2016-03-10",
    "year": 2016,
    "source": "교육청",
@@ -805,27 +993,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20160310/go3/eng_hsj_WpSWerOc.pdf"
   },
   {
+   "id": "D300-80003-20151112-홀수형",
    "title": "수능 홀수형",
+   "type": "수능",
    "date": "2015-11-12",
    "year": 2015,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20151112/go3/YAPNXRPm_eng1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20151112/go3/gC81Tbdk_eng1_hsj.pdf",
+   "form": "홀수형",
    "schoolYear": 2016
   },
   {
+   "id": "D300-80003-20151112-짝수형",
    "title": "수능 짝수형",
+   "type": "수능",
    "date": "2015-11-12",
    "year": 2015,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20151112/go3/XsL1c00g_eng2_mun.pdf",
    "answer": null,
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2016
   },
   {
+   "id": "D300-80003-20151013",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2015-10-13",
    "year": 2015,
    "source": "교육청",
@@ -834,7 +1030,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20151013/go3/Wwr2UAaT_eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20150902",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2015-09-02",
    "year": 2015,
    "source": "평가원",
@@ -844,7 +1042,9 @@
    "schoolYear": 2016
   },
   {
+   "id": "D300-80003-20150709",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2015-07-09",
    "year": 2015,
    "source": "교육청",
@@ -853,7 +1053,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150709/go3/ix4A2Dre_eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20150604",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2015-06-04",
    "year": 2015,
    "source": "평가원",
@@ -863,7 +1065,9 @@
    "schoolYear": 2016
   },
   {
+   "id": "D300-80003-20150409",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2015-04-09",
    "year": 2015,
    "source": "교육청",
@@ -872,7 +1076,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150409/go3/JXsNQptg_enga_hsj.pdf"
   },
   {
+   "id": "D300-80003-20150311",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2015-03-11",
    "year": 2015,
    "source": "교육청",
@@ -881,27 +1087,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20150311/go3/wgnOsjdx_enga_hsj.pdf"
   },
   {
+   "id": "D300-80003-201411133-홀수형",
    "title": "수능 홀수형",
+   "type": "수능",
    "date": "2014-11-13",
    "year": 2014,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201411133/xPx83BcT_h3_enga1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201411133/JKsEbUM5_h3_enga1_hsj_2.pdf",
+   "form": "홀수형",
    "schoolYear": 2015
   },
   {
+   "id": "D300-80003-201411133-짝수형",
    "title": "수능 짝수형",
+   "type": "수능",
    "date": "2014-11-13",
    "year": 2014,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201411133/bnoRiCCI_h3_enga2_mun.pdf",
    "answer": null,
    "solution": null,
+   "form": "짝수형",
    "schoolYear": 2015
   },
   {
+   "id": "D300-80003-201410073",
    "title": "10월 학평(서울)",
+   "type": "학평",
    "date": "2014-10-07",
    "year": 2014,
    "source": "교육청",
@@ -910,7 +1124,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201410073/WP5RvITt_h3_eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-201409033",
    "title": "9월 모평(평가원)",
+   "type": "모평",
    "date": "2014-09-03",
    "year": 2014,
    "source": "평가원",
@@ -920,7 +1136,9 @@
    "schoolYear": 2015
   },
   {
+   "id": "D300-80003-201407103",
    "title": "7월 학평(인천)",
+   "type": "학평",
    "date": "2014-07-10",
    "year": 2014,
    "source": "교육청",
@@ -929,7 +1147,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201407103/wgnOsjdx_enga_hsj.pdf"
   },
   {
+   "id": "D300-80003-201406123",
    "title": "6월 모평(평가원)",
+   "type": "모평",
    "date": "2014-06-12",
    "year": 2014,
    "source": "평가원",
@@ -939,7 +1159,9 @@
    "schoolYear": 2015
   },
   {
+   "id": "D300-80003-201404103",
    "title": "4월 학평(경기)",
+   "type": "학평",
    "date": "2014-04-10",
    "year": 2014,
    "source": "교육청",
@@ -948,7 +1170,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201404103/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-201403123",
    "title": "3월 학평(서울)",
+   "type": "학평",
    "date": "2014-03-12",
    "year": 2014,
    "source": "교육청",
@@ -957,179 +1181,235 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201403123/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-201311073-B형홀수형",
    "title": "수능 B 홀수형",
+   "type": "수능",
    "date": "2013-11-07",
    "year": 2013,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201311073/engb1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201311073/engb1_hsj.pdf",
+   "form": "B형 홀수형",
    "schoolYear": 2014
   },
   {
+   "id": "D300-80003-201311073-A형홀수형",
    "title": "수능 A 홀수형",
+   "type": "수능",
    "date": "2013-11-07",
    "year": 2013,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201311073/enga1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201311073/enga1_hsj.pdf",
+   "form": "A형 홀수형",
    "schoolYear": 2014
   },
   {
+   "id": "D300-80003-201311073-B형짝수형",
    "title": "수능 B 짝수형",
+   "type": "수능",
    "date": "2013-11-07",
    "year": 2013,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201311073/engb2_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201311073/engb2_hsj.pdf",
+   "form": "B형 짝수형",
    "schoolYear": 2014
   },
   {
+   "id": "D300-80003-201311073-A형짝수형",
    "title": "수능 A 짝수형",
+   "type": "수능",
    "date": "2013-11-07",
    "year": 2013,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201311073/enga2_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201311073/enga2_hsj.pdf",
+   "form": "A형 짝수형",
    "schoolYear": 2014
   },
   {
+   "id": "D300-80003-201310083-B형",
    "title": "10월 학평(서울) B",
+   "type": "학평",
    "date": "2013-10-08",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201310083/engb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201310083/engb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201310083/engb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D300-80003-201310083-A형",
    "title": "10월 학평(서울) A",
+   "type": "학평",
    "date": "2013-10-08",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201310083/enga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201310083/enga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201310083/enga_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D300-80003-201309033-A형",
    "title": "9월 모평(평가원) A",
+   "type": "모평",
    "date": "2013-09-03",
    "year": 2013,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201309033/enga_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201309033/enga_hsj.pdf",
+   "form": "A형",
    "schoolYear": 2014
   },
   {
+   "id": "D300-80003-201309033-B형",
    "title": "9월 모평(평가원) B",
+   "type": "모평",
    "date": "2013-09-03",
    "year": 2013,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201309033/engb_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201309033/engb_hsj.pdf",
+   "form": "B형",
    "schoolYear": 2014
   },
   {
+   "id": "D300-80003-201307123-A형",
    "title": "7월 학평(인천) A",
+   "type": "학평",
    "date": "2013-07-12",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201307123/enga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201307123/enga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201307123/enga_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D300-80003-201307123-B형",
    "title": "7월 학평(인천) B",
+   "type": "학평",
    "date": "2013-07-12",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201307123/engb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201307123/engb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201307123/engb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D300-80003-201306053-A형",
    "title": "6월 모평(평가원) A",
+   "type": "모평",
    "date": "2013-06-05",
    "year": 2013,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201306053/enga_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201306053/enga_hsj.pdf",
+   "form": "A형",
    "schoolYear": 2014
   },
   {
+   "id": "D300-80003-201306053-B형",
    "title": "6월 모평(평가원) B",
+   "type": "모평",
    "date": "2013-06-05",
    "year": 2013,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201306053/engb_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201306053/engb_hsj.pdf",
+   "form": "B형",
    "schoolYear": 2014
   },
   {
+   "id": "D300-80003-201304113-A형",
    "title": "4월 학평(경기) A",
+   "type": "학평",
    "date": "2013-04-11",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201304113/enga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201304113/enga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201304113/enga_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D300-80003-201304113-B형",
    "title": "4월 학평(경기) B",
+   "type": "학평",
    "date": "2013-04-11",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201304113/engb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201304113/engb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201304113/engb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D300-80003-201303133-A형",
    "title": "3월 학평(서울) A",
+   "type": "학평",
    "date": "2013-03-13",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201303133/enga_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201303133/enga_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201303133/enga_hsj.pdf",
+   "form": "A형"
   },
   {
+   "id": "D300-80003-201303133-B형",
    "title": "3월 학평(서울) B",
+   "type": "학평",
    "date": "2013-03-13",
    "year": 2013,
    "source": "교육청",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201303133/engb_mun.pdf",
    "answer": null,
-   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201303133/engb_hsj.pdf"
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201303133/engb_hsj.pdf",
+   "form": "B형"
   },
   {
+   "id": "D300-80003-201211083-홀수형",
    "title": "수능 외국어 홀수형",
+   "type": "수능",
    "date": "2012-11-08",
    "year": 2012,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201211083/eng1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201211083/eng1_hsj.pdf",
+   "form": "홀수형",
    "schoolYear": 2013
   },
   {
+   "id": "D300-80003-201211083-짝수형",
    "title": "수능 외국어 짝수형",
+   "type": "수능",
    "date": "2012-11-08",
    "year": 2012,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201211083/eng2_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201211083/eng2_hsj.pdf",
+   "form": "짝수형",
    "schoolYear": 2013
   },
   {
+   "id": "D300-80003-201210093",
    "title": "10월 학력평가(서울) 외국어",
+   "type": "학평",
    "date": "2012-10-09",
    "year": 2012,
    "source": "교육청",
@@ -1138,7 +1418,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201210093/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-201209043",
    "title": "9월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2012-09-04",
    "year": 2012,
    "source": "평가원",
@@ -1148,7 +1430,9 @@
    "schoolYear": 2013
   },
   {
+   "id": "D300-80003-201207113",
    "title": "7월 학력평가(인천) 외국어",
+   "type": "학평",
    "date": "2012-07-11",
    "year": 2012,
    "source": "교육청",
@@ -1157,7 +1441,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201207113/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-201206073",
    "title": "6월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2012-06-07",
    "year": 2012,
    "source": "평가원",
@@ -1167,7 +1453,9 @@
    "schoolYear": 2013
   },
   {
+   "id": "D300-80003-201204103",
    "title": "4월 학력평가 (경기) 외국어",
+   "type": "학평",
    "date": "2012-04-10",
    "year": 2012,
    "source": "교육청",
@@ -1176,7 +1464,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201204103/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-201203143",
    "title": "3월 학력평가 (서울) 외국어",
+   "type": "학평",
    "date": "2012-03-14",
    "year": 2012,
    "source": "교육청",
@@ -1185,27 +1475,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201203143/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-201111103-홀수형",
    "title": "수능 외국어 홀수형",
+   "type": "수능",
    "date": "2011-11-10",
    "year": 2011,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201111103/eng1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201111103/eng1_hsj.pdf",
+   "form": "홀수형",
    "schoolYear": 2012
   },
   {
+   "id": "D300-80003-201111103-짝수형",
    "title": "수능 외국어 짝수형",
+   "type": "수능",
    "date": "2011-11-10",
    "year": 2011,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201111103/eng2_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201111103/eng2_hsj.pdf",
+   "form": "짝수형",
    "schoolYear": 2012
   },
   {
+   "id": "D300-80003-201110123",
    "title": "10월 학력평가(서울) 외국어",
+   "type": "학평",
    "date": "2011-10-12",
    "year": 2011,
    "source": "교육청",
@@ -1214,7 +1512,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201110123/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-201109013",
    "title": "9월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2011-09-01",
    "year": 2011,
    "source": "평가원",
@@ -1224,7 +1524,9 @@
    "schoolYear": 2012
   },
   {
+   "id": "D300-80003-201107133",
    "title": "7월 학력평가(인천) 외국어",
+   "type": "학평",
    "date": "2011-07-13",
    "year": 2011,
    "source": "교육청",
@@ -1233,7 +1535,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201107133/eng_hsj_1.pdf"
   },
   {
+   "id": "D300-80003-201106023",
    "title": "6월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2011-06-02",
    "year": 2011,
    "source": "평가원",
@@ -1243,7 +1547,9 @@
    "schoolYear": 2012
   },
   {
+   "id": "D300-80003-201104123",
    "title": "4월 학력평가 (경기) 외국어",
+   "type": "학평",
    "date": "2011-04-12",
    "year": 2011,
    "source": "교육청",
@@ -1252,7 +1558,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201104123/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-201102283",
    "title": "3월 학력평가(서울) 외국어",
+   "type": "학평",
    "date": "2011-02-28",
    "year": 2011,
    "source": "교육청",
@@ -1261,27 +1569,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201102283/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20101118-홀수형",
    "title": "수능 외국어 홀수형",
+   "type": "수능",
    "date": "2010-11-18",
    "year": 2010,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20101118/eng1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20101118/eng1_hsj.pdf",
+   "form": "홀수형",
    "schoolYear": 2011
   },
   {
+   "id": "D300-80003-20101118-짝수형",
    "title": "수능 외국어 짝수형",
+   "type": "수능",
    "date": "2010-11-18",
    "year": 2010,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20101118/eng2_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20101118/eng2_hsj.pdf",
+   "form": "짝수형",
    "schoolYear": 2011
   },
   {
+   "id": "D300-80003-20101012",
    "title": "10월 학력평가(서울시) 외국어",
+   "type": "학평",
    "date": "2010-10-12",
    "year": 2010,
    "source": "교육청",
@@ -1290,7 +1606,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20101012/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20100902",
    "title": "9월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2010-09-02",
    "year": 2010,
    "source": "평가원",
@@ -1300,7 +1618,9 @@
    "schoolYear": 2011
   },
   {
+   "id": "D300-80003-20100708",
    "title": "7월 학력평가(인천) 외국어",
+   "type": "학평",
    "date": "2010-07-08",
    "year": 2010,
    "source": "교육청",
@@ -1309,7 +1629,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100708/eng_hsj_1.pdf"
   },
   {
+   "id": "D300-80003-20100610",
    "title": "6월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2010-06-10",
    "year": 2010,
    "source": "평가원",
@@ -1319,7 +1641,9 @@
    "schoolYear": 2011
   },
   {
+   "id": "D300-80003-20100413",
    "title": "4월 학력평가 (경기) 외국어",
+   "type": "학평",
    "date": "2010-04-13",
    "year": 2010,
    "source": "교육청",
@@ -1328,7 +1652,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100413/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20100312",
    "title": "3월 학력평가(서울) 외국어",
+   "type": "학평",
    "date": "2010-03-12",
    "year": 2010,
    "source": "교육청",
@@ -1337,27 +1663,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20100312/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20091112-홀수형",
    "title": "수능 외국어 홀수형",
+   "type": "수능",
    "date": "2009-11-12",
    "year": 2009,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20091112/eng1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20091112/eng1_hsj.pdf",
+   "form": "홀수형",
    "schoolYear": 2010
   },
   {
+   "id": "D300-80003-20091112-짝수형",
    "title": "수능 외국어 짝수형",
+   "type": "수능",
    "date": "2009-11-12",
    "year": 2009,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20091112/eng2_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20091112/eng2_hsj.pdf",
+   "form": "짝수형",
    "schoolYear": 2010
   },
   {
+   "id": "D300-80003-20091015",
    "title": "10월 학력평가(서울) 외국어",
+   "type": "학평",
    "date": "2009-10-15",
    "year": 2009,
    "source": "교육청",
@@ -1366,7 +1700,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20091015/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20090903",
    "title": "9월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2009-09-03",
    "year": 2009,
    "source": "평가원",
@@ -1376,7 +1712,9 @@
    "schoolYear": 2010
   },
   {
+   "id": "D300-80003-20090714",
    "title": "7월 학력평가(인천) 외국어",
+   "type": "학평",
    "date": "2009-07-14",
    "year": 2009,
    "source": "교육청",
@@ -1385,7 +1723,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090714/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20090604",
    "title": "6월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2009-06-04",
    "year": 2009,
    "source": "평가원",
@@ -1395,7 +1735,9 @@
    "schoolYear": 2010
   },
   {
+   "id": "D300-80003-20090415",
    "title": "4월 학력평가(경기) 외국어",
+   "type": "학평",
    "date": "2009-04-15",
    "year": 2009,
    "source": "교육청",
@@ -1404,7 +1746,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090415/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20090313",
    "title": "3월 학력평가(서울) 외국어",
+   "type": "학평",
    "date": "2009-03-13",
    "year": 2009,
    "source": "교육청",
@@ -1413,27 +1757,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20090313/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20081113-홀수형",
    "title": "수능 외국어 홀수형",
+   "type": "수능",
    "date": "2008-11-13",
    "year": 2008,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20081113/eng1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20081113/eng1_hsj.pdf",
+   "form": "홀수형",
    "schoolYear": 2009
   },
   {
+   "id": "D300-80003-20081113-짝수형",
    "title": "수능 외국어 짝수형",
+   "type": "수능",
    "date": "2008-11-13",
    "year": 2008,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20081113/eng2_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20081113/eng2_hsj.pdf",
+   "form": "짝수형",
    "schoolYear": 2009
   },
   {
+   "id": "D300-80003-20081016",
    "title": "10월 학력평가(서울) 외국어",
+   "type": "학평",
    "date": "2008-10-16",
    "year": 2008,
    "source": "교육청",
@@ -1442,7 +1794,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20081016/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20080904",
    "title": "9월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2008-09-04",
    "year": 2008,
    "source": "평가원",
@@ -1452,7 +1806,9 @@
    "schoolYear": 2009
   },
   {
+   "id": "D300-80003-20080715",
    "title": "7월 학력평가(인천) 외국어",
+   "type": "학평",
    "date": "2008-07-15",
    "year": 2008,
    "source": "교육청",
@@ -1461,7 +1817,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080715/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20080604",
    "title": "6월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2008-06-04",
    "year": 2008,
    "source": "평가원",
@@ -1471,7 +1829,9 @@
    "schoolYear": 2009
   },
   {
+   "id": "D300-80003-20080415",
    "title": "4월 학력평가(경기) 외국어",
+   "type": "학평",
    "date": "2008-04-15",
    "year": 2008,
    "source": "교육청",
@@ -1480,7 +1840,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080415/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20080314",
    "title": "3월 학력평가(서울) 외국어",
+   "type": "학평",
    "date": "2008-03-14",
    "year": 2008,
    "source": "교육청",
@@ -1489,27 +1851,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20080314/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20071115-홀수형",
    "title": "수능 외국어 홀수형",
+   "type": "수능",
    "date": "2007-11-15",
    "year": 2007,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20071115/eng1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20071115/eng1_hsj.pdf",
+   "form": "홀수형",
    "schoolYear": 2008
   },
   {
+   "id": "D300-80003-20071115-짝수형",
    "title": "수능 외국어 짝수형",
+   "type": "수능",
    "date": "2007-11-15",
    "year": 2007,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20071115/eng2_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20071115/eng2_hsj.pdf",
+   "form": "짝수형",
    "schoolYear": 2008
   },
   {
+   "id": "D300-80003-20071010",
    "title": "10월 학력평가(서울) 외국어",
+   "type": "학평",
    "date": "2007-10-10",
    "year": 2007,
    "source": "교육청",
@@ -1518,7 +1888,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20071010/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20070906",
    "title": "9월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2007-09-06",
    "year": 2007,
    "source": "평가원",
@@ -1528,7 +1900,9 @@
    "schoolYear": 2008
   },
   {
+   "id": "D300-80003-20070712",
    "title": "7월 학력평가(인천) 외국어",
+   "type": "학평",
    "date": "2007-07-12",
    "year": 2007,
    "source": "교육청",
@@ -1537,7 +1911,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070712/eng_hsj_1.pdf"
   },
   {
+   "id": "D300-80003-20070607",
    "title": "6월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2007-06-07",
    "year": 2007,
    "source": "평가원",
@@ -1547,7 +1923,9 @@
    "schoolYear": 2008
   },
   {
+   "id": "D300-80003-20070418",
    "title": "4월 학력평가(경기) 외국어",
+   "type": "학평",
    "date": "2007-04-18",
    "year": 2007,
    "source": "교육청",
@@ -1556,7 +1934,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070418/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20070316",
    "title": "3월 학력평가(서울) 외국어",
+   "type": "학평",
    "date": "2007-03-16",
    "year": 2007,
    "source": "교육청",
@@ -1565,17 +1945,22 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20070316/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20061116-홀수형",
    "title": "수능 외국어 홀수형",
+   "type": "수능",
    "date": "2006-11-16",
    "year": 2006,
    "source": "평가원",
    "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20061116/eng1_mun.pdf",
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20061116/eng1_hsj.pdf",
+   "form": "홀수형",
    "schoolYear": 2007
   },
   {
+   "id": "D300-80003-20061012",
    "title": "10월 학력평가(서울) 외국어",
+   "type": "학평",
    "date": "2006-10-12",
    "year": 2006,
    "source": "교육청",
@@ -1584,7 +1969,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20061012/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20060906",
    "title": "9월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2006-09-06",
    "year": 2006,
    "source": "평가원",
@@ -1594,7 +1981,9 @@
    "schoolYear": 2007
   },
   {
+   "id": "D300-80003-20060603",
    "title": "6월 모의평가(평가원) 외국어",
+   "type": "모평",
    "date": "2006-06-03",
    "year": 2006,
    "source": "평가원",
@@ -1604,7 +1993,9 @@
    "schoolYear": 2007
   },
   {
+   "id": "D300-80003-20060419",
    "title": "4월 학평(경기) 외국어",
+   "type": "학평",
    "date": "2006-04-19",
    "year": 2006,
    "source": "교육청",
@@ -1613,7 +2004,9 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060419/eng_hsj.pdf"
   },
   {
+   "id": "D300-80003-20060311",
    "title": "3월 학평(서울) 외국어",
+   "type": "학평",
    "date": "2006-03-11",
    "year": 2006,
    "source": "교육청",

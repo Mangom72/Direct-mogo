@@ -37,6 +37,41 @@ YEAR_NOTE = (
 )
 
 
+# 학생들이 실제로 부르는 줄임말. 화면에 쓰는 정식 이름과 달라서, 이것을 싣지
+# 않으면 "생윤 기출"이라는 말을 어느 과목으로 옮길지 읽는 쪽이 알 수 없다.
+# 로마 숫자·가운뎃점·띄어쓰기 변형은 아래에서 기계로 만들므로 여기 적지 않는다.
+SHORT = {
+    "화법과 작문": ["화작"], "언어와 매체": ["언매"],
+    "확률과 통계": ["확통"], "미적분": ["미적"],
+    "생활과 윤리": ["생윤"], "윤리와 사상": ["윤사"],
+    "한국지리": ["한지"], "세계지리": ["세지"],
+    "동아시아사": ["동아사", "동사"], "세계사": ["세사"],
+    "정치와 법": ["정법", "법과 정치", "법정"], "사회·문화": ["사문"],
+    "통합사회": ["통사"], "통합과학": ["통과"],
+    "물리학Ⅰ": ["물1", "물리1"], "물리학Ⅱ": ["물2", "물리2"],
+    "화학Ⅰ": ["화1"], "화학Ⅱ": ["화2"],
+    "생명과학Ⅰ": ["생1", "생명1"], "생명과학Ⅱ": ["생2", "생명2"],
+    "지구과학Ⅰ": ["지1", "지구1"], "지구과학Ⅱ": ["지2", "지구2"],
+}
+
+
+def aliases_of(name):
+    """이 과목을 부르는 다른 이름들. 정식 이름 자체는 넣지 않는다."""
+    out = list(SHORT.get(name, []))
+    forms = {name}
+    for a, b in (("Ⅰ", "1"), ("Ⅰ", "I"), ("Ⅱ", "2"), ("Ⅱ", "II")):
+        forms |= {f.replace(a, b) for f in forms if a in f}
+    forms |= {f.replace("·", "") for f in forms}       # 사회·문화 → 사회문화
+    forms |= {f.replace(" ", "") for f in forms}       # 화법과 작문 → 화법과작문
+    out += sorted(f for f in forms if f != name)
+    seen, uniq = set(), []
+    for a in out:
+        if a not in seen:
+            seen.add(a)
+            uniq.append(a)
+    return uniq
+
+
 def url(code, date_str):
     if not code:
         return None
@@ -77,11 +112,55 @@ def read_groups(text):
     return out
 
 
-def paper(row, year):
+# 같은 날 같은 과목에 시험지가 둘 이상인 경우가 있다 — 수학 가형/나형, 국어·영어
+# A형/B형, 그리고 문항 순서만 다른 홀수형/짝수형. 제목에만 적혀 있어 그대로 두면
+# 회차를 하나로 가리킬 수 없다(실제로 240건이 겹쳤다).
+FORM = re.compile(r"(수리\s*[가나]형|[가나]형|[AB]형|홀수형|짝수형|(?<![A-Za-z])[AB](?![A-Za-z가-힣]))")
+
+
+def form_of(title):
+    """시험지 유형. 없으면 빈 문자열.
+
+    제목에 'A'로만 적힌 것과 'A형'으로 적힌 것이 섞여 있어 'A형'으로 맞춘다.
+    한 회차에 둘이 겹치기도 한다 — 2013년 수능 영어의 'A 홀수형'처럼.
+    """
+    parts = []
+    for m in FORM.finditer(title):
+        f = m.group(1).replace(" ", "")
+        parts.append(f + "형" if f in ("A", "B") else f)
+    return " ".join(dict.fromkeys(parts))
+
+
+def kind_of(title):
+    """제목을 시험 종류 한 낱말로 줄인다.
+
+    제목은 사람이 읽으라고 쓴 것이라 표기가 여럿이다 — '6월 모평'과 '6월 모의평가',
+    '3월 학평'과 '3월 학력평가'가 같은 시험을 가리킨다(전체 38가지). 읽는 쪽이
+    글자를 맞춰 보다 틀리지 않게, 갈라 둔 값을 함께 싣는다.
+    """
+    if title.startswith("예비"):
+        return "예비시행"
+    if title.startswith("수능"):
+        return "수능"
+    if "모평" in title or "모의평가" in title:
+        return "모평"
+    if "학평" in title or "학력평가" in title:
+        return "학평"
+    return "기타"
+
+
+def paper(row, year, grade, sid):
     title, d = row[0], row[1]
     src = source_of(title)
+    form = form_of(title)
     out = {
+        # 회차를 가리키는 안정된 이름. 학년·과목·시행일에 (있으면) 시험지 유형을
+        # 붙인다 — 그러면 3,844회차가 모두 하나씩 구분된다. 자료는 덧붙이기만
+        # 하므로 이 값은 나중에 바뀌지 않는다. 제목은 같은 시험도 표기가
+        # 흔들리므로(38가지) 이름표로 쓰지 말 것.
+        "id": f"{grade}-{sid}-{d}" + (f"-{form.replace(' ', '')}" if form else ""),
         "title": title,
+        "type": kind_of(title),
         "date": f"{d[:4]}-{d[4:6]}-{d[6:8]}",
         "year": int(year),
         "source": src,
@@ -89,6 +168,8 @@ def paper(row, year):
         "answer": url(row[3], d),
         "solution": url(row[4], d),
     }
+    if form:
+        out["form"] = form
     # 학년도는 평가원 시험에만 의미가 있다 (시행 연도 + 1)
     if src == "평가원":
         out["schoolYear"] = int(year) + 1
@@ -115,7 +196,7 @@ def main():
                 years = db.get(grade, {}).get(sid, {})
                 papers = []
                 for y in sorted(years, reverse=True):
-                    papers += [paper(r, y) for r in years[y]]
+                    papers += [paper(r, y, grade, sid) for r in years[y]]
                 papers.sort(key=lambda p: p["date"], reverse=True)
                 if not papers:
                     continue
@@ -134,7 +215,11 @@ def main():
                     "papers": papers,
                 }, ensure_ascii=False, indent=1), encoding="utf-8")
                 subs.append({
-                    "id": sid, "name": name, "count": len(papers),
+                    "id": sid, "name": name,
+                    # 사람이 말하는 이름은 정식 명칭과 다르다("생윤", "확통").
+                    # 여기 없으면 읽는 쪽이 글자를 맞춰 보다 엉뚱한 과목을 집는다.
+                    "aliases": aliases_of(name),
+                    "count": len(papers),
                     "years": sorted({p["year"] for p in papers}, reverse=True),
                     "data": f"data/{rel}",
                 })
@@ -186,10 +271,12 @@ def weigh(out):
     틀리면 그대로 잘못된 판단이 된다. 잴 수 있는 것은 재서 쓴다.
     """
     sizes, gap, total = [], {"problem": 0, "answer": 0, "solution": 0}, 0
+    titles = set()
     for f in sorted(out.glob("D*/*.json")):
         sizes.append(f.stat().st_size / 1024)
         for p in json.loads(f.read_text(encoding="utf-8"))["papers"]:
             total += 1
+            titles.add(p["title"].split("(")[0].strip())
             for k in gap:
                 if not p.get(k):
                     gap[k] += 1
@@ -201,6 +288,8 @@ def weigh(out):
         "gap": gap,
         "worst": worst,
         "worst_pct": round(gap[worst] * 100 / total) if total else 0,
+        # '제목 표기가 흔들린다'는 경고에 숫자를 붙이기 위해 센다
+        "titles": len(titles),
     }
 
 
@@ -253,6 +342,16 @@ def llms_txt(index, nsub, w):
 경로 규칙은 `{SITE}data/<학년코드>/<과목ID>.json` 이고 학년코드는 D300(고3·N수) ·
 D200(고2) · D100(고1) 셋뿐입니다. 과목ID는 지어내지 말고 `index.json`에 있는 값만
 쓰세요 — 같은 과목이라도 학년마다 번호가 다릅니다.
+
+**사람이 말하는 과목 이름은 정식 명칭과 다릅니다.** "생윤"은 `생활과 윤리`,
+"확통"은 `확률과 통계`, "생명과학1"은 `생명과학Ⅰ`(로마 숫자)입니다. `index.json`의
+과목마다 `aliases`에 이런 이름들이 들어 있으니, 이름을 맞출 때는 `name`과
+`aliases`를 함께 보세요.
+
+회차를 하나로 가리켜야 할 때는 `id`를 쓰세요. `title`은 사람이 읽는 글이라 같은
+시험도 표기가 흔들립니다({w['titles']}가지) — 대신 `type`(`수능`·`모평`·`학평`)으로
+거르고, 같은 날 시험지가 둘인 경우(가형/나형, A형/B형, 홀수형/짝수형)는 `form`으로
+가릅니다.
 
 ## 시작점
 
@@ -319,7 +418,9 @@ def llms_full(index, nsub, w):
 
 ```json
 {{
+  "id": "D300-158-20260604",
   "title": "6월 모평(평가원)",
+  "type": "모평",
   "date": "2026-06-04",
   "year": 2026,
   "schoolYear": 2027,
@@ -332,7 +433,10 @@ def llms_full(index, nsub, w):
 
 | 칸 | 뜻 | 비고 |
 |---|---|---|
-| `title` | 회차 이름 | `수능` / `6월 모평(평가원)` / `7월 학평(인천)` 꼴 |
+| `id` | 회차를 가리키는 **안정된 이름** | `학년-과목-시행일`(+유형). 전 회차가 유일하고 바뀌지 않습니다 |
+| `title` | 회차 이름 | 사람이 읽는 글. 표기가 흔들리니 **가르는 데 쓰지 마세요** |
+| `type` | `수능`·`모평`·`학평`·`예비시행` | 제목 대신 **이것으로 거르세요** |
+| `form` | 시험지 유형 | `가형`·`A형`·`홀수형` 등. 유형이 없는 회차에는 이 칸이 없습니다 |
 | `date` | 시행일 `YYYY-MM-DD` | 정렬은 이것으로 하세요 |
 | `year` | **시행 연도** | 아래 「연도」 절을 꼭 보세요 |
 | `schoolYear` | **학년도** | 평가원 시험에만 있습니다 |
@@ -340,6 +444,13 @@ def llms_full(index, nsub, w):
 | `problem` | **문제지** PDF | 시험지 원본. 없으면 `null` |
 | `answer` | **정답표** PNG 이미지 | PDF가 아니라 그림입니다. 없으면 `null` |
 | `solution` | **해설지** PDF | 풀이. 없으면 `null` |
+
+`title`로 시험을 가르지 마세요. 같은 시험을 `6월 모평`이라고도 `6월 모의평가`라고도
+적어 두었습니다(전체 {w['titles']}가지). `type`은 그것을 한 낱말로 줄여 둔 값입니다.
+
+같은 날 같은 과목에 시험지가 둘인 경우가 있습니다 — 수학 가형/나형, 국어·영어
+A형/B형, 문항 순서만 다른 홀수형/짝수형. `form`이 그것을 가릅니다. `id`에도
+들어가므로 회차를 하나로 가리킬 때는 `id`를 쓰세요.
 
 셋 다 `null`인 회차는 없습니다. 다만 **하나씩 빠진 회차는 흔합니다** — 지금 자료에서
 `answer` {w['gap']['answer']:,}건, `solution` {w['gap']['solution']:,}건, `problem` {w['gap']['problem']:,}건이 비어 있습니다.
