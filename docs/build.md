@@ -18,6 +18,7 @@
 | `tools/build_pages.py` | `data/`를 `s/` 정적 페이지와 `sitemap.xml`로 내보냅니다 |
 | `tools/build_fonts.py` | 저장소 안의 글자를 모아 웹폰트를 잘라 만듭니다 |
 | `tools/check_csp.py` | 인라인 스크립트 해시가 CSP와 맞는지 봅니다 |
+| `tests/` | 회귀 시험 22종 ([tests/README.md](../tests/README.md)) |
 | `android/` | WebView 앱 ([docs/android.md](android.md)) |
 | `.github/workflows/refresh-data.yml` | 매일 23시(KST) 자동 실행 |
 
@@ -47,7 +48,16 @@ python3 tools/build_fonts.py              # → fonts/
 
 다만 `--check`는 **자기가 모은 목록과 비교할 뿐입니다.** 글자를 모으는 규칙 자체가
 잘못되면(주석을 걷어내는 부분이 지나치게 걷는 경우가 그렇습니다) 스스로를 통과시킵니다.
-그 규칙을 손볼 때는 화면에 실제로 그려지는 글자로 확인해야 합니다.
+그 규칙을 손볼 때는 `python3 tests/run.py glyphs`로 확인하십시오 — 화면에 실제로
+그려지는 글자를 모아 견줍니다.
+
+## 고치고 나면
+
+```bash
+python3 tests/run.py        # 회귀 시험 22종, 3분 남짓
+```
+
+무엇을 지키는 시험인지는 [tests/README.md](../tests/README.md)에 있습니다.
 
 기존 기록의 **있는 값은 고치지 않습니다.** 새 시행일을 덧붙이고, 이미 있는 회차는
 **비어 있던 칸만** 뒤늦게 채웁니다. 수집량이 기존의 80%에 못 미치면 EBSi 구조가
