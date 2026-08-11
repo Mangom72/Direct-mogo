@@ -1,8 +1,8 @@
 {
-  "versionCode": 39,
-  "versionName": "4.8",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v4.8/gijul-direct.apk",
-  "size": 1844767,
-  "sha256": "66e14dda597efa145e17fc1c821508578377f6570c7973430e17536c7f3ffd65",
-  "notes": "뒤로가기로 열어 둔 것을 하나씩 닫고, 두 번 눌러야 앱이 닫힙니다"
+  "versionCode": 40,
+  "versionName": "4.9",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v4.9/gijul-direct.apk",
+  "size": 1844863,
+  "sha256": "43deec764e38105a3630f3e65993fcea827c87b169359f2ad853e685299678d9",
+  "notes": "내려받는 곳을 옮겼습니다 — 앱 기능은 4.8과 같습니다"
 }
