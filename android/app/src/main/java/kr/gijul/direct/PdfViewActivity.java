@@ -1201,7 +1201,7 @@ public class PdfViewActivity extends Activity {
         sharp.evictAll();
         b = draw(index, width);
         if (b == null && lowMemory)
-            fail("이 자료는 너무 커서 열지 못했습니다 — '다른 앱'으로 열어 보세요");
+            fail("이 자료는 너무 커서 열지 못했습니다 — '다른 앱'으로 열어 주십시오");
         return b;
     }
 

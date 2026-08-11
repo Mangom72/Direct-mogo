@@ -25,7 +25,7 @@ addEventListener("securitypolicyviolation", function(e){
   window.__cspTold = 1;
   var d = document.createElement("div");
   d.textContent = "화면 일부가 차단되었습니다 (" + e.violatedDirective
-    + "). 새로고침해도 같으면 알려주세요.";
+    + "). 새로고침 후에도 동일하면 알려 주십시오.";
   d.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:99;padding:11px 14px;"
     + "background:#B4342A;color:#fff;font:600 13px/1.55 system-ui,sans-serif";
   (document.body || document.documentElement).appendChild(d);
@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-GDAn86s14Kb1JP4/QkVMi7Hi2EU8jSAl3+vXSZOutws=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-RneGsenzj9l5PpJtdR8xxEM97l5MgHF9DOlHWMJsUsM=' 'sha256-yyxJlX/p0Wv+wA6UQRLYhZyIBMcLCJ7BXkivXsOR7pw=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-wc7wcAIxAz3WkIDSZFp5esZFH0CnNkig6RAVjBsEPvo=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -566,7 +566,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
 <noscript>
   <div class="noscript">
     <b>이 화면은 자바스크립트로 자료를 펼칩니다.</b>
-    스크립트 없이 보시려면 <a href="s/">과목별 기출문제 목록</a>으로 가세요 —
+    스크립트 없이 보시려면 <a href="s/">과목별 기출문제 목록</a>을 이용해 주십시오.
     49과목 3,844회차가 문제·정답·해설 원본 주소와 함께 그대로 적혀 있습니다.
     프로그램으로 읽으신다면 <a href="llms.txt">llms.txt</a>(읽는 법)와
     <a href="data/index.json">data/index.json</a>(과목 목록)이 시작점입니다.
@@ -598,7 +598,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
     if(!window.__apkShown) return;
     var bar = document.getElementById("notice");
     document.getElementById("noticeText").textContent =
-      "안드로이드 앱을 설치해보세요 — 문제지를 앱에서 바로 읽고 오프라인으로 담아둘 수 있습니다.";
+      "안드로이드 앱을 설치하시면 문제지를 앱에서 바로 읽고, 연결이 없어도 보관한 자료를 열 수 있습니다.";
     var yes = document.getElementById("noticeYes");
     yes.textContent = "앱 받기";
     yes.onclick = function(){
@@ -629,7 +629,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
       <div class="row">
         <div class="lab">내 과목<button type="button" class="mini" id="favShare" hidden>공유</button><button type="button" class="mini" id="favEdit" hidden>편집</button></div>
         <div class="pills" id="favBox"></div>
-        <div class="pill-hint" id="favHint" hidden>탭하면 삭제 · 꾹 눌러 끌면 순서 변경 (키보드는 ← →)</div>
+        <div class="pill-hint" id="favHint" hidden>누르면 삭제 · 길게 눌러 끌면 순서 변경 (키보드는 ← →)</div>
       </div>
       <div class="row" id="pickShut" hidden>
         <div class="lab">과목</div>
@@ -690,7 +690,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
     </div>
     <div class="sheet-list" id="sheetList"></div>
     <button type="button" class="sheet-all" id="sheetAll">오프라인 저장 — 이 회차 전부 내려받기</button>
-    <p class="sheet-note" id="sheetNote">파일을 받아 공유 시트로 넘깁니다. 목록에서 노트앱을 고르세요.</p>
+    <p class="sheet-note" id="sheetNote">파일을 내려받아 공유 시트로 전달합니다. 목록에서 노트 앱을 선택해 주십시오.</p>
   </div>
 </div>
 
@@ -699,7 +699,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
   · 연도는 <b>시행 연도</b>입니다. 평가원 시험의 학년도는 시행 연도 +1이므로(예: <b>2013년 6월 시행 = 2014학년도 6월 모평</b>) 각 연도에 학년도를 병기했습니다. 교육청 학평은 관례상 시행 연도로만 부릅니다.<br>
   · 문제·해설은 PDF, 정답은 이미지입니다(웹은 새 탭, 앱은 앱 안에서 열립니다). 회차에 따라 일부 자료가 없으면 버튼이 비활성화됩니다.<br>
   · 모든 링크는 EBSi가 공개 제공하는 파일 주소로 직접 연결되며(로그인 불필요), 이 페이지는 어떤 파일도 저장·재배포하지 않습니다. 저작권은 <b>한국교육과정평가원</b> 및 <b>각 시·도교육청</b>에 있습니다. 권리자 또는 정당한 대리인의 게시중단 요청은 확인 즉시 이행합니다 — <a class="doc" href="mailto:direct.mogo.dev@gmail.com">direct.mogo.dev@gmail.com</a> 또는 <a class="doc" href="https://github.com/Mangom72/Direct-mogo/issues" target="_blank" rel="noopener">GitHub 이슈</a>. 자세한 것은 <a class="doc" href="https://github.com/Mangom72/Direct-mogo/blob/main/NOTICE.md" target="_blank" rel="noopener">이용 안내</a>에 있습니다.<br>
-  · 이 화면은 자료를 눌러 담아 두고 그때그때 풀어 쓰므로 검색엔진에는 빈 장으로 보입니다. 그래서 같은 자료를 <a class="doc" href="s/">과목별 목록</a>(그냥 읽히는 HTML) · <a class="doc" href="data/index.json">data/index.json</a>(과목 목록) · <a class="doc" href="llms.txt">llms.txt</a>(프로그램으로 읽는 법)로도 깔아 두었습니다.
+  · 이 화면은 자료를 압축하여 보관하고 필요할 때 펼치므로, 검색엔진에는 내용이 비어 있는 것으로 보입니다. 이에 동일한 자료를 <a class="doc" href="s/">과목별 목록</a>(스크립트 없이 읽히는 HTML) · <a class="doc" href="data/index.json">data/index.json</a>(과목 목록) · <a class="doc" href="llms.txt">llms.txt</a>(프로그램에서 읽는 방법)로도 함께 제공합니다.
   <div class="src"><a href="https://github.com/Mangom72/Direct-mogo" target="_blank" rel="noopener"
     aria-label="GitHub 저장소 — 소스와 자료 수집 방식"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>GitHub</a></div>
   <div class="appinfo" id="appInfo" hidden></div>
@@ -1243,7 +1243,7 @@ function subsLink(list){
 /* 복사가 막히면 주소를 글로 보여 주는데, 그냥 글로 두면 손으로 긁다가 끝이 잘린다.
    고를 수 있는 칸에 담고 미리 전체를 선택해 둔다 — 그대로 복사하면 온전하다. */
 function showLink(url){
-  showNotice("이 주소를 복사해 다른 기기에서 여세요.", "", null, null,
+  showNotice("이 주소를 복사하여 다른 기기에서 열어 주십시오.", "", null, null,
              { key:"share", field:url });
 }
 
@@ -1269,7 +1269,7 @@ function offerImport(list){
     showNotice(`링크의 과목 ${list.length}개가 이미 내 과목에 있습니다.`, "", null, null, { key:"subs" });
     return;
   }
-  showNotice(`링크에서 과목 ${fresh.length}개를 받았습니다 — ${fresh.map(label).join(", ")}. 내 과목에 추가할까요?`,
+  showNotice(`링크에서 과목 ${fresh.length}개를 받았습니다 — ${fresh.map(label).join(", ")}. 내 과목에 추가하시겠습니까?`,
     "추가", ()=>{ fresh.forEach(f=>favs.push({ g:f.g, s:f.s })); saveFavs(); syncFav(); },
     null, { key:"subs" });
 }
@@ -1354,7 +1354,7 @@ async function sendFile(f, btn){
       blobCache.set(f.url, blob);
     }catch(err){
       setBtn(btn, "", "보내기");
-      sheetNote.innerHTML = `파일을 받지 못했습니다. <b>새 탭에서 열었습니다</b> — 뷰어의 공유 기능을 이용하세요.`;
+      sheetNote.innerHTML = `파일을 받지 못했습니다. <b>새 탭에서 열었습니다</b> — 뷰어의 공유 기능을 이용해 주십시오.`;
       window.open(f.url, "_blank", "noopener");
       return;
     }
@@ -1374,7 +1374,7 @@ async function sendFile(f, btn){
          한 번 더 누르면 곧바로 공유된다. */
       if(err && err.name==="NotAllowedError" && !confirming){
         setBtn(btn, "confirm", "노트앱으로 보내기");
-        sheetNote.textContent = "받기가 끝났습니다. 버튼을 한 번 더 누르면 공유 시트가 열립니다.";
+        sheetNote.textContent = "내려받기가 끝났습니다. 버튼을 한 번 더 누르면 공유 시트가 열립니다.";
         return;
       }
       /* 그 밖의 공유 실패는 저장으로 대체 */
@@ -1383,7 +1383,7 @@ async function sendFile(f, btn){
 
   saveBlob(blob, f.name);
   setBtn(btn, "done", "저장했습니다");
-  sheetNote.innerHTML = `<b>다운로드</b> 폴더에 저장했습니다. 알림에서 열어 노트앱을 고르세요.`;
+  sheetNote.innerHTML = `<b>다운로드</b> 폴더에 저장했습니다. 알림에서 열어 노트 앱을 선택해 주십시오.`;
 }
 
 /* 오프라인 저장 — 회차의 파일을 전부 기기에 내려받는다.
@@ -1433,7 +1433,7 @@ function askTwice(btn, label, question, run){
   };
   btn.onclick = ()=>{
     if(btn.dataset.ask){ reset(); run(); return; }
-    btn.textContent = "지울까요?";
+    btn.textContent = "삭제하시겠습니까?";
     btn.dataset.ask = "1";
     btn.setAttribute("aria-label", question + " — 한 번 더 누르면 지웁니다");
     timer = setTimeout(reset, 4000);
@@ -1495,7 +1495,7 @@ function openVault(opener){
 
   sheetNote.innerHTML = items.length
     ? `버튼을 누르면 앱 안에서 바로 열립니다. 앱을 지우면 함께 사라집니다.`
-    : `회차의 <b>보내기</b> → <b>폴더에 담기</b>로 받아두면 여기 모입니다.`;
+    : `회차의 <b>보내기</b> → <b>폴더에 담기</b>로 내려받으면 이곳에 모입니다.`;
   if(items.length){
     const b=document.createElement("button");
     b.type="button"; b.textContent="모두 지우기";
@@ -1538,8 +1538,8 @@ function savedFolders(){
 function saveViaNative(){
   const folder = folderName(sheetRow.y, sheetRow.title, sheetRow.sub);
   sheetAll.disabled = true;
-  sheetAll.textContent = "앱이 받는 중…";
-  sheetNote.textContent = "앱 폴더에 담고 있습니다. 다 담기면 '받아둔 자료'에서 열 수 있습니다.";
+  sheetAll.textContent = "내려받는 중입니다…";
+  sheetNote.textContent = "앱 폴더에 보관하고 있습니다. 완료되면 '받아둔 자료'에서 열 수 있습니다.";
   try{
     NATIVE.savePaper(JSON.stringify({
       folder,
@@ -1577,7 +1577,7 @@ async function saveAll(){
   sheetAll.disabled = false;
   sheetAll.textContent = ALL_LABEL_NATIVE;
   sheetNote.innerHTML = failed
-    ? `${done}개 저장, ${failed}개 실패. 연결을 확인하고 다시 눌러 주세요.`
+    ? `${done}개 저장, ${failed}개 실패. 연결을 확인한 뒤 다시 눌러 주십시오.`
     : `<b>${done}개 파일을 저장했습니다.</b> 네트워크가 없어도 파일 앱(다운로드)에서 열 수 있습니다.`;
 }
 sheetAll.onclick = saveAll;
@@ -1738,7 +1738,7 @@ function render(){
   out.innerHTML = total
     ? `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · ${total}개 회차</span>${acts}</div>` + html
     : `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · 0개 회차</span>${acts}</div>
-       <div class="empty">해당 조건으로 수록된 회차가 없습니다.<br>선택한 학년에서 그 과목이 시행되지 않았거나, 연도·기관 필터를 좁게 잡았을 수 있습니다.</div>`;
+       <div class="empty">해당 조건으로 수록된 회차가 없습니다.<br>선택한 학년에서 그 과목이 시행되지 않았거나, 연도·기관 조건을 좁게 설정하셨을 수 있습니다.</div>`;
 
   /* 자리를 잡아 두던 표시를 뗀다. 그리기 전까지만 필요한 것이라, 그대로 두면
      회차가 몇 개뿐일 때 목록 아래로 한 화면이 통째로 비어 버린다. */
@@ -1844,7 +1844,7 @@ if(NATIVE && NATIVE.checkUpdate){
     if(state === "error" && settle("app", message || "새 버전을 확인하지 못했습니다.")) return;
     if(state === "downloading") showNotice("새 버전을 내려받는 중입니다…", "", null, null, { key:"update" });
     else if(state === "installing") closeNotice(null);   // 설치 화면이 화면을 가져간다
-    else if(state === "permission") showNotice(message || "설치를 허용해 주세요.", "", null, null, { key:"update" });
+    else if(state === "permission") showNotice(message || "설치를 허용해 주십시오.", "", null, null, { key:"update" });
     else if(state === "latest") showNotice(message || "이미 최신 버전입니다.", "", null, null, { key:"update" });
     else if(state === "error") showNotice(message || "업데이트하지 못했습니다.", "", null, null, { key:"update" });
   };
@@ -1890,7 +1890,7 @@ function androidWeb(){ return !NATIVE && !!window.__androidWeb; }
 if(androidWeb()){
   /* 늘 있는 자리 — 푸터. 앱에서는 같은 자리에 판 정보가 뜬다. */
   const box = $("#appInfo");
-  box.innerHTML = `<span>안드로이드 앱으로 쓰면 문제지를 <b>앱 안에서 바로</b> 읽고, 회차를 통째로 담아 오프라인에서 볼 수 있습니다 — 앱이 없으면 받습니다.</span>`;
+  box.innerHTML = `<span>안드로이드 앱에서는 문제지를 <b>앱 안에서 바로</b> 읽고, 회차 전체를 보관하여 연결이 없어도 볼 수 있습니다. 설치되어 있지 않으면 내려받기로 연결됩니다.</span>`;
   const a = document.createElement("a");
   a.textContent = "앱으로 열기"; a.rel = "noopener";
   /* 이미 깔려 있으면 열고, 없으면 그때 받는다. 웹은 설치 여부를 물어볼 수 없으니
@@ -1916,7 +1916,7 @@ if(androidWeb()){
       key: "apk" };
   } else if(off === null){
     afterPaint(()=> showNotice(
-      "안드로이드 앱을 설치해보세요 — 문제지를 앱에서 바로 읽고 오프라인으로 담아둘 수 있습니다.",
+      "안드로이드 앱을 설치하시면 문제지를 앱에서 바로 읽고, 연결이 없어도 보관한 자료를 열 수 있습니다.",
       "앱 받기",
       ()=>{ location.href = APK; },
       ()=>{ try{ localStorage.setItem(APK_KEY, "off"); }catch(e){} },

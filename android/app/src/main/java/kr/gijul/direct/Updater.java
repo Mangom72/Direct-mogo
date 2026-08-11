@@ -112,7 +112,7 @@ class Updater {
         /* 안드로이드 8부터는 앱마다 '이 출처 허용'을 받아야 한다. 없으면 설치 화면이
            그냥 튕기므로, 튕기기 전에 해당 설정 화면으로 보낸다. */
         if (Build.VERSION.SDK_INT >= 26 && !act.getPackageManager().canRequestPackageInstalls()) {
-            report("permission", "이 앱에서 설치를 허용해 주세요");
+            report("permission", "이 앱에서 설치를 허용해 주십시오");
             act.runOnUiThread(() -> {
                 try {
                     act.startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
