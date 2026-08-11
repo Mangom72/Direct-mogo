@@ -1,0 +1,63 @@
+name: v4.8 태그 옮기기 (일회성)
+
+# 히스토리에서 app/gijul-direct.apk 를 걷어내며 커밋 해시가 전부 바뀌었는데,
+# v4.8 태그만 옛 커밋에 남았다. 태그가 옛 히스토리를 붙들면 클론이 그것을 통째로
+# 받아 가므로(실측 67MB · APK 33판) 재작성이 아무 소용이 없어진다.
+#
+# 태그 ref 갱신은 이 저장소를 다루는 세션의 git 으로는 통과되지 않아, 워크플로가
+# GITHUB_TOKEN 으로 API를 직접 부른다. 옮기고 나면 이 파일은 지운다.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/retag.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  retag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: v4.8 을 새 히스토리로
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          # 재작성된 히스토리에서 v4.8 을 낸 커밋
+          # ("Publish the APK as a release asset instead of a committed file")
+          TARGET: 091cc823fd66315f3bfab0ad4a2e8e425ed4d101
+        run: |
+          set -euo pipefail
+          API=https://api.github.com/repos/$REPO
+
+          before=$(curl -sS -H "Authorization: Bearer $GH_TOKEN" \
+            "$API/git/ref/tags/v4.8" | python3 -c "import json,sys;print(json.load(sys.stdin)['object']['sha'])")
+          echo "지금:  $before"
+          echo "목표:  $TARGET"
+          if [ "$before" = "$TARGET" ]; then echo "이미 옮겨져 있습니다"; exit 0; fi
+
+          # 태그를 다른 커밋으로 옮기는 것이라 force 가 필요하다.
+          curl -sS -X PATCH -o /tmp/ref.json -w '옮기기 %{http_code}\n' \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "$API/git/refs/tags/v4.8" \
+            -d "{\"sha\":\"$TARGET\",\"force\":true}"
+
+          python3 -c "
+          import json, sys, os
+          d = json.load(open('/tmp/ref.json'))
+          got = d.get('object', {}).get('sha')
+          if got != os.environ['TARGET']:
+              sys.exit('옮기지 못했습니다: ' + json.dumps(d, ensure_ascii=False)[:300])
+          print('태그 v4.8 →', got)
+          "
+
+          # 릴리스 자산이 그대로인지 같은 자리에서 확인한다.
+          curl -sS -H "Authorization: Bearer $GH_TOKEN" "$API/releases/tags/v4.8" \
+            | python3 -c "
+          import json, sys
+          r = json.load(sys.stdin)
+          a = r.get('assets', [])
+          print('릴리스:', r.get('tag_name'), '· 자산', [(x['name'], x['size']) for x in a])
+          assert any(x['name'] == 'gijul-direct.apk' for x in a), '자산이 사라졌습니다'
+          "
