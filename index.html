@@ -113,8 +113,11 @@ addEventListener("securitypolicyviolation", function(e){
 <link rel="alternate" type="text/plain" href="llms-full.txt" title="AI·프로그램용 자세한 안내">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#191713">
+<!-- 검색 결과와 탭에 뜨는 아이콘은 둥글게 깎인다. 액자가 모서리까지 닿는 그림
+     (icons/icon-192.png)을 주면 네 귀가 잘려 나가므로, 여백을 둔 쪽을 준다.
+     매니페스트의 'any' 아이콘은 깎이지 않는 자리에 쓰이므로 그대로 둔다. -->
 <link rel="icon" href="icons/favicon.ico" sizes="32x32">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/favicon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="기출 직행">
 <meta name="mobile-web-app-capable" content="yes">

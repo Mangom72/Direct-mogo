@@ -11,6 +11,7 @@ const SHELL_URLS = [
   "./icons/icon-192.png", "./icons/icon-512.png",
   "./icons/icon-maskable-192.png", "./icons/icon-maskable-512.png",
   "./icons/apple-touch-icon.png", "./icons/favicon.ico", "./icons/favicon-32.png",
+  "./icons/favicon-192.png",
   /* 글꼴도 우리 것이 됐으므로 셸과 함께 미리 받아 둔다 — 첫 방문부터 오프라인에서
      제 글꼴로 뜨고, 예전처럼 남의 서버가 대답할 때까지 기다릴 일이 없다. */
   "./fonts/fonts.css",
