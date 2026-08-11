@@ -24,9 +24,14 @@
 <link rel="alternate" type="text/plain" href="../../llms-full.txt" title="AI·프로그램용 자세한 안내">
 <link rel="alternate" type="application/json" href="../../data/index.json" title="과목 목록 (JSON)">
 <link rel="alternate" type="application/json" href="../../data/D300/63003.json" title="윤리와 사상 전 회차 (JSON)">
-<!-- 글꼴을 preload로 당겨 보기도 했으나 값이 이득보다 컸다. 느린 4G에서 재 보니
-     이 페이지는 첫 그림이 1020ms에서 1892ms로 밀렸고, 얻은 것은 CLS 0.064를
-     0으로 만든 것뿐이었다 — 둘 다 이미 '좋음' 구간이다. 그래서 걸지 않는다. -->
+<!-- 글꼴은 font-display:optional 이라 제때 준비되지 않으면 그 방문에 안 쓰인다.
+     스타일시트를 읽고 나서 받기 시작하면 그 창을 못 맞춰, 검색으로 들어온 첫
+     페이지가 늘 시스템 글꼴로 열린다. preload로 파싱하는 자리에서 띄워 맞춘다.
+     늦게 도착해도 갈아끼우지 않으니 이걸로 흔들릴 일은 없다. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../fonts/SongMyung-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../fonts/GijulSans-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../fonts/GijulSans-600.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../fonts/GijulSans-700.woff2">
 <link rel="stylesheet" href="../../fonts/fonts.css">
 <link rel="stylesheet" href="../../s/paper.css">
 <meta name="theme-color" content="#191713">

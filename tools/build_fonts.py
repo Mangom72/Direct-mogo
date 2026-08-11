@@ -179,13 +179,23 @@ def finalize(path, family, weight, rename):
 
 
 def css_text():
-    """@font-face 만. 어느 글꼴을 어디에 쓸지는 index.html이 정한다."""
+    """@font-face 만. 어느 글꼴을 어디에 쓸지는 index.html이 정한다.
+
+    optional 인 이유: swap 은 늦게 도착한 글꼴로 글자를 갈아끼우는데, 그때 줄바꿈이
+    다시 잡히면서 아래 내용이 통째로 밀린다. 과목 색인에서 재 보니 폭 412px에서
+    41px가 밀려 CLS 0.25가 나왔다 — 나쁨 구간이다. 대체 글꼴의 폭을 맞춰 두는
+    길(size-adjust)도 있지만 그 값이 기기마다 달라 한 숫자로는 못 맞춘다.
+
+    optional 은 글꼴이 제때 준비되지 않으면 그 방문에는 아예 갈아끼우지 않는다.
+    갈아끼우지 않으니 밀릴 것도 없다. 대신 느린 회선의 첫 방문은 시스템 글꼴로
+    보인다 — 두 번째부터는 캐시에서 즉시 나오므로 제 글꼴이 쓰인다.
+    """
     out = ["/* tools/build_fonts.py 가 만든다. 손으로 고치지 말 것.",
            "   글꼴 라이선스는 같은 폴더의 OFL-*.txt 를 보라. */"]
     for _, family, weight, name in FACES:
         out.append(
             f"@font-face{{font-family:'{family}';font-style:normal;font-weight:{weight};"
-            f"font-display:swap;src:url('{name}') format('woff2')}}")
+            f"font-display:optional;src:url('{name}') format('woff2')}}")
     return "\n".join(out) + "\n"
 
 

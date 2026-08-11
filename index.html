@@ -124,12 +124,18 @@ addEventListener("securitypolicyviolation", function(e){
      media="print"로 걸어 두면 받아는 오되 첫 그림을 막지 않는다. 다 오면 아래
      스크립트가 적용한다. CSP가 인라인 onload를 막으므로 붙이는 일은 스크립트가 한다.
 
-     글꼴을 preload로 미리 당겨 보기도 했다. 흔들림을 줄이려는 것이었는데, 목록
-     자리를 CSS로 잡아 둔 뒤로는 그쪽이 이미 흔들림을 막고 있어 남는 이득이 거의
-     없었다. 대신 값이 비쌌다 — 느린 4G에서 글꼴 359KB가 문서와 같은 회선을
-     다투는 바람에 첫 그림이 472ms에서 680ms로 밀렸다. 그래서 도로 뺐다.
-     (재 보면: 휴대전화 FCP 680→472ms, CLS는 0.068로 동일. 데스크톱은 CLS가
-     0.004에서 0.016으로 오르지만 둘 다 '좋음' 안이고 LCP는 204→156ms.) -->
+     preload를 거는 이유는 흔들림이 아니라 **첫 방문에 제 글꼴이 나오게** 하기
+     위해서다. 글꼴은 font-display:optional 이라(fonts.css 참고) 제때 준비되지
+     않으면 그 방문에는 아예 쓰이지 않는데, 스타일시트를 읽고 나서야 받기
+     시작하면 그 100ms를 절대 못 맞춘다 — 재 보니 빠른 회선에서도 첫 페이지는
+     시스템 글꼴이었다. preload로 파싱하는 자리에서 띄우면 맞춘다.
+     optional 이라 늦게 도착해도 갈아끼우지 않으므로, 이걸 걸어서 흔들릴 일은
+     없다. 값은 느린 4G에서 첫 그림 554→716ms. 그 회선에서는 어차피 대체
+     글꼴로 가지만, 대부분의 방문은 이것 덕에 제 얼굴로 열린다. -->
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/SongMyung-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/GijulSans-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/GijulSans-600.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/GijulSans-700.woff2">
 <link id="webfont" media="print" href="fonts/fonts.css" rel="stylesheet">
 <style>
 :root{
