@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-LQasTbOCrXh1P9dLEzTmYFC1AGgQ3DCjCrO3iDgTdUU='; img-src 'self' data:; style-src 'self' 'sha256-jsr/IbrhGp9AvKHVJAYn7eFluyMBOSVPonAw8/isKdQ='; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>과목별 기출문제 49과목 — 기출 직행</title>
 <meta name="description" content="고1·고2·고3 49개 과목의 수능·모의평가·전국연합학력평가 기출 문제지 3,844회차. 과목을 고르면 전 회차의 문제·정답·해설 원본 PDF 주소가 나옵니다.">
 <link rel="canonical" href="https://mangom72.github.io/Direct-mogo/s/">
@@ -31,10 +31,183 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../fonts/GijulSans-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../fonts/GijulSans-600.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../fonts/GijulSans-700.woff2">
-<link rel="stylesheet" href="../fonts/fonts.css">
-<link rel="stylesheet" href="../s/paper.css">
+<style>/* tools/build_fonts.py 가 만든다. 손으로 고치지 말 것.
+   글꼴 라이선스는 같은 폴더의 OFL-*.txt 를 보라. */
+@font-face{font-family:'Song Myung';font-style:normal;font-weight:400;font-display:optional;src:url('../fonts/SongMyung-400.woff2') format('woff2')}
+@font-face{font-family:'Gijul Sans';font-style:normal;font-weight:400;font-display:optional;src:url('../fonts/GijulSans-400.woff2') format('woff2')}
+@font-face{font-family:'Gijul Sans';font-style:normal;font-weight:500;font-display:optional;src:url('../fonts/GijulSans-500.woff2') format('woff2')}
+@font-face{font-family:'Gijul Sans';font-style:normal;font-weight:600;font-display:optional;src:url('../fonts/GijulSans-600.woff2') format('woff2')}
+@font-face{font-family:'Gijul Sans';font-style:normal;font-weight:700;font-display:optional;src:url('../fonts/GijulSans-700.woff2') format('woff2')}
+/* tools/build_pages.py 가 쓰는 과목 페이지용 스타일.
+   앱 화면(index.html)과 같은 규칙 — 명조는 지면(제호·표제·연도·회차 이름),
+   고딕은 조작과 설명.
+
+   테마는 세 갈래다. 아무것도 고르지 않았으면 기기 설정을 따르고(가운데 블록),
+   앱 화면에서 밝게·어둡게를 골라 뒀으면 그것을 따른다(data-theme, site.js가 건다).
+   기기가 어둡더라도 사람이 밝게를 골랐으면 밝아야 하므로, 가운데 블록은
+   :not([data-theme="light"])로 막아 둔다. */
+:root{
+  --paper:#F5F1E6; --card:#FBF9F3; --ink:#191713; --ink2:#5C5747; --rule:#CFC6AC;
+  --mark:#B4342A; --gov:#1F4E79; --edu:#2E6B3E; --btn:#FFFDF7; --off:#6E6754;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#161A22; --card:#1F2531; --ink:#ECE7DA; --ink2:#AEB5C2; --rule:#3A4353;
+    --mark:#F08379; --gov:#8AC6EA; --edu:#A6D48D; --btn:#262E3B; --off:#9AA5B6;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#161A22; --card:#1F2531; --ink:#ECE7DA; --ink2:#AEB5C2; --rule:#3A4353;
+  --mark:#F08379; --gov:#8AC6EA; --edu:#A6D48D; --btn:#262E3B; --off:#9AA5B6;
+}
+*{box-sizing:border-box}
+body{
+  margin:0 auto;max-width:900px;padding:20px 16px 40px;
+  background:var(--paper);color:var(--ink);
+  font-family:"Gijul Sans",sans-serif;font-size:14px;line-height:1.7;
+  -webkit-text-size-adjust:100%;
+}
+a{color:var(--ink)}
+a:focus-visible,.dl a:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+
+.crumb{font-size:11.5px;color:var(--ink2);margin:0 0 8px}
+.crumb b{color:var(--ink)}
+/* 글줄 안이라 높이가 17px였다. 줄 간격은 그대로 두고 닿는 넓이만 넓힌다. */
+.crumb a,footer .ln a{display:inline-block;padding:4px 0;min-height:24px}
+
+.pg{border:1.5px solid var(--ink);background:var(--card);padding:18px 20px;margin-bottom:22px}
+.pg .kicker{font-family:"Song Myung",serif;font-size:11px;letter-spacing:3.5px;
+  color:var(--mark);font-weight:700;margin:0 0 7px}
+.pg h1{font-family:"Song Myung",serif;font-size:27px;font-weight:700;margin:0;
+  letter-spacing:-.5px;line-height:1.2}
+.pg .lead{margin:9px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.65}
+/* 연도 안내. 이 자료를 잘못 읽는 자리가 여기 하나뿐이라 표보다 먼저 읽혀야 한다 —
+   각주에만 두었더니 회차가 170개인 과목에서는 표를 다 지나야 닿았다. */
+.pg .yrnote{margin:11px 0 0;padding:8px 11px;font-size:12px;line-height:1.7;
+  color:var(--ink2);background:var(--paper);border-left:3px solid var(--mark)}
+.pg .yrnote b{color:var(--ink);font-weight:700}
+.pg .facts{margin:11px 0 0;padding:0 0 0 17px;font-size:12px;color:var(--ink2);line-height:1.75}
+.pg .facts li{margin:0}
+.pg .facts b{color:var(--ink);font-weight:700}
+.pg .go{margin:13px 0 0;display:flex;gap:7px;flex-wrap:wrap}
+.pg .go a{font-size:12.5px;font-weight:600;text-decoration:none;padding:8px 13px;
+  border:1.2px solid var(--ink);background:var(--btn)}
+.pg .go a.app{background:var(--ink);color:var(--card)}
+
+.yr{margin:0 0 26px}
+.yr h2{font-family:"Song Myung",serif;font-size:19px;font-weight:700;margin:0 0 9px;
+  padding-bottom:6px;border-bottom:2px solid var(--ink)}
+.yr h3{font-size:12px;font-weight:700;color:var(--ink2);margin:16px 0 6px;
+  letter-spacing:1px}
+.hak{font-family:"Gijul Sans",sans-serif;font-size:11px;font-weight:400;color:var(--ink2)}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{text-align:left;font-size:10.5px;letter-spacing:.5px;color:var(--ink2);
+  font-weight:700;padding:0 8px 6px;border-bottom:1px solid var(--rule)}
+tbody th{font-family:"Song Myung",serif;font-size:15px;font-weight:700;text-align:left}
+tbody th,tbody td{padding:9px 8px;border-bottom:1px solid var(--rule);vertical-align:middle}
+tbody tr:hover{background:var(--card)}
+td:nth-child(2){white-space:nowrap;color:var(--ink2);font-size:11.5px}
+.src{font-size:10px;font-weight:600;letter-spacing:.5px;padding:1px 7px;
+  border:1px solid currentColor;white-space:nowrap}
+.s-gov{color:var(--gov)} .s-edu{color:var(--edu)}
+.dl{text-align:right;white-space:nowrap}
+.dl a{display:inline-block;text-decoration:none;font-weight:600;font-size:11.5px;
+  padding:5px 10px;margin-left:4px;border:1.2px solid var(--ink);background:var(--btn)}
+.dl .off{display:inline-block;font-size:11.5px;padding:5px 10px;margin-left:4px;
+  border:1.2px dashed var(--rule);color:var(--off)}
+
+.subs{list-style:none;margin:0 0 4px;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.subs li{flex:0 0 auto}
+.subs a{display:inline-block;text-decoration:none;font-size:13px;padding:7px 13px;
+  border:1.2px solid var(--rule);background:var(--card)}
+.subs a:hover{border-color:var(--ink)}
+.subs .cnt{font-size:10.5px;color:var(--ink2);margin-left:5px}
+
+.also h2{font-family:"Song Myung",serif;font-size:15px;margin:0 0 8px;
+  padding-bottom:5px;border-bottom:1px solid var(--rule)}
+.chips{margin:0;display:flex;flex-wrap:wrap;gap:6px}
+.chips a{text-decoration:none;font-size:12px;padding:5px 11px;
+  border:1.2px solid var(--rule);background:var(--card)}
+.chips a:hover{border-color:var(--ink)}
+
+footer{margin-top:28px;padding-top:14px;border-top:1.5px solid var(--ink);
+  font-size:11px;color:var(--ink2);line-height:1.8}
+footer p{margin:0 0 7px}
+footer b{color:var(--ink)}
+footer .ln{font-weight:600}
+
+/* 좁은 화면에서는 표를 카드처럼 편다 — 가로로 흐르면 링크를 누르기 어렵다 */
+@media (max-width:560px){
+  thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  tbody tr{display:block;border-bottom:1px solid var(--rule);padding:9px 0}
+  tbody th,tbody td{display:inline-block;border:0;padding:2px 6px}
+  tbody th{display:block;font-size:16px}
+  .dl{display:block;text-align:left;margin-top:5px}
+  .dl a,.dl .off{margin:0 4px 0 0}
+}
+</style>
 <meta name="theme-color" content="#191713">
-<script src="../s/site.js"></script>
+<script>/* tools/build_pages.py 가 쓴다. 손으로 고치지 말 것.
+   과목 페이지에 붙는 유일한 스크립트다. 두 가지만 한다.
+
+   1) 앱 화면에서 골라 둔 테마를 여기서도 따른다. 같은 출처라 저장소를 그대로
+      읽을 수 있다. 기기가 어두워도 사람이 '밝게'를 골라 뒀으면 밝아야 한다.
+   2) 앱 안에서 열렸으면 문제·정답·해설을 창구로 넘긴다. 그냥 두면 앱이 주소만
+      보고 뷰어를 여는데, 그때 제목이 EBSi 원본 파일명(g_bio1_mun_3WDW7H97.pdf)이
+      된다. 사람이 읽는 이름은 data-nm에 실어 두었다.
+
+   CSP가 인라인 스크립트를 막으므로 파일로 따로 둔다. <head>에서 그냥(defer 없이)
+   불러야 첫 그림 전에 테마가 걸려 화면이 번쩍이지 않는다. */
+(function(){
+  var KEY = "gijul.theme.v1";
+  var BAR = { light:"#191713", dark:"#161A22" };
+  var media = matchMedia("(prefers-color-scheme: dark)");
+
+  function systemDark(){
+    try{
+      if(typeof GijulNative !== "undefined" && GijulNative && GijulNative.systemDark)
+        return !!GijulNative.systemDark();
+    }catch(e){}
+    return media.matches;
+  }
+
+  function apply(){
+    var pref = "auto";
+    try{ pref = localStorage.getItem(KEY) || "auto"; }catch(e){}
+    if(pref !== "light" && pref !== "dark") pref = "auto";
+    var t = pref === "auto" ? (systemDark() ? "dark" : "light") : pref;
+    document.documentElement.setAttribute("data-theme", t);
+    var bar = document.querySelector('meta[name="theme-color"]');
+    if(bar) bar.setAttribute("content", BAR[t]);
+  }
+
+  apply();
+  media.addEventListener("change", apply);
+  /* 앱은 액티비티를 다시 만들지 않으므로 테마가 바뀌면 이렇게 알려온다 */
+  window.gijulThemeChanged = apply;
+  /* 다른 탭에서 앱 화면의 테마를 바꿨을 때 */
+  addEventListener("storage", function(e){ if(e.key === KEY) apply(); });
+
+  /* 앱 안에서만 — 브라우저에서는 평범한 링크가 맞다 */
+  try{
+    if(typeof GijulNative === "undefined" || !GijulNative || !GijulNative.openPaper) return;
+  }catch(e){ return; }
+  addEventListener("click", function(e){
+    var a = e.target.closest && e.target.closest(".dl a[href]");
+    if(!a || e.defaultPrevented || e.button) return;
+    var row = a.closest("tr");
+    if(!row || !row.dataset.nm) return;
+    /* 앱 화면의 fileName()과 같은 이름을 여기서 맞춘다:
+       "<연도> <회차> <과목>" + " " + "문제|정답|해설" + "." + 확장자 */
+    var nm = row.dataset.nm + " " + a.textContent.trim()
+           + "." + a.href.split("?")[0].split(".").pop().toLowerCase();
+    e.preventDefault();
+    try{ GijulNative.openPaper(a.href, nm); }
+    catch(err){ location.href = a.href; }
+  });
+})();
+</script>
 </head>
 <body>
 <main>

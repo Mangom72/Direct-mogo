@@ -21,6 +21,8 @@ canonical로 자기 자신을 가리키고 서로 오갈 수 있게 해 둔다.
 data/ 가 먼저 있어야 한다 — tools/build_api.py 를 먼저 돌린다.
 """
 import argparse
+import base64
+import hashlib
 import html
 import json
 import re
@@ -35,15 +37,37 @@ REPO = "https://github.com/Mangom72/Direct-mogo"
 E = lambda s: html.escape(str(s), quote=True)
 
 
+def sha(text):
+    """CSP가 인라인 조각을 알아보게 하는 해시."""
+    return "sha256-" + base64.b64encode(hashlib.sha256(text.encode()).digest()).decode()
+
+
+def styles(up):
+    """@font-face 와 이 페이지의 스타일을 한 덩이로.
+
+    파일로 두면 각각 왕복이 하나씩 붙는다. 3KB짜리인데도 느린 4G에서는 왕복
+    자체가 비싸, 재 보니 fonts.css·paper.css·site.js 셋이 렌더링을 1,070ms
+    막고 있었다(구글이 440ms 절감으로 셈했다). 크기가 아니라 횟수가 문제라
+    본문에 실어 왕복을 0으로 만든다.
+
+    @font-face의 주소는 원래 fonts.css 자리를 기준으로 적혀 있다. 본문에 실으면
+    페이지 기준으로 풀리므로 여기서 고쳐 넣는다 — 안 고치면 글꼴이 404가 된다.
+    """
+    faces = (ROOT / "fonts/fonts.css").read_text(encoding="utf-8")
+    faces = re.sub(r"url\('([^'/]+)'\)", lambda m: f"url('{up}fonts/{m.group(1)}')", faces)
+    return faces.rstrip() + "\n" + CSS
+
+
 def head(title, desc, canon, depth, alt=""):
     """페이지 머리. depth는 사이트 뿌리까지 거슬러 올라갈 칸 수."""
     up = "../" * depth
+    css, js = styles(up), JS
     return f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' '{sha(js)}'; img-src 'self' data:; style-src 'self' '{sha(css)}'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>{E(title)}</title>
 <meta name="description" content="{E(desc)}">
 <link rel="canonical" href="{E(canon)}">
@@ -71,10 +95,9 @@ def head(title, desc, canon, depth, alt=""):
 <link rel="preload" as="font" type="font/woff2" crossorigin href="{up}fonts/GijulSans-400.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="{up}fonts/GijulSans-600.woff2">
 <link rel="preload" as="font" type="font/woff2" crossorigin href="{up}fonts/GijulSans-700.woff2">
-<link rel="stylesheet" href="{up}fonts/fonts.css">
-<link rel="stylesheet" href="{up}s/paper.css">
+<style>{css}</style>
 <meta name="theme-color" content="#191713">
-<script src="{up}s/site.js"></script>
+<script>{js}</script>
 </head>
 <body>
 <main>
@@ -495,8 +518,7 @@ def main():
     if out.exists():
         shutil.rmtree(out)            # 과목이 사라지면 낡은 페이지도 사라져야 한다
     out.mkdir(parents=True)
-    (out / "paper.css").write_text(CSS, encoding="utf-8")
-    (out / "site.js").write_text(JS, encoding="utf-8")
+    # paper.css·site.js 는 더 이상 파일로 두지 않는다 — 각 페이지 안에 실린다.
 
     n, pages = 0, []
     for gr in index["grades"]:
