@@ -67,12 +67,27 @@ def hangul(text):
     return {c for c in text if "가" <= c <= "힣"}
 
 
+# 주석은 화면에 나오지 않는다. 그런데 이 저장소는 주석이 길고 한글이라, 재 보니
+# 담고 있던 799자 중 309자가 오직 주석에서만 오는 글자였다 — 39%가 헛짐이다.
+# 글꼴은 이 사이트가 내려보내는 바이트의 4분의 3을 차지하므로 그냥 둘 수 없다.
+#
+# 여는 태그 안의 글(예: alt="…")은 주석이 아니므로 그대로 남는다. 문자열 안에
+# '/*'가 들어가면 잘못 잘릴 수 있는데, base64에는 '*'가 없고 이 저장소의 문자열에도
+# 없다 — 그래도 확실히 하려고 test_glyphs 가 실제로 그려진 글자를 훑어 확인한다.
+COMMENT = re.compile(r"<!--.*?-->|/\*.*?\*/", re.S)
+
+
+def visible(text):
+    """주석을 걷어낸 글. 여기서 지나치게 걷으면 그 글자가 화면에서 네모가 된다."""
+    return COMMENT.sub(" ", text)
+
+
 def wanted():
     """저장소에서 글자를 모은다. 여기 빠진 출처가 있으면 그게 곧 두부가 된다."""
     chars = set()
 
     index = (ROOT / "index.html").read_text(encoding="utf-8")
-    chars |= hangul(index)                      # 정적 문구 · 과목명 · 학년명
+    chars |= hangul(visible(index))             # 정적 문구 · 과목명 · 학년명
     m = re.search(r'id="payload"[^>]*>([A-Za-z0-9+/=\s]+)<', index)
     if m:                                       # 회차 제목 — 매달 늘어나는 쪽
         db = json.loads(gzip.decompress(base64.b64decode(re.sub(r"\s", "", m.group(1)))))
@@ -82,14 +97,14 @@ def wanted():
     # 앱이 띄우는 문구도 이 글꼴로 그려진다 — 웹뷰 안이라 같은 페이지다
     src = ROOT / "android/app/src/main"
     for f in list(src.rglob("*.java")) + list(src.rglob("*.xml")):
-        chars |= hangul(f.read_text(encoding="utf-8"))
+        chars |= hangul(visible(f.read_text(encoding="utf-8")))
 
     # 과목 페이지(s/)도 같은 글꼴을 쓴다. 만들어진 HTML을 그대로 읽는다 — 틀에 적힌
     # 글과 자료에서 온 글이 섞여 있어, 만드는 쪽 소스만 봐서는 놓치는 것이 생긴다.
     # 그래서 워크플로에서 build_pages.py 를 먼저 돌리고 이 스크립트를 나중에 돌린다.
     pages = list((ROOT / "s").rglob("*.html")) or [ROOT / "tools/build_pages.py"]
     for f in pages:
-        chars |= hangul(f.read_text(encoding="utf-8"))
+        chars |= hangul(visible(f.read_text(encoding="utf-8")))
 
     # 릴리스 노트 — 커밋 메시지가 그대로 들어와 알림 막대에 뜬다
     latest = ROOT / "app/latest.json"
