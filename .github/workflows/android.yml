@@ -70,6 +70,30 @@ jobs:
         working-directory: android
         run: rm -f gijul-release.jks
 
+      # 서명 인증서가 바뀌면 기존 사용자 기기가 업데이트를 **영구히** 거부한다.
+      # 지우고 다시 깔라고 할 수밖에 없고 받아둔 자료도 함께 사라진다. 그러니
+      # 나가기 전에 여기서 막는다. 이 지문은 docs/assetlinks.json 의 것과 같아야
+      # 하며, 그쪽이 어긋나면 앱 링크도 함께 깨진다.
+      - name: 서명 확인
+        if: ${{ env.release == '1' }}
+        env:
+          WANT: "54:37:0E:D9:0C:11:E5:3D:BC:7D:3C:C0:55:58:F4:9D:D1:11:BD:65:78:E4:33:85:0D:6E:83:62:2C:FD:10:C1"
+        run: |
+          set -euo pipefail
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | tail -1)
+          GOT=$("$APKSIGNER" verify --print-certs \
+            android/app/build/outputs/apk/release/app-release.apk \
+            | sed -n 's/.*certificate SHA-256 digest: //p' | head -1)
+          # apksigner 는 콜론 없는 소문자로 찍는다. assetlinks 쪽 표기에 맞춘다.
+          NORM=$(printf %s "$WANT" | tr -d ':' | tr 'A-Z' 'a-z')
+          echo "지문 $GOT"
+          if [ "$GOT" != "$NORM" ]; then
+            echo "기대한 값 $NORM"
+            echo "서명 키가 다릅니다 — 이대로 내보내면 기존 사용자가 영영 업데이트를 못 받습니다"
+            exit 1
+          fi
+          echo "이전 판본과 같은 키입니다"
+
       - uses: actions/upload-artifact@v4
         with:
           name: gijul-direct-apk
@@ -81,23 +105,76 @@ jobs:
       # 앱은 app/latest.json을 읽어 스스로 새 버전을 찾는다. 서명된 빌드일 때만
       # 올린다 — 서명이 다른 APK는 기기가 어차피 거부하므로 올려봐야 해롭다.
       # versionCode가 늘지 않았으면 스크립트가 스스로 멈춘다.
+      #
+      # 차례가 중요하다. **릴리스를 먼저 만들고 latest.json 을 나중에 커밋한다** —
+      # 반대로 하면 명세가 아직 없는 주소를 가리키는 동안 앱이 그것을 읽고
+      # 내려받기에 실패한다.
       - name: 사이트에 올리기
         if: ${{ env.release == '1' && github.ref == 'refs/heads/main' }}
         env:
           MSG: ${{ github.event.head_commit.message }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          APK: android/app/build/outputs/apk/release/app-release.apk
         run: |
+          set -euo pipefail
           # 이 한 줄은 사용자의 알림 막대에 그대로 뜬다. 커밋 제목은 영어 관례라
           # 그것을 쓰면 "Release 4.9" 같은 말이 화면에 나간다. 그래서 커밋 본문의
           # 'Notes: …' 줄을 찾아 쓰고, 없으면 무난한 한 줄로 대신한다.
           NOTES=$(printf %s "$MSG" | sed -n 's/^[Nn]otes:[[:space:]]*//p' | head -1)
           [ -n "$NOTES" ] || NOTES="앱을 새로 고쳤습니다"
           echo "알림 문구: $NOTES"
-          if python3 tools/publish_apk.py --notes "$NOTES"; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add app
-            git diff --cached --quiet || git commit -m "Publish the app update manifest"
-            git push
-          else
+
+          if ! python3 tools/publish_apk.py --notes "$NOTES"; then
             echo "올릴 새 판본이 없습니다 — 넘어갑니다"
+            exit 0
           fi
+
+          python3 - <<'PY'
+          import hashlib, json, os, sys, urllib.error, urllib.request
+
+          TOKEN, REPO = os.environ["GH_TOKEN"], os.environ["REPO"]
+          API = f"https://api.github.com/repos/{REPO}"
+          m = json.load(open("app/latest.json"))
+          tag = "v" + m["versionName"]
+
+          blob = open(os.environ["APK"], "rb").read()
+          if len(blob) != m["size"] or hashlib.sha256(blob).hexdigest() != m["sha256"]:
+              sys.exit("빌드된 APK가 방금 쓴 명세와 다릅니다")
+
+          def call(url, data=None, ctype="application/json"):
+              req = urllib.request.Request(url, data=data)
+              req.add_header("Authorization", "Bearer " + TOKEN)
+              req.add_header("Accept", "application/vnd.github+json")
+              if data is not None:
+                  req.add_header("Content-Type", ctype)
+              try:
+                  with urllib.request.urlopen(req) as r:
+                      return r.status, json.loads(r.read() or b"{}")
+              except urllib.error.HTTPError as e:
+                  return e.code, json.loads(e.read() or b"{}")
+
+          if call(f"{API}/releases/tags/{tag}")[0] == 200:
+              sys.exit(f"{tag} 릴리스가 이미 있습니다 — versionName 을 올리세요")
+
+          body = json.dumps({"tag_name": tag,
+                             "name": f"{tag} (versionCode {m['versionCode']})",
+                             "body": m.get("notes") or "",
+                             "draft": False, "prerelease": False}, ensure_ascii=False).encode()
+          st, rel = call(f"{API}/releases", body)
+          if "id" not in rel:
+              sys.exit(f"릴리스를 만들지 못했습니다 ({st}) {rel}")
+
+          st, a = call(f"https://uploads.github.com/repos/{REPO}/releases/{rel['id']}"
+                       "/assets?name=gijul-direct.apk",
+                       blob, "application/vnd.android.package-archive")
+          if a.get("state") != "uploaded" or a.get("size") != m["size"]:
+              sys.exit(f"자산을 올리지 못했습니다 ({st}) {a}")
+          print("릴리스", tag, "·", a["browser_download_url"])
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/latest.json
+          git diff --cached --quiet || git commit -m "Publish the app update manifest"
+          git push

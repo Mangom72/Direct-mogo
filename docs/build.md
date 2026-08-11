@@ -18,12 +18,12 @@
 | `tools/build_pages.py` | `data/`를 `s/` 정적 페이지와 `sitemap.xml`로 내보냅니다 |
 | `tools/build_fonts.py` | 저장소 안의 글자를 모아 웹폰트를 잘라 만듭니다 |
 | `tools/check_csp.py` | 인라인 스크립트 해시가 CSP와 맞는지 봅니다 |
-| `tools/publish_apk.py` | 빌드된 릴리스 APK를 `app/`에 올리고 명세를 씁니다 |
+| `tools/publish_apk.py` | 빌드된 릴리스 APK를 읽어 `app/latest.json`을 씁니다 |
 | `tests/` | 회귀 시험 27종 ([tests/README.md](../tests/README.md)) |
 | `android/` | WebView 앱 ([docs/android.md](android.md)) |
 | `.github/workflows/refresh-data.yml` | 매일 23시(KST) 자료 갱신 |
 | `.github/workflows/tests.yml` | 화면을 고쳐 main에 밀면 27종을 돌립니다 |
-| `.github/workflows/android.yml` | APK 빌드 (main 푸시·수동 실행) |
+| `.github/workflows/android.yml` | APK 빌드·서명·릴리스 (main 푸시·수동 실행) |
 
 자료를 `index.html` 안에 넣어둔 덕분에 **이 파일 하나만 캐시하면 조회·필터가
 네트워크 없이 전부 동작합니다.** 네트워크가 필요한 건 PDF를 받을 때뿐입니다.

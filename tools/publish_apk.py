@@ -27,7 +27,6 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 APK_SRC = ROOT / "android/app/build/outputs/apk/release/app-release.apk"
 APP_DIR = ROOT / "app"
-APK_DST = APP_DIR / "gijul-direct.apk"
 MANIFEST = APP_DIR / "latest.json"
 
 # 내려받는 자리는 릴리스 자산이다. 저장소에 APK를 커밋해 두면 판본마다 1.8MB가
@@ -96,9 +95,10 @@ def main():
         sys.exit(f"versionCode가 늘지 않았습니다 ({old.get('versionCode')} → {code}). "
                  "build.gradle을 먼저 올리세요.")
 
+    # APK 자체는 저장소에 두지 않는다 — 판본마다 1.8MB가 히스토리에 영구히 쌓인다.
+    # 여기서는 명세만 쓰고, 파일은 부르는 쪽(워크플로)이 릴리스 자산으로 올린다.
     APP_DIR.mkdir(exist_ok=True)
-    shutil.copy2(apk, APK_DST)
-    data = APK_DST.read_bytes()
+    data = apk.read_bytes()
 
     MANIFEST.write_text(json.dumps({
         "versionCode": code,
@@ -110,8 +110,8 @@ def main():
     }, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     print(f"{name} (versionCode {code}) · {len(data)/1048576:.2f}MB")
-    print(f"  {APK_DST.relative_to(ROOT)}")
     print(f"  {MANIFEST.relative_to(ROOT)}")
+    print(f"  자산으로 올릴 파일: {apk}")
     fp = signer(apk)
     if fp:
         print(f"  서명 SHA-256 {fp}")

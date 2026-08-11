@@ -88,8 +88,8 @@ app/latest.json        versionCode·versionName·url·size·sha256·notes
 ```
 
 APK 자체는 저장소가 아니라 **GitHub 릴리스 자산**으로 나갑니다. 판본마다 1.8MB가
-히스토리에 영구히 쌓이면 받는 사람 전부가 그 비용을 내기 때문입니다. `latest.json`이
-바뀌면 `release.yml`이 그 `versionName`으로 태그를 달고 APK를 붙입니다.
+히스토리에 영구히 쌓이면 받는 사람 전부가 그 비용을 내기 때문입니다. `android.yml`이
+서명해 빌드한 APK를 `versionName`으로 태그를 달아 릴리스에 붙입니다.
 
 ```
 릴리스에 붙는 이름   gijul-direct.apk           (늘 같습니다)
@@ -113,18 +113,37 @@ versionCode보다 크면 알림 막대를 띄웁니다. 누르면 받아서 시�
 안드로이드 8+에서는 이 앱에 "이 출처 허용"을 한 번 줘야 하며, 없으면 앱이 해당
 설정 화면으로 안내합니다.
 
-새 판본을 올리려면 `build.gradle`의 `versionCode`를 올리고:
+## 새 판본 내보내기
 
-```bash
-cd android && gradle assembleRelease && cd ..
-python3 tools/publish_apk.py --notes "무엇이 달라졌는지 한 줄"
+`android/app/build.gradle`의 `versionCode`와 `versionName`을 올려 main에 밀면
+끝입니다. 나머지는 `android.yml`이 합니다 — 시크릿의 키로 서명해 빌드하고,
+**지문이 이전 판본과 같은지 확인하고**, 릴리스를 만들어 APK를 붙이고,
+`app/latest.json`을 커밋합니다.
+
+차례가 정해져 있습니다. **릴리스를 먼저 만들고 명세를 나중에 커밋합니다** —
+반대로 하면 명세가 아직 없는 주소를 가리키는 동안 앱이 그것을 읽고 내려받기에
+실패합니다. versionCode가 늘지 않았으면 거기서 조용히 멈춥니다.
+
+사용자의 알림 막대에 뜰 한 줄은 **커밋 본문의 `Notes:` 줄**에서 가져옵니다.
+
+```
+Release 4.9
+
+Notes: 문제지를 넘길 때 쪽 번호를 함께 보냅니다
 ```
 
-versionCode가 늘지 않았으면 스크립트가 거부합니다. 서명 키가 CI 시크릿에 들어
-있으면 `android/`를 고쳐 main에 밀 때 워크플로가 이 과정을 대신합니다.
+그 줄이 없으면 "앱을 새로 고쳤습니다"로 갑니다. 커밋 제목은 영어 관례라 그것을
+쓰면 화면에 "Release 4.9"가 나가므로, 제목을 그대로 가져다 쓰지 않습니다.
 
-`--notes`의 한 줄은 **사용자의 알림 막대에 그대로 뜹니다.** CI가 대신 올릴 때는
-커밋 본문에서 `Notes:` 로 시작하는 줄을 찾아 씁니다.
+손에서 명세만 확인하고 싶다면 `python3 tools/publish_apk.py --notes "…"`가
+`app/latest.json`을 써 줍니다. 다만 릴리스 자산을 올리는 것은 워크플로 몫이라,
+그것만으로는 배포가 끝나지 않습니다.
+
+### 서명 지문 확인
+
+`android.yml`은 서명한 APK의 인증서를 `docs/assetlinks.json`의 지문과 대조하고,
+다르면 **거기서 멈춥니다.** 서명 키가 바뀐 APK는 기존 기기가 영영 거부하므로
+(지우고 새로 깔아야 하며 받아둔 자료도 사라집니다), 나가기 전에 막습니다.
 
 ```
 Release 4.9
