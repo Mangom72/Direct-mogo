@@ -29,7 +29,14 @@ APK_SRC = ROOT / "android/app/build/outputs/apk/release/app-release.apk"
 APP_DIR = ROOT / "app"
 APK_DST = APP_DIR / "gijul-direct.apk"
 MANIFEST = APP_DIR / "latest.json"
-BASE = "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk"
+
+# 내려받는 자리는 릴리스 자산이다. 저장소에 APK를 커밋해 두면 판본마다 1.8MB가
+# 히스토리에 영구히 남고 받는 사람 전부가 그 비용을 낸다.
+#
+# 판본을 **못박아** 적는다. latest.json 자체가 한 판본을 가리키는 문서인데 주소만
+# 'latest'로 두면, 다음 판이 올라간 순간 이 문서가 말하는 크기·sha256과 실제로
+# 내려오는 파일이 어긋난다. 앱은 그 둘을 대조하므로 그대로 설치를 거부한다.
+RELEASE = "https://github.com/Mangom72/Direct-mogo/releases/download/v{name}/gijul-direct.apk"
 
 
 def sdk_tool(name):
@@ -96,7 +103,7 @@ def main():
     MANIFEST.write_text(json.dumps({
         "versionCode": code,
         "versionName": name,
-        "url": BASE,
+        "url": RELEASE.format(name=name),
         "size": len(data),
         "sha256": hashlib.sha256(data).hexdigest(),
         "notes": args.notes,

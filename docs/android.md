@@ -85,8 +85,21 @@ Android/data/kr.gijul.direct/files/
 
 ```
 app/latest.json        versionCode·versionName·url·size·sha256·notes
-app/gijul-direct.apk   최신 릴리스 APK (이름은 늘 같습니다)
 ```
+
+APK 자체는 저장소가 아니라 **GitHub 릴리스 자산**으로 나갑니다. 판본마다 1.8MB가
+히스토리에 영구히 쌓이면 받는 사람 전부가 그 비용을 내기 때문입니다. `latest.json`이
+바뀌면 `release.yml`이 그 `versionName`으로 태그를 달고 APK를 붙입니다.
+
+```
+릴리스에 붙는 이름   gijul-direct.apk           (늘 같습니다)
+사람이 누르는 주소   …/releases/latest/download/gijul-direct.apk
+latest.json 의 url   …/releases/download/v4.8/gijul-direct.apk
+```
+
+아래쪽은 **판본을 못박습니다.** `latest.json`은 한 판본을 가리키는 문서라, 주소만
+`latest`로 두면 다음 판이 올라간 순간 거기 적힌 크기·sha256과 실제로 내려오는
+파일이 어긋나고 앱이 설치를 거부합니다.
 
 앱은 **실행할 때마다**, 그리고 다시 앞으로 불러올 때마다 이 명세를 보고, 설치된
 versionCode보다 크면 알림 막대를 띄웁니다. 누르면 받아서 시스템 설치 화면으로

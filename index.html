@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-iat1dqVrWcI5/wDYaZOJ8pCtYMZIWnCD0ncCP31Zarw=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-jnhriYA/AHnDnkCM8JkYrjlv+6HZLj5j/XHUpX8XXjE=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -675,7 +675,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
     var yes = document.getElementById("noticeYes");
     yes.textContent = "앱 받기";
     yes.onclick = function(){
-      location.href = "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk";
+      location.href = "https://github.com/Mangom72/Direct-mogo/releases/latest/download/gijul-direct.apk";
     };
     document.getElementById("noticeNo").onclick = function(){
       try{ localStorage.setItem("gijul.apk.v1", "off"); }catch(e){}
@@ -2194,7 +2194,10 @@ if(NATIVE && NATIVE.checkUpdate){
 
 /* ── 안드로이드 웹에서 앱 권하기 ─────────────────────────────────
    앱 안에서는 이 코드가 통째로 돌지 않는다(NATIVE가 있으면 이미 앱이다). */
-const APK = "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk";
+/* 릴리스 자산으로 간다. 여기는 사람이 '앱 받기'를 누르는 자리라 늘 최신을 줘야
+   하므로 latest 를 쓴다. 앱이 스스로 읽는 app/latest.json 쪽은 반대로 판본을
+   못박는다 — 거기 적힌 크기·sha256과 어긋나면 안 되기 때문이다. */
+const APK = "https://github.com/Mangom72/Direct-mogo/releases/latest/download/gijul-direct.apk";
 const APK_KEY = "gijul.apk.v1";
 
 /* 안드로이드인지 — '데스크톱 화면으로 보기'까지 잡는다.

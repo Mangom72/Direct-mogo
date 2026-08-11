@@ -4,7 +4,7 @@
 EBSi에서 찾아 들어갈 필요 없이 학년 → 과목 → 연도만 고르면 문제·정답·해설이 바로 나옵니다.
 
 **웹 → [mangom72.github.io/Direct-mogo](https://mangom72.github.io/Direct-mogo/)**
-· **안드로이드 → [앱 받기](https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk)**
+· **안드로이드 → [앱 받기](https://github.com/Mangom72/Direct-mogo/releases/latest/download/gijul-direct.apk)**
 
 ![밝은 화면과 어두운 화면](docs/screenshot.png)
 
@@ -31,7 +31,7 @@ EBSi에서 찾아 들어갈 필요 없이 학년 → 과목 → 연도만 고르
 문제지를 **앱 안에서 바로 읽고**, 회차를 통째로 담아 연결 없이 볼 수 있습니다.
 스토어에 없어서 APK를 직접 받습니다 — 한 번 넣으면 새 판은 앱이 알아서 알려줍니다.
 
-**→ [앱 받기](https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk)**
+**→ [앱 받기](https://github.com/Mangom72/Direct-mogo/releases/latest/download/gijul-direct.apk)**
 
 받은 자료가 어디에 쌓이는지, 뷰어와 자체 업데이트가 어떻게 도는지는
 [docs/android.md](docs/android.md)에 있습니다.
