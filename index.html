@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-7osri7UWOEq/qw0KYfPmqGrgXiJ72PuprUrCXA8Ny+8=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-GAQMGFsh3123879DHJbcb5gM8OJ7anZiBYujbdLu1HA=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -454,6 +454,30 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 .sai img{display:block;width:100%;height:auto;border:1.2px solid var(--rule);border-radius:8px}
 .sai figcaption{margin-top:7px;font-size:11.5px;color:var(--ink2)}
 .sai .q{color:var(--ink);font-weight:600}
+
+/* 예시 그림 크게 보기.
+
+   새 탭으로 여는 길은 쓸 수 없다 — 앱은 같은 사이트 주소를 그대로 열어서,
+   그림 한 장을 보려다 앱이 통째로 그 그림으로 넘어간다. 화면 안에서 띄운다.
+
+   그림을 제 크기(1000px)로 두고 겹판이 스크롤을 맡는다. 화면에 맞춰 줄이면
+   패널에서 보던 340px와 별 차이가 없어 '확대'가 되지 않는다.
+   width:max-content 는 넓을 때 왼쪽 끝까지 스크롤되게 하는 자리다 — 가운데
+   정렬만 걸어 두면 넘치는 쪽이 잘려서 못 본다. */
+/* 겹판 바탕은 밝은 화면에서도 어둡게 둔다. 여기서 볼 것은 그림 한 장뿐이라,
+   뒤가 덜 눌리면 시트 글과 섞여 무엇을 보는 중인지 흐려진다. */
+.lens{position:fixed;inset:0;z-index:200;background:rgba(12,10,8,.86);overflow:auto;
+  -webkit-overflow-scrolling:touch}
+.lens[hidden]{display:none}
+.lens .pad{min-width:100%;min-height:100%;width:max-content;
+  display:flex;align-items:center;justify-content:center;padding:14px;box-sizing:border-box}
+.lens img{display:block;width:1000px;max-width:none;height:auto;border-radius:8px}
+.lens .x{position:fixed;top:12px;right:12px;font:inherit;font-size:12.5px;font-weight:700;
+  cursor:pointer;padding:8px 15px;border-radius:999px;
+  border:1.5px solid var(--paper);background:var(--ink);color:var(--paper)}
+.lens .x:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+.sai .zoom{display:block;width:100%;padding:0;border:none;background:none;cursor:zoom-in}
+.sai .zoom:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px;border-radius:8px}
 
 /* 갱신 내역 한 줄. 날짜 · 결과 · 무슨 일이 있었는지. */
 .slog{padding:9px 18px;border-bottom:1px solid var(--rule);display:flex;
@@ -1719,6 +1743,9 @@ function openAI(opener){
   box.appendChild(row);
 
   const fig = document.createElement("figure");
+  const zoom = document.createElement("button");
+  zoom.type = "button"; zoom.className = "zoom";
+  zoom.setAttribute("aria-label", "예시 그림 크게 보기");
   const im = document.createElement("img");
   /* 400KB짜리를 늘 받아오게 두지 않는다 — 이 패널을 열 때만 부른다.
      README가 쓰는 것과 같은 파일이라 두 벌로 갈라지지 않는다. */
@@ -1729,11 +1756,13 @@ function openAI(opener){
   /* 이 그림은 셸 캐시에 없다 — 102KB를 늘 들고 다닐 만한 것이 아니다. 연결이
      없으면 못 받는데, 그대로 두면 깨진 그림 아이콘이 남는다. 조용히 접는다. */
   im.onerror = ()=>{ fig.hidden = true; };
+  zoom.onclick = ()=>openLens(im.src, im.alt, zoom);
+  zoom.appendChild(im);
   const cap = document.createElement("figcaption");
   cap.innerHTML = '<span class="q">' + esc(AI_ASK) + "</span><br>"
     + "'21학년도'를 2020년 6월 시행분으로 옳게 옮겼습니다 — 시행 연도로 찾았다면 "
     + "한 해 어긋난 시험지를 폈을 것입니다.";
-  fig.append(im, cap);
+  fig.append(zoom, cap);
   box.appendChild(fig);
 
   sheetList.appendChild(box);
@@ -1741,6 +1770,44 @@ function openAI(opener){
   document.body.style.overflow = "hidden";
   sheetX.focus();
 }
+/* 겹판은 시트 위에 뜨므로 Esc가 이쪽을 먼저 닫아야 한다. 안 그러면 시트가
+   닫히면서 그림만 화면에 남는다. */
+let lens = null, lensBack = null;
+function openLens(src, alt, opener){
+  if(!lens){
+    lens = document.createElement("div");
+    lens.className = "lens"; lens.hidden = true;
+    lens.setAttribute("role", "dialog");
+    lens.setAttribute("aria-modal", "true");
+    lens.setAttribute("aria-label", "예시 그림 크게 보기");
+    const pad = document.createElement("div"); pad.className = "pad";
+    const big = document.createElement("img"); pad.appendChild(big);
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "x"; x.textContent = "닫기";
+    x.onclick = closeLens;
+    /* 그림을 눌러도 닫힌다 — 손가락으로 여는 사람에게 닫기 단추만 두면 좁다.
+       끌어서 훑는 중에는 닫지 않는다. */
+    let moved = false;
+    pad.onpointerdown = ()=>{ moved = false; };
+    pad.onpointermove = ()=>{ moved = true; };
+    pad.onclick = ()=>{ if(!moved) closeLens(); };
+    lens.append(pad, x);
+    document.body.appendChild(lens);
+  }
+  lens.querySelector("img").src = src;
+  lens.querySelector("img").alt = alt || "";
+  lensBack = opener || null;
+  lens.hidden = false;
+  lens.querySelector(".x").focus();
+}
+function closeLens(){
+  if(!lens || lens.hidden) return false;
+  lens.hidden = true;
+  if(lensBack && document.contains(lensBack)) lensBack.focus();
+  lensBack = null;
+  return true;
+}
+
 $("#aiBtn").onclick = e => openAI(e.currentTarget);
 
 /* ── 자료 갱신 내역 ──────────────────────────────────────
@@ -1871,7 +1938,7 @@ if(NATIVE && NATIVE.openPaper){
 }
 sheetBg.onclick=closeSheet;
 sheetX.onclick=closeSheet;
-document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeSheet(); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !closeLens()) closeSheet(); });
 sheet.addEventListener("keydown", e=>{
   if(e.key!=="Tab") return;
   const f=[...sheet.querySelectorAll("button")];

@@ -69,11 +69,40 @@ with sync_playwright() as pw:
     ck("21학년도" in cap and "2020년" in cap, f"예시 설명이 이상합니다: {cap[:40]!r}")
     print("5. 설명:", cap[:46].replace("\n", " "))
 
+    # 눌러서 크게 보기 — 패널에서는 작아서 글자가 안 읽힌다
+    pg.click(".sai .zoom")
+    pg.wait_for_selector(".lens:not([hidden])")
+    big = pg.eval_on_selector(".lens img", "e=>Math.round(e.getBoundingClientRect().width)")
+    scroll = pg.eval_on_selector(".lens", "e=>e.scrollWidth > e.clientWidth")
+    covers = pg.evaluate("()=>{const l=document.querySelector('.lens').getBoundingClientRect();"
+                         "return Math.round(l.width)===innerWidth && Math.round(l.height)===innerHeight;}")
+    print(f"6. 크게 보기: {im['shown']}px → {big}px · 가로 스크롤 {scroll} · 화면 다 덮음 {covers}")
+    ck(big > im["shown"] * 2, f"크게 보기가 {big}px — 패널의 {im['shown']}px와 별 차이가 없습니다")
+    ck(scroll, "제 크기로 띄웠는데 좁은 화면에서 옆을 볼 수 없습니다")
+    ck(covers, "겹판이 화면을 다 덮지 않습니다")
+
+    # Esc는 겹판을 먼저 닫는다 — 시트가 먼저 닫히면 그림만 남는다
+    pg.keyboard.press("Escape")
+    pg.wait_for_timeout(300)
+    ck(pg.is_hidden(".lens"), "Esc로 겹판이 닫히지 않습니다")
+    ck(pg.is_visible("#sheet"), "겹판을 닫았는데 시트까지 닫혔습니다")
+    ck(pg.evaluate("()=>document.activeElement.className") == "zoom",
+       "겹판을 닫은 뒤 초점이 그림으로 돌아오지 않습니다")
+    print("7. Esc — 겹판만 닫힘 · 시트 남음 · 초점 복귀")
+
+    # 그림을 눌러도 닫힌다 (닫기 단추만으로는 손가락에 좁다)
+    pg.click(".sai .zoom")
+    pg.wait_for_selector(".lens:not([hidden])")
+    pg.click(".lens img")
+    pg.wait_for_timeout(300)
+    ck(pg.is_hidden(".lens"), "그림을 눌러도 닫히지 않습니다")
+    print("8. 그림을 눌러 닫힘")
+
     pg.keyboard.press("Escape")
     pg.wait_for_timeout(300)
     ck(pg.is_hidden("#sheet"), "Esc로 닫히지 않습니다")
     ck(pg.evaluate("()=>document.activeElement.id") == "aiBtn", "닫은 뒤 초점이 단추로 돌아오지 않습니다")
-    print("6. Esc로 닫힘 · 초점 복귀 정상")
+    print("9. Esc로 시트 닫힘 · 초점 복귀 정상")
     print("   오류:", errs or "없음")
     b.close()
 
