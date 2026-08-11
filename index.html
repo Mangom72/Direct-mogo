@@ -39,6 +39,12 @@ addEventListener("securitypolicyviolation", function(e){
        남는 단서가 '터치가 되는 리눅스'라서 그걸 쓴다. 크롬북은 제외. */
     window.__androidWeb = /Android/i.test(ua) || (d && d.platform === "Android")
       || (/Linux/i.test(ua) && !/CrOS/i.test(ua) && (navigator.maxTouchPoints||0) > 0);
+    /* 앱 권유 막대를 띄울지 여기서 정한다. 판단에 필요한 것(안드로이드인가,
+       전에 닫았는가)이 둘 다 지금 손에 있으므로 굳이 미룰 이유가 없다.
+       미루면 나중에 막대가 끼어들며 본문을 통째로 밀어 화면이 흔들린다. */
+    var seen = null;
+    try{ seen = localStorage.getItem("gijul.apk.v1"); }catch(e){}
+    window.__apkShown = !!window.__androidWeb && seen === null;
     /* 주소에 조각(#…)을 실을 수 없다 — intent: 형식이 '#Intent;'를 구분자로 써서
        페이지의 해시와 자리를 다툰다. 조각은 별도 항목으로 넘긴다.
        앱이 없을 때 어디로 보낼지(fallback)는 부르는 쪽이 정한다. */
@@ -74,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-iqAzMK1b5MWrS7VqQlSF0bfCiRXifpEMVAo1YZDBJWA=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-Ov+xAFDOHRzQSyYL3VsVooYHmDVbAzXeqPNsrdNPvGA=';
+  script-src 'self' 'sha256-GDAn86s14Kb1JP4/QkVMi7Hi2EU8jSAl3+vXSZOutws=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-RneGsenzj9l5PpJtdR8xxEM97l5MgHF9DOlHWMJsUsM=' 'sha256-rVZUHgFM739x4Dfb6OTKgs8lG9GmtoP+W45uRwjtGPs=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -576,6 +582,31 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
       <button type="button" class="no" id="noticeNo">닫기</button>
     </span>
   </div>
+  <!-- 앱 권유는 첫 그림에 이미 자리에 있어야 한다. 아래 큰 스크립트가 만들어
+       끼우게 두면 그때 본문이 통째로 밀린다 — 느린 기기에서 재 보니 첫 그림은
+       0.65초, 그 스크립트는 3.3초라 흔들림이 고스란히 남았다(CLS 0.14).
+       글자를 HTML에 박아 두지 않고 여기서 넣는 이유는, 해당 없는 사람의 문서에
+       보이지도 않을 광고 문구를 남기지 않기 위해서다.
+       단추도 지금 이어 둔다. 아래 스크립트가 도는 3초 동안 눌러도 안 먹으면
+       곤란하고, 그 스크립트는 같은 단추에 제 처리를 다시 걸어 이어받는다. -->
+  <script>
+  (function(){ try{
+    if(!window.__apkShown) return;
+    var bar = document.getElementById("notice");
+    document.getElementById("noticeText").textContent =
+      "안드로이드 앱을 설치해보세요 — 문제지를 앱에서 바로 읽고 오프라인으로 담아둘 수 있습니다.";
+    var yes = document.getElementById("noticeYes");
+    yes.textContent = "앱 받기";
+    yes.onclick = function(){
+      location.href = "https://mangom72.github.io/Direct-mogo/app/gijul-direct.apk";
+    };
+    document.getElementById("noticeNo").onclick = function(){
+      try{ localStorage.setItem("gijul.apk.v1", "off"); }catch(e){}
+      bar.hidden = true;
+    };
+    bar.hidden = false;
+  }catch(e){} })();
+  </script>
 
   <div class="masthead">
     <div class="mast-top">
@@ -1848,7 +1879,17 @@ if(androidWeb()){
   /* 알림 막대는 한 번 닫으면 다시 띄우지 않는다. 매번 권하는 건 광고다. */
   let off = null;
   try{ off = localStorage.getItem(APK_KEY); }catch(e){}
-  if(off === null){
+  if(window.__apkShown){
+    /* 막대는 첫 그림 전에 이미 올라와 있다(#notice 바로 뒤의 이른 스크립트).
+       대기열에게 그 사실을 알려 둔다 — 모르면 다음 알림이 이것을 지우고
+       들어앉거나, 닫아도 뒤에 밀린 알림이 안 나온다. 단추 처리는 이 스크립트가
+       위에서 이미 제 것으로 다시 걸었으므로 여기서 손대지 않는다. */
+    showingNotice = {
+      text: noticeText.textContent, yesLabel: "앱 받기",
+      onYes: ()=>{ location.href = APK; },
+      onNo:  ()=>{ try{ localStorage.setItem(APK_KEY, "off"); }catch(e){} },
+      key: "apk" };
+  } else if(off === null){
     afterPaint(()=> showNotice(
       "안드로이드 앱을 설치해보세요 — 문제지를 앱에서 바로 읽고 오프라인으로 담아둘 수 있습니다.",
       "앱 받기",
