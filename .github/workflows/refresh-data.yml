@@ -73,6 +73,23 @@ jobs:
         if: steps.changed.outputs.yes == '1'
         run: python3 tools/build_fonts.py
 
+      # 사람이 보지 않는 채로 나가는 커밋이므로, 내보내기 전에 자료를 한 번 본다.
+      #
+      # 화면을 여는 시험(tests/ 대부분)은 여기서 돌리지 않는다. 크로미움을 받는 데만
+      # 1~2분이고 실행에 3분이 더 드는데, 이 작업이 건드리는 것은 자료뿐이라 화면
+      # 코드가 깨질 일이 없다. 대신 자료가 어긋나는 길은 여기서 다 막는다 —
+      # 회차 이름표가 겹치는가, 시험 종류와 출제 기관이 맞는가, 학년도가 맞는가,
+      # 과목 별칭이 두 과목을 가리키지 않는가(test_fields), 그리고 같은 자료에서
+      # 같은 파일이 나오는가(test_stable). 둘 다 브라우저 없이 몇 초면 끝난다.
+      #
+      # 여기서 실패하면 커밋 단계로 가지 않는다. 자료는 어제 것 그대로 남고,
+      # 워크플로가 빨갛게 떠서 사람이 본다.
+      - name: 나간 자료 확인
+        if: steps.changed.outputs.yes == '1'
+        run: |
+          python3 tests/test_fields.py
+          python3 tests/test_stable.py
+
       - name: 변경분 커밋
         if: steps.changed.outputs.yes == '1'
         run: |

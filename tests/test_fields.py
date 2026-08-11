@@ -1,8 +1,7 @@
 """회차 이름표(id)·시험 종류(type)·유형(form)·과목 별칭(aliases) 점검."""
 import sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from harness import CHROME, ROOT, SHOT, site, Serve
-_srv, SITE = site()
+from harness import ROOT      # 이 시험은 브라우저도 서버도 쓰지 않는다
 import json, glob, pathlib, collections, re, sys
 
 BAD = []

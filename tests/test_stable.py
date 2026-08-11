@@ -1,8 +1,7 @@
 """같은 자료면 같은 파일이 나오는가 — 매일 도는 갱신이 헛커밋을 내지 않으려면 필요하다."""
 import sys, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from harness import CHROME, ROOT, SHOT, site, Serve
-_srv, SITE = site()
+from harness import ROOT      # 이 시험은 브라우저도 서버도 쓰지 않는다
 import sys, hashlib, subprocess, pathlib, json
 sys.path.insert(0, str(ROOT / "tools"))
 R = ROOT

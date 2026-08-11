@@ -2,7 +2,7 @@
 
 ```bash
 pip install playwright "fonttools[woff]" brotli && playwright install chromium
-python3 tests/run.py              # 전부 (3분 남짓)
+python3 tests/run.py              # 전부 (3분 남짓, 24종)
 python3 tests/run.py sw stale     # 이름에 그 말이 든 것만
 python3 tests/run.py -v           # 출력까지 그대로
 ```
@@ -48,6 +48,8 @@ python3 tests/run.py -v           # 출력까지 그대로
 | `test_fields` | 회차 `id`가 유일한가, `type`·`form`·`schoolYear`·`aliases`가 서로 맞는가 |
 | `test_glyphs` | **화면에 그려지는 글자가 글꼴에 다 있는가** |
 | `test_stable` | 같은 자료면 같은 파일이 나오는가 (매일 도는 갱신이 헛커밋을 내지 않도록) |
+| `test_kept` | 이미 받아둔 회차의 저장 단추가 잠기는가 |
+| `test_footer` | 각주가 어디서 끊기는지 눈에 보이는가 |
 
 ## 왜 `test_glyphs`가 따로 있는가
 
@@ -63,3 +65,14 @@ python3 tests/run.py -v           # 출력까지 그대로
 새로고침을 닫으면 그 뒤로 계속 "최신입니다"라고 답하던 일에서, `test_apkbar`는
 앱 설치 안내가 과목 받기 질문을 덮어 다섯 과목이 사라진 일에서 왔습니다.
 같은 일이 다시 나지 않게 하는 것이 이 폴더의 목적입니다.
+
+## 매일 도는 갱신에서는 두 개만 돕니다
+
+자료 갱신 워크플로는 사람이 보지 않는 채로 커밋을 내보내므로, 나가기 전에
+`test_fields`와 `test_stable`을 돌립니다. 이 둘은 **브라우저도 서버도 쓰지 않아**
+몇 초면 끝나고, 그 작업이 실제로 낼 수 있는 잘못(회차 이름표 겹침, 시험 종류와
+출제 기관 어긋남, 학년도 오류, 과목 별칭 충돌, 재현되지 않는 빌드)을 덮습니다.
+
+화면을 여는 나머지는 CI에서 돌리지 않습니다. 크로미움을 받는 데만 1~2분이고
+실행에 3분이 더 드는데, 그 작업이 건드리는 것은 자료뿐이라 화면 코드가 깨질 일이
+없기 때문입니다. 화면을 고쳤다면 손에서 `python3 tests/run.py`를 돌리십시오.

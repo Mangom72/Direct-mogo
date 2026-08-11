@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-wc7wcAIxAz3WkIDSZFp5esZFH0CnNkig6RAVjBsEPvo=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-wjhv7xlVnNtTKDxfr1aYzR+DdzXrOE66Bgpe7gPJNNM=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -450,6 +450,10 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
   background:var(--btn);color:var(--edu);
 }
 .sheet-all[hidden]{display:none}
+/* 이미 받아둔 회차. 누를 수 없다는 것을 색과 커서로 함께 말한다 — 흐리게만
+   하면 '지금 처리 중'과 구별되지 않아, 사용자가 계속 누르게 된다. */
+.sheet-all:disabled{cursor:default;border-style:solid;opacity:.72}
+.sheet-all.kept{border-color:var(--rule);background:transparent;color:var(--ink2);opacity:1}
 .sheet-all:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 @media (max-width:620px){
   .sheet{align-items:flex-end;padding:0}
@@ -469,7 +473,17 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
    목록 아래로 한 화면이 통째로 비어, 바닥글이 저 멀리 떨어져 보였다. 흔들림을
    막자고 늘 빈 자리를 남겨 둘 이유는 없다 — 필요한 것은 첫 그림 한 번이다. */
 #out.boot{min-height:100vh}
-footer{max-width:900px;margin:22px auto 0;font-size:11px;color:var(--ink2);line-height:1.85}
+footer{max-width:900px;margin:22px auto 0;font-size:11px;color:var(--ink2)}
+/* 각주는 항목마다 한 덩이다. 예전에는 <br>로만 나눠 두어, 한 항목이 두 줄로
+   넘어가면 그 줄 사이와 항목 사이의 간격이 똑같았다 — 어디서 끊기는지 보이지
+   않았다. 항목 안은 좁히고(1.6) 항목 사이만 벌린다(9px). 이어지는 줄은 가운뎃점
+   자리만큼 들여써서, 한눈에 앞 항목의 뒷줄임이 드러나게 한다. */
+footer .n{margin:0 0 9px;line-height:1.6;padding-left:9px;text-indent:-9px}
+footer .n:last-of-type{margin-bottom:0}
+/* 매달린 들여쓰기는 첫 줄을 당기고(text-indent) 그만큼 안쪽 여백을 주는 방식인데,
+   inline-block 은 그 값을 물려받는다. 각주 속 링크가 그래서 저마다 9px씩 왼쪽으로
+   당겨져 앞 낱말에 달라붙었다 — '또는GitHub 이슈'처럼. 물려받은 값을 되돌린다. */
+footer .n a{text-indent:0}
 footer b{color:var(--ink)}
 /* 각주 속 링크. 기본 파란 밑줄은 이 자리에서 너무 튄다. */
 footer a.doc{color:var(--ink);text-decoration:underline;text-underline-offset:2px;
@@ -695,11 +709,11 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
 </div>
 
 <footer>
-  · <b>평가원</b> = 11월 수능 + 6·9월 모의평가(한국교육과정평가원). <b>교육청</b> = 3·4·5·7·10·11월 전국연합학력평가(서울·부산·인천·경기교육청).<br>
-  · 연도는 <b>시행 연도</b>입니다. 평가원 시험의 학년도는 시행 연도 +1이므로(예: <b>2013년 6월 시행 = 2014학년도 6월 모평</b>) 각 연도에 학년도를 병기했습니다. 교육청 학평은 관례상 시행 연도로만 부릅니다.<br>
-  · 문제·해설은 PDF, 정답은 이미지입니다(웹은 새 탭, 앱은 앱 안에서 열립니다). 회차에 따라 일부 자료가 없으면 버튼이 비활성화됩니다.<br>
-  · 모든 링크는 EBSi가 공개 제공하는 파일 주소로 직접 연결되며(로그인 불필요), 이 페이지는 어떤 파일도 저장·재배포하지 않습니다. 저작권은 <b>한국교육과정평가원</b> 및 <b>각 시·도교육청</b>에 있습니다. 권리자 또는 정당한 대리인의 게시중단 요청은 확인 즉시 이행합니다 — <a class="doc" href="mailto:direct.mogo.dev@gmail.com">direct.mogo.dev@gmail.com</a> 또는 <a class="doc" href="https://github.com/Mangom72/Direct-mogo/issues" target="_blank" rel="noopener">GitHub 이슈</a>. 자세한 것은 <a class="doc" href="https://github.com/Mangom72/Direct-mogo/blob/main/NOTICE.md" target="_blank" rel="noopener">이용 안내</a>에 있습니다.<br>
-  · 이 화면은 자료를 압축하여 보관하고 필요할 때 펼치므로, 검색엔진에는 내용이 비어 있는 것으로 보입니다. 이에 동일한 자료를 <a class="doc" href="s/">과목별 목록</a>(스크립트 없이 읽히는 HTML) · <a class="doc" href="data/index.json">data/index.json</a>(과목 목록) · <a class="doc" href="llms.txt">llms.txt</a>(프로그램에서 읽는 방법)로도 함께 제공합니다.
+  <p class="n">· <b>평가원</b> = 11월 수능 + 6·9월 모의평가(한국교육과정평가원). <b>교육청</b> = 3·4·5·7·10·11월 전국연합학력평가(서울·부산·인천·경기교육청).</p>
+  <p class="n">· 연도는 <b>시행 연도</b>입니다. 평가원 시험의 학년도는 시행 연도 +1이므로(예: <b>2013년 6월 시행 = 2014학년도 6월 모평</b>) 각 연도에 학년도를 병기했습니다. 교육청 학평은 관례상 시행 연도로만 부릅니다.</p>
+  <p class="n">· 문제·해설은 PDF, 정답은 이미지입니다(웹은 새 탭, 앱은 앱 안에서 열립니다). 회차에 따라 일부 자료가 없으면 버튼이 비활성화됩니다.</p>
+  <p class="n">· 모든 링크는 EBSi가 공개 제공하는 파일 주소로 직접 연결되며(로그인 불필요), 이 페이지는 어떤 파일도 저장·재배포하지 않습니다. 저작권은 <b>한국교육과정평가원</b> 및 <b>각 시·도교육청</b>에 있습니다. 권리자 또는 정당한 대리인의 게시중단 요청은 확인 즉시 이행합니다 — <a class="doc" href="mailto:direct.mogo.dev@gmail.com">direct.mogo.dev@gmail.com</a> 또는 <a class="doc" href="https://github.com/Mangom72/Direct-mogo/issues" target="_blank" rel="noopener">GitHub 이슈</a>. 자세한 것은 <a class="doc" href="https://github.com/Mangom72/Direct-mogo/blob/main/NOTICE.md" target="_blank" rel="noopener">이용 안내</a>에 있습니다.</p>
+  <p class="n">· 이 화면은 자료를 압축하여 보관하고 필요할 때 펼치므로, 검색엔진에는 내용이 비어 있는 것으로 보입니다. 이에 동일한 자료를 <a class="doc" href="s/">과목별 목록</a>(스크립트 없이 읽히는 HTML) · <a class="doc" href="data/index.json">data/index.json</a>(과목 목록) · <a class="doc" href="llms.txt">llms.txt</a>(프로그램에서 읽는 방법)로도 함께 제공합니다.</p>
   <div class="src"><a href="https://github.com/Mangom72/Direct-mogo" target="_blank" rel="noopener"
     aria-label="GitHub 저장소 — 소스와 자료 수집 방식"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>GitHub</a></div>
   <div class="appinfo" id="appInfo" hidden></div>
@@ -1398,6 +1412,7 @@ window.gijulSaveResult = (ok, count, message)=>{
   savedCache = null;                 /* 담기거나 지워졌다 — 다음에 다시 물어본다 */
   sheetAll.disabled = false;
   sheetAll.textContent = ALL_LABEL_NATIVE;
+  syncSaveBtn();                     /* 방금 담았으면 여기서 잠긴다 */
   if(vaultMode){ openVault(); render(); return; }  /* 보관함에서 지운 뒤라면 목록을 다시 그린다 */
   sheetNote.innerHTML = ok ? `<b>${esc(message)}</b>` : esc(message);
   if(ok) render();                                  /* 방금 담은 회차에 표시가 붙게 */
@@ -1582,6 +1597,23 @@ async function saveAll(){
 }
 sheetAll.onclick = saveAll;
 
+/* 이 회차를 이미 받아 두었는가에 따라 저장 단추의 모양을 정한다.
+
+   예전에는 늘 눌리는 채였다. 두 번째로 누르면 앱이 같은 폴더에 다시 담을 뿐이라
+   자료는 늘지 않는데, 화면은 '받는 중…'을 거쳐 성공한 것처럼 보였다 — 사용자는
+   저장이 되고 있다고 믿고 계속 누르게 된다. 이미 있으면 그렇다고 말하고 막는다.
+
+   웹에서는 판단할 수 없다. 다운로드 폴더에 무엇이 있는지 물어볼 방법이 없어
+   savedFolders()가 늘 비어 있고, 그러면 이 함수는 아무것도 바꾸지 않는다. */
+function syncSaveBtn(){
+  const kept = sheetRow && savedFolders().has(
+    folderName(sheetRow.y, sheetRow.title, sheetRow.sub));
+  sheetAll.classList.toggle("kept", !!kept);
+  sheetAll.disabled = !!kept;
+  sheetAll.textContent = kept ? "이미 받아둔 회차입니다" : ALL_LABEL_NATIVE;
+  return !!kept;
+}
+
 function openSheet(row, opener){
   if(!row) return;
   sheetRow = row;
@@ -1593,6 +1625,7 @@ function openSheet(row, opener){
   sheetNm.textContent = `${row.y}년 ${row.title}`;
   sheetSb.textContent = `${row.sub} · ${row.date.slice(0,4)}.${row.date.slice(4,6)}.${row.date.slice(6,8)}`;
   sheetNote.textContent = NOTE_DEFAULT;
+  if(syncSaveBtn()) sheetNote.textContent = "이 회차는 이미 받아 두었습니다. '받아둔 자료'에서 열 수 있습니다.";
   sheetList.innerHTML = "";
   row.files.forEach(f=>{
     const el=document.createElement("div"); el.className="sfile";
