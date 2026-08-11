@@ -116,7 +116,6 @@ jobs:
       - name: 사이트에 올리기
         if: ${{ env.release == '1' && github.ref == 'refs/heads/main' }}
         env:
-          MSG: ${{ github.event.head_commit.message }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           APK: android/app/build/outputs/apk/release/app-release.apk
@@ -125,7 +124,14 @@ jobs:
           # 이 한 줄은 사용자의 알림 막대에 그대로 뜬다. 커밋 제목은 영어 관례라
           # 그것을 쓰면 "Release 4.9" 같은 말이 화면에 나간다. 그래서 커밋 본문의
           # 'Notes: …' 줄을 찾아 쓰고, 없으면 무난한 한 줄로 대신한다.
-          NOTES=$(printf %s "$MSG" | sed -n 's/^[Nn]otes:[[:space:]]*//p' | head -1)
+          #
+          # 커밋 메시지는 git 에서 읽는다. github.event.head_commit 은 push 로
+          # 돌 때만 있어서, 수동 실행(workflow_dispatch)에서는 비어 버린다.
+          # 마지막 것을 쓴다. 트레일러는 관례상 끝에 붙고, 본문 중간에 우연히
+          # 'Notes:' 로 시작하는 줄이 있으면 앞의 것이 이겨 버린다 — 실제로
+          # 그렇게 엉뚱한 문장이 뽑힌 적이 있다. (head 와 달리 tail 은 앞의
+          # sed 를 SIGPIPE 로 끊지도 않는다.)
+          NOTES=$(git log -1 --format=%B | sed -n 's/^[Nn]otes:[[:space:]]*//p' | tail -1)
           [ -n "$NOTES" ] || NOTES="앱을 새로 고쳤습니다"
           echo "알림 문구: $NOTES"
 
