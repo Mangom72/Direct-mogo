@@ -7,7 +7,7 @@
 
 | 파일 | 역할 |
 |---|---|
-| `index.html` | 앱 전체. 자료 3,844회차가 gzip+base64로 안에 들어 있습니다 (212KB) |
+| `index.html` | 앱 전체. 자료 3,844회차가 gzip+base64로 안에 들어 있습니다 (229KB) |
 | `sw.js` | 서비스 워커. 앱 셸·글꼴·받아둔 PDF를 캐시합니다 |
 | `data/`, `llms.txt`, `llms-full.txt` | AI·프로그램용 정적 JSON과 사용 안내 |
 | `s/`, `sitemap.xml` | 검색엔진과 사람이 읽는 과목별 정적 페이지 |
@@ -18,9 +18,11 @@
 | `tools/build_pages.py` | `data/`를 `s/` 정적 페이지와 `sitemap.xml`로 내보냅니다 |
 | `tools/build_fonts.py` | 저장소 안의 글자를 모아 웹폰트를 잘라 만듭니다 |
 | `tools/check_csp.py` | 인라인 스크립트 해시가 CSP와 맞는지 봅니다 |
-| `tests/` | 회귀 시험 22종 ([tests/README.md](../tests/README.md)) |
+| `tools/publish_apk.py` | 빌드된 릴리스 APK를 `app/`에 올리고 명세를 씁니다 |
+| `tests/` | 회귀 시험 27종 ([tests/README.md](../tests/README.md)) |
 | `android/` | WebView 앱 ([docs/android.md](android.md)) |
-| `.github/workflows/refresh-data.yml` | 매일 23시(KST) 자동 실행 |
+| `.github/workflows/refresh-data.yml` | 매일 23시(KST) 자료 갱신 |
+| `.github/workflows/android.yml` | APK 빌드 (수동 실행) |
 
 자료를 `index.html` 안에 넣어둔 덕분에 **이 파일 하나만 캐시하면 조회·필터가
 네트워크 없이 전부 동작합니다.** 네트워크가 필요한 건 PDF를 받을 때뿐입니다.
@@ -54,7 +56,7 @@ python3 tools/build_fonts.py              # → fonts/
 ## 고치고 나면
 
 ```bash
-python3 tests/run.py        # 회귀 시험 22종, 3분 남짓
+python3 tests/run.py        # 회귀 시험 27종, 3분 남짓
 ```
 
 무엇을 지키는 시험인지는 [tests/README.md](../tests/README.md)에 있습니다.
@@ -81,6 +83,12 @@ EBSi가 한 회차를 한 번에 올리지 않습니다. 파일 헤더(`Last-Mod
 
 새 자료가 없는 날은 페이로드가 그대로이므로 워크플로가 거기서 끝납니다 — 정적
 JSON·과목 페이지·글꼴을 다시 만들지 않고, 커밋도 하지 않습니다.
+
+사람이 보지 않는 채로 나가는 커밋이므로, 내보내기 전에 `test_fields`와 `test_stable`
+두 가지를 돌립니다. 브라우저도 서버도 쓰지 않아 몇 초면 끝나고, 이 작업이 실제로
+낼 수 있는 잘못(회차 이름표 겹침, 시험 종류와 출제 기관 어긋남, 학년도 오류, 과목
+별칭 충돌, 재현되지 않는 빌드)을 덮습니다. 여기서 실패하면 커밋 단계로 가지 않으므로
+자료는 어제 것 그대로 남고, 워크플로가 빨갛게 떠서 사람이 봅니다.
 
 `data/index.json`의 `updated`는 **수록된 가장 최근 시행일**입니다. 돌린 날이
 아니므로, 새 회차가 없으면 출력이 바이트 단위로 같고 워크플로도 커밋하지 않습니다.
