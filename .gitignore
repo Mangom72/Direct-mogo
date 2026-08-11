@@ -3,3 +3,11 @@ __pycache__/
 
 # 서브셋을 뜨려고 받아온 원본 글꼴 — 13MB라 싣지 않는다. build_fonts.py가 다시 받는다.
 fonts/.src/
+
+# 릴리스 서명 키와 그 비밀번호. android/.gitignore 에도 있지만 그쪽은 그 폴더
+# 안에서만 걸린다. 키를 잠깐 다른 자리에 두는 일이 실제로 있으므로 저장소 전체에
+# 건다 — 한 번 새어 나가면 되돌릴 방법이 없다.
+*.jks
+*.keystore
+keystore.properties
+local.properties

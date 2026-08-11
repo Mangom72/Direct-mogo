@@ -1,0 +1,59 @@
+name: 회귀 시험
+
+# 화면을 고쳐 미는 길에는 그동안 아무 관문이 없었다. 자료 갱신 워크플로는 자료만
+# 건드리므로 `test_fields`·`test_stable` 둘로 충분하지만, `index.html`이나 `sw.js`를
+# 손보면 그 둘이 덮지 못하는 곳이 깨진다. 그래서 이쪽은 27종을 전부 돌린다.
+on:
+  workflow_dispatch:
+  push:
+    # main 에서만 돈다. 같은 커밋을 작업 브랜치에도 올리므로 브랜치를 가리지
+    # 않으면 한 번의 푸시에 두 벌이 돈다.
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 's/**'
+      - 'fonts/**'
+      - 'tools/**'
+      - 'tests/**'
+      - '.github/workflows/tests.yml'
+
+concurrency:
+  # 뒤에 온 커밋이 앞선 것을 대신한다. 여기서는 아무것도 내보내지 않으므로
+  # 도중에 끊어도 잃을 것이 없다.
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # requests 는 test_stable 이 부르는 refresh_data 가, fonttools·brotli 는
+      # 글꼴을 다시 떠 보는 대목이 쓴다.
+      - run: pip install playwright requests "fonttools[woff]" brotli
+
+      # 크로미움 한 벌만 받는다. harness 가 ~/.cache/ms-playwright 를 훑어 찾는다.
+      - run: playwright install --with-deps chromium
+
+      # 실패한 시험이 남긴 화면 그림을 건져낼 수 있도록 작업 폴더에 모은다.
+      - name: 시험
+        env:
+          GIJUL_SHOT: ${{ github.workspace }}/shots
+        run: |
+          mkdir -p "$GIJUL_SHOT"
+          python3 tests/run.py
+
+      # 손에서 재현되지 않는 실패를 눈으로 볼 수 있는 유일한 길이다.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: 실패한-화면
+          path: shots
+          if-no-files-found: ignore

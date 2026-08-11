@@ -22,7 +22,8 @@
 | `tests/` | 회귀 시험 27종 ([tests/README.md](../tests/README.md)) |
 | `android/` | WebView 앱 ([docs/android.md](android.md)) |
 | `.github/workflows/refresh-data.yml` | 매일 23시(KST) 자료 갱신 |
-| `.github/workflows/android.yml` | APK 빌드 (수동 실행) |
+| `.github/workflows/tests.yml` | 화면을 고쳐 main에 밀면 27종을 돌립니다 |
+| `.github/workflows/android.yml` | APK 빌드 (main 푸시·수동 실행) |
 
 자료를 `index.html` 안에 넣어둔 덕분에 **이 파일 하나만 캐시하면 조회·필터가
 네트워크 없이 전부 동작합니다.** 네트워크가 필요한 건 PDF를 받을 때뿐입니다.
@@ -60,6 +61,8 @@ python3 tests/run.py        # 회귀 시험 27종, 3분 남짓
 ```
 
 무엇을 지키는 시험인지는 [tests/README.md](../tests/README.md)에 있습니다.
+`index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로 main에 올라가면 같은 27종이
+CI에서도 한 번 더 돕니다. 실패하면 그때의 화면 그림이 artifact로 남습니다.
 
 기존 기록의 **있는 값은 고치지 않습니다.** 새 시행일을 덧붙이고, 이미 있는 회차는
 **비어 있던 칸만** 뒤늦게 채웁니다. 수집량이 기존의 80%에 못 미치면 EBSi 구조가
