@@ -1,0 +1,88 @@
+name: 릴리스 올리기
+
+# APK를 저장소에 커밋해 두면 판본마다 1.8MB가 히스토리에 영구히 쌓인다. 받는 사람
+# 전부가 그 비용을 낸다. 그래서 파일 자체는 릴리스 자산으로 올리고, 저장소에는
+# 그것을 가리키는 app/latest.json 만 남긴다.
+#
+# 서명 키는 필요 없다 — 올릴 APK는 이미 서명된 채로 저장소에 들어와 있고, 이
+# 워크플로는 그것을 그대로 붙이기만 한다. 쓰는 권한도 워크플로가 이미 받는
+# GITHUB_TOKEN 하나뿐이다.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app/latest.json'
+      - '.github/workflows/release.yml'
+
+permissions:
+  contents: write        # 릴리스를 만들고 자산을 올린다
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 릴리스 만들고 APK 붙이기
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          API=https://api.github.com/repos/$REPO
+          TAG="v$(python3 -c "import json;print(json.load(open('app/latest.json'))['versionName'])")"
+          export TAG
+
+          # 이미 있으면 아무것도 하지 않는다. 이 워크플로는 latest.json 이 바뀔
+          # 때마다 도는데, 같은 판본을 두 번 올리려 들면 422 로 떨어진다.
+          code=$(curl -sS -o /tmp/rel.json -w '%{http_code}' \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "$API/releases/tags/$TAG")
+          if [ "$code" = 200 ]; then
+            echo "$TAG 는 이미 있습니다 — 넘어갑니다"
+            exit 0
+          fi
+
+          # 릴리스에 적을 말은 앱이 알림 막대에 띄우는 그 한 줄을 그대로 쓴다.
+          python3 -c "
+          import json, os
+          d = json.load(open('app/latest.json'))
+          tag = os.environ['TAG']
+          print(json.dumps({'tag_name': tag,
+                            'name': tag + ' (versionCode %d)' % d['versionCode'],
+                            'body': d.get('notes') or '',
+                            'draft': False, 'prerelease': False}, ensure_ascii=False))
+          " > /tmp/body.json
+
+          curl -sS -X POST -o /tmp/new.json -w '만들기 %{http_code}\n' \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "$API/releases" --data-binary @/tmp/body.json
+          ID=$(python3 -c "
+          import json, sys
+          d = json.load(open('/tmp/new.json'))
+          if 'id' not in d:
+              sys.exit('릴리스를 만들지 못했습니다: ' + json.dumps(d, ensure_ascii=False)[:300])
+          print(d['id'])
+          ")
+
+          # 자산 이름은 늘 같아야 한다. releases/latest/download/gijul-direct.apk
+          # 라는 고정 주소가 그 이름 위에 서 있다.
+          curl -sS -X POST -o /tmp/asset.json -w '올리기 %{http_code}\n' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary "@app/gijul-direct.apk" \
+            "https://uploads.github.com/repos/$REPO/releases/$ID/assets?name=gijul-direct.apk"
+
+          python3 -c "
+          import json, sys
+          a = json.load(open('/tmp/asset.json'))
+          if a.get('state') != 'uploaded':
+              sys.exit('자산을 올리지 못했습니다: ' + json.dumps(a, ensure_ascii=False)[:300])
+          print('자산:', a['name'], a['size'], '바이트')
+          print('주소:', a['browser_download_url'])
+          "
