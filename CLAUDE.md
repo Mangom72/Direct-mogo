@@ -37,6 +37,40 @@ PDF를 열어 확인한 결과 내용은 EBSi가 붙인 행과 일치했다 — 
 푸터의 '앱으로 열기'처럼 **누를 때만** 넘어간다. UA로 크롤러를 골라내는 방식으로
 되돌리지 않는다(`tests/test_toapp.py`가 지킨다).
 
+**APK를 저장소에 커밋하지 않는다.** 판본마다 1.8MB가 히스토리에 영구히 쌓이고
+받는 사람 전부가 그 비용을 낸다. 한때 33판 57.7MB가 쌓여 있었고, 히스토리를
+다시 써서 걷어냈다(`.git` 89MB → 12MB). `app/`에 들어가는 것은 `latest.json`
+하나뿐이고, APK는 **GitHub 릴리스 자산**으로만 나간다. 다시 커밋하면 그 작업이
+통째로 되돌아간다.
+
+**서명 키는 어떤 경우에도 커밋하지 않는다.** `android/gijul-release.jks`와
+`keystore.properties`는 gitignore 대상이며 저장소 뿌리의 `.gitignore`가 어느
+폴더에 있든 잡는다. 인증서 지문은 `54:37:0E:D9:…:2C:FD:10:C1` 하나로 고정이다 —
+이게 바뀐 APK는 기존 기기가 **영구히** 거부하고(지우고 새로 깔아야 하며 받아둔
+자료도 사라진다), `docs/assetlinks.json`의 앱 링크도 함께 깨진다. `android.yml`의
+'서명 확인' 단계가 매 빌드 대조하니 그 단계를 지우지 않는다.
+
+## 이 실행 환경에서 막히는 것 (해보기 전에 알아 둘 것)
+
+**`api.github.com`은 세션에서 쓸 수 없다.** 프록시가 가로채 403을 돌려주고,
+직접 넣은 토큰은 무시된다(토큰 있을 때와 없을 때 응답이 같다). 읽기는
+`mcp__github__*` 도구로, 쓰기는 워크플로의 `GITHUB_TOKEN`으로 한다.
+
+**git은 ref를 만들고 옮길 수만 있다.** 브랜치 push·force push는 되지만
+**태그 갱신과 ref 삭제는 통과되지 않는다** — `send-pack: unexpected disconnect`로
+끊긴다. 태그를 옮기거나 브랜치를 지워야 하면 일회성 워크플로를 만들어
+`GITHUB_TOKEN`으로 API를 부르고, 쓴 뒤에 그 워크플로를 지운다.
+
+## 판본 올리기
+
+`android/app/build.gradle`의 `versionCode`·`versionName`을 올려 main에 밀면
+`android.yml`이 전부 한다 — 서명 빌드 → 지문 확인 → 릴리스 생성 → APK 첨부 →
+`app/latest.json` 커밋. **릴리스가 먼저, 명세 커밋이 나중이다.** 뒤집으면 명세가
+아직 없는 주소를 가리키는 동안 앱이 그것을 읽고 내려받기에 실패한다.
+
+사용자 알림 막대에 뜰 한 줄은 커밋 본문의 `Notes:` 줄에서 가져온다. 커밋 제목은
+영어 관례라 그대로 쓰면 화면에 "Release 4.9"가 나간다.
+
 ## 고친 뒤에는
 
 화면(`index.html`·`sw.js`·`s/`)을 건드렸으면 `python3 tests/run.py`를 돌린다
@@ -44,3 +78,6 @@ PDF를 열어 확인한 결과 내용은 EBSi가 붙인 행과 일치했다 — 
 인라인 스크립트를 고쳤으면 `python3 tools/check_csp.py --fix`로 CSP 해시를
 다시 맞춘다 — 어긋난 채로 나가면 그 스크립트가 통째로 막힌다.
 자료·과목 페이지를 다시 만들었으면 `tools/build_fonts.py`가 **맨 나중**이다.
+
+자세한 것은 `docs/build.md`(파일 구성·자료 갱신·검색), `docs/android.md`(앱과
+배포), `tests/README.md`(시험)에 있다.
