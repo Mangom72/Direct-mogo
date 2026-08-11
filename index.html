@@ -179,6 +179,16 @@ body{
 }
 .wrap{max-width:900px;margin:0 auto}
 
+/* 건너뛰기 링크. 화면 밖에 두되 display:none 은 쓰지 않는다 — 그러면 초점이
+   닿지 않아 있으나 마나다. 초점을 받으면 왼쪽 위로 내려와 제 모습을 드러낸다.
+   자리를 차지하지 않으므로(fixed) 나타났다 사라져도 본문이 밀리지 않는다. */
+.skip{position:fixed;left:8px;top:-60px;z-index:120;padding:10px 16px;
+  background:var(--ink);color:var(--paper);font-size:13px;font-weight:700;
+  text-decoration:none;border:2px solid var(--paper);transition:top .12s}
+.skip:focus{top:8px}
+#out:focus{outline:none}
+#out:focus-visible{outline:2.5px solid var(--mark);outline-offset:4px}
+
 /* 알림 막대 — 과목 가져오기 / 새 자료 안내에 함께 쓴다.
    sticky라서 흐름 안에 자리를 차지한 채(맨 위에서는 지금까지와 같은 자리) 아래로
    내려가도 화면 같은 높이에 붙어 있는다. top은 body의 위 여백과 같은 값이어야
@@ -533,6 +543,11 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
 </script>
 </head>
 <body>
+<!-- 키보드로 오는 사람을 위한 지름길. 고르개(테마·학년·과목군·과목·기관·연도)를
+     다 지나야 목록에 닿는데 세어 보니 Tab 13번이다. 매번 그걸 지나게 하지 않는다.
+     평소에는 화면 밖에 있다가 Tab을 처음 누르면 나타난다 — 눈으로 보는 사람에게는
+     아무것도 늘지 않고, 숨겨서 검색엔진에만 보이는 글도 아니다. -->
+<a class="skip" href="#out">본문으로 건너뛰기</a>
 <!-- 이 화면은 자료를 눌러 담아 두고 스크립트로 편다. 그래서 스크립트를 돌리지
      않고 받아 가는 쪽(검색엔진, 자료를 읽으러 온 프로그램, 페이지를 글로 바꿔
      읽는 AI)에게는 빈 껍데기로 보인다. noscript는 정확히 그 경우에만 나오고
@@ -624,7 +639,9 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
     </div>
   </div>
 
-  <main id="out"></main>
+  <!-- tabindex="-1" 는 건너뛰기 링크가 여기로 초점을 옮길 수 있게 하는 것이다.
+       없으면 주소만 바뀌고 초점은 고르개에 남아, 다음 Tab이 도로 위로 간다. -->
+  <main id="out" tabindex="-1"></main>
 </div>
 
 <div class="sheet" id="sheet" hidden>
