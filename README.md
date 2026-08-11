@@ -94,7 +94,7 @@ https://mangom72.github.io/Direct-mogo/data/D300/158.json 고3 생명과학Ⅰ �
 > https://mangom72.github.io/Direct-mogo/s/ 를 이용하여 문제지를 얻은후,
 > 21학년도 6평 경제 4번 해설해줘
 
-![과목 목록 주소를 주고 문제 해설까지 받은 예](docs/example-llm.png)
+![과목 목록 주소를 주고 문제 해설까지 받은 예](docs/example-llm.jpg)
 
 "21학년도"를 **2020년 6월 18일 시행분**으로 옳게 옮겼습니다 — 시행 연도로 찾았다면
 한 해 어긋난 시험지를 폈을 것입니다. 정답 ④도 EBSi 정답표와 일치합니다.

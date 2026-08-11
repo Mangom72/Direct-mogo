@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-3ejXCkIkd+z6KpPlRKnm6sw+2yIz3jSzAh/oVwLPU8s=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-Ce/iqJSzmsCRfPzuSTJV6mwM6w5QEKQADTIOAmX4RRo=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -437,6 +437,24 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 .sheet-note button[data-ask="1"]{
   background:var(--mark);color:var(--onmark);border-color:var(--mark);font-weight:700;
 }
+/* AI 안내. 설명 두어 줄, 주소 상자, 예시 그림 — 그 이상은 두지 않는다.
+   자세한 것은 llms.txt 와 README가 이미 들고 있다. */
+.sai{padding:14px 18px;font-size:12.5px;line-height:1.7;color:var(--ink2)}
+.sai p{margin:0 0 10px}
+.sai b{color:var(--ink)}
+.sai .box{display:flex;gap:6px;margin:0 0 12px}
+.sai .box input{flex:1;min-width:0;font:inherit;font-size:12px;padding:8px 10px;
+  border:1.2px solid var(--rule);border-radius:8px;background:var(--card);color:var(--ink)}
+.sai .box button{flex:none;font:inherit;font-size:12px;font-weight:700;cursor:pointer;
+  padding:8px 14px;border-radius:8px;border:1.2px solid var(--ink);
+  background:var(--ink);color:var(--paper)}
+.sai .box button:focus-visible, .sai .box input:focus-visible{
+  outline:2.5px solid var(--mark);outline-offset:2px}
+.sai figure{margin:0}
+.sai img{display:block;width:100%;height:auto;border:1.2px solid var(--rule);border-radius:8px}
+.sai figcaption{margin-top:7px;font-size:11.5px;color:var(--ink2)}
+.sai .q{color:var(--ink);font-weight:600}
+
 /* 갱신 내역 한 줄. 날짜 · 결과 · 무슨 일이 있었는지. */
 .slog{padding:9px 18px;border-bottom:1px solid var(--rule);display:flex;
   align-items:baseline;gap:10px;font-size:12.5px}
@@ -728,7 +746,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
   <p class="n">· 문제·해설은 PDF, 정답은 이미지입니다(웹은 새 탭, 앱은 앱 안에서 열립니다). 회차에 따라 일부 자료가 없으면 버튼이 비활성화됩니다.</p>
   <p class="n">· 모든 링크는 EBSi가 공개 제공하는 파일 주소로 직접 연결되며(로그인 불필요), 이 페이지는 어떤 파일도 저장·재배포하지 않습니다. 저작권은 <b>한국교육과정평가원</b> 및 <b>각 시·도교육청</b>에 있습니다. 권리자 또는 정당한 대리인의 게시중단 요청은 확인 즉시 이행합니다 — <a class="doc" href="mailto:direct.mogo.dev@gmail.com">direct.mogo.dev@gmail.com</a> 또는 <a class="doc" href="https://github.com/Mangom72/Direct-mogo/issues" target="_blank" rel="noopener">GitHub 이슈</a>. 자세한 것은 <a class="doc" href="https://github.com/Mangom72/Direct-mogo/blob/main/NOTICE.md" target="_blank" rel="noopener">이용 안내</a>에 있습니다.</p>
   <p class="n">· 이 화면은 자료를 압축하여 보관하고 필요할 때 펼치므로, 검색엔진에는 내용이 비어 있는 것으로 보입니다. 이에 동일한 자료를 <a class="doc" href="s/">과목별 목록</a>(스크립트 없이 읽히는 HTML) · <a class="doc" href="data/index.json">data/index.json</a>(과목 목록) · <a class="doc" href="llms.txt">llms.txt</a>(프로그램에서 읽는 방법)로도 함께 제공합니다.</p>
-  <div class="src"><button type="button" id="logBtn">자료 갱신 내역</button><a href="https://github.com/Mangom72/Direct-mogo" target="_blank" rel="noopener"
+  <div class="src"><button type="button" id="aiBtn">AI로 쓰기</button><button type="button" id="logBtn">자료 갱신 내역</button><a href="https://github.com/Mangom72/Direct-mogo" target="_blank" rel="noopener"
     aria-label="GitHub 저장소 — 소스와 자료 수집 방식"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>GitHub</a></div>
   <div class="appinfo" id="appInfo" hidden></div>
 </footer>
@@ -1657,6 +1675,73 @@ function openSheet(row, opener){
   document.body.style.overflow="hidden";
   sheetX.focus();
 }
+
+/* ── AI로 쓰기 ────────────────────────────────────────────
+   이 화면은 자료를 압축해 품고 있어 AI가 그대로 읽지 못한다. 그래서 같은 자료를
+   스크립트 없이 읽히는 /s/ 로도 내는데, 그 사실을 아는 사람이 없었다.
+   각주에 단추 하나로 둔다 — 주된 쓰임이 아니므로 자리를 크게 차지하지 않는다. */
+const AI_URL = "https://mangom72.github.io/Direct-mogo/s/";
+const AI_ASK = "위 주소를 이용하여 문제지를 얻은 후, 21학년도 6평 경제 4번 해설해줘";
+
+function openAI(opener){
+  vaultMode = false;
+  sheetRow = null;
+  lastFocus = opener || null;
+  sheetAll.hidden = true;
+  sheetNm.textContent = "AI로 쓰기";
+  sheetSb.textContent = "같은 자료를 AI가 읽는 형태로도 냅니다";
+  sheetNote.textContent = "프로그램으로 다루실 때는 llms.txt 를 보십시오 — 각주에 링크가 있습니다.";
+  sheetList.innerHTML = "";
+
+  const box = document.createElement("div"); box.className = "sai";
+
+  const lead = document.createElement("p");
+  lead.innerHTML = "이 주소를 AI에게 건네고 물어보시면 됩니다. "
+    + "<b>회차·시행일·문제·정답·해설 주소가 그대로 적힌 페이지</b>라, "
+    + "AI가 거기서 문제지를 찾아 열어 읽습니다.";
+  box.appendChild(lead);
+
+  const row = document.createElement("div"); row.className = "box";
+  const f = document.createElement("input");
+  f.type = "text"; f.readOnly = true; f.value = AI_URL;
+  f.setAttribute("aria-label", "AI에게 건넬 주소");
+  f.onfocus = ()=>f.select();
+  f.onclick = ()=>f.select();
+  const cp = document.createElement("button");
+  cp.type = "button"; cp.textContent = "복사";
+  cp.onclick = async ()=>{
+    f.select();
+    try{ await navigator.clipboard.writeText(AI_URL); cp.textContent = "복사했습니다"; }
+    catch(e){ cp.textContent = "직접 복사해 주십시오"; }   /* 막히면 이미 골라 뒀다 */
+    setTimeout(()=>{ cp.textContent = "복사"; }, 2000);
+  };
+  row.append(f, cp);
+  box.appendChild(row);
+
+  const fig = document.createElement("figure");
+  const im = document.createElement("img");
+  /* 400KB짜리를 늘 받아오게 두지 않는다 — 이 패널을 열 때만 부른다.
+     README가 쓰는 것과 같은 파일이라 두 벌로 갈라지지 않는다. */
+  im.src = "docs/example-llm.jpg";
+  im.alt = "주소를 건네고 '21학년도 6평 경제 4번 해설해줘'라고 묻자, "
+         + "2020년 6월 시행분을 찾아 정답 ④와 선택지별 풀이를 답한 화면";
+  im.decoding = "async";
+  /* 이 그림은 셸 캐시에 없다 — 102KB를 늘 들고 다닐 만한 것이 아니다. 연결이
+     없으면 못 받는데, 그대로 두면 깨진 그림 아이콘이 남는다. 조용히 접는다. */
+  im.onerror = ()=>{ fig.hidden = true; };
+  const cap = document.createElement("figcaption");
+  cap.innerHTML = '<span class="q">' + esc(AI_ASK) + "</span><br>"
+    + "'21학년도'를 2020년 6월 시행분으로 옳게 옮겼습니다 — 시행 연도로 찾았다면 "
+    + "한 해 어긋난 시험지를 폈을 것입니다.";
+  fig.append(im, cap);
+  box.appendChild(fig);
+
+  sheetList.appendChild(box);
+  sheet.hidden = false;
+  document.body.style.overflow = "hidden";
+  sheetX.focus();
+}
+$("#aiBtn").onclick = e => openAI(e.currentTarget);
 
 /* ── 자료 갱신 내역 ──────────────────────────────────────
    자료는 매일 밤 자동으로 채워진다. 잘 돌고 있는지 사용자가 볼 방법이 없었다.
