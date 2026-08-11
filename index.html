@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-GAQMGFsh3123879DHJbcb5gM8OJ7anZiBYujbdLu1HA=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-zUyMKbMICpxfJSpirGU6UrME+tqk01lXCCyE6DrO7Sk=' 'sha256-F4QPg8eTdFNJ8f7gA6OCyGiANjT1ciOlggbS9ilcaOo=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -450,6 +450,9 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
   background:var(--ink);color:var(--paper)}
 .sai .box button:focus-visible, .sai .box input:focus-visible{
   outline:2.5px solid var(--mark);outline-offset:2px}
+/* 주소와 그림 사이의 이름표. 화면의 다른 구획(내 과목·학년·출제 기관)이
+   쓰는 .lab 과 같은 모양이라 여기만 튀지 않는다. */
+.sai .lab{margin:0 0 9px}
 .sai figure{margin:0}
 .sai img{display:block;width:100%;height:auto;border:1.2px solid var(--rule);border-radius:8px}
 .sai figcaption{margin-top:7px;font-size:11.5px;color:var(--ink2)}
@@ -1741,6 +1744,10 @@ function openAI(opener){
   };
   row.append(f, cp);
   box.appendChild(row);
+
+  const lab = document.createElement("div");
+  lab.className = "lab"; lab.textContent = "사용 예";
+  box.appendChild(lab);
 
   const fig = document.createElement("figure");
   const zoom = document.createElement("button");

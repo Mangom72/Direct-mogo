@@ -65,9 +65,18 @@ with sync_playwright() as pw:
     ck(im["alt"] > 20, "그림에 설명이 없습니다 — 화면을 못 보는 사람에게는 빈 자리입니다")
     ck(im["shown"] > 200, f"그림이 {im['shown']}px로 그려집니다")
 
+    # 주소와 그림 사이의 이름표 — 문장이 아니라 한 낱말이어야 한다
+    lab = pg.eval_on_selector(".sai .lab", "e=>e.textContent.trim()")
+    order = pg.evaluate("""()=>{const c=[...document.querySelector('.sai').children]
+        .map(e=>e.className||e.tagName.toLowerCase());
+        return [c.indexOf('box'), c.indexOf('lab'), c.findIndex(x=>x==='figure')];}""")
+    print("5. 이름표:", repr(lab), "· 차례(주소·이름표·그림):", order)
+    ck(lab == "사용 예", f"이름표가 {lab!r} 입니다")
+    ck(order[0] < order[1] < order[2], f"이름표가 주소와 그림 사이에 있지 않습니다: {order}")
+
     cap = pg.eval_on_selector(".sai figcaption", "e=>e.textContent")
     ck("21학년도" in cap and "2020년" in cap, f"예시 설명이 이상합니다: {cap[:40]!r}")
-    print("5. 설명:", cap[:46].replace("\n", " "))
+    print("   설명:", cap[:46].replace("\n", " "))
 
     # 눌러서 크게 보기 — 패널에서는 작아서 글자가 안 읽힌다
     pg.click(".sai .zoom")
