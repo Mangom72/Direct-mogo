@@ -1,20 +1,22 @@
-"""수능 D-day — 맞는 날을 세는가, 지난 뒤엔 입을 다무는가.
+"""수능 D-day — 관례대로 셈하는가, 연기됐을 때 손으로 덮을 수 있는가.
 
-시행일에는 관례가 있다 — 11월 13~19일 사이의 목요일이고, 2016년 시행분부터
-12회 연속 예외가 없다. 그래도 평가원이 해마다 따로 공고하는 것이지 규칙으로
-정해진 것이 아니라(2015년 이전에는 자주 한 주 빨랐다), index.html 의 SUNEUNG
-한 줄에 박아 두고 해마다 고친다. 고치는 것을 잊는 것이 이 기능의 유일하고도
-확실한 고장 방식이다. 그래서 **날이 지났으면 여기서 실패한다** — 사람이
-알아차릴 자리가 여기 말고 없다.
+시행일은 **11월 13~19일 사이의 목요일**이다. 7일 창이라 목요일이 딱 하나뿐이어서
+해만 알면 날이 정해진다. 2016년 시행분부터 이 기준이 정착했고 그 뒤로 예외가
+없다 — 그 이전에는 '11월 둘째 주'가 기준이라 한 주 빨랐다. 요일이 목요일인 것은
+2007년 시행분부터이며, 문제지 수송 차량이 주말 고속도로 혼잡을 피하도록 수요일에서
+옮긴 것이다.
 
-셈은 한국 시각으로 한다. 기기 시간대를 그대로 쓰면 시차가 있는 곳에서 하루가
-어긋나는데, 이 숫자를 보는 이유가 바로 그 하루다.
+그래서 화면은 상수를 두지 않고 셈한다. 해마다 손댈 일이 없다.
+
+지금까지의 예외는 **전부 연기**였다 — 2005 APEC, 2010 G20, 2017 포항 지진,
+2020 코로나. 그때만 index.html 의 SUNEUNG_MOVED 에 실제 시행일을 적는다.
 
     python3 tests/test_dday.py --date
 
-날짜만 본다. 브라우저도 서버도 쓰지 않아 몇 밀리초면 끝나므로, 매일 도는 자료
-갱신 워크플로가 이 형태로 부른다 — 시험이 지나는 시점은 대개 아무도 코드를 밀지
-않는 때라, 코드를 밀 때만 도는 시험으로는 영영 안 잡힌다.
+셈한 날짜를 한국어 위키백과와 대조만 한다. 브라우저도 서버도 쓰지 않아 몇
+밀리초면 끝나므로 매일 도는 자료 갱신이 이 형태로 부른다 — 평가원이 관례를
+벗어나 공고하거나 시험이 연기되면, 화면은 그것을 모른 채 옛 관례대로 세고 있다.
+그것을 알아차릴 자리가 여기 말고 없다.
 """
 import sys, pathlib, re, json, datetime
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -27,42 +29,34 @@ def ck(cond, msg):
     if not cond:
         BAD.append(msg)
 
+
+def scheduled(year):
+    """그 해 11월 13~19일 사이의 목요일. 화면의 셈과 같은 규칙."""
+    for day in range(13, 20):
+        d = datetime.date(year, 11, day)
+        if d.weekday() == 3:
+            return d
+
+
 src = (ROOT / "index.html").read_text(encoding="utf-8")
-m = re.search(r'const SUNEUNG = "(\d{4}-\d{2}-\d{2})"', src)
+m = re.search(r'const SUNEUNG_MOVED = "([^"]*)"', src)
 if not m:
-    print("★ index.html 에서 SUNEUNG 을 찾지 못했습니다")
+    print("★ index.html 에서 SUNEUNG_MOVED 를 찾지 못했습니다")
     sys.exit(1)
-EXAM = datetime.date.fromisoformat(m.group(1))
+MOVED = m.group(1)
 TODAY = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date()
-left = (EXAM - TODAY).days
-print(f"1. 박혀 있는 시행일 {EXAM} · 오늘(한국) {TODAY} · D-{left}")
 
-
-# ── 관례에 비추어 보기 (망을 타지 않는다) ─────────────────────────────────
-#
-# 요일: 2007학년도부터 **예외 없이 목요일**이다. 문제지 배송 차량이 주말 고속도로
-# 혼잡을 피하도록 그때 바꾼 것이라, 사정이 있어 옮길 만한 종류의 것이 아니다.
-# 저장소 자료 21회가 전부 목요일이었다 — 지진·코로나로 연기된 해까지 그렇다.
-#
-# 날짜: **11월 13~19일 사이의 목요일**. 7일 창이라 목요일이 딱 하나뿐이다.
-# 저장소 자료로 재 보면 2016년 시행분부터 12회 연속 예외가 없고, 연기된 두 해도
-# '연기 전 예정일'은 이 창 안이었다(2017-11-16, 2020-11-19). 어긋나는 옛 해는
-# 2009·2011·2012·2013·2015뿐이고 전부 정확히 일주일 빨랐다 — 늦은 적은 없다.
-#
-# 그래도 **이걸로 날짜를 만들지는 않는다.** 관례는 바뀔 수 있고, 실제로 2015년
-# 이전에는 자주 한 주 빨랐다. 박아 둔 값이 관례에서 벗어났을 때 사람을 부르는
-# 데에만 쓴다.
-
-def convention(exam_date):
-    """관례에 어긋나는지 본다. (치명적인가, 할 말) 로 돌려준다."""
-    W = "월화수목금토일"[exam_date.weekday()]
-    if exam_date.weekday() != 3:
-        return True, (f"{W}요일입니다 — 수능은 2007학년도 이후 예외 없이 목요일입니다"
-                      " (문제지 배송이 주말 혼잡을 피하도록 정해진 것입니다).")
-    if not (exam_date.month == 11 and 13 <= exam_date.day <= 19):
-        return False, (f"11월 13~19일 창 밖입니다 — 2016년 이후 12회가 모두 그 안이었습니다."
-                       " 평가원이 관례를 벗어나 공고했다면 그대로 두셔도 됩니다.")
-    return False, ""
+EXAM = scheduled(TODAY.year)
+if TODAY > EXAM:
+    EXAM = scheduled(TODAY.year + 1)
+note = ""
+if MOVED:
+    mv = datetime.date.fromisoformat(MOVED)
+    if mv >= TODAY:
+        EXAM, note = mv, "  (연기됨 — SUNEUNG_MOVED)"
+    else:
+        note = f"  (SUNEUNG_MOVED={MOVED} 는 지난 날이라 무시됩니다 — 지우셔도 됩니다)"
+print(f"1. 오늘(한국) {TODAY} · 다음 수능 {EXAM} · D-{(EXAM - TODAY).days}{note}")
 
 
 # ── 바깥과 대조 ────────────────────────────────────────────────────────
@@ -73,7 +67,7 @@ def convention(exam_date):
 # 그나마 규격이 일정한 것이 한국어 위키백과의 학년도별 인포박스다. 2024~2027
 # 학년도를 실제 공고와 대조해 네 해 모두 맞는 것을 확인했다. 그래도 **이 값을
 # 화면에 쓰지는 않는다** — 누구나 고칠 수 있는 문서라, 틀린 날짜가 조용히
-# 나가는 것보다 아무것도 안 뜨는 편이 낫다. 어긋날 때 사람을 부르는 데에만 쓴다.
+# 나가는 것보다 관례대로 세는 편이 낫다. 어긋날 때 사람을 부르는 데에만 쓴다.
 
 def parse_infobox_date(wikitext):
     """인포박스의 '날짜' 칸에서 날짜를 꺼낸다.
@@ -110,52 +104,59 @@ def wiki_date(schoolyear):
     return (got, "") if got else (None, "인포박스 모양이 달라졌습니다")
 
 
-def cross_check(exam_date, why):
-    """박아 둔 날짜를 위키백과와 견준다. 어긋날 때만 실패로 돌려준다."""
-    sy = exam_date.year + 1                      # 시행 연도 + 1 = 학년도
-    got, note = wiki_date(sy)
+if DATE_ONLY:
+    sy = EXAM.year + 1                           # 시행 연도 + 1 = 학년도
+    got, why = wiki_date(sy)
     if got is None:
-        print(f"   대조: {sy}학년도 — {note} (넘어갑니다)")
-        return True
-    if got == exam_date.isoformat():
+        print(f"   대조: {sy}학년도 — {why} (넘어갑니다)")
+        sys.exit(0)
+    if got == EXAM.isoformat():
         print(f"   대조: {sy}학년도 위키백과도 {got} — 같습니다")
-        return True
-    print(f"\n  ★ 박아 둔 날짜와 위키백과가 다릅니다{why}\n"
-          f"    index.html : {exam_date}\n"
-          f"    위키백과   : {got}  ({sy}학년도 문서)\n"
-          "    평가원 공고를 확인하고 맞는 쪽으로 고치십시오. 위키백과는 누구나"
-          " 고칠 수 있으므로\n    그 값을 그대로 믿지는 마십시오.")
-    return False
-
-
-if left < 0:
-    # 여기서 끝낸다. 나머지를 돌려 봐야 지난 날짜를 셀 뿐이고, 정작 사람이
-    # 읽어야 할 말이 뒤따르는 출력에 묻힌다.
-    print(f"\n  ★ 시행일이 {-left}일 지났습니다 — index.html 의 SUNEUNG 을 다음 수능"
-          " 날짜로 고치십시오.\n    (평가원 공고. 그때까지 화면에는 아무것도 뜨지 않습니다.)")
-    if DATE_ONLY:
-        # 다음 시험 날짜를 짐작해 함께 알려 준다 — 고치러 갈 때 손에 들려 보낸다.
-        nxt, note = wiki_date(EXAM.year + 2)
-        print(f"    다음 회차: 위키백과에는 {nxt}로 적혀 있습니다 (확인 필요)"
-              if nxt else f"    다음 회차: {note}")
+        sys.exit(0)
+    how = "SUNEUNG_MOVED" if note.startswith("  (연기") else "11월 13~19일 목요일"
+    print(f"\n  ★ 화면이 세는 날과 위키백과가 다릅니다\n"
+          f"    화면     : {EXAM}   ({how})\n"
+          f"    위키백과 : {got}   ({sy}학년도 문서)\n"
+          "    연기됐거나 평가원이 관례를 벗어나 공고한 것일 수 있습니다."
+          " 공고를 확인하고,\n    맞으면 index.html 의 SUNEUNG_MOVED 에 실제"
+          " 시행일을 적으십시오.\n    위키백과는 누구나 고칠 수 있으므로 그 값을"
+          " 그대로 믿지는 마십시오.")
     sys.exit(1)
 
-fatal, say = convention(EXAM)
-print(f"   관례: ★ {say}" if say else
-      "   관례: 11월 13~19일 사이의 목요일 — 맞습니다")
 
-if DATE_ONLY:
-    ok = cross_check(EXAM, "")
-    if fatal:
-        # 목요일이 아닌 것은 거의 확실히 잘못 적은 것이다. 창 밖인 것은
-        # 평가원이 관례를 바꿨을 수도 있으므로 말만 하고 넘어간다.
-        print("\n  ★ 요일이 관례와 다릅니다 — 잘못 적었는지 확인하십시오.")
-        sys.exit(1)
-    sys.exit(0 if ok else 1)
+# ── 셈이 실제 역사와 맞는가 (망을 타지 않는다) ────────────────────────────
+#
+# 2016년 시행분부터, 연기된 해를 빼고 전부. 연기된 해는 '연기 전 예정일'이
+# 나오는 것이 맞다 — 그 자리가 곧 SUNEUNG_MOVED 로 덮을 자리다.
+HISTORY = [
+    (2016, "2016-11-17", None),
+    (2017, "2017-11-16", "2017-11-23"),   # 포항 지진 — 하루 전 긴급 연기
+    (2018, "2018-11-15", None),
+    (2019, "2019-11-14", None),
+    (2020, "2020-11-19", "2020-12-03"),   # 코로나 — 2주 연기
+    (2021, "2021-11-18", None),
+    (2022, "2022-11-17", None),
+    (2023, "2023-11-16", None),
+    (2024, "2024-11-14", None),           # 창의 이른 쪽
+    (2025, "2025-11-13", None),           # 가장 이른 날
+    (2026, "2026-11-19", None),           # 가장 늦은 날
+    (2027, "2027-11-18", None),
+]
+for y, want, moved in HISTORY:
+    got = scheduled(y).isoformat()
+    ck(got == want, f"{y}년 예정일: {got} (기대 {want})")
+moved_n = sum(1 for *_, mv in HISTORY if mv)
+print(f"2. 2016~2027 예정일 {len(HISTORY)}회 — "
+      f"{'전부 맞음' if not BAD else '어긋남'} (그중 {moved_n}회는 뒤에 연기됨)")
 
-# 인포박스 읽는 규칙 — 실제로 쓰이는 두 모양과, 읽지 말아야 할 것들.
-# 망을 타지 않고 여기서 본다. 위키백과가 문서 틀을 바꾸면 --date 쪽이 조용히
-# '모양이 달라졌습니다'로 넘어가 버리므로, 규칙 자체는 손에서 붙잡아 둔다.
+# 관례가 정착하기 전(2015년 이전)은 셈과 다르다. 그 사실을 못박아 둔다 —
+# 누군가 '옛날 것도 세지지 않느냐'고 규칙을 되돌리지 않도록.
+OLD = [(2015, "2015-11-12"), (2013, "2013-11-07"), (2011, "2011-11-10")]
+for y, real in OLD:
+    ck(scheduled(y).isoformat() != real,
+       f"{y}년은 관례 이전이라 셈과 달라야 하는데 같습니다")
+print(f"3. 2015년 이전 {len(OLD)}회는 셈과 다름 — 관례 정착 이전이 맞음")
+
 FIXTURES = [
     ("|날짜 = [[2026년]] [[11월 19일]] (목)", "2026-11-19"),
     ("|날짜 = 2021년 11월 18일 ([[목요일]])", "2021-11-18"),
@@ -165,32 +166,17 @@ FIXTURES = [
     ("|날짜 = 미정", None),
 ]
 for text, want in FIXTURES:
-    got = parse_infobox_date(text)
-    ck(got == want, f"인포박스 읽기: {text[:34]!r} → {got!r} (기대 {want!r})")
-print(f"2. 인포박스 읽는 규칙 {len(FIXTURES)}가지 — "
+    ck(parse_infobox_date(text) == want,
+       f"인포박스 읽기: {text[:34]!r} → {parse_infobox_date(text)!r} (기대 {want!r})")
+print(f"4. 인포박스 읽는 규칙 {len(FIXTURES)}가지 — "
       f"{'전부 맞음' if not BAD else '어긋남'}")
 
-# 관례 판정 — 실제로 있었던 날들로 견준다.
-CONV = [
-    ("2026-11-19", False, False),   # 2027학년도, 공고
-    ("2025-11-13", False, False),   # 창의 첫날
-    ("2016-11-17", False, False),
-    ("2015-11-12", False, True),    # 관례 이전 — 창 밖이지만 잘못은 아니다
-    ("2020-12-03", False, True),    # 코로나로 12월 (요일은 목요일)
-    ("2026-11-18", True,  True),    # 수요일 — 잘못 적은 것
-    ("2026-11-21", True,  True),    # 토요일
-]
-for iso, want_fatal, want_say in CONV:
-    f, s = convention(datetime.date.fromisoformat(iso))
-    ck(f == want_fatal and bool(s) == want_say,
-       f"관례 판정 {iso}: 치명={f}(기대 {want_fatal}) 할말={bool(s)}(기대 {want_say})")
-print(f"3. 관례 판정 {len(CONV)}가지 — {'전부 맞음' if not BAD else '어긋남'}")
-
-# 여기서부터는 화면을 연다. 위의 날짜 확인만 필요한 쪽(매일 도는 갱신)이
-# 브라우저를 깔지 않아도 되도록, 무거운 것은 여기서 처음 불러온다.
+# 여기서부터는 화면을 연다. 위의 확인만 필요한 쪽(매일 도는 갱신)이 브라우저를
+# 깔지 않아도 되도록, 무거운 것은 여기서 처음 불러온다.
 from harness import CHROME, site                                   # noqa: E402
 _srv, SITE = site()
 from playwright.sync_api import sync_playwright                    # noqa: E402
+
 
 def at(pw, when, tz="America/Los_Angeles"):
     """기기 시계를 그 순간으로, 시간대는 일부러 한국 밖으로 두고 연다."""
@@ -203,52 +189,53 @@ def at(pw, when, tz="America/Los_Angeles"):
       const D = Date; Date = class extends D {{
         constructor(...a){{ super(...(a.length ? a : [F])); }}
         static now(){{ return F; }} }};
-      Date.parse = D.parse;""")
+      Date.parse = D.parse; Date.UTC = D.UTC;""")
     pg.goto(SITE, wait_until="load")
     pg.wait_for_selector(".item", timeout=25000)
     return b, pg
 
-def shown(pg):
+
+def badge(pg):
     return pg.evaluate("()=>{const e=document.getElementById('dday');"
-                       "return e && !e.hidden ? e.textContent : null;}")
+                       "return e && !e.hidden ? [e.textContent, e.title] : null;}")
+
 
 with sync_playwright() as pw:
-    # 시행일 100일 전 — 한국은 낮, 기기 시간대는 미국
-    d100 = (EXAM - datetime.timedelta(days=100)).isoformat()
-    b, pg = at(pw, d100 + "T02:00:00Z")            # 한국 11:00
-    got = shown(pg)
-    print("4. 100일 전(기기 시간대 미국):", got)
-    ck(got == "수능 D-100", f"D-100 이어야 하는데 {got!r} 입니다")
+    # 화면이 실제로 역사와 같은 날을 가리키는가 — 그 해 1월에 열어 본다
+    for y, want, _ in HISTORY[:6]:
+        b, pg = at(pw, f"{y}-01-15T02:00:00Z")
+        got = badge(pg)
+        ck(got and got[1].startswith(want.replace("-", ".")),
+           f"{y}년 1월에 열었을 때 화면이 {got} 를 가리킵니다 (기대 {want})")
+        b.close()
+    print(f"5. 화면이 가리키는 날 {min(6, len(HISTORY))}회 — "
+          f"{'역사와 같음' if not BAD else '어긋남'}")
 
-    # 같은 한국 날짜인데 UTC로는 전날인 순간 — 시차로 하루가 밀리는지
-    b2, pg2 = at(pw, (EXAM - datetime.timedelta(days=101)).isoformat() + "T20:00:00Z")
-    got2 = shown(pg2)                               # 한국 05:00, 100일 전
-    print("5. 같은 한국 날짜의 이른 새벽:", got2)
-    ck(got2 == "수능 D-100", f"시차로 하루가 어긋났습니다: {got2!r}")
+    NEXT = scheduled(2027)                      # 2026 다음 회차
+    # 시차 — 기기가 미국인데 한국 날짜로 세는가
+    b, pg = at(pw, "2026-08-11T02:00:00Z")      # 한국 11:00
+    ck(badge(pg)[0] == "수능 D-100", f"D-100 이어야 하는데 {badge(pg)} 입니다")
+    b2, pg2 = at(pw, "2026-08-10T20:00:00Z")    # 한국 11일 05:00, 같은 날
+    ck(badge(pg2)[0] == "수능 D-100", f"시차로 하루 어긋남: {badge(pg2)}")
     b2.close()
+    print("6. 시차 — 기기가 미국이어도 한국 날짜로 셈")
 
-    # 당일 — 자정 직후와 밤늦게 둘 다
-    for t, label in (("T00:30:00Z", "한국 09:30"), ("T14:00:00Z", "한국 23:00")):
-        b3, pg3 = at(pw, EXAM.isoformat() + t)
-        g = shown(pg3)
-        print(f"6. 시험 당일 {label}:", g)
-        ck(g == "수능 D-DAY", f"당일에 {g!r} 이 떴습니다")
-        b3.close()
-
-    # 지난 뒤 — 아무 말도 하지 않아야 한다
-    b4, pg4 = at(pw, (EXAM + datetime.timedelta(days=1)).isoformat() + "T01:00:00Z")
-    g = shown(pg4)
-    print("7. 다음 날:", g if g else "(숨김)")
-    ck(g is None, f"시험이 지났는데 {g!r} 이 남아 있습니다 — 고쳐지지 않은 화면이 "
-                  "스스로 틀린 소리를 하게 됩니다")
+    # 당일과 그 다음 날 — 넘어가는가
+    b3, pg3 = at(pw, "2026-11-19T14:00:00Z")    # 한국 23:00, 당일
+    ck(badge(pg3)[0] == "수능 D-DAY", f"당일에 {badge(pg3)}")
+    b3.close()
+    b4, pg4 = at(pw, "2026-11-20T01:00:00Z")    # 한국 10:00, 다음 날
+    g = badge(pg4)
+    ck(g and g[1].startswith(NEXT.isoformat().replace("-", ".")),
+       f"다음 날 이듬해({NEXT})로 넘어가야 하는데 {g} 입니다")
     b4.close()
+    print(f"7. 당일 D-DAY · 다음 날 {NEXT} 로 넘어감")
 
-    # 제목을 밀거나 화면을 넘치게 하지 않는가
+    # 자리 — 제목을 밀거나 화면을 넘치게 하지 않는가
     box = pg.evaluate("""()=>{const d=document.getElementById('dday');
       const r=d.getBoundingClientRect(), h=d.parentElement.getBoundingClientRect();
       return {넘침:document.documentElement.scrollWidth-innerWidth,
-              제목줄안:r.top>=h.top-1&&r.bottom<=h.bottom+1,
-              폭:Math.round(r.width)};}""")
+              제목줄안:r.top>=h.top-1&&r.bottom<=h.bottom+1};}""")
     print("8. 자리:", box)
     ck(box["넘침"] == 0, f"가로로 {box['넘침']}px 넘칩니다")
     ck(box["제목줄안"], "제목 줄 밖으로 나갔습니다")

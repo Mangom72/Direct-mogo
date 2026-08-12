@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-SKn+qaQhbWfYVayffcSeyV41/rETDh0r1miK6tsNIGA=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-X6VBA7ahOSWJEahVnYKZuCDqEfAEhaIZdcnhGG0GCyE=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -849,28 +849,54 @@ media.addEventListener("change", ()=>{ if(themePref==="auto") applyTheme(); });
 applyTheme();
 
 /* ── 수능까지 ──────────────────────────────────────────────────────
-   시행일은 평가원이 해마다 따로 공고하므로 규칙으로 셀 수 없다. 아래 한 줄을
-   해마다 고친다(2027학년도 = 2026-11-19, 교육부 공고).
+   **11월 13~19일 사이의 목요일.** 7일 창이라 목요일이 딱 하나뿐이어서 해만
+   알면 날이 정해진다. 2016년 시행분부터 이 기준이 정착했고 그 뒤로 예외가
+   없다 — 그 이전에는 '11월 둘째 주'가 기준이라 한 주 빨랐다.
 
-   날이 지나면 **말없이 사라진다.** 다음 시험일은 아직 공고되지 않았을 수
-   있는데, 그 사이에 'D+12' 같은 말을 띄우면 고쳐지지 않은 화면이 스스로
-   틀린 소리를 하는 꼴이 된다. 없는 편이 낫다.
+   요일은 2007년 시행분(2007학년도)부터 목요일이다. 그전에는 수요일이었는데,
+   문제지 수송 차량이 주말 고속도로 혼잡을 피하도록 옮겼다.
 
-   셈은 한국 시각으로 한다. 기기 시간대를 그대로 쓰면 시차가 있는 곳에서
-   하루가 어긋난다 — 이 숫자를 보는 이유가 바로 그 하루다. */
-const SUNEUNG = "2026-11-19";
+   그래서 상수 대신 셈한다. 해가 바뀌면 저절로 다음 회차를 가리키므로 해마다
+   손댈 일이 없다.
+
+   **연기됐을 때만 손으로 적는다.** 지금까지의 예외는 전부 연기였다 —
+   2005 APEC, 2010 G20, 2017 포항 지진(하루 전 긴급 연기), 2020 코로나.
+   그런 해에는 아래 한 줄에 실제 시행일을 적으면 그것이 이긴다. 날이 지나면
+   저절로 무시되므로 지우는 것을 잊어도 된다. */
+const SUNEUNG_MOVED = "";        /* 예: "2027-11-25" — 연기됐을 때만 */
+
 (function dday(){
   const el = document.getElementById("dday");
   if(!el) return;
   /* 한국 시각의 '오늘 0시'를 UTC 기준으로 잡는다. KST는 서머타임이 없어
-     +9시간 고정이라 이 계산이 그대로 성립한다. */
+     +9시간 고정이라 이 계산이 그대로 성립한다. 기기 시간대를 그대로 쓰면
+     시차가 있는 곳에서 하루가 어긋나는데, 이 숫자를 보는 이유가 그 하루다. */
   const KST = 9 * 3600e3, DAY = 86400e3;
   const today = Math.floor((Date.now() + KST) / DAY);
-  const exam = Math.floor((Date.parse(SUNEUNG + "T00:00:00Z")) / DAY);
+
+  /* 그 해 11월 13~19일 중 목요일. UTC 기준 요일이면 충분하다 — 날짜만 다룬다. */
+  const examOf = y => {
+    for(let d = 13; d <= 19; d++){
+      const t = Date.UTC(y, 10, d);
+      if(new Date(t).getUTCDay() === 4) return Math.floor(t / DAY);
+    }
+  };
+
+  const thisYear = new Date((today * DAY)).getUTCFullYear();
+  let exam = examOf(thisYear);
+  if(today > exam) exam = examOf(thisYear + 1);   // 올해 것은 지났다
+
+  /* 연기된 해. 아직 오지 않은 날일 때만 쓴다 — 지난 값이 남아 있어도
+     저절로 무시되어, 이듬해에 엉뚱한 날을 가리키지 않는다. */
+  if(SUNEUNG_MOVED){
+    const moved = Math.floor(Date.parse(SUNEUNG_MOVED + "T00:00:00Z") / DAY);
+    if(moved >= today) exam = moved;
+  }
+
   const left = exam - today;
-  if(left < 0) return;                       // 지난 시험은 말하지 않는다
   el.textContent = left === 0 ? "수능 D-DAY" : "수능 D-" + left;
-  el.title = SUNEUNG.replace(/-/g, ".") + " 시행";
+  el.title = new Date(exam * DAY).toISOString().slice(0, 10).replace(/-/g, ".")
+    + " 시행";
   el.hidden = false;
 })();
 
