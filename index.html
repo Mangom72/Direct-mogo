@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-jnhriYA/AHnDnkCM8JkYrjlv+6HZLj5j/XHUpX8XXjE=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-rm4i4jzegig0HD/9dNs4uMcdQVRTh2RZD2HO6K17mjE=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -1840,7 +1840,14 @@ async function openLog(opener){
   sheetAll.hidden = true;
   sheetNm.textContent = "자료 갱신 내역";
   sheetSb.textContent = "매일 밤 11시에 EBSi를 확인합니다";
-  sheetNote.textContent = "0건인 날도 적힙니다 — 확인했고 새 자료가 없었다는 뜻입니다.";
+  /* 줄마다 '확인했고 새 자료가 없었습니다'라고 적혀 있으므로 그 말을 여기서
+     되풀이하지 않는다. 대신 목록이 어디서 끊기는지와, 그 너머를 볼 길을 준다. */
+  sheetNote.textContent = "최근 20회까지 보입니다. ";
+  const more = document.createElement("a");
+  more.href = "https://github.com/Mangom72/Direct-mogo/actions/workflows/refresh-data.yml";
+  more.target = "_blank"; more.rel = "noopener";
+  more.textContent = "깃허브에서 전체 보기";
+  sheetNote.appendChild(more);
   sheetList.innerHTML = `<div class="slog"><div class="d">불러오는 중입니다…</div></div>`;
   sheet.hidden = false;
   document.body.style.overflow = "hidden";
