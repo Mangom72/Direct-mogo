@@ -2,7 +2,7 @@
 
 ```bash
 pip install playwright "fonttools[woff]" brotli && playwright install chromium
-python3 tests/run.py              # 전부 (3분 남짓, 27종)
+python3 tests/run.py              # 전부 (3분 남짓, 28종)
 python3 tests/run.py sw stale     # 이름에 그 말이 든 것만
 python3 tests/run.py -v           # 출력까지 그대로
 ```
@@ -53,6 +53,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 | `test_log` | 자료 갱신 내역에 **0건인 날과 실패한 날**이 보이는가 |
 | `test_ai` | AI로 쓰기 — 주소를 복사할 수 있고 예시 그림이 실제로 뜨는가 |
 | `test_back` | 앱 뒤로가기가 열어 둔 것부터 하나씩 닫는가 |
+| `test_dday` | 수능까지 며칠인가 — 그리고 **박아 둔 시행일이 지났으면 실패한다** |
 
 ## 왜 `test_glyphs`가 따로 있는가
 
@@ -79,7 +80,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 더 드는 나머지를 여기서까지 돌리지는 않습니다 — 그 작업이 건드리는 것은 자료뿐입니다.
 
 **화면 쪽**(`tests.yml`)은 `index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로
-main에 올라갈 때 27종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
+main에 올라갈 때 28종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
 남아, 손에서 재현되지 않는 실패도 눈으로 볼 수 있습니다.
 
 어느 쪽이든 CI는 마지막 그물입니다. 고친 자리에서 `python3 tests/run.py`를 먼저

@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-rm4i4jzegig0HD/9dNs4uMcdQVRTh2RZD2HO6K17mjE=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-SKn+qaQhbWfYVayffcSeyV41/rETDh0r1miK6tsNIGA=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -243,6 +243,11 @@ body{
 .mast-title .kicker{font-family:"Song Myung",serif;font-size:11px;letter-spacing:3.5px;
   color:var(--mark);font-weight:700;margin-bottom:7px}
 .mast-title h1{font-family:"Song Myung",serif;font-weight:700;margin:0;font-size:31px;letter-spacing:-1px;line-height:1.15}
+/* 수능까지 남은 날. 제목 옆에 붙되 제목을 밀지 않는다 — 값이 늦게 들어와도
+   자리를 미리 잡아 두어 화면이 흔들리지 않게 min-width 를 준다. */
+.dday{font-family:"Gijul Sans",system-ui,sans-serif;font-size:12.5px;font-weight:700;
+  letter-spacing:0;vertical-align:middle;margin-left:9px;padding:3px 8px;border-radius:11px;
+  background:var(--mark);color:var(--onmark);min-width:62px;display:inline-block;text-align:center}
 .mast-title p{margin:8px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.65}
 .mast-side{width:120px;border-left:1.5px solid var(--ink);display:flex;flex-direction:column}
 .mast-side > *{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1px solid var(--rule);padding:6px}
@@ -692,7 +697,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
     <div class="mast-top">
       <div class="mast-title">
         <div class="kicker">문 제 지 원 본 직 행</div>
-        <h1>기출 직행</h1>
+        <h1>기출 직행<span class="dday" id="dday" hidden></span></h1>
         <p>평가원(수능·6/9월 모의평가)과 교육청(전국연합학력평가) 원본 PDF로 한 번에 이동합니다.<br>연도는 시행 연도 기준이며, 평가원 시험의 학년도를 함께 표기했습니다.</p>
       </div>
       <div class="mast-side">
@@ -842,6 +847,32 @@ document.getElementById("thBtn").onclick = ()=>{
 };
 media.addEventListener("change", ()=>{ if(themePref==="auto") applyTheme(); });
 applyTheme();
+
+/* ── 수능까지 ──────────────────────────────────────────────────────
+   시행일은 평가원이 해마다 따로 공고하므로 규칙으로 셀 수 없다. 아래 한 줄을
+   해마다 고친다(2027학년도 = 2026-11-19, 교육부 공고).
+
+   날이 지나면 **말없이 사라진다.** 다음 시험일은 아직 공고되지 않았을 수
+   있는데, 그 사이에 'D+12' 같은 말을 띄우면 고쳐지지 않은 화면이 스스로
+   틀린 소리를 하는 꼴이 된다. 없는 편이 낫다.
+
+   셈은 한국 시각으로 한다. 기기 시간대를 그대로 쓰면 시차가 있는 곳에서
+   하루가 어긋난다 — 이 숫자를 보는 이유가 바로 그 하루다. */
+const SUNEUNG = "2026-11-19";
+(function dday(){
+  const el = document.getElementById("dday");
+  if(!el) return;
+  /* 한국 시각의 '오늘 0시'를 UTC 기준으로 잡는다. KST는 서머타임이 없어
+     +9시간 고정이라 이 계산이 그대로 성립한다. */
+  const KST = 9 * 3600e3, DAY = 86400e3;
+  const today = Math.floor((Date.now() + KST) / DAY);
+  const exam = Math.floor((Date.parse(SUNEUNG + "T00:00:00Z")) / DAY);
+  const left = exam - today;
+  if(left < 0) return;                       // 지난 시험은 말하지 않는다
+  el.textContent = left === 0 ? "수능 D-DAY" : "수능 D-" + left;
+  el.title = SUNEUNG.replace(/-/g, ".") + " 시행";
+  el.hidden = false;
+})();
 
 const $ = s => document.querySelector(s);
 const gradeBox=$("#gradeBox"), grpSel=$("#grp"), subSel=$("#sub"),
