@@ -7,12 +7,18 @@ SUNEUNG 한 줄에 박아 두고 해마다 고치는데, 고치는 것을 잊는
 
 셈은 한국 시각으로 한다. 기기 시간대를 그대로 쓰면 시차가 있는 곳에서 하루가
 어긋나는데, 이 숫자를 보는 이유가 바로 그 하루다.
+
+    python3 tests/test_dday.py --date
+
+날짜만 본다. 브라우저도 서버도 쓰지 않아 몇 밀리초면 끝나므로, 매일 도는 자료
+갱신 워크플로가 이 형태로 부른다 — 시험이 지나는 시점은 대개 아무도 코드를 밀지
+않는 때라, 코드를 밀 때만 도는 시험으로는 영영 안 잡힌다.
 """
 import sys, pathlib, re, datetime
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from harness import CHROME, ROOT, site
-_srv, SITE = site()
-from playwright.sync_api import sync_playwright
+from harness import ROOT
+
+DATE_ONLY = "--date" in sys.argv
 
 BAD = []
 def ck(cond, msg):
@@ -34,6 +40,16 @@ if left < 0:
     print(f"\n  ★ 시행일이 {-left}일 지났습니다 — index.html 의 SUNEUNG 을 다음 수능"
           " 날짜로 고치십시오.\n    (평가원 공고. 그때까지 화면에는 아무것도 뜨지 않습니다.)")
     sys.exit(1)
+
+if DATE_ONLY:
+    print("   (날짜만 확인했습니다)")
+    sys.exit(0)
+
+# 여기서부터는 화면을 연다. 위의 날짜 확인만 필요한 쪽(매일 도는 갱신)이
+# 브라우저를 깔지 않아도 되도록, 무거운 것은 여기서 처음 불러온다.
+from harness import CHROME, site                                   # noqa: E402
+_srv, SITE = site()
+from playwright.sync_api import sync_playwright                    # noqa: E402
 
 def at(pw, when, tz="America/Los_Angeles"):
     """기기 시계를 그 순간으로, 시간대는 일부러 한국 밖으로 두고 연다."""

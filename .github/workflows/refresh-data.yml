@@ -101,3 +101,14 @@ jobs:
           NOTE=$(cat "$RUNNER_TEMP/note.txt" 2>/dev/null || true)
           git commit -m "Refresh exam data from EBSi${NOTE:+ ($NOTE)}"
           git push
+
+      # 수능 시행일은 화면에 상수 한 줄로 박혀 있고 해마다 손으로 고쳐야 한다.
+      # 그것을 지키는 시험(test_dday)은 코드를 밀 때만 도는데, 시험이 지나는
+      # 시점은 대개 아무도 코드를 밀지 않는 때다 — 그래서 여기서 매일 본다.
+      #
+      # 자료 커밋 **뒤에** 둔다. 날짜가 지났다고 그날의 자료 갱신까지 막을 이유는
+      # 없다. 자료는 그대로 나가고, 워크플로만 빨갛게 떠서 사람이 본다.
+      # 날짜만 보는 형태라 브라우저도 서버도 필요 없고 0.1초면 끝난다.
+      - name: 수능 날짜가 지났는지
+        if: always()
+        run: python3 tests/test_dday.py --date

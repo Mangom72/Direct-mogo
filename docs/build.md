@@ -40,7 +40,7 @@ PDF는 EBSi가 `Access-Control-Allow-Origin: *`를 주기 때문에 페이지가
 |---|---|---|
 | `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 28종. 실패하면 그때의 화면 그림을 artifact로 남깁니다 |
 | `android/**` | `android.yml` | 서명 빌드 → **지문 확인** → 릴리스 생성 → APK 첨부 → `app/latest.json` 커밋 |
-| (매일 23시 KST) | `refresh-data.yml` | EBSi에서 새 회차 수집 → JSON·과목 페이지·글꼴 → `test_fields`·`test_stable` → 커밋 |
+| (매일 23시 KST) | `refresh-data.yml` | EBSi에서 새 회차 수집 → JSON·과목 페이지·글꼴 → `test_fields`·`test_stable` → 커밋 → 수능 날짜가 지났는지 |
 
 `refresh-data.yml`이 `index.html`을 커밋하므로, 새 자료가 있는 날에는 그 커밋이
 이어서 `tests.yml`을 깨웁니다. 자료가 없는 날은 아무것도 커밋하지 않아 조용합니다.
