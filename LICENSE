@@ -19,13 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-본 MIT 라이선스는 저장소가 직접 작성한 저작물에 한하여 적용됩니다.
-저장소에 함께 포함되어 있으나 별도의 조건이 적용되는 사항은 다음과 같으며,
-자세한 내용은 NOTICE.md 에 따릅니다.
-
-  · 문제 자료(PDF)         저작권은 한국교육과정평가원 및 각 시·도교육청에 귀속되며,
-                          저장소는 해당 파일을 저장하거나 재배포하지 아니합니다.
-  · fonts/ 의 글꼴         SIL Open Font License 1.1 (fonts/OFL-*.txt)
