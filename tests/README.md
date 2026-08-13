@@ -2,7 +2,7 @@
 
 ```bash
 pip install playwright "fonttools[woff]" brotli && playwright install chromium
-python3 tests/run.py              # 전부 (3분 남짓, 28종)
+python3 tests/run.py              # 전부 (3분 남짓, 29종)
 python3 tests/run.py sw stale     # 이름에 그 말이 든 것만
 python3 tests/run.py -v           # 출력까지 그대로
 ```
@@ -54,6 +54,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 | `test_ai` | AI로 쓰기 — 주소를 복사할 수 있고 예시 그림이 실제로 뜨는가 |
 | `test_back` | 앱 뒤로가기가 열어 둔 것부터 하나씩 닫는가 |
 | `test_dday` | 수능까지 며칠인가 — 셈한 날이 역대 실제 시행일과 맞는가, 자정을 넘기면 그 자리에서 바뀌는가 |
+| `test_scv` | 회차 이름의 EBSi 링크가 **실제로 열리는 회차에만** 걸리는가, 바깥으로 나가는 것이 보이는가 |
 
 ## 왜 `test_glyphs`가 따로 있는가
 
@@ -71,6 +72,11 @@ python3 tests/run.py -v           # 출력까지 그대로
 `test_dday`의 자정 넘김은 앱을 접어 두었다가 이튿날 아침에 폈더니 D-day가
 어제 숫자 그대로였던 일에서 왔습니다.
 같은 일이 다시 나지 않게 하는 것이 이 폴더의 목적입니다.
+
+`test_scv`는 겪기 전에 쓴 몇 안 되는 시험입니다. EBSi는 없는 회차를 물으면
+404를 주지 않고 **말없이 첫 화면으로** 보냅니다. 그래서 링크를 잘못 걸어도
+화면에서는 멀쩡해 보이고, 누른 사람만 자기가 왜 엉뚱한 데 왔는지 모른 채
+돌아옵니다. 이건 일어난 뒤에 알아차릴 방법이 없어서 미리 못박았습니다.
 
 ## CI에서는 두 갈래로 돕니다
 
@@ -96,7 +102,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 빨갛게 뜹니다.
 
 **화면 쪽**(`tests.yml`)은 `index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로
-main에 올라갈 때 28종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
+main에 올라갈 때 29종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
 남아, 손에서 재현되지 않는 실패도 눈으로 볼 수 있습니다.
 
 어느 쪽이든 CI는 마지막 그물입니다. 고친 자리에서 `python3 tests/run.py`를 먼저

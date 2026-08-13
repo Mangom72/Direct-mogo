@@ -103,7 +103,7 @@ PDF를 열어 확인한 결과 내용은 EBSi가 붙인 행과 일치했다 — 
 ## 고친 뒤에는
 
 화면(`index.html`·`sw.js`·`s/`)을 건드렸으면 `python3 tests/run.py`를 돌린다
-(28종, 3분 남짓). 무엇을 지키는 시험인지는 `tests/README.md`에 있다.
+(29종, 3분 남짓). 무엇을 지키는 시험인지는 `tests/README.md`에 있다.
 인라인 스크립트를 고쳤으면 `python3 tools/check_csp.py --fix`로 CSP 해시를
 다시 맞춘다 — 어긋난 채로 나가면 그 스크립트가 통째로 막힌다.
 자료·과목 페이지를 다시 만들었으면 `tools/build_fonts.py`가 **맨 나중**이다.
