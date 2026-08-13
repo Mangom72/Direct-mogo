@@ -179,17 +179,27 @@ from playwright.sync_api import sync_playwright                    # noqa: E402
 
 
 def at(pw, when, tz="America/Los_Angeles"):
-    """기기 시계를 그 순간으로, 시간대는 일부러 한국 밖으로 두고 연다."""
+    """기기 시계를 그 순간으로, 시간대는 일부러 한국 밖으로 두고 연다.
+
+    시계는 굳어 있지 않다. `__at('...')` 으로 옮길 수 있어서, 열어 둔 채
+    자정을 넘기는 상황을 그대로 만들어 볼 수 있다. 예약된 setTimeout 은
+    `__timeouts` 에 쌓인다 — 다음 0시에 스스로 깨어나는지 보려는 것이다.
+    """
     b = pw.chromium.launch(executable_path=CHROME)
     ctx = b.new_context(viewport={"width": 412, "height": 800},
                         service_workers="block", timezone_id=tz)
     pg = ctx.new_page()
     pg.add_init_script(f"""
-      const F = new Date('{when}').getTime();
-      const D = Date; Date = class extends D {{
+      const D = Date; let F = D.parse('{when}');
+      Date = class extends D {{
         constructor(...a){{ super(...(a.length ? a : [F])); }}
         static now(){{ return F; }} }};
-      Date.parse = D.parse; Date.UTC = D.UTC;""")
+      Date.parse = D.parse; Date.UTC = D.UTC;
+      globalThis.__at = t => {{ F = D.parse(t); }};
+      globalThis.__timeouts = [];
+      const ST = setTimeout.bind(globalThis);
+      globalThis.setTimeout = (fn, ms, ...r) => {{
+        __timeouts.push(ms); return ST(fn, ms, ...r); }};""")
     pg.goto(SITE, wait_until="load")
     pg.wait_for_selector(".item", timeout=25000)
     return b, pg
@@ -230,6 +240,39 @@ with sync_playwright() as pw:
        f"다음 날 이듬해({NEXT})로 넘어가야 하는데 {g} 입니다")
     b4.close()
     print(f"7. 당일 D-DAY · 다음 날 {NEXT} 로 넘어감")
+
+    # 자정을 넘겨도 그 자리에서 바뀌는가.
+    #
+    # 앱은 닫아도 죽지 않고 접히기만 한다. 숫자를 열 때 한 번만 세면, 이튿날
+    # 아침에 다시 펴도 어제 숫자가 그대로 남는다 — 실제로 그랬다. 그래서
+    # 화면으로 돌아오는 길목(visibilitychange·pageshow·focus)마다 다시 세고,
+    # 열어 둔 채로도 다음 0시에 스스로 깨어난다.
+    b5, pg5 = at(pw, "2026-08-12T02:00:00Z")        # 한국 12일 11:00
+    ck(badge(pg5)[0] == "수능 D-99", f"D-99 여야 하는데 {badge(pg5)} 입니다")
+
+    # (1) 다음 한국 0시에 맞춰 예약해 두는가. 13시간 뒤 + 1초.
+    due = 13 * 3600e3 + 1000
+    ck(due in pg5.evaluate("()=>__timeouts"),
+       f"다음 0시({due:.0f}ms 뒤)에 다시 그릴 예약이 없습니다")
+
+    # (2) 접었다 편 사이에 날이 바뀌었다 — 펴는 순간 다시 세는가.
+    #     시계만 옮기고 아직 아무 일도 일으키지 않았으면 옛 숫자가 남아 있어야
+    #     한다. 그래야 뒤이어 바뀌는 것이 '돌아왔기 때문'임이 분명해진다.
+    pg5.evaluate("()=>__at('2026-08-13T01:00:00Z')")   # 한국 13일 10:00
+    ck(badge(pg5)[0] == "수능 D-99", "돌아오기 전인데 벌써 바뀌었습니다")
+
+    BACK = [                       # 어디에 무엇을 보내면 다시 세는가
+        ("visibilitychange", "document", "2026-08-13T01:00:00Z", "수능 D-98"),
+        ("pageshow",         "window",   "2026-08-14T01:00:00Z", "수능 D-97"),
+        ("focus",            "window",   "2026-08-15T01:00:00Z", "수능 D-96"),
+    ]
+    for how, where, when, want in BACK:
+        pg5.evaluate(f"()=>__at('{when}')")
+        pg5.evaluate(f"()=>{where}.dispatchEvent(new Event('{how}'))")
+        ck(badge(pg5)[0] == want,
+           f"{how} 로 돌아왔을 때 {badge(pg5)} — {want} 여야 합니다")
+    b5.close()
+    print("9. 자정 넘김 — 다음 0시 예약 · 돌아오는 길목 3가지에서 다시 셈")
 
     # 자리 — 제목을 밀거나 화면을 넘치게 하지 않는가
     box = pg.evaluate("""()=>{const d=document.getElementById('dday');

@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-X6VBA7ahOSWJEahVnYKZuCDqEfAEhaIZdcnhGG0GCyE=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-sy3kutZqXuEeulPf3HWWkMmFGzP2bDUZyVF/a7opWOw=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -872,7 +872,6 @@ const SUNEUNG_MOVED = "";        /* 예: "2027-11-25" — 연기됐을 때만 */
      +9시간 고정이라 이 계산이 그대로 성립한다. 기기 시간대를 그대로 쓰면
      시차가 있는 곳에서 하루가 어긋나는데, 이 숫자를 보는 이유가 그 하루다. */
   const KST = 9 * 3600e3, DAY = 86400e3;
-  const today = Math.floor((Date.now() + KST) / DAY);
 
   /* 그 해 11월 13~19일 중 목요일. UTC 기준 요일이면 충분하다 — 날짜만 다룬다. */
   const examOf = y => {
@@ -882,22 +881,50 @@ const SUNEUNG_MOVED = "";        /* 예: "2027-11-25" — 연기됐을 때만 */
     }
   };
 
-  const thisYear = new Date((today * DAY)).getUTCFullYear();
-  let exam = examOf(thisYear);
-  if(today > exam) exam = examOf(thisYear + 1);   // 올해 것은 지났다
+  let timer = 0;
 
-  /* 연기된 해. 아직 오지 않은 날일 때만 쓴다 — 지난 값이 남아 있어도
-     저절로 무시되어, 이듬해에 엉뚱한 날을 가리키지 않는다. */
-  if(SUNEUNG_MOVED){
-    const moved = Math.floor(Date.parse(SUNEUNG_MOVED + "T00:00:00Z") / DAY);
-    if(moved >= today) exam = moved;
+  function draw(){
+    const now = Date.now();
+    const today = Math.floor((now + KST) / DAY);
+
+    const thisYear = new Date((today * DAY)).getUTCFullYear();
+    let exam = examOf(thisYear);
+    if(today > exam) exam = examOf(thisYear + 1);   // 올해 것은 지났다
+
+    /* 연기된 해. 아직 오지 않은 날일 때만 쓴다 — 지난 값이 남아 있어도
+       저절로 무시되어, 이듬해에 엉뚱한 날을 가리키지 않는다. */
+    if(SUNEUNG_MOVED){
+      const moved = Math.floor(Date.parse(SUNEUNG_MOVED + "T00:00:00Z") / DAY);
+      if(moved >= today) exam = moved;
+    }
+
+    const left = exam - today;
+    el.textContent = left === 0 ? "수능 D-DAY" : "수능 D-" + left;
+    el.title = new Date(exam * DAY).toISOString().slice(0, 10).replace(/-/g, ".")
+      + " 시행";
+    el.hidden = false;
+
+    /* 다음 한국 0시에 스스로 다시 그린다. 열어 둔 채 자정을 넘겨도 숫자가
+       그 자리에서 바뀐다. 늦게 깨어나도 상관없다 — 그때의 Date.now() 로
+       다시 세므로 밀린 시간만큼 어긋나지 않는다. */
+    clearTimeout(timer);
+    timer = setTimeout(draw, (today + 1) * DAY - (now + KST) + 1000);
   }
 
-  const left = exam - today;
-  el.textContent = left === 0 ? "수능 D-DAY" : "수능 D-" + left;
-  el.title = new Date(exam * DAY).toISOString().slice(0, 10).replace(/-/g, ".")
-    + " 시행";
-  el.hidden = false;
+  draw();
+
+  /* 화면으로 돌아올 때마다 다시 센다.
+     앱은 닫아도 죽지 않고 접히기만 한다. 그 사이 위의 타이머는 기기가 자면
+     함께 멈춰 제때 깨어난다는 보장이 없다 — 실제로 이튿날 아침에 열었더니
+     어제 숫자가 그대로 있었다. 그래서 돌아오는 길목마다 다시 그린다.
+     visibilitychange 는 앱을 펼칠 때, pageshow 는 뒤로 가기로 되살아난
+     페이지(bfcache)일 때, focus 는 앞의 둘이 오지 않는 웹뷰를 위한 그물이다.
+     셈은 몇 마이크로초짜리라 몇 번 더 돌아도 무게가 없다. */
+  document.addEventListener("visibilitychange", () => {
+    if(!document.hidden) draw();
+  });
+  window.addEventListener("pageshow", () => draw());
+  window.addEventListener("focus", () => draw());
 })();
 
 const $ = s => document.querySelector(s);
