@@ -119,3 +119,29 @@ jobs:
       - name: 수능 날짜 대조
         if: always()
         run: python3 tests/test_dday.py --date
+
+      # 공개 저장소의 예약 워크플로는 **저장소에 60일 동안 아무 일도 없으면
+      # 깃허브가 알아서 꺼 버린다.** 워크플로가 돈 것은 활동으로 치지 않는다.
+      #
+      # 이 저장소는 그 함정에 정확히 걸리는 모양이다. 새 자료가 없는 날은 아무것도
+      # 커밋하지 않도록 일부러 만들어 두었는데, 시험이 없는 겨울(11월 수능이 끝난
+      # 뒤부터 3월 학평 전까지)이 60일보다 길다. 그동안 커밋이 한 건도 나가지
+      # 않으면 갱신이 조용히 멈추고, 3월에 새 학년도가 시작되어도 아무도 모른다.
+      # 사람이 지켜보지 않는 것을 전제로 만든 것이라 알아차릴 자리가 없다.
+      #
+      # 그래서 50일 넘게 조용하면 빈 커밋 하나로 시계를 되감는다. 열흘의 여유를
+      # 두는 것은 이 작업이 며칠 연달아 실패해도 넘기지 않게 하기 위해서다.
+      # 자료가 도는 철에는 한 번도 걸리지 않고, 겨울에도 해야 두어 번이다.
+      # 아무 파일도 건드리지 않으므로 다른 워크플로를 깨우지도 않는다.
+      - name: 예약이 꺼지지 않게
+        if: always()
+        run: |
+          set -euo pipefail
+          QUIET=$(( ( $(date +%s) - $(git log -1 --format=%ct) ) / 86400 ))
+          echo "마지막 커밋에서 ${QUIET}일 지났습니다 (50일부터 깨웁니다)"
+          if [ "$QUIET" -ge 50 ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit --allow-empty -m "Keep the scheduled refresh from being disabled"
+            git push
+          fi

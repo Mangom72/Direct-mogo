@@ -32,8 +32,18 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # 러너 이미지에 Android SDK가 이미 깔려 있어 ANDROID_HOME을 따로 잡을 필요가 없다
+      # 러너 이미지에 Android SDK가 이미 깔려 있어 ANDROID_HOME을 따로 잡을 필요가 없다.
+      #
+      # **Gradle 판본은 못박는다.** 저장소에 래퍼(gradlew)가 없어서, 적지 않으면
+      # 러너 이미지에 깔려 있는 것을 그대로 쓴다 — 우리가 아무것도 바꾸지 않아도
+      # 깃허브가 이미지를 갈아끼우는 날 발밑이 바뀐다. 지금 build.gradle 의 AGP는
+      # 8.7.3 인데, 실제 빌드 로그가 "Gradle 10 과는 호환되지 않는다"고 이미
+      # 경고하고 있다. 이미지가 10을 싣는 날 릴리스가 통째로 멈춘다는 뜻이다.
+      #
+      # 그래서 지금 초록불로 확인된 9.6.1 에 고정한다. 올릴 때는 AGP와 함께 본다.
       - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '9.6.1'
 
       # publish_apk.py 가 알림 문구의 글자가 글꼴에 있는지 확인하는데, 그
       # 확인이 fontTools 를 쓴다. 없으면 확인이 깨지고 발행이 통째로 멈춘다.
