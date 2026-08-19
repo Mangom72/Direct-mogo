@@ -211,6 +211,24 @@ public class FloatService extends Service {
     }
 
     /** 세 창을 현재 자리에 맞춰 다시 놓는다. 옮기든 크기를 바꾸든 여기 하나로 끝난다. */
+    /**
+     * 끌 때 쓰는 자리 갱신.
+     *
+     * 터치는 화면 주사율보다 빨리 들어온다(요즘 기기는 두세 배). 그때마다
+     * place() 를 부르면 창 셋에 대고 초당 수백 번 IPC 를 날리는 셈이라, 창들이
+     * 서로 다른 프레임에 도착해 <b>따로 노는 것처럼 보이고</b> 끌기도 끊긴다.
+     * 프레임마다 한 번으로 묶으면 셋이 같은 프레임에 함께 움직인다.
+     */
+    private boolean placeQueued;
+    private void placeSoon() {
+        if (placeQueued) return;
+        placeQueued = true;
+        android.view.Choreographer.getInstance().postFrameCallback(t -> {
+            placeQueued = false;
+            place();
+        });
+    }
+
     private void place() {
         barLp.x = wx;              barLp.y = wy;              barLp.width = ww; barLp.height = barH;
         paperLp.x = wx;            paperLp.y = wy + barH;     paperLp.width = ww;
@@ -290,7 +308,9 @@ public class FloatService extends Service {
         countdown = new View(this);
         countdown.setBackgroundColor(0xFFB4342A);
         countdown.setVisibility(View.GONE);
-        wrap.addView(countdown, new FrameLayout.LayoutParams(0, dp(2), Gravity.BOTTOM | Gravity.START));
+        countdown.setPivotX(0);
+        wrap.addView(countdown, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(2), Gravity.BOTTOM | Gravity.START));
 
         wrap.setOnTouchListener(new DragMove());
         updateBar();
@@ -419,7 +439,9 @@ public class FloatService extends Service {
 
     private void setOpacity(int pct) {
         int max = passThrough ? capPct() : 100;
-        opacity = Math.max(MIN_OPACITY, Math.min(max, pct));
+        int v = Math.max(MIN_OPACITY, Math.min(max, pct));
+        if (v == opacity) return;          // 상한에 붙은 채로 계속 끌 때가 대부분이다
+        opacity = v;
         updateBar();
         applyMode();
     }
@@ -448,9 +470,9 @@ public class FloatService extends Service {
                 if (!paperTouched) applyMode();
                 return;
             }
-            ViewGroup.LayoutParams p = countdown.getLayoutParams();
-            p.width = (int) (ww * left / (float) GRACE_MS);
-            countdown.setLayoutParams(p);
+            /* setLayoutParams 는 바 전체를 다시 배치한다 — 초당 스물다섯 번씩
+               할 일이 아니다. 배율만 바꾸면 다시 그리기만 한다. */
+            countdown.setScaleX(left / (float) GRACE_MS);
             countdown.setVisibility(View.VISIBLE);
             ui.postDelayed(this, 40);
         }
@@ -476,10 +498,14 @@ public class FloatService extends Service {
         int f = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                 | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
         if (!live()) f |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
-        paperLp.flags = f;
         /* 통과 모드에서는 상한을 넘길 수 없다 — 넘기면 아래 앱이 터치를 못 받는다. */
         int pct = passThrough ? Math.min(opacity, capPct()) : opacity;
-        paperLp.alpha = pct / 100f;
+        float a = pct / 100f;
+        /* 값이 그대로면 넘기지 않는다. applyMode() 는 슬라이더를 끄는 동안에도
+           터치마다 불리는데, 같은 값을 다시 실어 보내는 것은 그냥 낭비다. */
+        if (paperLp.flags == f && Math.abs(paperLp.alpha - a) < 0.001f) return;
+        paperLp.flags = f;
+        paperLp.alpha = a;
         try { wm.updateViewLayout(paper, paperLp); }
         catch (Exception e) { Log.w(TAG, "종이 갱신 실패", e); }
     }
@@ -496,7 +522,7 @@ public class FloatService extends Service {
                 case MotionEvent.ACTION_MOVE:
                     wx = sx + (int) (e.getRawX() - ox);
                     wy = sy + (int) (e.getRawY() - oy);
-                    place(); return true;
+                    placeSoon(); return true;
             }
             return false;
         }
@@ -515,7 +541,7 @@ public class FloatService extends Service {
                     int h = Math.max(dp(140), sh + dy);
                     wx = sx + (sw - w);                 // 오른쪽 모서리는 제자리에 둔다
                     ww = w; wh = h; full = false;
-                    place(); return true;
+                    placeSoon(); return true;
             }
             return false;
         }
@@ -580,6 +606,27 @@ public class FloatService extends Service {
         };
         private final Paint dim = new Paint();
         private final android.graphics.Rect at = new android.graphics.Rect();
+        /* onDraw 는 프레임마다 돈다. 아직 안 그려진 쪽을 그때마다 새로 시키면
+           같은 일이 큐에 수십 개씩 쌓여, 정작 지금 보이는 쪽이 뒤로 밀린다. */
+        private final java.util.Set<Integer> inFlight =
+                java.util.Collections.synchronizedSet(new java.util.HashSet<Integer>());
+        private int cachedTotalH, cachedForW = -1;
+
+        /* 창 크기를 바꾸는 동안에는 예전 폭으로 그린 쪽이 늘어난 채로 보인다.
+           끌고 있는 내내 다시 그리면 렌더 스레드가 밀리므로, 손이 멎은 뒤에
+           한 번만 새로 그린다. */
+        private final Runnable resharp = () -> {
+            cache.evictAll(); inFlight.clear(); cachedForW = -1; invalidate();
+        };
+
+        @Override protected void onSizeChanged(int w, int h, int ow, int oh) {
+            super.onSizeChanged(w, h, ow, oh);
+            if (w != ow) {
+                removeCallbacks(resharp);
+                postDelayed(resharp, 180);
+            }
+            clamp();
+        }
 
         PaperView(Context c) { super(c); setBackgroundColor(Color.WHITE); }
 
@@ -604,6 +651,8 @@ public class FloatService extends Service {
                 }
                 scrollY = scrollX = 0;
                 cache.evictAll();
+                inFlight.clear();
+                cachedForW = -1;
               }
                 postInvalidate();
             } catch (Exception e) {
@@ -639,16 +688,22 @@ public class FloatService extends Service {
             scrollY = Math.round((scrollY + fy) * k - fy);
             zoom = z;
             cache.evictAll();
+            cachedForW = -1;
             clamp();
             invalidate();
         }
 
         private int contentW() { return Math.max(1, (int) (getWidth() * zoom)); }
 
+        /* 끌 때마다 clamp() 가 부르는 자리다. 폭이 그대로면 답도 그대로다. */
         private int totalH() {
-            int w = contentW(), h = 0;
+            int w = contentW();
+            if (w == cachedForW) return cachedTotalH;
+            int h = 0;
             for (float r : ratio) h += (int) (w * r) + dp(6);
-            return Math.max(1, h);
+            cachedForW = w;
+            cachedTotalH = Math.max(1, h);
+            return cachedTotalH;
         }
 
         private void clamp() {
@@ -672,14 +727,20 @@ public class FloatService extends Service {
                     }
                 }
                 y += ph + dp(6);
-                if (y > getHeight()) break;
+                if (y > getHeight()) {
+                    /* 다음 쪽을 미리 그려 둔다. 스크롤이 그 자리에 닿았을 때
+                       흰 종이만 보이다 뒤늦게 채워지는 것이 끊겨 보이는 원인이다. */
+                    want(i + 1, w);
+                    break;
+                }
             }
         }
 
         private void want(final int i, final int w) {
-            if (pdf == null) return;
+            if (pdf == null || i < 0 || i >= ratio.length) return;
+            if (!inFlight.add(i)) return;
             render.execute(() -> {
-                if (cache.get(i) != null) return;
+                if (cache.get(i) != null) { inFlight.remove(i); return; }
                 try {
                     Bitmap b;
                     synchronized (FloatService.this) {
@@ -694,7 +755,11 @@ public class FloatService extends Service {
                     }
                     cache.put(i, b);
                     postInvalidate();
-                } catch (Exception e) { Log.w(TAG, "쪽을 그리지 못했습니다: " + i, e); }
+                } catch (Exception e) {
+                    Log.w(TAG, "쪽을 그리지 못했습니다: " + i, e);
+                } finally {
+                    inFlight.remove(i);
+                }
             });
         }
 
