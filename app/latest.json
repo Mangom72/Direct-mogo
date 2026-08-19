@@ -1,8 +1,8 @@
 {
-  "versionCode": 43,
-  "versionName": "5.2",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v5.2/gijul-direct.apk",
-  "size": 1853291,
-  "sha256": "86ab3b8d63265410fcaac19cf4b1d85e5291161ab377b02e1bb2d25a737df595",
-  "notes": "문제지를 다른 앱 위에 반투명하게 띄워 둘 수 있습니다"
+  "versionCode": 44,
+  "versionName": "5.3",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v5.3/gijul-direct.apk",
+  "size": 1853555,
+  "sha256": "8a51531ad142274838286b9df60f5b49988f5edefc8382ddd74adec6dedd7bf7",
+  "notes": "두 손가락으로 확대할 수 있고, 좌하단 손잡이가 잘 보입니다"
 }
