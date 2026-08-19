@@ -604,20 +604,27 @@ public class FloatService extends Service {
         private final LruCache<Integer, Bitmap> cache = new LruCache<Integer, Bitmap>(4) {
             @Override protected int sizeOf(Integer k, Bitmap b) { return 1; }
         };
-        private final Paint dim = new Paint();
+        /* 늘려 그리는 동안(핀칭 중)에는 원래 폭과 어긋난다. 필터를 켜 두면
+           그때 모난 계단 대신 부드럽게 흐려져서, 다시 그려질 때까지의 몇
+           프레임이 눈에 덜 거슬린다. */
+        private final Paint dim = new Paint(Paint.FILTER_BITMAP_FLAG);
         private final android.graphics.Rect at = new android.graphics.Rect();
         /* onDraw 는 프레임마다 돈다. 아직 안 그려진 쪽을 그때마다 새로 시키면
            같은 일이 큐에 수십 개씩 쌓여, 정작 지금 보이는 쪽이 뒤로 밀린다. */
         private final java.util.Set<Integer> inFlight =
                 java.util.Collections.synchronizedSet(new java.util.HashSet<Integer>());
         private int cachedTotalH, cachedForW = -1;
+        /* 쪽마다 어느 폭으로 그려 두었는지. 폭이 달라졌다고 그림을 버리면
+           다시 그려질 때까지 흰 바탕이 보인다 — 있는 것을 늘려 쓰다가,
+           새것이 준비되면 그때 갈아 끼운다. */
+        private final java.util.Map<Integer, Integer> madeAt =
+                java.util.Collections.synchronizedMap(new java.util.HashMap<Integer, Integer>());
+        private boolean sharpen;
 
         /* 창 크기를 바꾸는 동안에는 예전 폭으로 그린 쪽이 늘어난 채로 보인다.
            끌고 있는 내내 다시 그리면 렌더 스레드가 밀리므로, 손이 멎은 뒤에
            한 번만 새로 그린다. */
-        private final Runnable resharp = () -> {
-            cache.evictAll(); inFlight.clear(); cachedForW = -1; invalidate();
-        };
+        private final Runnable resharp = () -> { sharpen = true; invalidate(); };
 
         @Override protected void onSizeChanged(int w, int h, int ow, int oh) {
             super.onSizeChanged(w, h, ow, oh);
@@ -652,6 +659,7 @@ public class FloatService extends Service {
                 scrollY = scrollX = 0;
                 cache.evictAll();
                 inFlight.clear();
+                madeAt.clear();
                 cachedForW = -1;
               }
                 postInvalidate();
@@ -687,10 +695,13 @@ public class FloatService extends Service {
             scrollX = Math.round((scrollX + fx) * k - fx);
             scrollY = Math.round((scrollY + fy) * k - fy);
             zoom = z;
-            cache.evictAll();
             cachedForW = -1;
             clamp();
             invalidate();
+            /* 핀칭 중에 매번 다시 그리라고 하면 렌더가 밀린다. 손이 멎은 뒤에
+               한 번만 또렷하게 한다. 그동안은 있는 그림을 늘려 쓴다. */
+            removeCallbacks(resharp);
+            postDelayed(resharp, 180);
         }
 
         private int contentW() { return Math.max(1, (int) (getWidth() * zoom)); }
@@ -720,24 +731,31 @@ public class FloatService extends Service {
                 if (y + ph > 0 && y < getHeight()) {
                     Bitmap b = still != null ? still : cache.get(i);
                     if (b != null) {
+                        /* 폭이 달라졌으면 늘려서 그린다. 잠깐 흐릴지언정
+                           비어 보이지는 않는다. */
                         at.set(-scrollX, y, -scrollX + w, y + ph);
                         c.drawBitmap(b, null, at, dim);
-                    } else {
-                        want(i, w);
                     }
+                    if (b == null || sharpen) want(i, w);
                 }
                 y += ph + dp(6);
                 if (y > getHeight()) {
+                    sharpen = false;
                     /* 다음 쪽을 미리 그려 둔다. 스크롤이 그 자리에 닿았을 때
                        흰 종이만 보이다 뒤늦게 채워지는 것이 끊겨 보이는 원인이다. */
                     want(i + 1, w);
                     break;
                 }
             }
+            sharpen = false;
         }
 
         private void want(final int i, final int w) {
             if (pdf == null || i < 0 || i >= ratio.length) return;
+            final int target = Math.min(w, 1600);
+            /* 이미 그 폭으로 들고 있으면 할 일이 없다. 그림이 밀려나 사라졌다면
+               madeAt 에 자국이 남아 있어도 다시 그린다. */
+            if (cache.get(i) != null && Integer.valueOf(target).equals(madeAt.get(i))) return;
             if (!inFlight.add(i)) return;
             render.execute(() -> {
                 if (cache.get(i) != null) { inFlight.remove(i); return; }
@@ -746,7 +764,7 @@ public class FloatService extends Service {
                     synchronized (FloatService.this) {
                         if (pdf == null) return;
                         try (PdfRenderer.Page p = pdf.openPage(i)) {
-                            int bw = Math.min(w, 1600);
+                            int bw = target;
                             int bh = Math.max(1, (int) (bw * ratio[i]));
                             b = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888);
                             b.eraseColor(Color.WHITE);
@@ -754,6 +772,7 @@ public class FloatService extends Service {
                         }
                     }
                     cache.put(i, b);
+                    madeAt.put(i, target);
                     postInvalidate();
                 } catch (Exception e) {
                     Log.w(TAG, "쪽을 그리지 못했습니다: " + i, e);
