@@ -94,6 +94,7 @@ public class FloatService extends Service {
     private int wx, wy, ww, wh;
     private int barH, gripPx;
 
+    private boolean full = true;      // 아직 사용자가 크기를 건드리지 않았다
     private boolean passThrough = true;
     private int opacity = DEF_OPACITY;
     private long graceUntil = 0;
@@ -170,11 +171,15 @@ public class FloatService extends Service {
         barH = dp(44);
         gripPx = dp(34);
 
+        /* 처음에는 화면 너비를 그대로 쓴다. 문제지는 세로로 긴 데다 글자가
+           작아서, 옆을 남기면 그만큼 읽을 수 없다. 종이는 창 너비에 맞춰
+           그려지므로(zoom 1 = 폭 맞춤) 이 한 줄이 곧 '가로로 꽉 참'이다.
+           좁히고 싶으면 좌하단 손잡이로 줄이면 된다. */
         android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
-        ww = Math.min(dp(340), (int) (dm.widthPixels * 0.92f));
-        wh = Math.min(dp(300), (int) (dm.heightPixels * 0.55f));
-        wx = (dm.widthPixels - ww) / 2;
-        wy = dp(96);
+        ww = dm.widthPixels;
+        wh = Math.min(dp(420), (int) (dm.heightPixels * 0.6f));
+        wx = 0;
+        wy = dp(72);
 
         paper = new PaperView(this);
         bar = buildBar();
@@ -509,7 +514,7 @@ public class FloatService extends Service {
                     int w = Math.max(dp(200), sw - dx);
                     int h = Math.max(dp(140), sh + dy);
                     wx = sx + (sw - w);                 // 오른쪽 모서리는 제자리에 둔다
-                    ww = w; wh = h;
+                    ww = w; wh = h; full = false;
                     place(); return true;
             }
             return false;
@@ -738,6 +743,28 @@ public class FloatService extends Service {
     }
 
     // ── 끝 ──────────────────────────────────────────────────────────────
+
+    /**
+     * 화면이 돌거나 크기가 바뀌면 창을 다시 맞춘다.
+     *
+     * 처음에 화면 너비로 열어 두므로 이걸 안 하면 가로로 돌렸을 때 옆이 뭉텅
+     * 남는다. 사용자가 손잡이로 줄인 뒤라면 그 크기를 존중하되, 화면 밖으로
+     * 나가지만 않게 안으로 밀어 넣는다 — 밖으로 나가면 잡을 수가 없다.
+     */
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration c) {
+        super.onConfigurationChanged(c);
+        if (wm == null || bar == null) return;
+        android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+        if (full) { ww = dm.widthPixels; wx = 0; }
+        else {
+            ww = Math.min(ww, dm.widthPixels);
+            wx = Math.max(0, Math.min(wx, dm.widthPixels - ww));
+        }
+        wh = Math.min(wh, dm.heightPixels);
+        wy = Math.max(0, Math.min(wy, Math.max(0, dm.heightPixels - wh)));
+        place();
+    }
 
     @Override
     public void onDestroy() {
