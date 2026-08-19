@@ -181,7 +181,7 @@ public class PdfViewActivity extends Activity {
         /* 글자 단추 둘이 나란히 있으면 제목이 설 자리를 그만큼 잡아먹는다. 하는 일이
            둘 다 한마디로 그려지는 것이라 표로 바꿨다. 오른쪽 끝이 화면 넓히기 —
            읽는 중에 가장 자주 누르는 것이 손이 닿기 쉬운 자리에 온다. */
-        ImageButton out = iconBtn(R.drawable.ic_share, "다른 앱으로 보내기", ink);
+        ImageButton out = iconBtn(R.drawable.ic_open_external, "다른 앱으로 열기", ink);
         out.setOnClickListener(v -> openElsewhere());
         bar.addView(out, new LinearLayout.LayoutParams(dp(44), dp(44)));
 
