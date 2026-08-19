@@ -1,0 +1,177 @@
+{
+ "grade": "D200",
+ "gradeLabel": "고2",
+ "group": "직업탐구",
+ "subject": "수산·해운 산업 기초",
+ "subjectId": "50622",
+ "count": 15,
+ "note": "year는 시험을 본 해(시행 연도)입니다. schoolYear는 학년도이며 시행 연도 + 1로, 평가원 시험(수능·6월·9월 모의평가)에만 있습니다. 흔히 '2021학년도 6월 모평'이라 부르는 것은 year 2020 · schoolYear 2021인 회차입니다 — year로 찾으면 한 해 어긋납니다. 교육청 전국연합학력평가는 학년도를 쓰지 않습니다.",
+ "papers": [
+  {
+   "id": "D200-50622-20251014",
+   "title": "10월 학평(경기)",
+   "type": "학평",
+   "date": "2025-10-14",
+   "year": 2025,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/go2/J_susan_mun_3WW14L3A.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/mobile/h2_m_J_susan_ans_395618HI.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/go2/J_susan_hsj_ONMX6UW7.pdf"
+  },
+  {
+   "id": "D200-50622-20241015",
+   "title": "10월 학평(경기)",
+   "type": "학평",
+   "date": "2024-10-15",
+   "year": 2024,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/go2/J_susan_mun_5OO6L3YR.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/mobile/h2_m_J_susan_ans_E7557L5A.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/go2/J_susan_hsj_9F91DI92.pdf"
+  },
+  {
+   "id": "D200-50622-20231219",
+   "title": "11월 학평(경기)_12.19 시행",
+   "type": "학평",
+   "date": "2023-12-19",
+   "year": 2023,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/go2/J_susan_mun_44EYCN17.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/mobile/h2_m_J_susan_ans_OR1TV952.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/go2/J_susan_hsj_257Y77EP.pdf"
+  },
+  {
+   "id": "D200-50622-20221123",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2022-11-23",
+   "year": 2022,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/go2/J_susan_mun_HW7R19W4.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/mobile/h2_m_J_susan_ans_FZHR8C7D.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/go2/J_susan_hsj_56BQMU31.pdf"
+  },
+  {
+   "id": "D200-50622-20211124",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2021-11-24",
+   "year": 2021,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/go2/J_susan_mun_VW7K23E2.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/mobile/h2_m_J_susan_ans_31S4PGTD.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/go2/J_susan_hsj_2TD5HBU6.pdf"
+  },
+  {
+   "id": "D200-50622-20201118",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2020-11-18",
+   "year": 2020,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/go2/J_susan_mun_N9VCI6IF.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/mobile/h2_m_J_susan_ans_F53NQ16A.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/go2/J_susan_hsj_8QB8U9KD.pdf"
+  },
+  {
+   "id": "D200-50622-20191120",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2019-11-20",
+   "year": 2019,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/J_susan_mun_96QV5WSB.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/mobile/h2_m_J_susan_hsj_6DYKA2JN.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20191120/go2/J_susan_hsj_3VWM4I79.pdf"
+  },
+  {
+   "id": "D200-50622-20181121",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2018-11-21",
+   "year": 2018,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/go2/J_susan_mun_luZw0Vcl_12.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/mobile/h2_J_susan_UzavtVHX.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20181121/go2/J_susan_hsj_Xez2NoKM_12.pdf"
+  },
+  {
+   "id": "D200-50622-20171122",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2017-11-22",
+   "year": 2017,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/go2/J_susan_mun_Aj81EYtN.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/mobile/h2_J_susan_HYS8YV2b.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20171122/go2/J_susan_hsj_3Isam5R4.pdf"
+  },
+  {
+   "id": "D200-50622-20161123",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2016-11-23",
+   "year": 2016,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/go2/J_susan_mun_FUtLch9w.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/mobile/h2_J_susan_jq50K8pa.jpg",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20161123/go2/J_susan_hsj_PiyAphwF.pdf"
+  },
+  {
+   "id": "D200-50622-20151117",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2015-11-17",
+   "year": 2015,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20151117/go2/okLQ8aZR_J_ssnw_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20151117/go2/hQdOgl4r_J_ssnw_hsj.pdf"
+  },
+  {
+   "id": "D200-50622-201411182",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2014-11-18",
+   "year": 2014,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201411182/I5KBTl2X_h2_J_ssnhw_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201411182/TRWJFa6w_h2_J_ssnhw_hsj.pdf"
+  },
+  {
+   "id": "D200-50622-201311142",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2013-11-14",
+   "year": 2013,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201311142/J_ssnw_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201311142/J_ssnw_hsj.pdf"
+  },
+  {
+   "id": "D200-50622-201211142",
+   "title": "11월 학력평가(경기)",
+   "type": "학평",
+   "date": "2012-11-14",
+   "year": 2012,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201211142/J_ssnw_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201211142/J_ssnw_hsj.pdf"
+  },
+  {
+   "id": "D200-50622-201205172",
+   "title": "2014 수능 예비시행(평가원)",
+   "type": "예비시행",
+   "date": "2012-05-17",
+   "year": 2012,
+   "source": "평가원",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/201205172/J_ssnw_mun.pdf",
+   "answer": null,
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201205172/J_ssnw_hsj.pdf",
+   "schoolYear": 2013
+  }
+ ]
+}

@@ -1,0 +1,77 @@
+{
+ "grade": "D200",
+ "gradeLabel": "고2",
+ "group": "직업탐구",
+ "subject": "성공적인 직업 생활",
+ "subjectId": "140110",
+ "count": 6,
+ "note": "year는 시험을 본 해(시행 연도)입니다. schoolYear는 학년도이며 시행 연도 + 1로, 평가원 시험(수능·6월·9월 모의평가)에만 있습니다. 흔히 '2021학년도 6월 모평'이라 부르는 것은 year 2020 · schoolYear 2021인 회차입니다 — year로 찾으면 한 해 어긋납니다. 교육청 전국연합학력평가는 학년도를 쓰지 않습니다.",
+ "papers": [
+  {
+   "id": "D200-140110-20251014",
+   "title": "10월 학평(경기)",
+   "type": "학평",
+   "date": "2025-10-14",
+   "year": 2025,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/go2/J_sjl_mun_YW1VQI1K.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/mobile/h2_m_J_sjl_ans_86WM3L33.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20251014/go2/J_sjl_hsj_VGNKNL29.pdf"
+  },
+  {
+   "id": "D200-140110-20241015",
+   "title": "10월 학평(경기)",
+   "type": "학평",
+   "date": "2024-10-15",
+   "year": 2024,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/go2/J_sjl_mun_D46ARB61.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/mobile/h2_m_J_sjl_ans_4RGD19MO.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20241015/go2/J_sjl_hsj_6541TLO6.pdf"
+  },
+  {
+   "id": "D200-140110-20231219",
+   "title": "11월 학평(경기)_12.19 시행",
+   "type": "학평",
+   "date": "2023-12-19",
+   "year": 2023,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/go2/J_sjl_mun_Q481I4J3.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/mobile/h2_m_J_sjl_ans_5YBO8J1H.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20231219/go2/J_sjl_hsj_A87HW9RS.pdf"
+  },
+  {
+   "id": "D200-140110-20221123",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2022-11-23",
+   "year": 2022,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/go2/J_sjl_mun_WCH5Y3PQ.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/mobile/h2_m_J_sjl_ans_17Y5YC27.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20221123/go2/J_sjl_hsj_5N32HKR1.pdf"
+  },
+  {
+   "id": "D200-140110-20211124",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2021-11-24",
+   "year": 2021,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/go2/J_sjl_mun_UN61DRSO.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/mobile/h2_m_J_sjl_ans_AHI5M2Y9.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20211124/go2/J_sjl_hsj_2ESD4KAQ.pdf"
+  },
+  {
+   "id": "D200-140110-20201118",
+   "title": "11월 학평(경기)",
+   "type": "학평",
+   "date": "2020-11-18",
+   "year": 2020,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/go2/J_sjl_mun_CZY73T9N.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/mobile/h2_m_J_sjl_ans_313I8I4K.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20201118/go2/J_sjl_hsj_X2HB11W3.pdf"
+  }
+ ]
+}
