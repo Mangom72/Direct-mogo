@@ -772,7 +772,25 @@ public class PdfViewActivity extends Activity {
             Intent i = new Intent(Intent.ACTION_VIEW);
             i.setDataAndType(u, out.getName().toLowerCase().endsWith(".png")
                     ? "image/png" : "application/pdf");
-            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            /* 고른 앱이 **제 앱으로** 서게 한다.
+               이 깃발이 없으면 안드로이드는 시작한 활동을 부른 쪽 작업(task) 안에
+               쌓는다. 그래서 노트앱이 기출 직행의 한 화면처럼 열리고, 최근 앱
+               목록에도 따로 서지 않으며, 뒤로 가기를 누르면 노트앱을 벗어나
+               문제지로 돌아와 버린다. 넘겨 준 뒤의 일은 그 앱의 몫이어야 한다.
+               MainActivity 가 우리가 못 그리는 형식을 넘길 때 쓰는 깃발과 같다.
+
+               NEW_DOCUMENT 를 함께 붙이는 것은, NEW_TASK 하나만으로는 **그 앱이
+               이미 떠 있을 때** 하던 작업을 앞으로 끌어오고 마는 수가 있어서다.
+               그러면 앱은 바뀌는데 우리가 건넨 문제지는 안 열린다. 이 깃발이
+               '이 문서를 위한 자리'를 따로 잡아 주고, 받는 쪽이 감당하지 못하는
+               경우에는 조용히 무시되어 NEW_TASK 만 있는 것과 같아진다.
+
+               깃발은 고르는 창이 아니라 **실제로 열릴 인텐트**에 붙인다. 고르는
+               창은 우리 작업 안에 떠도 되고(고르고 나면 사라진다), 새 작업으로
+               띄우면 그 창만 최근 앱 목록에 남는다. */
+            i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    | Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
             startActivity(Intent.createChooser(i, name));
         } catch (Exception e) {
             fail("열 수 있는 앱이 없습니다");
