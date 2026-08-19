@@ -92,6 +92,13 @@ PDF를 열어 확인한 결과 내용은 EBSi가 붙인 행과 일치했다 — 
 
 ## 판본 올리기
 
+**앱(`android/`)을 고쳤으면 판올림까지가 한 벌이다 — 묻지 말고 같이 올린다.**
+사용자가 그렇게 하라고 했다. 올리지 않은 변경은 CI가 빌드만 하고 버리므로
+아무에게도 가지 않는다.
+
+판본 이름은 **소수 자리가 9에서 다음 정수로 넘어간다** — 3.9 다음이 4.0이었고
+4.9 다음은 5.0이다. 4.10이 아니다. `versionCode`는 그냥 1씩 는다.
+
 `android/app/build.gradle`의 `versionCode`·`versionName`을 올려 main에 밀면
 `android.yml`이 전부 한다 — 서명 빌드 → 지문 확인 → 릴리스 생성 → APK 첨부 →
 `app/latest.json` 커밋. **릴리스가 먼저, 명세 커밋이 나중이다.** 뒤집으면 명세가
@@ -99,6 +106,21 @@ PDF를 열어 확인한 결과 내용은 EBSi가 붙인 행과 일치했다 — 
 
 사용자 알림 막대에 뜰 한 줄은 커밋 본문의 `Notes:` 줄에서 가져온다. 커밋 제목은
 영어 관례라 그대로 쓰면 화면에 "Release 4.9"가 나간다.
+
+**그 한 줄의 글자가 글꼴에 없으면 발행이 통째로 멈춘다.** 노트를 새로 쓸 때마다
+처음 보는 글자가 하나씩 걸렸다('쳤' 다음은 '꿨'이었다). 쓰기 전에 확인하고,
+없으면 `tools/build_fonts.py`의 `MARGIN`에 넣고 글꼴을 다시 만든다.
+
+```bash
+python3 - <<'EOF'
+from fontTools.ttLib import TTFont; import glob
+NOTE = "여기에 알림 문구"
+for p in sorted(glob.glob("fonts/*.woff2")):
+    cm = set(TTFont(p).getBestCmap())
+    m = {c for c in NOTE if c != " " and ord(c) not in cm}
+    if m: print(p, "빠짐:", "".join(sorted(m)))
+EOF
+```
 
 ## 고친 뒤에는
 
