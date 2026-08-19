@@ -27,6 +27,7 @@ import android.util.Log;
 import android.util.LruCache;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -86,6 +87,7 @@ public class FloatService extends Service {
     private WindowManager.LayoutParams barLp, paperLp, gripLp;
     private View countdown;                        // 유예가 얼마나 남았는지 보이는 실선
     private TextView pctText;
+    private Slider slider;
     private TextView passBtn, holdBtn;
 
     /* 창 자리. 셋이 이 하나를 나눠 쓴다. */
@@ -251,10 +253,10 @@ public class FloatService extends Service {
         seg.addView(passBtn); seg.addView(holdBtn);
         row.addView(seg);
 
-        Slider sl = new Slider(this, night);
+        slider = new Slider(this, night);
         LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(0, dp(30), 1f);
         slp.leftMargin = dp(8); slp.rightMargin = dp(10);
-        row.addView(sl, slp);
+        row.addView(slider, slp);
 
         pctText = new TextView(this);
         pctText.setTextColor(ink);
@@ -340,6 +342,10 @@ public class FloatService extends Service {
             }
         }
         if (pctText != null) pctText.setText(opacity + "%");
+        /* 값만 고치고 말면 슬라이더는 옛 자리를 그대로 그리고 있는다. 조작에서
+           100을 찍고 통과로 돌아오면 상한까지 깎이는데, 손잡이는 100에 남아
+           있어서 만지기 전까지 어긋난 채로 보였다. */
+        if (slider != null) slider.invalidate();
     }
 
     // ── 좌하단 손잡이 ───────────────────────────────────────────────────
@@ -355,16 +361,27 @@ public class FloatService extends Service {
             @Override protected void onDraw(Canvas c) {
                 float t = dp(6);
                 p.setStyle(Paint.Style.STROKE);
-                p.setStrokeWidth(t);
                 p.setStrokeCap(Paint.Cap.ROUND);
-                p.setColor(night ? 0xD8ECE7DA : 0xD8221F1A);
-                float pad = t / 2f + dp(1);
+                p.setStrokeJoin(Paint.Join.ROUND);
+                float pad = t / 2f + dp(2);
                 path.rewind();
                 path.moveTo(pad, dp(4));
                 path.lineTo(pad, getHeight() - pad - dp(6));
                 arc.set(pad, getHeight() - pad - dp(12), pad + dp(12), getHeight() - pad);
                 path.arcTo(arc, 180, -90);
                 path.lineTo(getWidth() - dp(4), getHeight() - pad);
+                /* 이 손잡이는 앱 화면이 아니라 **문제지 위**에 얹힌다. 시스템
+                   테마를 따라가게 두었더니 어두운 화면에서 밝은 획이 되어 흰
+                   종이에 묻혀 버렸다 — 그래서 안 보였다.
+                   종이가 흰 것에 맞춰 어둡게 그리되, 그림·표처럼 검은 자리에
+                   걸려도 살아남도록 흰 테를 먼저 깔고 그 위에 얹는다. 어느
+                   바탕이든 둘 중 하나는 보인다. 바탕색을 재어 갈아 끼우는
+                   방법도 있지만, 넘길 때마다 색이 바뀌어 깜빡인다. */
+                p.setStrokeWidth(t + dp(3));
+                p.setColor(0xE6FFFFFF);
+                c.drawPath(path, p);
+                p.setStrokeWidth(t);
+                p.setColor(0xF2151310);
                 c.drawPath(path, p);
             }
         };
@@ -433,6 +450,14 @@ public class FloatService extends Service {
             ui.postDelayed(this, 40);
         }
     };
+
+    /** 종이를 만지는 동안에는 유예를 다시 채운다. 손을 놓고 3초가 지나야 통과로 돌아간다. */
+    private void extend() {
+        if (!passThrough || graceUntil == 0) return;
+        graceUntil = android.os.SystemClock.uptimeMillis() + GRACE_MS;
+        ui.removeCallbacks(tick);
+        ui.post(tick);
+    }
 
     /** 지금 종이가 터치를 받아야 하는가 */
     private boolean live() {
@@ -593,9 +618,20 @@ public class FloatService extends Service {
             }
         }
 
-        void zoomBy(float by) {
-            float z = Math.max(1f, Math.min(4f, zoom * by));
-            if (z == zoom) return;
+        void zoomBy(float by) { zoomAt(zoom * by, getWidth() / 2f, getHeight() / 2f); }
+
+        /**
+         * (fx, fy) 아래에 있던 자리를 그대로 두고 배율만 바꾼다.
+         *
+         * 그냥 배율만 올리면 왼쪽 위로 밀린다 — ＋를 누르면 화면 가운데가,
+         * 손가락 둘로 벌리면 그 사이가 제자리에 있어야 보던 곳을 잃지 않는다.
+         */
+        void zoomAt(float want, float fx, float fy) {
+            float z = Math.max(1f, Math.min(4f, want));
+            if (Math.abs(z - zoom) < 0.001f) return;
+            float k = z / zoom;
+            scrollX = Math.round((scrollX + fx) * k - fx);
+            scrollY = Math.round((scrollY + fy) * k - fy);
             zoom = z;
             cache.evictAll();
             clamp();
@@ -658,22 +694,40 @@ public class FloatService extends Service {
         }
 
         private float lx, ly;
+        private final ScaleGestureDetector pinch = new ScaleGestureDetector(
+                FloatService.this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override public boolean onScale(ScaleGestureDetector d) {
+                zoomAt(zoom * d.getScaleFactor(), d.getFocusX(), d.getFocusY());
+                return true;
+            }
+        });
 
         @Override public boolean onTouchEvent(MotionEvent e) {
+            pinch.onTouchEvent(e);
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     paperTouched = true;
+                    extend();
+                    lx = e.getX(); ly = e.getY();
+                    return true;
+                /* 손가락이 늘거나 줄면 기준점을 다시 잡는다. 그러지 않으면 그
+                   순간 좌표가 튀어 화면이 한 번 껑충 뛴다. */
+                case MotionEvent.ACTION_POINTER_DOWN:
+                case MotionEvent.ACTION_POINTER_UP:
                     lx = e.getX(); ly = e.getY();
                     return true;
                 case MotionEvent.ACTION_MOVE:
-                    scrollY -= (int) (e.getY() - ly);
-                    scrollX -= (int) (e.getX() - lx);
+                    if (!pinch.isInProgress() && e.getPointerCount() == 1) {
+                        scrollY -= (int) (e.getY() - ly);
+                        scrollX -= (int) (e.getX() - lx);
+                        clamp(); invalidate();
+                    }
                     lx = e.getX(); ly = e.getY();
-                    clamp(); invalidate();
                     return true;
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
                     paperTouched = false;
+                    extend();
                     /* 끌기가 끝났다. 유예가 이미 지났다면 여기서 비로소 통과로
                        되돌아간다 — 손가락이 닿아 있는 동안은 미뤄 두었다. */
                     applyMode();

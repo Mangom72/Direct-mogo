@@ -772,8 +772,9 @@ public class PdfViewActivity extends Activity {
     /**
      * 이 문제지를 다른 앱 위에 반투명하게 띄운다.
      *
-     * 띄운 뒤에는 우리 화면을 물린다. 그러지 않으면 같은 문제지가 두 겹으로
-     * 보이고, 사용자가 하려던 일(노트앱에 풀이 적기)까지 한 걸음이 더 남는다.
+     * 띄운 뒤에는 이 화면만 닫아 목록으로 돌아간다. 같은 문제지가 두 겹으로
+     * 보이지 않게 하려는 것인데, 앱을 통째로 물리지는 않는다 — 그러면 꺼진 것처럼
+     * 보이고, 다음 회차를 띄우려면 앱을 다시 찾아 들어와야 한다.
      *
      * 권한은 사용자가 설정에서 직접 켜야 하는 종류라, 없으면 왜 필요한지 적고
      * 그 화면으로 보낸다. 돌아왔을 때 다시 누르면 된다 — 돌아오는 길을
@@ -802,7 +803,7 @@ public class PdfViewActivity extends Activity {
             i.putExtra(FloatService.EXTRA_FILE, file.getAbsolutePath());
             i.putExtra(FloatService.EXTRA_NAME, name);
             startForegroundService(i);
-            moveTaskToBack(true);
+            finish();
         } catch (Exception e) {
             Log.w(TAG, "띄우지 못했습니다", e);
             fail("띄우지 못했습니다");
