@@ -1,8 +1,8 @@
 {
-  "versionCode": 42,
-  "versionName": "5.1",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v5.1/gijul-direct.apk",
-  "size": 1844755,
-  "sha256": "15e93c72df2762c96bfa14a4c24c216de6363ef043568c3d1d66b92be1cad8c1",
-  "notes": "다른 앱으로 열면 그 앱이 따로 열립니다"
+  "versionCode": 43,
+  "versionName": "5.2",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v5.2/gijul-direct.apk",
+  "size": 1853291,
+  "sha256": "86ab3b8d63265410fcaac19cf4b1d85e5291161ab377b02e1bb2d25a737df595",
+  "notes": "문제지를 다른 앱 위에 반투명하게 띄워 둘 수 있습니다"
 }
