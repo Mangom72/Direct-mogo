@@ -86,11 +86,33 @@ def hangul(text):
 # '/*'가 들어가면 잘못 잘릴 수 있는데, base64에는 '*'가 없고 이 저장소의 문자열에도
 # 없다 — 그래도 확실히 하려고 test_glyphs 가 실제로 그려진 글자를 훑어 확인한다.
 COMMENT = re.compile(r"<!--.*?-->|/\*.*?\*/", re.S)
+# 자바 문자열 리터럴. 줄바꿈은 들어갈 수 없고, \" 로 이스케이프된 따옴표는 넘긴다.
+JAVA_STRING = re.compile(r'"(?:\\.|[^"\\\n])*"')
 
 
 def visible(text):
     """주석을 걷어낸 글. 여기서 지나치게 걷으면 그 글자가 화면에서 네모가 된다."""
     return COMMENT.sub(" ", text)
+
+
+def java_visible(text):
+    """자바에서 **화면에 뜨는 글**만 골라낸다 — 곧 문자열 리터럴이다.
+
+    주석만 걷어내는 것으로는 모자랐다. COMMENT 가 /* */ 만 걷고 // 줄 주석은
+    그대로 두어서, 화면에 나올 일이 없는 주석 글자가 글꼴에 실렸다. 실제로
+    `// 상한에 붙은 채로 계속 끌 때가 대부분이다` 한 줄 때문에 '속' 하나가
+    새로 필요해져 발행이 멈췄다.
+
+    // 를 마저 걷는 방법도 있지만 그건 위험하다 — 문자열 안의 `https://` 를
+    주석으로 잘못 보고 그 뒤를 통째로 버리면, 같은 줄에 있던 한글이 조용히
+    사라져 화면에서 네모가 된다. 반대로 **문자열만 줍는 것**은 놓칠 것이 없다:
+    자바가 화면에 글을 내보내는 통로가 리터럴뿐이고, 리소스에 있는 글은
+    strings.xml 쪽에서 따로 걷힌다.
+
+    주석을 먼저 걷고 나서 줍는다. 주석 안에 예시로 적어 둔 따옴표까지 담을
+    이유는 없다.
+    """
+    return " ".join(JAVA_STRING.findall(COMMENT.sub(" ", text)))
 
 
 def wanted():
@@ -107,7 +129,9 @@ def wanted():
 
     # 앱이 띄우는 문구도 이 글꼴로 그려진다 — 웹뷰 안이라 같은 페이지다
     src = ROOT / "android/app/src/main"
-    for f in list(src.rglob("*.java")) + list(src.rglob("*.xml")):
+    for f in src.rglob("*.java"):
+        chars |= hangul(java_visible(f.read_text(encoding="utf-8")))
+    for f in src.rglob("*.xml"):
         chars |= hangul(visible(f.read_text(encoding="utf-8")))
 
     # 과목 페이지(s/)도 같은 글꼴을 쓴다. 만들어진 HTML을 그대로 읽는다 — 틀에 적힌
