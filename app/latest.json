@@ -1,8 +1,8 @@
 {
-  "versionCode": 47,
-  "versionName": "5.6",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v5.6/gijul-direct.apk",
-  "size": 1854571,
-  "sha256": "2b2b2a6a30ec4aaadc68497ad58b2e5d4365e68a0c9ccb15fb3a708f67f0fdd1",
-  "notes": "띄운 창이 부드러워지고, 확대해도 문제지가 그대로 보입니다"
+  "versionCode": 48,
+  "versionName": "5.7",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v5.7/gijul-direct.apk",
+  "size": 1854331,
+  "sha256": "21479036568897988736cca8acefb9976dab8a273b55fd303c31c7f9b918522f",
+  "notes": "손잡이가 따로 가는 것과 창이 너무 넓게 열리는 것을 고쳤습니다"
 }
