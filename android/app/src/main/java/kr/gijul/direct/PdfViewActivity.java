@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.pdf.PdfRenderer;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
@@ -181,6 +182,10 @@ public class PdfViewActivity extends Activity {
         /* 글자 단추 둘이 나란히 있으면 제목이 설 자리를 그만큼 잡아먹는다. 하는 일이
            둘 다 한마디로 그려지는 것이라 표로 바꿨다. 오른쪽 끝이 화면 넓히기 —
            읽는 중에 가장 자주 누르는 것이 손이 닿기 쉬운 자리에 온다. */
+        ImageButton flo = iconBtn(R.drawable.ic_float, "다른 앱 위에 띄우기", ink);
+        flo.setOnClickListener(v -> floatIt());
+        bar.addView(flo, new LinearLayout.LayoutParams(dp(44), dp(44)));
+
         ImageButton out = iconBtn(R.drawable.ic_open_external, "다른 앱으로 열기", ink);
         out.setOnClickListener(v -> openElsewhere());
         bar.addView(out, new LinearLayout.LayoutParams(dp(44), dp(44)));
@@ -762,6 +767,46 @@ public class PdfViewActivity extends Activity {
 
     private void fail(String message) {
         runOnUiThread(() -> { status.setVisibility(View.VISIBLE); status.setText(message); });
+    }
+
+    /**
+     * 이 문제지를 다른 앱 위에 반투명하게 띄운다.
+     *
+     * 띄운 뒤에는 우리 화면을 물린다. 그러지 않으면 같은 문제지가 두 겹으로
+     * 보이고, 사용자가 하려던 일(노트앱에 풀이 적기)까지 한 걸음이 더 남는다.
+     *
+     * 권한은 사용자가 설정에서 직접 켜야 하는 종류라, 없으면 왜 필요한지 적고
+     * 그 화면으로 보낸다. 돌아왔을 때 다시 누르면 된다 — 돌아오는 길을
+     * 가로채 자동으로 띄우지는 않는다. 사용자가 설정에서 마음을 바꿨을 수도
+     * 있는데 그때 창이 불쑥 뜨면 그건 우리가 정한 것이다.
+     */
+    private void floatIt() {
+        if (file == null) { fail("아직 자료를 열지 못했습니다"); return; }
+        if (Build.VERSION.SDK_INT < 26) {
+            fail("띄워 두기는 안드로이드 8.0부터 됩니다");
+            return;
+        }
+        if (!Settings.canDrawOverlays(this)) {
+            fail("'다른 앱 위에 표시'를 켜 주십시오 — 설정을 엽니다");
+            try {
+                startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName())));
+            } catch (Exception e) {
+                Log.w(TAG, "권한 화면을 열지 못했습니다", e);
+                fail("설정 > 앱 > 기출 직행 > 다른 앱 위에 표시 를 켜 주십시오");
+            }
+            return;
+        }
+        try {
+            Intent i = new Intent(this, FloatService.class);
+            i.putExtra(FloatService.EXTRA_FILE, file.getAbsolutePath());
+            i.putExtra(FloatService.EXTRA_NAME, name);
+            startForegroundService(i);
+            moveTaskToBack(true);
+        } catch (Exception e) {
+            Log.w(TAG, "띄우지 못했습니다", e);
+            fail("띄우지 못했습니다");
+        }
     }
 
     private void openElsewhere() {

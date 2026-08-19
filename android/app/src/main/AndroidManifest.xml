@@ -6,6 +6,14 @@
          안드로이드 8+에서는 사용자가 이 앱에 한 번 '이 출처 허용'을 줘야 동작한다. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- 문제지를 다른 앱 위에 반투명하게 띄우는 기능. 사용자가 설정에서 직접 켜야
+         하는 권한이라, 켜지 않으면 그 단추만 동작하지 않고 나머지는 그대로다. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- 띄운 창은 우리 화면을 떠난 뒤에도 살아 있어야 한다. 그래서 서비스가 들고
+         있고, 그 서비스는 포그라운드여야 죽지 않는다(알림이 함께 뜬다). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
     <application
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
@@ -44,6 +52,18 @@
             android:exported="false"
             android:configChanges="orientation|screenSize|keyboardHidden|uiMode"
             android:parentActivityName=".MainActivity" />
+
+        <!-- 문제지를 다른 앱 위에 띄워 두는 창. 알림 하나를 달고 살아 있는다.
+             targetSdk 34 부터 포그라운드 서비스는 유형을 반드시 밝혀야 하는데,
+             떠 있는 창에 맞는 기성 유형이 없어 specialUse 를 쓴다. -->
+        <service
+            android:name=".FloatService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="floating_paper_overlay" />
+        </service>
 
         <!-- 받아둔 파일을 외부 뷰어에 넘기려면 content:// 로 줘야 한다 (file:// 는 API 24+에서 막힘) -->
         <provider
