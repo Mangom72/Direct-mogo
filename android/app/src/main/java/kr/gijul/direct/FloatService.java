@@ -171,15 +171,7 @@ public class FloatService extends Service {
         barH = dp(44);
         gripPx = dp(34);
 
-        /* 처음에는 화면 너비를 그대로 쓴다. 문제지는 세로로 긴 데다 글자가
-           작아서, 옆을 남기면 그만큼 읽을 수 없다. 종이는 창 너비에 맞춰
-           그려지므로(zoom 1 = 폭 맞춤) 이 한 줄이 곧 '가로로 꽉 참'이다.
-           좁히고 싶으면 좌하단 손잡이로 줄이면 된다. */
-        android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
-        ww = dm.widthPixels;
-        wh = Math.min(dp(420), (int) (dm.heightPixels * 0.6f));
-        wx = 0;
-        wy = dp(72);
+        defaultGeometry();
 
         paper = new PaperView(this);
         bar = buildBar();
@@ -194,6 +186,42 @@ public class FloatService extends Service {
         wm.addView(grip, gripLp);
         place();
         applyMode();
+    }
+
+    /**
+     * 처음 열릴 때의 자리와 크기.
+     *
+     * 폰에서는 화면 너비를 그대로 쓴다 — 문제지는 세로로 길고 글자가 작아서
+     * 옆을 남기면 그만큼 못 읽는다.
+     *
+     * 다만 넓은 화면에서 그대로 늘리면 거꾸로 읽기 나빠진다. 종이는 창 너비에
+     * 맞춰 그려지므로(zoom 1 = 폭 맞춤) 태블릿에서 폭을 다 쓰면 **한 쪽이 창
+     * 높이보다 훨씬 커져 윗동강만 들어온다.** 게다가 화면을 통째로 덮어서,
+     * 옆에 두고 쓰는 창이 아니라 그냥 큰 창이 된다. 그래서 읽기 좋은 폭까지만
+     * 쓰고 가운데에 놓는다. 더 넓게 쓰고 싶으면 손잡이로 늘리면 된다.
+     */
+    private void defaultGeometry() {
+        android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+        ww = Math.min(dm.widthPixels, dp(560));
+        wh = Math.min(dp(560), (int) (dm.heightPixels * 0.6f));
+        wx = (dm.widthPixels - ww) / 2;
+        wy = dp(72);
+    }
+
+    /**
+     * 창을 화면 안으로 밀어 넣는다.
+     *
+     * 이걸 안 하면 벽에 닿았을 때 <b>손잡이만 따로 움직인다.</b> 창 셋의 y가
+     * 저마다 다른데(바는 위, 손잡이는 아래) 화면 밖으로 나가는 창은 시스템이
+     * 알아서 붙잡아 두므로, 이미 붙잡힌 바·종이는 서면서 아직 여유가 있는
+     * 작은 손잡이만 계속 내려간다. 우리가 먼저 묶어 두면 셋이 함께 선다.
+     */
+    private void clampWindow() {
+        android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+        ww = Math.min(ww, dm.widthPixels);
+        wh = Math.min(wh, dm.heightPixels);
+        wx = Math.max(0, Math.min(wx, dm.widthPixels - ww));
+        wy = Math.max(0, Math.min(wy, Math.max(0, dm.heightPixels - wh)));
     }
 
     private WindowManager.LayoutParams lp(int w, int h) {
@@ -230,6 +258,7 @@ public class FloatService extends Service {
     }
 
     private void place() {
+        clampWindow();
         barLp.x = wx;              barLp.y = wy;              barLp.width = ww; barLp.height = barH;
         paperLp.x = wx;            paperLp.y = wy + barH;     paperLp.width = ww;
         paperLp.height = Math.max(dp(80), wh - barH);
@@ -839,15 +868,8 @@ public class FloatService extends Service {
     public void onConfigurationChanged(android.content.res.Configuration c) {
         super.onConfigurationChanged(c);
         if (wm == null || bar == null) return;
-        android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
-        if (full) { ww = dm.widthPixels; wx = 0; }
-        else {
-            ww = Math.min(ww, dm.widthPixels);
-            wx = Math.max(0, Math.min(wx, dm.widthPixels - ww));
-        }
-        wh = Math.min(wh, dm.heightPixels);
-        wy = Math.max(0, Math.min(wy, Math.max(0, dm.heightPixels - wh)));
-        place();
+        if (full) defaultGeometry();     // 아직 손대지 않았으면 새 화면에 맞춰 다시
+        place();                         // 손댄 뒤라면 크기는 지키고 안으로만 민다
     }
 
     @Override
