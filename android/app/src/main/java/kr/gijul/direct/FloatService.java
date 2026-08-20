@@ -262,12 +262,16 @@ public class FloatService extends Service {
     }
 
     /**
-     * 지난번에 맞춰 둔 크기와 자리를 적어 둔다.
+     * 맞춰 둔 크기와 자리를 적어 둔다.
      *
-     * 화면 크기를 열쇠에 함께 넣는다. 세로로 맞춘 크기를 가로에 그대로 물리면
-     * 창이 화면 밖으로 삐져나가거나 우스운 비율이 되는데, 이렇게 두면 세로에서
-     * 맞춘 것은 세로에서, 가로에서 맞춘 것은 가로에서 돌아온다. 처음 보는 화면
-     * 크기라면 적어 둔 것이 없으니 저절로 기본값으로 연다.
+     * 두 벌로 적는다. 하나는 <b>화면 크기를 열쇠에 넣은 것</b>이라 세로에서 맞춘
+     * 것은 세로에서, 가로에서 맞춘 것은 가로에서 제 크기 그대로 돌아온다. 다른
+     * 하나는 열쇠 없는 <b>마지막 한 벌</b>이다.
+     *
+     * 마지막 한 벌이 있어야 하는 까닭 — 처음 보는 화면(처음 돌려 본 가로, 바꾼
+     * 폰, 접었다 편 화면)에는 맞춰 둔 것이 없다. 그때 기본값으로 열면 사용자가
+     * 보기엔 <b>기억이 지워진 것</b>이다. 마지막 크기를 새 화면에 맞게 줄여 쓰면,
+     * 한 번 맞춰 둔 뒤로는 기본값이 다시 나오지 않는다.
      */
     private String key(String k) {
         android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
@@ -283,6 +287,7 @@ public class FloatService extends Service {
                     .putInt(key("y"), wy)
                     .putInt(key("w"), ww)
                     .putInt(key("h"), wh)
+                    .putInt("lastW", ww).putInt("lastH", wh)
                     .apply();
         } catch (Exception e) { Log.w(TAG, "창 크기를 적어 두지 못했습니다", e); }
     }
@@ -291,11 +296,23 @@ public class FloatService extends Service {
         try {
             android.content.SharedPreferences sp = getSharedPreferences("float", MODE_PRIVATE);
             int w = sp.getInt(key("w"), 0), h = sp.getInt(key("h"), 0);
-            /* 손잡이가 허락하는 가장 작은 크기보다 작으면 적힌 것이 성치 않다. */
-            if (w < dp(200) || h < dp(140)) return false;
-            ww = w; wh = h;
-            wx = sp.getInt(key("x"), 0);
-            wy = sp.getInt(key("y"), 0);
+            boolean here = w >= dp(200) && h >= dp(140);
+            if (!here) {                 // 이 화면에서는 맞춰 본 적이 없다
+                w = sp.getInt("lastW", 0);
+                h = sp.getInt("lastH", 0);
+                if (w < dp(200) || h < dp(140)) return false;   // 한 번도 없다
+            }
+            android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+            ww = Math.min(w, dm.widthPixels);
+            wh = Math.min(h, dm.heightPixels);
+            if (here) {
+                wx = sp.getInt(key("x"), 0);
+                wy = sp.getInt(key("y"), 0);
+            } else {
+                /* 빌려 온 크기다. 자리까지 빌리면 엉뚱한 데서 열리므로 가운데. */
+                wx = (dm.widthPixels - ww) / 2;
+                wy = dp(72);
+            }
             return true;                 // 화면 밖이면 clampWindow 가 끌어들인다
         } catch (Exception e) {
             Log.w(TAG, "적어 둔 창 크기를 읽지 못했습니다", e);
