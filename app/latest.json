@@ -1,8 +1,8 @@
 {
-  "versionCode": 55,
-  "versionName": "6.4",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v6.4/gijul-direct.apk",
-  "size": 1865283,
-  "sha256": "d22295dbd22bca83ee5fa1ecbcbdf614b46c0b2471b684b0c893007b5e814819",
-  "notes": "자판이 뜨면 크기 손잡이가 물러납니다"
+  "versionCode": 56,
+  "versionName": "6.5",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v6.5/gijul-direct.apk",
+  "size": 1865843,
+  "sha256": "54916ce35a253c5ff7ab7b97848b80339bce55e8911b2c5de10625bf4e3c7104",
+  "notes": "창 크기가 남고 목록은 보던 과목부터 열립니다"
 }
