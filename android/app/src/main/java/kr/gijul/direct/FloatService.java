@@ -26,6 +26,7 @@ import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.util.LruCache;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -69,6 +70,7 @@ public class FloatService extends Service {
     static final String TAG = "gijul.float";
     static final String EXTRA_FILE = "file";
     static final String EXTRA_NAME = "name";
+    static final String EXTRA_URL = "url";      // 목록에서 '지금 보는 중'을 가리기 위해
     static final String ACTION_STOP = "kr.gijul.direct.FLOAT_STOP";
 
     private static final String CHANNEL = "float";
@@ -86,8 +88,16 @@ public class FloatService extends Service {
     private PaperView paper;
     private WindowManager.LayoutParams barLp, paperLp, gripLp;
     private View countdown;                        // 유예가 얼마나 남았는지 보이는 실선
-    private TextView pctText;
+    private TextView pctBubble;
     private Slider slider;
+    private TextView menuBtn;
+    private android.widget.FrameLayout content;   // 종이와 목록이 같은 자리를 나눠 쓴다
+    private PickerView picker;
+    private Catalog catalog;
+    private boolean pickerOpen;
+    private boolean passBefore;                   // 목록을 열기 전 모드
+    private String showingUrl;                    // 지금 보고 있는 자료의 주소
+    private final ExecutorService fetch = Executors.newSingleThreadExecutor();
     private TextView passBtn, holdBtn;
 
     /* 창 자리. 셋이 이 하나를 나눠 쓴다. */
@@ -114,6 +124,8 @@ public class FloatService extends Service {
         String n = intent == null ? null : intent.getStringExtra(EXTRA_NAME);
         if (path == null) { stopSelf(); return START_NOT_STICKY; }
         name = n == null ? "" : n;
+        String u = intent.getStringExtra(EXTRA_URL);
+        if (u != null && !u.isEmpty()) showingUrl = u;
 
         note();
         if (bar == null) build();
@@ -173,7 +185,18 @@ public class FloatService extends Service {
 
         defaultGeometry();
 
+        catalog = new Catalog(getCacheDir());
         paper = new PaperView(this);
+        content = new android.widget.FrameLayout(this);
+        content.setFocusableInTouchMode(true);
+        content.setOnKeyListener((v, code, ev) -> {
+            if (code != KeyEvent.KEYCODE_BACK || ev.getAction() != KeyEvent.ACTION_UP) return false;
+            if (!pickerOpen) return false;
+            if (!picker.back()) closePicker();     // 과목 목록이면 목록 자체를 닫는다
+            return true;
+        });
+        content.addView(paper, new android.widget.FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         bar = buildBar();
         grip = buildGrip();
 
@@ -181,7 +204,7 @@ public class FloatService extends Service {
         barLp = lp(ww, barH);
         gripLp = lp(gripPx, gripPx);
 
-        wm.addView(paper, paperLp);
+        wm.addView(content, paperLp);
         wm.addView(bar, barLp);
         wm.addView(grip, gripLp);
         place();
@@ -265,7 +288,7 @@ public class FloatService extends Service {
         gripLp.x = wx;             gripLp.y = wy + wh - gripPx;
         try {
             wm.updateViewLayout(bar, barLp);
-            wm.updateViewLayout(paper, paperLp);
+            wm.updateViewLayout(content, paperLp);
             wm.updateViewLayout(grip, gripLp);
         } catch (Exception e) { Log.w(TAG, "자리 갱신 실패", e); }
     }
@@ -298,6 +321,11 @@ public class FloatService extends Service {
         segBg.setColor(night ? 0x1FECE7DA : 0x17221F1A);
         segBg.setCornerRadius(dp(8));
         seg.setBackground(segBg);
+        menuBtn = chip("☰", night, v -> togglePicker());
+        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(dp(30), dp(30));
+        mlp.rightMargin = dp(7);
+        row.addView(menuBtn, mlp);
+
         passBtn = segItem("통과");
         holdBtn = segItem("조작");
         passBtn.setOnClickListener(v -> setPass(true));
@@ -309,14 +337,6 @@ public class FloatService extends Service {
         LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(0, dp(30), 1f);
         slp.leftMargin = dp(8); slp.rightMargin = dp(10);
         row.addView(slider, slp);
-
-        pctText = new TextView(this);
-        pctText.setTextColor(ink);
-        pctText.setTextSize(11.5f);
-        pctText.setTypeface(null, android.graphics.Typeface.BOLD);
-        pctText.setWidth(dp(36));
-        pctText.setGravity(Gravity.END);
-        row.addView(pctText);
 
         row.addView(chip("－", night, v -> zoom(1 / 1.25f)), chipLp());
         row.addView(chip("＋", night, v -> zoom(1.25f)), chipLp());
@@ -331,6 +351,23 @@ public class FloatService extends Service {
         close.setBackground(null);
         close.setTextColor(night ? 0x99ECE7DA : 0x99221F1A);
         row.addView(close, chipLp());
+
+        /* 상시로 두면 ☰ 자리가 없다. 손잡이 위치로도 대강 읽히므로 끄는
+           동안에만 눈금을 띄운다. 바가 44dp뿐이라 위로 못 올리고 슬라이더
+           오른쪽 끝에 얹는다. */
+        pctBubble = new TextView(this);
+        pctBubble.setTextSize(11);
+        pctBubble.setTypeface(null, android.graphics.Typeface.BOLD);
+        pctBubble.setTextColor(night ? 0xFF161A22 : 0xFFF3F1EC);
+        pctBubble.setPadding(dp(6), dp(1), dp(6), dp(1));
+        GradientDrawable bub = new GradientDrawable();
+        bub.setColor(ink);
+        bub.setCornerRadius(dp(6));
+        pctBubble.setBackground(bub);
+        pctBubble.setVisibility(View.GONE);
+        wrap.addView(pctBubble, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER_VERTICAL | Gravity.START));
 
         /* 유예가 얼마나 남았는지 — 바 아래 얇은 선이 줄어든다. 글자로 알리면
            읽는 사이에 시간이 간다. */
@@ -395,7 +432,7 @@ public class FloatService extends Service {
                 t.setTextColor(off);
             }
         }
-        if (pctText != null) pctText.setText(opacity + "%");
+        if (pctBubble != null) pctBubble.setText(opacity + "%");
         /* 값만 고치고 말면 슬라이더는 옛 자리를 그대로 그리고 있는다. 조작에서
            100을 찍고 통과로 돌아오면 상한까지 깎이는데, 손잡이는 100에 남아
            있어서 만지기 전까지 어긋난 채로 보였다. */
@@ -507,6 +544,21 @@ public class FloatService extends Service {
         }
     };
 
+    private final Runnable hidePct = () -> {
+        if (pctBubble != null) pctBubble.setVisibility(View.GONE);
+    };
+
+    private void showPct(final View sliderView) {
+        if (pctBubble == null) return;
+        ui.removeCallbacks(hidePct);
+        pctBubble.setText(opacity + "%");
+        pctBubble.setVisibility(View.VISIBLE);
+        /* 슬라이더 오른쪽 끝에 붙인다. 손잡이를 따라다니게 하면 손가락에
+           가려서, 정작 읽으려는 숫자가 안 보인다. */
+        pctBubble.post(() -> pctBubble.setTranslationX(
+                sliderView.getX() + sliderView.getWidth() - pctBubble.getWidth()));
+    }
+
     /** 종이를 만지는 동안에는 유예를 다시 채운다. 손을 놓고 3초가 지나야 통과로 돌아간다. */
     private void extend() {
         if (!passThrough || graceUntil == 0) return;
@@ -524,19 +576,98 @@ public class FloatService extends Service {
 
     private void applyMode() {
         if (paperLp == null) return;
-        int f = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
-        if (!live()) f |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
-        /* 통과 모드에서는 상한을 넘길 수 없다 — 넘기면 아래 앱이 터치를 못 받는다. */
-        int pct = passThrough ? Math.min(opacity, capPct()) : opacity;
-        float a = pct / 100f;
+        int f = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
+        float a;
+        if (pickerOpen) {
+            /* 목록은 글자를 받아야 한다 — 초점을 잡지 않으면 자판이 붙지 않는다.
+               읽으라고 띄운 것이니 그동안은 투명도도 걷는다. */
+            a = 1f;
+        } else {
+            f |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            if (!live()) f |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+            /* 통과 모드에서는 상한을 넘길 수 없다 — 넘기면 아래 앱이 터치를 못 받는다. */
+            int pct = passThrough ? Math.min(opacity, capPct()) : opacity;
+            a = pct / 100f;
+        }
         /* 값이 그대로면 넘기지 않는다. applyMode() 는 슬라이더를 끄는 동안에도
            터치마다 불리는데, 같은 값을 다시 실어 보내는 것은 그냥 낭비다. */
         if (paperLp.flags == f && Math.abs(paperLp.alpha - a) < 0.001f) return;
         paperLp.flags = f;
         paperLp.alpha = a;
-        try { wm.updateViewLayout(paper, paperLp); }
+        try { wm.updateViewLayout(content, paperLp); }
         catch (Exception e) { Log.w(TAG, "종이 갱신 실패", e); }
+    }
+
+    // ── 목록 ────────────────────────────────────────────────────────────
+
+    private void togglePicker() {
+        if (pickerOpen) closePicker(); else openPicker();
+    }
+
+    private void openPicker() {
+        if (content == null) return;
+        if (picker == null) {
+            picker = new PickerView(this, catalog, new PickerView.Host() {
+                @Override public void pick(Catalog.Paper p, int kind) { load(p, kind); }
+                @Override public String showing() { return showingUrl; }
+            }, night());
+            content.addView(picker, new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        }
+        /* 목록은 만져야 하니 조작으로 바꾸고, 고르고 나면 있던 자리로 돌린다.
+           통과로 되돌리는 것을 사용자가 기억할 일이 아니다. */
+        passBefore = passThrough;
+        passThrough = false;
+        pickerOpen = true;
+        picker.setVisibility(View.VISIBLE);
+        content.requestFocus();
+        markMenu(true);
+        updateBar();
+        applyMode();
+        picker.enter();
+    }
+
+    private void closePicker() {
+        pickerOpen = false;
+        if (picker != null) picker.setVisibility(View.GONE);
+        passThrough = passBefore;
+        markMenu(false);
+        updateBar();
+        applyMode();
+    }
+
+    private void markMenu(boolean on) {
+        if (menuBtn == null) return;
+        boolean night = night();
+        GradientDrawable g = new GradientDrawable();
+        g.setCornerRadius(dp(8));
+        g.setColor(on ? (night ? 0xFFECE7DA : 0xFF221F1A) : (night ? 0x1AECE7DA : 0x12221F1A));
+        menuBtn.setBackground(g);
+        menuBtn.setTextColor(on ? (night ? 0xFF161A22 : 0xFFF3F1EC)
+                                : (night ? 0xFFECE7DA : 0xFF221F1A));
+    }
+
+    /** 고른 자료를 연다. 이미 받아 둔 것이면 받는 화면 없이 바로 뜬다. */
+    private void load(final Catalog.Paper p, final int kind) {
+        final String url = p.url(kind);
+        if (url == null || url.isEmpty()) return;
+        final String label = p.title + " " + Catalog.KIND[kind];
+        closePicker();
+        paper.busy(label + " 받는 중…");
+        fetch.execute(() -> {
+            try {
+                final java.io.File f = catalog.paper(url);
+                ui.post(() -> {
+                    showingUrl = url;
+                    name = label;
+                    paper.open(f);
+                    note();                    // 알림에 뜨는 이름도 따라간다
+                });
+            } catch (Exception e) {
+                Log.w(TAG, "받지 못했습니다: " + url, e);
+                ui.post(() -> paper.busy("받지 못했습니다 — 연결을 확인해 주십시오"));
+            }
+        });
     }
 
     // ── 끌기 ────────────────────────────────────────────────────────────
@@ -611,6 +742,12 @@ public class FloatService extends Service {
             float t = (e.getX() - x0) / span;
             setOpacity(Math.round(MIN_OPACITY + t * (100 - MIN_OPACITY)));
             invalidate();
+            switch (e.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_MOVE: showPct(this); break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL: ui.postDelayed(hidePct, 700); break;
+            }
             return true;
         }
     }
@@ -650,6 +787,10 @@ public class FloatService extends Service {
                 java.util.Collections.synchronizedMap(new java.util.HashMap<Integer, Integer>());
         private boolean sharpen;
 
+        /* 받는 동안 종이 대신 뜨는 한 줄. 다 받으면 open() 이 지운다. */
+        private String msg;
+        private final Paint say = new Paint(Paint.ANTI_ALIAS_FLAG);
+
         /* 창 크기를 바꾸는 동안에는 예전 폭으로 그린 쪽이 늘어난 채로 보인다.
            끌고 있는 내내 다시 그리면 렌더 스레드가 밀리므로, 손이 멎은 뒤에
            한 번만 새로 그린다. */
@@ -664,7 +805,28 @@ public class FloatService extends Service {
             clamp();
         }
 
-        PaperView(Context c) { super(c); setBackgroundColor(Color.WHITE); }
+        PaperView(Context c) {
+            super(c);
+            setBackgroundColor(Color.WHITE);
+            say.setColor(0xFF6B7280);
+            say.setTextSize(dp(14));
+            say.setTextAlign(Paint.Align.CENTER);
+        }
+
+        /** 자료를 받아오는 동안 그 자리에 한 줄만 띄운다. */
+        void busy(String text) {
+            close();
+            synchronized (FloatService.this) {
+                ratio = new float[0];
+                inFlight.clear();
+                madeAt.clear();
+                cachedForW = -1;
+                scrollY = scrollX = 0;
+                zoom = 1f;
+            }
+            msg = text;
+            postInvalidate();
+        }
 
         void open(File f) {
             close();
@@ -685,6 +847,7 @@ public class FloatService extends Service {
                         }
                     }
                 }
+                msg = null;
                 scrollY = scrollX = 0;
                 cache.evictAll();
                 inFlight.clear();
@@ -752,6 +915,11 @@ public class FloatService extends Service {
         }
 
         @Override protected void onDraw(Canvas c) {
+            if (msg != null) {
+                c.drawText(msg, getWidth() / 2f,
+                        getHeight() / 2f - (say.ascent() + say.descent()) / 2f, say);
+                return;
+            }
             int w = contentW();
             if (ratio.length == 0) return;
             int y = -scrollY;
@@ -875,10 +1043,13 @@ public class FloatService extends Service {
     @Override
     public void onDestroy() {
         ui.removeCallbacks(tick);
-        try { if (paper != null) { paper.close(); wm.removeView(paper); } } catch (Exception ignore) {}
+        try { if (picker != null) picker.shutdown(); } catch (Exception ignore) {}
+        fetch.shutdownNow();
+        try { if (paper != null) paper.close(); } catch (Exception ignore) {}
+        try { if (content != null) wm.removeView(content); } catch (Exception ignore) {}
         try { if (bar != null) wm.removeView(bar); } catch (Exception ignore) {}
         try { if (grip != null) wm.removeView(grip); } catch (Exception ignore) {}
-        bar = grip = null; paper = null;
+        bar = grip = null; paper = null; content = null;
         super.onDestroy();
     }
 }

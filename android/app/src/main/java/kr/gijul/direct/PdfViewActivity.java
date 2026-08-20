@@ -94,6 +94,8 @@ public class PdfViewActivity extends Activity {
     private Bitmap image;               // PNG일 때
     private File file;
     private String name = "";
+    /* 받아서 연 것이면 그 주소. 띄워 둘 때 목록에 '지금 보는 중'을 표시하는 데 쓴다. */
+    private String src;
 
     private float zoom = 1f, panX = 0f, panY = 0f;
 
@@ -132,6 +134,7 @@ public class PdfViewActivity extends Activity {
 
         String path = getIntent().getStringExtra(EXTRA_FILE);
         String url = getIntent().getStringExtra(EXTRA_URL);
+        src = url;
         if (path != null) {
             io.execute(() -> load(new File(path)));
         } else if (url != null) {
@@ -802,6 +805,7 @@ public class PdfViewActivity extends Activity {
             Intent i = new Intent(this, FloatService.class);
             i.putExtra(FloatService.EXTRA_FILE, file.getAbsolutePath());
             i.putExtra(FloatService.EXTRA_NAME, name);
+            if (src != null) i.putExtra(FloatService.EXTRA_URL, src);
             startForegroundService(i);
             finish();
         } catch (Exception e) {
