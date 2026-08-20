@@ -98,6 +98,7 @@ public class FloatService extends Service {
     private int imeLift;                          // 자판을 피해 올려 둔 만큼
     private int imeTop;                           // 자판 윗변의 화면 좌표 (0이면 없다)
     private boolean imeFrozen;                    // 손으로 옮긴 뒤로는 건드리지 않는다
+    private boolean imeUp;                        // 자판이 떠 있는가
     private TextView minBtn;
     private GradientDrawable barBg;
     private boolean minimized;
@@ -618,7 +619,7 @@ public class FloatService extends Service {
         if (on && pickerOpen) closePicker();
         minBtn.setText(on ? "＋" : "－");
         content.setVisibility(on ? View.GONE : View.VISIBLE);
-        grip.setVisibility(on ? View.GONE : View.VISIBLE);
+        showGrip();
 
         /* 종이가 없는데 투명도와 통과 여부를 물어봐야 소용이 없다. 접으면
            남는 것은 되돌릴 단추와 닫을 단추뿐이다. */
@@ -641,6 +642,18 @@ public class FloatService extends Service {
         roundBar();
         place();
         applyMode();
+    }
+
+    /**
+     * 손잡이를 보일지 정한다.
+     *
+     * 접혀 있으면 크기를 바꿀 종이가 없고, 자판이 떠 있으면 손잡이는 대개 그
+     * 자판 위에 겹쳐 앉는다 — 글자를 치는 내내 창 모서리에 얹힌 ㄴ자가 걸리적
+     * 거린다. 자판을 내리면 그대로 돌아온다.
+     */
+    private void showGrip() {
+        if (grip == null) return;
+        grip.setVisibility(minimized || imeUp ? View.GONE : View.VISIBLE);
     }
 
     /** 펼친 창의 왼쪽 변에서 알약의 왼쪽 변까지 — 접고 펴며 wx 를 옮기는 폭 */
@@ -675,6 +688,8 @@ public class FloatService extends Service {
      * 셋이 흩어지는 것보다야 낫다.
      */
     private void onIme(boolean shown, int deep) {
+        imeUp = shown;
+        showGrip();
         if (!shown) {
             imeTop = 0;
             imeFrozen = false;
@@ -729,6 +744,8 @@ public class FloatService extends Service {
         } catch (Exception e) { Log.w(TAG, "자판을 내리지 못했습니다", e); }
         imeTop = 0;
         imeFrozen = false;
+        imeUp = false;
+        showGrip();
         lift(0);
     }
 
