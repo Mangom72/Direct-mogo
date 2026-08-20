@@ -99,6 +99,9 @@ public class FloatService extends Service {
     private TextView minBtn;
     private GradientDrawable barBg;
     private boolean minimized;
+    private LinearLayout seg;                     // 통과|조작
+    private View sep;                             // 창틀 단추 앞의 실선
+    private int minW;                             // 접었을 때의 바 너비
     private final ExecutorService fetch = Executors.newSingleThreadExecutor();
     private TextView passBtn, holdBtn;
 
@@ -183,6 +186,8 @@ public class FloatService extends Service {
         wm = getSystemService(WindowManager.class);
         barH = dp(44);
         gripPx = dp(34);
+        /* 접으면 ＋와 ✕만 남는다. 바 좌우 여백에 단추 둘, 그 사이 간격 하나. */
+        minW = dp(8) * 2 + dp(30) * 2 + dp(6);
 
         defaultGeometry();
 
@@ -245,8 +250,11 @@ public class FloatService extends Service {
         android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
         ww = Math.min(ww, dm.widthPixels);
         wh = Math.min(wh, dm.heightPixels);
-        wx = Math.max(0, Math.min(wx, dm.widthPixels - ww));
-        wy = Math.max(0, Math.min(wy, Math.max(0, dm.heightPixels - wh)));
+        /* 접혀 있으면 붙잡아 둘 것은 바 하나뿐이다. 펼쳤을 때의 크기로 묶으면
+           작은 알약이 화면 오른쪽·아래에 닿기도 전에 선다. */
+        int w = minimized ? minW : ww, h = minimized ? barH : wh;
+        wx = Math.max(0, Math.min(wx, dm.widthPixels - w));
+        wy = Math.max(0, Math.min(wy, Math.max(0, dm.heightPixels - h)));
     }
 
     private WindowManager.LayoutParams lp(int w, int h) {
@@ -290,7 +298,8 @@ public class FloatService extends Service {
     private void place() {
         clampWindow();
         final int y = wy - imeLift;      // 자판이 떴으면 셋이 함께 그만큼 올라간다
-        barLp.x = wx;              barLp.y = y;               barLp.width = ww; barLp.height = barH;
+        barLp.x = wx;              barLp.y = y;               barLp.height = barH;
+        barLp.width = minimized ? minW : ww;
         paperLp.x = wx;            paperLp.y = y + barH;      paperLp.width = ww;
         paperLp.height = Math.max(dp(80), wh - barH);
         gripLp.x = wx;             gripLp.y = y + wh - gripPx;
@@ -323,7 +332,7 @@ public class FloatService extends Service {
 
         /* 통과 | 조작 — 켬/끔 스위치로 두면 '켜짐'이 어느 쪽인지 헷갈린다.
            두 낱말을 나란히 놓고 지금 것을 칠하면 읽을 것이 없다. */
-        LinearLayout seg = new LinearLayout(this);
+        seg = new LinearLayout(this);
         seg.setOrientation(LinearLayout.HORIZONTAL);
         GradientDrawable segBg = new GradientDrawable();
         segBg.setColor(night ? 0x1FECE7DA : 0x17221F1A);
@@ -346,7 +355,7 @@ public class FloatService extends Service {
         slp.leftMargin = dp(8); slp.rightMargin = dp(10);
         row.addView(slider, slp);
 
-        View sep = new View(this);
+        sep = new View(this);
         sep.setBackgroundColor(night ? 0x29ECE7DA : 0x24221F1A);
         LinearLayout.LayoutParams sepLp = new LinearLayout.LayoutParams(dp(1), dp(18));
         sepLp.leftMargin = dp(6); sepLp.rightMargin = dp(4);
@@ -584,6 +593,20 @@ public class FloatService extends Service {
         minBtn.setText(on ? "＋" : "－");
         content.setVisibility(on ? View.GONE : View.VISIBLE);
         grip.setVisibility(on ? View.GONE : View.VISIBLE);
+
+        /* 종이가 없는데 투명도와 통과 여부를 물어봐야 소용이 없다. 접으면
+           남는 것은 되돌릴 단추와 닫을 단추뿐이다. */
+        int vis = on ? View.GONE : View.VISIBLE;
+        menuBtn.setVisibility(vis);
+        seg.setVisibility(vis);
+        slider.setVisibility(vis);
+        sep.setVisibility(vis);
+        /* 앞이 비었으니 왼쪽 여백은 바 자신의 것으로 충분하다 — 그대로 두면
+           ＋가 오른쪽으로 6dp 치우쳐 보인다. */
+        LinearLayout.LayoutParams mp = (LinearLayout.LayoutParams) minBtn.getLayoutParams();
+        mp.leftMargin = on ? 0 : dp(6);
+        minBtn.setLayoutParams(mp);
+
         roundBar();
         place();
         applyMode();
