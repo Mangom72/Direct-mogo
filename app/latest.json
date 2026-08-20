@@ -1,8 +1,8 @@
 {
-  "versionCode": 49,
-  "versionName": "5.8",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v5.8/gijul-direct.apk",
-  "size": 1864407,
-  "sha256": "8f7febdfc543c5210f43f8ed774e1a5744547299764a5131ef19ac2d1ac7ad4a",
-  "notes": "띄운 창에서 다른 시험지로 바로 넘어갈 수 있습니다"
+  "versionCode": 50,
+  "versionName": "5.9",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v5.9/gijul-direct.apk",
+  "size": 1864975,
+  "sha256": "0f46bf667bba853552f907a55ecff970532d1e07c0c95b67ef2da2c111687bf6",
+  "notes": "자판이 떠도 창 셋이 함께 움직입니다"
 }
