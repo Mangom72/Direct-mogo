@@ -121,8 +121,27 @@ def main():
         print(f"  서명 SHA-256 {fp}")
         print("  ※ 이 지문이 이전 판본과 다르면 사용자 기기가 업데이트를 거부합니다")
 
+    # 글꼴을 다시 만들고 나서 확인한다.
+    #
     # 노트는 커밋 메시지가 그대로 들어오는 자리라, 글자가 미리 정해지지 않은 유일한
     # 통로다. 글꼴에 없는 글자가 섞이면 알림 막대가 네모(□)로 뜬다.
+    #
+    # 예전에는 확인만 했다. 그래서 사람이 글꼴 다시 만들기를 잊으면 발행이 거기서
+    # 멈췄고, 5.5·5.6이 그렇게 아무에게도 가지 않았다 — 화면에 나오지도 않는 자바
+    # 주석 한 줄에서 온 '속' 한 글자 때문이었다. 잊을 수 있는 일은 잊는다고 보고
+    # 여기서 만들어 버린다.
+    #
+    # **위에서 latest.json 을 쓴 뒤라야 한다.** build_fonts 는 그 파일의 notes 도
+    # 글자 출처로 삼는데, 순서가 반대면 방금 받은 노트를 못 보고 만들어 놓고는
+    # 곧바로 그 글자가 없다고 걸린다.
+    build = subprocess.run([sys.executable, str(ROOT / "tools" / "build_fonts.py")],
+                           capture_output=True, text=True)
+    if build.returncode != 0:
+        print()
+        print((build.stdout + build.stderr).strip())
+        raise SystemExit("글꼴을 다시 만들지 못했습니다")
+
+    # 만든 것이 정말 다 덮는지 본다. 여기서 걸리면 만드는 쪽이 고장 난 것이다.
     check = subprocess.run([sys.executable, str(ROOT / "tools" / "build_fonts.py"), "--check"],
                            capture_output=True, text=True)
     if check.returncode != 0:

@@ -203,6 +203,10 @@ jobs:
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app/latest.json
+          # 글꼴이 바뀌었으면 명세와 같은 커밋으로 나간다 — 따로 내보내면 그
+          # 사이에 화면이 네모를 띄우는 순간이 생긴다.
+          git add app/latest.json fonts
           git diff --cached --quiet || git commit -m "Publish the app update manifest"
-          git push
+          # 매일 도는 자료 갱신도 fonts 를 건드린다. 겹치는 일은 드물지만,
+          # 겹쳤을 때 릴리스만 올라가고 명세가 빠지는 것이 제일 나쁘다.
+          git push || { git pull --rebase origin main && git push; }
