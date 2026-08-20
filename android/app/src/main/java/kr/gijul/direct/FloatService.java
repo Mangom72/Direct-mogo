@@ -633,10 +633,18 @@ public class FloatService extends Service {
         mp.leftMargin = on ? 0 : dp(6);
         minBtn.setLayoutParams(mp);
 
+        /* 알약은 방금 그 단추들이 있던 자리, 곧 창의 오른쪽 끝에 선다. 왼쪽에
+           두면 누르자마자 화면을 가로질러 달아난 것처럼 보인다. wx 는 늘 '지금
+           보이는 것의 왼쪽 변'이라, 접고 펼 때 그 차이만큼 함께 옮겨 준다. */
+        wx += on ? tuck() : -tuck();
+
         roundBar();
         place();
         applyMode();
     }
+
+    /** 펼친 창의 왼쪽 변에서 알약의 왼쪽 변까지 — 접고 펴며 wx 를 옮기는 폭 */
+    private int tuck() { return Math.max(0, ww - minW); }
 
     /** 접었으면 바 혼자 뜨므로 네 귀가 다 둥글고, 폈으면 아래는 종이와 잇는다. */
     private void roundBar() {
@@ -1162,7 +1170,12 @@ public class FloatService extends Service {
     public void onConfigurationChanged(android.content.res.Configuration c) {
         super.onConfigurationChanged(c);
         if (wm == null || bar == null) return;
-        if (full) defaultGeometry();     // 아직 손대지 않았으면 새 화면에 맞춰 다시
+        if (full) {
+            defaultGeometry();           // 아직 손대지 않았으면 새 화면에 맞춰 다시
+            /* defaultGeometry 는 펼친 창을 기준으로 잡는다. 접혀 있으면 wx 가
+               가리키는 것은 알약이므로 그 차이만큼 다시 밀어 준다. */
+            if (minimized) wx += tuck();
+        }
         place();                         // 손댄 뒤라면 크기는 지키고 안으로만 민다
     }
 
