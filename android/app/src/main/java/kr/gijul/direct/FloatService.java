@@ -96,12 +96,15 @@ public class FloatService extends Service {
     private boolean passBefore;                   // 목록을 열기 전 모드
     private String showingUrl;                    // 지금 보고 있는 자료의 주소
     private int imeLift;                          // 자판을 피해 올려 둔 만큼
+    private int imeTop;                           // 자판 윗변의 화면 좌표 (0이면 없다)
+    private boolean imeFrozen;                    // 손으로 옮긴 뒤로는 건드리지 않는다
     private TextView minBtn;
     private GradientDrawable barBg;
     private boolean minimized;
     private LinearLayout seg;                     // 통과|조작
     private View sep;                             // 창틀 단추 앞의 실선
     private int minW;                             // 접었을 때의 바 너비
+    private int seam;                             // 종이가 바 밑으로 파고든 깊이
     private final ExecutorService fetch = Executors.newSingleThreadExecutor();
     private TextView passBtn, holdBtn;
 
@@ -206,6 +209,20 @@ public class FloatService extends Service {
         bar = buildBar();
         grip = buildGrip();
 
+        /* 종이 창의 윗변을 바 밑으로 조금 밀어 넣는다.
+
+           창 셋은 저마다 따로 시스템에 자리를 알린다. 한 프레임에 셋을 다 부르지만
+           화면에 실리는 것은 저마다라, 빠르게 끌면 어느 하나가 한 박자 늦는다. 그
+           틈으로 아래 앱이 비쳐 셋이 흩어져 보였다. 겹쳐 두면 늦어도 틈이 안 난다.
+
+           대신 그만큼 안쪽 여백을 줘서 종이가 바에 가려지지는 않게 하고, 그 여백은
+           종이와 같은 흰색으로 채운다 — 늦는 순간에 보이는 것이 남의 화면이 아니라
+           흰 종이여야 눈에 안 띈다. */
+        seam = dp(8);
+        content.setBackgroundColor(Color.WHITE);
+        content.setPadding(0, seam, 0, 0);
+        content.setClipToPadding(true);
+
         paperLp = lp(ww, wh - barH);
         barLp = lp(ww, barH);
         gripLp = lp(gripPx, gripPx);
@@ -298,16 +315,25 @@ public class FloatService extends Service {
     private void place() {
         clampWindow();
         final int y = wy - imeLift;      // 자판이 떴으면 셋이 함께 그만큼 올라간다
-        barLp.x = wx;              barLp.y = y;               barLp.height = barH;
-        barLp.width = minimized ? minW : ww;
-        paperLp.x = wx;            paperLp.y = y + barH;      paperLp.width = ww;
-        paperLp.height = Math.max(dp(80), wh - barH);
-        gripLp.x = wx;             gripLp.y = y + wh - gripPx;
-        try {
-            wm.updateViewLayout(bar, barLp);
-            wm.updateViewLayout(content, paperLp);
-            wm.updateViewLayout(grip, gripLp);
-        } catch (Exception e) { Log.w(TAG, "자리 갱신 실패", e); }
+        move(bar, barLp, wx, y, minimized ? minW : ww, barH);
+        /* 종이는 바 밑으로 seam 만큼 파고들어 있다 — 아래 setPadding 을 보라. */
+        move(content, paperLp, wx, y + barH - seam, ww,
+                Math.max(dp(80), wh - barH) + seam);
+        move(grip, gripLp, wx, y + wh - gripPx, gripPx, gripPx);
+    }
+
+    /**
+     * 창 하나를 옮긴다. 자리가 그대로면 아무것도 하지 않는다.
+     *
+     * updateViewLayout 은 한 번마다 시스템에 다녀오는 길이다. 끄는 동안 프레임마다
+     * 셋을 다 부르면 그 왕복이 셋씩 쌓여, 어느 하나가 그 프레임을 놓치면 그것만
+     * 뒤처져 보인다. 안 바뀐 것은 부르지 않는 것만으로도 그 빈도가 준다.
+     */
+    private void move(View v, WindowManager.LayoutParams p, int x, int y, int w, int h) {
+        if (p.x == x && p.y == y && p.width == w && p.height == h) return;
+        p.x = x; p.y = y; p.width = w; p.height = h;
+        try { wm.updateViewLayout(v, p); }
+        catch (Exception e) { Log.w(TAG, "자리 갱신 실패", e); }
     }
 
     // ── 위쪽 설정 바 ────────────────────────────────────────────────────
@@ -624,28 +650,47 @@ public class FloatService extends Service {
     /**
      * 자판에 가려지지 않을 만큼만 창 셋을 함께 올린다.
      *
-     * 창이 남은 자리보다 크면 위로는 더 못 간다 — 그때는 화면 맨 위까지만
-     * 올리고 아래가 가려지는 것을 받아들인다. 목록은 위에서부터 읽는 것이라
-     * 찾는 칸과 첫 줄들이 살아남는 편이 낫다.
+     * <h3>인셋을 그대로 쓰면 창이 떤다</h3>
+     * 떠 있는 창이 받는 IME 인셋은 <b>자판의 높이가 아니라 자판이 이 창을
+     * 파고든 깊이</b>다. 그래서 그만큼 올리고 나면 다음 번에는 덜 파고들었다고
+     * 나오고, 그 말을 믿고 도로 내리면 다시 깊어진다 — 올렸다 내렸다를 프레임마다
+     * 되풀이하며 깜빡였다.
      *
-     * 안드로이드 11부터 자판 높이를 물어볼 수 있다. 그 아래에서는 0으로 두는데,
-     * 그러면 아무것도 움직이지 않는다 — 셋이 흩어지는 것보다야 낫다.
+     * 그래서 받은 깊이를 <b>화면 좌표의 자판 윗변</b>으로 바꿔 적어 둔다. 그것은
+     * 창을 어디로 옮기든 같은 값이라, 한 번 알면 흔들리지 않는다.
+     *
+     * 창이 남은 자리보다 크면 위로는 더 못 간다 — 그때는 화면 맨 위까지만 올리고
+     * 아래가 가려지는 것을 받아들인다. 목록은 위에서부터 읽는 것이라 찾는 칸과
+     * 첫 줄들이 살아남는 편이 낫다.
+     *
+     * 안드로이드 11부터 물어볼 수 있다. 그 아래에서는 아무것도 움직이지 않는데,
+     * 셋이 흩어지는 것보다야 낫다.
      */
-    private void onIme(int imeH) {
-        int want = 0;
-        if (imeH > 0) {
-            int free = getResources().getDisplayMetrics().heightPixels - imeH;
-            want = Math.min(Math.max(0, wy + wh - free), wy);
+    private void onIme(boolean shown, int deep) {
+        if (!shown) {
+            imeTop = 0;
+            imeFrozen = false;
+            lift(0);
+            return;
         }
-        if (want == imeLift) return;
-        imeLift = want;
+        if (deep > 0) imeTop = paperLp.y + paperLp.height - deep;
+        if (imeTop <= 0 || imeFrozen) return;
+        /* 자판이 떠 있는 동안에는 내려오지 않는다. 다 피하고 나면 파고든 깊이가
+           0이 되는데, 그것을 '자판이 없다'로 읽으면 도로 내려가 다시 가려진다. */
+        lift(Math.max(imeLift, Math.min(Math.max(0, wy + wh - imeTop), wy)));
+    }
+
+    private void lift(int px) {
+        if (px == imeLift) return;
+        imeLift = px;
         place();
     }
 
     private void watchIme() {
         if (Build.VERSION.SDK_INT < 30 || content == null) return;
         content.setOnApplyWindowInsetsListener((v, in) -> {
-            onIme(in.getInsets(android.view.WindowInsets.Type.ime()).bottom);
+            int ime = android.view.WindowInsets.Type.ime();
+            onIme(in.isVisible(ime), in.getInsets(ime).bottom);
             return in;
         });
     }
@@ -658,6 +703,9 @@ public class FloatService extends Service {
      * 사용자의 자리로 삼으면 손을 따라온다.
      */
     private void settle() {
+        /* 손으로 옮긴 뒤에는 자판을 피해 다시 올리지 않는다. 올려 주면 방금
+           끌어다 놓은 자리에서 창이 저 혼자 도로 빠져나간다. */
+        imeFrozen = true;
         if (imeLift == 0) return;
         wy -= imeLift;
         imeLift = 0;
@@ -671,7 +719,9 @@ public class FloatService extends Service {
             if (im != null && content != null && content.getWindowToken() != null)
                 im.hideSoftInputFromWindow(content.getWindowToken(), 0);
         } catch (Exception e) { Log.w(TAG, "자판을 내리지 못했습니다", e); }
-        if (imeLift != 0) { imeLift = 0; place(); }
+        imeTop = 0;
+        imeFrozen = false;
+        lift(0);
     }
 
     // ── 목록 ────────────────────────────────────────────────────────────
