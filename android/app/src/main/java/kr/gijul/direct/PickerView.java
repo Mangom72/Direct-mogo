@@ -60,6 +60,7 @@ class PickerView extends LinearLayout {
     private List<Catalog.Paper> papers = new ArrayList<>();
     private Catalog.Subject open;          // null 이면 과목 고르기
     private String atGrade, atSub;         // 처음 열 때 펼칠 과목
+    private String atTitle;                // 그 값이 없을 때 되짚을 자료 이름
     private boolean landed;                // 첫 화면을 이미 정했는가
 
     PickerView(Context c, Catalog cat, Host host, boolean night) {
@@ -153,10 +154,14 @@ class PickerView extends LinearLayout {
     // ── 화면 둘 ─────────────────────────────────────────────────────────
 
     /** 창을 띄울 때 보고 있던 과목. 목록을 처음 열면 여기서 시작한다. */
-    void startAt(String grade, String sub) {
+    void startAt(String grade, String sub, String title) {
         atGrade = grade;
         atSub = sub;
+        atTitle = title;
     }
+
+    /** 전체 목록을 보고 있는가 */
+    boolean atTop() { return open == null; }
 
     /** 열릴 때 부른다. 지난번에 보던 과목이 있으면 거기로 바로 간다. */
     void enter() {
@@ -194,10 +199,12 @@ class PickerView extends LinearLayout {
     }
 
     private Catalog.Subject wanted() {
-        if (atGrade == null || atSub == null) return null;
-        for (Catalog.Subject s : allSubjects)
-            if (atGrade.equals(s.grade) && atSub.equals(s.id)) return s;
-        return null;                       // 사라진 과목이면 그냥 전체 목록으로
+        if (atGrade != null && atSub != null)
+            for (Catalog.Subject s : allSubjects)
+                if (atGrade.equals(s.grade) && atSub.equals(s.id)) return s;
+        /* 페이지가 알려주지 않았거나(받아둔 자료·옛 페이지) 사라진 과목이면
+           자료 이름에서 되짚어 본다. 그것도 아니면 전체 목록이다. */
+        return Catalog.byTitle(allSubjects, atTitle);
     }
 
     private void say(String msg) {

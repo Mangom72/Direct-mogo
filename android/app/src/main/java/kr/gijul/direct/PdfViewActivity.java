@@ -20,6 +20,9 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.animation.DecelerateInterpolator;
 import android.view.View;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -91,6 +94,14 @@ public class PdfViewActivity extends Activity {
     private RecyclerView list;
     private TextView status;
     private TextView pageLabel;
+    private TextView sbPage;           // 막대를 잡고 있는 동안 뜨는 쪽수
+
+    /* 스크롤 막대 — 띄워 둔 창(FloatService)과 같은 값이다. 한쪽만 고치면 어긋난다. */
+    private static final int SB_BAND = FloatService.SB_BAND;
+    private static final int SB_LEN  = FloatService.SB_LEN;
+    private static final int SB_REST = FloatService.SB_REST;
+    private static final int SB_GRAB = FloatService.SB_GRAB;
+    private static final int SB_HALO = FloatService.SB_HALO;
     private PdfRenderer pdf;
     private ParcelFileDescriptor fd;
     private Bitmap image;               // PNG일 때
@@ -254,14 +265,32 @@ public class PdfViewActivity extends Activity {
         stage.addView(zoomPill, zp);
 
         /* 스크롤 막대. 목록에 붙은 기본 막대는 확대 변형을 같이 받아 늘어나므로,
-           변형 밖인 무대 위에 따로 둔다. 자리만 알려주면 되니 얇게. */
-        scrollbar = new View(this);
-        android.graphics.drawable.GradientDrawable sg = new android.graphics.drawable.GradientDrawable();
-        sg.setColor(night ? 0x66EDE8DF : 0x55221F1A);
-        sg.setCornerRadius(dp(3));
-        /* 보이는 굵기는 5dp지만 잡히는 폭은 24dp다. 손가락으로 5dp를 겨누게 하면
+           변형 밖인 무대 위에 따로 둔다.
+        
+           <b>가장자리 손잡이</b> — 길잡이 선 없이 짧은 알약 하나다. 길이는 쪽수와
+           상관없이 고정인데, '얼마나 남았는가'는 잡았을 때 뜨는 말풍선이 쪽수로
+           말해 주므로 막대까지 길이로 되풀이할 것이 없어서다.
+        
+           흰 테를 먼저 깔고 먹을 얹는다. 이건 문제지 **위에** 얹히는 것이라 그림이나
+           표처럼 검은 자리에 걸리면 먹만으로는 묻힌다 — ㄴ자 손잡이가 안 보였던 그
+           일이다. 어느 바탕이든 둘 중 하나는 보인다.
+        
+           보이는 굵기는 4dp지만 잡히는 폭은 22dp다. 4dp를 손가락으로 겨누게 하면
            대개 빗나간다 — 안쪽을 비워 두고 그 위도 이 뷰가 받는다. */
-        scrollbar.setBackground(new android.graphics.drawable.InsetDrawable(sg, dp(16), 0, dp(3), 0));
+        scrollbar = new View(this) {
+            private final Paint sp = new Paint(Paint.ANTI_ALIAS_FLAG);
+            private final RectF r = new RectF();
+            @Override protected void onDraw(Canvas c) {
+                float pad = dp(SB_HALO), right = getWidth() - dp(4);
+                float w = dp(dragging ? SB_GRAB : SB_REST);
+                r.set(right - w - pad, pad - pad, right + pad, getHeight() - pad + pad);
+                sp.setColor(0xCCFFFFFF);
+                c.drawRoundRect(r, r.width() / 2, r.width() / 2, sp);
+                r.set(right - w, pad, right, getHeight() - pad);
+                sp.setColor(dragging ? 0xC7221F1A : 0x8C221F1A);
+                c.drawRoundRect(r, w / 2, w / 2, sp);
+            }
+        };
         scrollbar.setVisibility(View.GONE);
         scrollbar.setOnTouchListener(new View.OnTouchListener() {
             private float grabY;
@@ -280,6 +309,8 @@ public class PdfViewActivity extends Activity {
                         grabY = e.getRawY();
                         grabOffset = list.computeVerticalScrollOffset();
                         dragging = true;
+                        v.invalidate();
+                        syncScrollbar();
                         return true;
                     case MotionEvent.ACTION_MOVE: {
                         /* 막대가 지나간 거리 : 트랙 = 스크롤한 양 : 전체 */
@@ -291,15 +322,38 @@ public class PdfViewActivity extends Activity {
                     case MotionEvent.ACTION_UP:
                     case MotionEvent.ACTION_CANCEL:
                         dragging = false;
+                        v.invalidate();
+                        sbPage.setVisibility(View.GONE);
                         resharp();       // 놓은 자리를 제대로 그린다
                         return true;
                 }
                 return false;
             }
         });
-        FrameLayout.LayoutParams sbp = new FrameLayout.LayoutParams(dp(24), 0);
+        FrameLayout.LayoutParams sbp =
+                new FrameLayout.LayoutParams(dp(SB_BAND), dp(SB_LEN) + dp(SB_HALO) * 2);
         sbp.gravity = Gravity.TOP | Gravity.END;
         stage.addView(scrollbar, sbp);
+
+        /* 잡고 있는 동안에만 뜨는 쪽수. 막대 **왼쪽**에 붙인다 — 위에 얹으면 잡은
+           손가락에 가려서 정작 읽으려는 숫자가 안 보인다. 위 막대의 쪽수 표시와
+           겹치는 것 같지만, 그쪽은 화면을 두드려 감추면 함께 사라진다. 훑는 동안
+           쪽수를 알려주는 것은 이것뿐이다. */
+        sbPage = new TextView(this);
+        sbPage.setTextColor(0xFFF3F1EC);
+        sbPage.setTextSize(11);
+        sbPage.setTypeface(null, android.graphics.Typeface.BOLD);
+        sbPage.setPadding(dp(8), dp(2), dp(8), dp(2));
+        android.graphics.drawable.GradientDrawable bg2 = new android.graphics.drawable.GradientDrawable();
+        bg2.setColor(0xF2221F1A);
+        bg2.setCornerRadius(dp(6));
+        sbPage.setBackground(bg2);
+        sbPage.setVisibility(View.GONE);
+        FrameLayout.LayoutParams pp = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        pp.gravity = Gravity.TOP | Gravity.END;
+        pp.setMargins(0, 0, dp(SB_BAND) + dp(2), 0);
+        stage.addView(sbPage, pp);
 
         /* 뒤쪽까지 내려갔다가 처음으로 돌아오는 일이 잦다 */
         topBtn = pill("맨 위로");
@@ -815,7 +869,11 @@ public class PdfViewActivity extends Activity {
             if (grade != null) i.putExtra(FloatService.EXTRA_GRADE, grade);
             if (subject != null) i.putExtra(FloatService.EXTRA_SUBJECT, subject);
             startForegroundService(i);
-            finish();
+            /* 앱은 물러난다. 띄워 두기의 요점이 '다른 앱을 쓰면서 문제지를
+               곁에 두는 것'이라, 뒤에 우리 화면이 남아 있으면 그 앱으로 가는
+               데 한 걸음이 더 든다. 완전히 죽는 것은 아니다 — 띄운 창의 ☰ 를
+               3초 누르면 그 자리에서 다시 열린다. */
+            finishAndRemoveTask();
         } catch (Exception e) {
             Log.w(TAG, "띄우지 못했습니다", e);
             fail("띄우지 못했습니다");
@@ -1202,16 +1260,24 @@ public class PdfViewActivity extends Activity {
         int extent = list.computeVerticalScrollExtent();
         if (range <= extent || extent <= 0) { scrollbar.setVisibility(View.GONE); return; }
 
-        int track = stage.getHeight();
-        int h = Math.max(dp(28), Math.round(track * (float) extent / range));
+        int h = scrollbar.getHeight() > 0 ? scrollbar.getHeight() : dp(SB_LEN) + dp(SB_HALO) * 2;
+        int track = stage.getHeight() - h;
         int max = range - extent;
         int y = max <= 0 ? 0
-                : Math.round((track - h) * Math.min(1f, list.computeVerticalScrollOffset() / (float) max));
+                : Math.round(track * Math.min(1f, list.computeVerticalScrollOffset() / (float) max));
 
-        ViewGroup.LayoutParams lp = scrollbar.getLayoutParams();
-        if (lp.height != h) { lp.height = h; scrollbar.setLayoutParams(lp); }
         scrollbar.setTranslationY(y);
         scrollbar.setVisibility(View.VISIBLE);
+
+        RecyclerView.Adapter<?> a = list.getAdapter();
+        int pages = a == null ? 0 : a.getItemCount();
+        if (dragging && pages > 1) {
+            sbPage.setText((visFirst + 1) + " / " + pages);
+            sbPage.setVisibility(View.VISIBLE);
+            sbPage.setTranslationY(y + (h - sbPage.getHeight()) / 2f);
+        } else {
+            sbPage.setVisibility(View.GONE);
+        }
     }
 
     /* 쪽마다의 가로세로비. 그리지 않고 크기만 읽으므로 문서를 열 때 한 번에 끝난다.

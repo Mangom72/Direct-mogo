@@ -158,6 +158,38 @@ class Catalog {
         return out;
     }
 
+    /**
+     * 자료 이름에서 과목을 되짚는다.
+     *
+     * 페이지가 어느 과목에서 눌렀는지 함께 보내 주는 것이 정식 길이다. 다만
+     * 받아둔 자료에서 띄웠거나 아직 옛 페이지를 보고 있으면 그 값이 없다.
+     * 그때는 이름이 남는다 — "2026 6월 모평 생명과학Ⅰ 문제.pdf" 처럼 사람이
+     * 읽는 이름에는 과목이 그대로 들어 있다.
+     *
+     * 겹치면 <b>긴 이름이 이긴다</b>. '생명과학Ⅰ'과 '생명과학Ⅱ'는 서로를 품지
+     * 않지만 '수학'은 '수학Ⅰ'에 묻히므로, 짧은 쪽을 집으면 엉뚱한 과목으로
+     * 간다. 학년까지는 이름에 없어서 고3부터 본다.
+     */
+    static Subject byTitle(List<Subject> all, String title) {
+        String hay = squash(title);
+        if (hay.isEmpty()) return null;
+        Subject best = null;
+        int bestLen = 0;
+        for (Subject s : all) {
+            String n = squash(s.name);
+            if (n.isEmpty() || !hay.contains(n)) continue;
+            if (best == null || n.length() > bestLen
+                    || (n.length() == bestLen && rank(s) < rank(best))) {
+                best = s; bestLen = n.length();
+            }
+        }
+        return best;
+    }
+
+    private static int rank(Subject s) {          // 고3 → 고2 → 고1
+        return "D300".equals(s.grade) ? 0 : "D200".equals(s.grade) ? 1 : 2;
+    }
+
     // ── 파일 ────────────────────────────────────────────────────────────
 
     /**

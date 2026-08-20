@@ -78,6 +78,14 @@ public class FloatService extends Service {
     private static final String CHANNEL = "float";
     private static final int NOTE_ID = 71;
 
+    /* 스크롤 막대 — 뷰어와 같은 값을 쓴다. 보이는 굵기는 얇지만 잡히는 폭은
+       넉넉하다. 4dp 를 손가락으로 겨누게 하면 대개 빗나간다. */
+    static final int SB_BAND = 22;    // 잡히는 폭
+    static final int SB_LEN = 44;     // 알약 길이 — 쪽수와 무관하게 고정이다
+    static final int SB_REST = 4;     // 평소 굵기
+    static final int SB_GRAB = 9;     // 잡았을 때
+    static final int SB_HALO = 2;     // 흰 테
+
     private static final int MIN_OPACITY = 20;    // 더 내리면 글자가 안 보이고 창도 잃는다
     private static final int DEF_OPACITY = 65;
     private static final float DEF_CAP = 0.8f;    // API 31 미만에서 쓸 기본 상한
@@ -109,6 +117,9 @@ public class FloatService extends Service {
     private View sep;                             // 창틀 단추 앞의 실선
     private int minW;                             // 접었을 때의 바 너비
     private int seam;                             // 종이가 바 밑으로 파고든 깊이
+    private View gripMark;                        // 접었을 때의 ≡ 자국
+    private float foldT;                          // 0 펼침 · 1 접힘 — 그 사이가 다 있다
+    private android.animation.ValueAnimator foldAnim;
     private final ExecutorService fetch = Executors.newSingleThreadExecutor();
     private TextView passBtn, holdBtn;
 
@@ -195,8 +206,8 @@ public class FloatService extends Service {
         wm = getSystemService(WindowManager.class);
         barH = dp(44);
         gripPx = dp(34);
-        /* 접으면 ＋와 ✕만 남는다. 바 좌우 여백에 단추 둘, 그 사이 간격 하나. */
-        minW = dp(8) * 2 + dp(30) * 2 + dp(6);
+        /* 접으면 ≡·＋·✕ 셋이 남는다. 바 좌우 여백에 칸 셋, 그 사이 간격 둘. */
+        minW = dp(8) * 2 + dp(30) * 3 + dp(6) * 2;
 
         if (restore()) full = false; else defaultGeometry();
 
@@ -280,10 +291,8 @@ public class FloatService extends Service {
 
     private void save() {
         try {
-            /* 접혀 있으면 wx 가 가리키는 것은 알약이다. 펼친 창의 자리로 되돌려
-               적는다 — 다음에 열 때는 펼친 채로 열리므로. */
             getSharedPreferences("float", MODE_PRIVATE).edit()
-                    .putInt(key("x"), wx - (minimized ? tuck() : 0))
+                    .putInt(key("x"), wx)
                     .putInt(key("y"), wy)
                     .putInt(key("w"), ww)
                     .putInt(key("h"), wh)
@@ -333,9 +342,11 @@ public class FloatService extends Service {
         ww = Math.min(ww, dm.widthPixels);
         wh = Math.min(wh, dm.heightPixels);
         /* 접혀 있으면 붙잡아 둘 것은 바 하나뿐이다. 펼쳤을 때의 크기로 묶으면
-           작은 알약이 화면 오른쪽·아래에 닿기도 전에 선다. */
-        int w = minimized ? minW : ww, h = minimized ? barH : wh;
-        wx = Math.max(0, Math.min(wx, dm.widthPixels - w));
+           작은 알약이 화면 오른쪽·아래에 닿기도 전에 선다. 알약은 wx 보다
+           lead() 만큼 오른쪽에서 시작하므로 그만큼 왼쪽으로 더 갈 수 있다. */
+        int lead = lead(), w = barW();
+        int h = minimized ? barH : wh;
+        wx = Math.max(-lead, Math.min(wx, dm.widthPixels - w - lead));
         wy = Math.max(0, Math.min(wy, Math.max(0, dm.heightPixels - h)));
     }
 
@@ -380,7 +391,7 @@ public class FloatService extends Service {
     private void place() {
         clampWindow();
         final int y = wy - imeLift;      // 자판이 떴으면 셋이 함께 그만큼 올라간다
-        move(bar, barLp, wx, y, minimized ? minW : ww, barH);
+        move(bar, barLp, wx + lead(), y, barW(), barH);
         /* 종이는 바 밑으로 seam 만큼 파고들어 있다 — 아래 setPadding 을 보라. */
         move(content, paperLp, wx, y + barH - seam, ww,
                 Math.max(dp(80), wh - barH) + seam);
@@ -429,7 +440,45 @@ public class FloatService extends Service {
         segBg.setColor(night ? 0x1FECE7DA : 0x17221F1A);
         segBg.setCornerRadius(dp(8));
         seg.setBackground(segBg);
+        /* 접었을 때 '여기를 잡으면 옮겨진다'고 알리는 자국.
+        
+           알약은 바탕도 테두리도 단추와 같아서, 어디를 잡아야 하는지가 안 보인다.
+           바 전체가 손잡이라 사실 아무 데나 잡아도 되지만, 단추 둘을 빼면 남는
+           빈자리가 한 칸뿐이라 그 한 칸을 눈에 보이게 한다. */
+        gripMark = new View(this) {
+            private final Paint g = new Paint(Paint.ANTI_ALIAS_FLAG);
+            @Override protected void onDraw(Canvas c) {
+                g.setStrokeWidth(dp(1.6f));
+                g.setStrokeCap(Paint.Cap.ROUND);
+                g.setColor(night ? 0x59ECE7DA : 0x4A221F1A);
+                float w = dp(13), x0 = (getWidth() - w) / 2f, cy = getHeight() / 2f, gap = dp(4);
+                for (int i = -1; i <= 1; i++)
+                    c.drawLine(x0, cy + i * gap, x0 + w, cy + i * gap, g);
+            }
+        };
+        gripMark.setVisibility(View.GONE);
+        row.addView(gripMark, new LinearLayout.LayoutParams(dp(30), dp(30)));
+
         menuBtn = chip("☰", night, v -> togglePicker());
+        /* 전체 목록을 보는 중에 3초 누르면 앱이 열린다. 여기 둔 것은, 목록을
+           끝까지 거슬러 올라간 사람이 찾는 것이 대개 '앱 화면'이어서다.
+           onTouch 가 false 를 돌려주므로 짧게 누르는 것은 평소대로 눌린다. */
+        menuBtn.setOnTouchListener((v, e) -> {
+            switch (e.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    if (pickerOpen && picker != null && picker.atTop()) {
+                        holdLeft = 3;
+                        ui.post(hold);
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    ui.removeCallbacks(hold);
+                    ui.post(hidePct);
+                    break;
+            }
+            return false;
+        });
         LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(dp(30), dp(30));
         mlp.rightMargin = dp(7);
         row.addView(menuBtn, mlp);
@@ -656,6 +705,7 @@ public class FloatService extends Service {
             int pct = passThrough ? Math.min(opacity, capPct()) : opacity;
             a = pct / 100f;
         }
+        a *= 1f - foldT;               // 접히는 동안 함께 옅어진다
         /* 값이 그대로면 넘기지 않는다. applyMode() 는 슬라이더를 끄는 동안에도
            터치마다 불리는데, 같은 값을 다시 실어 보내는 것은 그냥 낭비다. */
         if (paperLp.flags == f && Math.abs(paperLp.alpha - a) < 0.001f) return;
@@ -663,6 +713,49 @@ public class FloatService extends Service {
         paperLp.alpha = a;
         try { wm.updateViewLayout(content, paperLp); }
         catch (Exception e) { Log.w(TAG, "종이 갱신 실패", e); }
+    }
+
+    // ── 앱으로 ──────────────────────────────────────────────────────────
+
+    /**
+     * ☰ 를 3초 누르면 앱 화면이 열린다.
+     *
+     * 문제지를 띄우면 앱은 물러난다. 되부를 길이 하나는 있어야 하는데, 바에
+     * 단추를 하나 더 놓기에는 44dp 밖에 없는 자리가 이미 빡빡하다. 그래서
+     * 목록의 맨 위 — 곧 사람이 '더 넓은 데서 고르고 싶다'고 느끼는 바로 그
+     * 자리 — 에서만 듣는 몸짓으로 두었다.
+     *
+     * 몇 초 남았는지 숫자로 알린다. 아무 표시가 없으면 3초는 '안 되는 것'과
+     * 구별되지 않는다.
+     */
+    private int holdLeft;
+    private final Runnable hold = new Runnable() {
+        @Override public void run() {
+            if (holdLeft <= 0) { ui.post(hidePct); launchApp(); return; }
+            if (pctBubble != null && menuBtn != null) {
+                ui.removeCallbacks(hidePct);
+                pctBubble.setText("앱 열기 " + holdLeft);
+                pctBubble.setVisibility(View.VISIBLE);
+                pctBubble.setTranslationX(menuBtn.getX() + menuBtn.getWidth() + dp(4));
+            }
+            holdLeft--;
+            ui.postDelayed(this, 1000);
+        }
+    };
+
+    private void launchApp() {
+        closePicker();
+        /* 앱을 전체 화면으로 부르는데 그 위에 창이 그대로 떠 있으면 부른 보람이
+           없다. 접어서 알약으로 물러나 둔다 — 없애지는 않으므로 ＋ 한 번이면
+           보던 자리로 돌아온다. */
+        setMin(true);
+        try {
+            Intent i = new Intent(this, MainActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(i);
+        } catch (Exception e) {
+            Log.w(TAG, "앱을 열지 못했습니다", e);
+        }
     }
 
     // ── 접기 ────────────────────────────────────────────────────────────
@@ -679,34 +772,57 @@ public class FloatService extends Service {
      * 터치도 받지 않는다.
      */
     private void setMin(boolean on) {
+        if (minimized == on) return;
         minimized = on;
         if (on && pickerOpen) closePicker();
         minBtn.setText(on ? "＋" : "－");
-        content.setVisibility(on ? View.GONE : View.VISIBLE);
-        showGrip();
 
         /* 종이가 없는데 투명도와 통과 여부를 물어봐야 소용이 없다. 접으면
-           남는 것은 되돌릴 단추와 닫을 단추뿐이다. */
+           남는 것은 잡는 자국과 되돌릴 단추와 닫을 단추뿐이다. */
         int vis = on ? View.GONE : View.VISIBLE;
         menuBtn.setVisibility(vis);
         seg.setVisibility(vis);
         slider.setVisibility(vis);
         sep.setVisibility(vis);
-        /* 앞이 비었으니 왼쪽 여백은 바 자신의 것으로 충분하다 — 그대로 두면
-           ＋가 오른쪽으로 6dp 치우쳐 보인다. */
-        LinearLayout.LayoutParams mp = (LinearLayout.LayoutParams) minBtn.getLayoutParams();
-        mp.leftMargin = on ? 0 : dp(6);
-        minBtn.setLayoutParams(mp);
-
-        /* 알약은 방금 그 단추들이 있던 자리, 곧 창의 오른쪽 끝에 선다. 왼쪽에
-           두면 누르자마자 화면을 가로질러 달아난 것처럼 보인다. wx 는 늘 '지금
-           보이는 것의 왼쪽 변'이라, 접고 펼 때 그 차이만큼 함께 옮겨 준다. */
-        wx += on ? tuck() : -tuck();
-
+        gripMark.setVisibility(on ? View.VISIBLE : View.GONE);
+        if (!on) { content.setVisibility(View.VISIBLE); showGrip(); }
         roundBar();
-        place();
-        applyMode();
+        fold(on ? 1f : 0f);
     }
+
+    /**
+     * 접힘 정도를 0에서 1로, 또는 그 반대로 이어서 옮긴다.
+     *
+     * 전에는 폭과 자리를 한 번에 갈아 끼웠다. 접히는 순간 알약이 오른쪽 끝에
+     * <b>이미 가 있고</b> 그제서야 나머지가 정리되니, 창이 순간이동한 뒤에
+     * 움직이는 것처럼 보였다. 이제 자리도 폭도 이 하나의 값에서 나오므로
+     * 중간 자리가 다 있다.
+     *
+     * 자리는 wx 를 건드려 만들지 않는다. wx 는 언제나 <b>펼친 창의 왼쪽 변</b>
+     * 이고, 알약이 오른쪽 끝에 서는 것은 그리는 쪽에서 tuck() 만큼 밀어 주는
+     * 것뿐이다. 접은 채로 화면을 돌리든 손으로 옮기든 셈이 한 곳에서만 난다.
+     */
+    private void fold(float to) {
+        if (foldAnim != null) foldAnim.cancel();
+        foldAnim = android.animation.ValueAnimator.ofFloat(foldT, to);
+        foldAnim.setDuration(Math.round(190 * Math.abs(to - foldT)) + 40);
+        foldAnim.setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f));
+        foldAnim.addUpdateListener(a -> {
+            foldT = (Float) a.getAnimatedValue();
+            grip.setAlpha(1f - foldT);
+            place();
+            applyMode();               // 종이는 접히면서 함께 옅어진다
+        });
+        foldAnim.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(android.animation.Animator a) {
+                if (minimized) { content.setVisibility(View.GONE); showGrip(); }
+            }
+        });
+        foldAnim.start();
+    }
+
+    private int barW() { return Math.round(ww + (minW - ww) * foldT); }
+    private int lead() { return Math.round(tuck() * foldT); }
 
     /**
      * 손잡이를 보일지 정한다.
@@ -728,6 +844,9 @@ public class FloatService extends Service {
         if (barBg == null) return;
         float r = dp(12), b = minimized ? r : 0;
         barBg.setCornerRadii(new float[]{r, r, r, r, b, b, b, b});
+        /* 접히면 남의 앱 위에 알약 하나만 뜬다. 바탕색이 그쪽과 비슷하면 통째로
+           묻히므로 흰 테를 두른다 — 종이 위의 손잡이와 같은 수법이다. */
+        barBg.setStroke(minimized ? dp(2) : 0, minimized ? 0xE6FFFFFF : 0);
     }
 
     // ── 자판 ────────────────────────────────────────────────────────────
@@ -829,7 +948,7 @@ public class FloatService extends Service {
             }, night());
             /* 보던 과목의 회차부터 펼친다. 찾던 것은 대개 거기 있고, 아니면
                '‹'로 한 걸음이면 전체 목록이다. */
-            picker.startAt(atGrade, atSub);
+            picker.startAt(atGrade, atSub, name);
             content.addView(picker, new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
@@ -1014,6 +1133,12 @@ public class FloatService extends Service {
         private final java.util.Map<Integer, Integer> madeAt =
                 java.util.Collections.synchronizedMap(new java.util.HashMap<Integer, Integer>());
         private boolean sharpen;
+        /* 스크롤 막대 */
+        private final Paint sb = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF pill = new RectF();
+        private boolean sbGrab;
+        private float sbFrom;
+        private int sbAt;
 
         /* 받는 동안 종이 대신 뜨는 한 줄. 다 받으면 open() 이 지운다. */
         private String msg;
@@ -1171,6 +1296,71 @@ public class FloatService extends Service {
                 }
             }
             sharpen = false;
+            bar(c);
+        }
+
+        /** 지금 화면 맨 위에 걸린 쪽 */
+        private int pageAt() {
+            int w = contentW(), acc = 0;
+            for (int i = 0; i < ratio.length; i++) {
+                acc += (int) (w * ratio[i]) + dp(6);
+                if (scrollY < acc) return i + 1;
+            }
+            return Math.max(1, ratio.length);
+        }
+
+        private int sbRoom() { return Math.max(0, totalH() - getHeight()); }
+        private int sbTrack() { return Math.max(0, getHeight() - dp(SB_LEN)); }
+
+        /** 알약의 윗변이 y 에 오도록 굴린다 */
+        private void seek(float y) {
+            int track = sbTrack();
+            if (track <= 0) return;
+            scrollY = Math.round(Math.max(0, Math.min(1f, y / track)) * sbRoom());
+            clamp();
+        }
+
+        private int sbTop() {
+            int room = sbRoom(), track = sbTrack();
+            return room <= 0 ? 0 : Math.round(track * Math.min(1f, scrollY / (float) room));
+        }
+
+        /**
+         * 가장자리 손잡이 — 길잡이 선 없이 짧은 알약 하나.
+         *
+         * 길이는 쪽수와 상관없이 고정이다. '얼마나 남았는가'는 잡았을 때 뜨는
+         * 말풍선이 쪽수로 말해 주므로, 막대까지 길이로 되풀이할 것이 없다.
+         *
+         * 흰 테를 먼저 깔고 먹을 얹는다. 이건 문제지 위에 얹히는 것이라 그림이나
+         * 표처럼 검은 자리에 걸리면 먹만으로는 묻혀 버린다 — ㄴ자 손잡이가 안
+         * 보였던 그 일이다. 어느 바탕이든 둘 중 하나는 보인다.
+         */
+        private void bar(Canvas c) {
+            if (sbRoom() <= 0) return;
+            float pad = dp(SB_HALO), right = getWidth() - dp(4);
+            float w = dp(sbGrab ? SB_GRAB : SB_REST);
+            float top = sbTop() + pad, bot = top + dp(SB_LEN) - pad * 2;
+
+            sb.setStyle(Paint.Style.FILL);
+            pill.set(right - w - pad, top - pad, right + pad, bot + pad);
+            sb.setColor(0xCCFFFFFF);
+            c.drawRoundRect(pill, pill.width() / 2, pill.width() / 2, sb);
+            pill.set(right - w, top, right, bot);
+            sb.setColor(sbGrab ? 0xC7221F1A : 0x8C221F1A);
+            c.drawRoundRect(pill, w / 2, w / 2, sb);
+
+            if (!sbGrab || ratio.length < 2) return;
+            /* 말풍선은 막대 **왼쪽**에 붙인다. 위에 얹으면 잡은 손가락에 가려서
+               정작 읽으려는 숫자가 안 보인다. */
+            String t = pageAt() + " / " + ratio.length;
+            sb.setTextSize(dp(11));
+            float tw = sb.measureText(t), bw = tw + dp(16), bh = dp(20);
+            float bx = right - w - pad - dp(7), by = (top + bot) / 2;
+            pill.set(bx - bw, by - bh / 2, bx, by + bh / 2);
+            sb.setColor(0xF2221F1A);
+            c.drawRoundRect(pill, dp(6), dp(6), sb);
+            sb.setColor(0xFFF3F1EC);
+            c.drawText(t, bx - bw / 2 - tw / 2, by - (sb.ascent() + sb.descent()) / 2, sb);
         }
 
         private void want(final int i, final int w) {
@@ -1215,10 +1405,21 @@ public class FloatService extends Service {
         });
 
         @Override public boolean onTouchEvent(MotionEvent e) {
-            pinch.onTouchEvent(e);
+            if (!sbGrab) pinch.onTouchEvent(e);   // 막대를 잡은 손은 확대가 아니다
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     paperTouched = true;
+                    if (e.getX() > getWidth() - dp(SB_BAND) && sbRoom() > 0) {
+                        sbGrab = true;
+                        int top = sbTop();
+                        /* 알약 밖을 눌렀으면 그 자리로 먼저 뛴다 — 긴 문제지에서
+                           끝까지 끌고 가는 것보다 찍는 편이 빠르다. */
+                        if (e.getY() < top || e.getY() > top + dp(SB_LEN))
+                            seek(e.getY() - dp(SB_LEN) / 2f);
+                        sbFrom = e.getY(); sbAt = scrollY;
+                        invalidate();
+                        return true;
+                    }
                     lx = e.getX(); ly = e.getY();
                     return true;
                 /* 손가락이 늘거나 줄면 기준점을 다시 잡는다. 그러지 않으면 그
@@ -1228,6 +1429,14 @@ public class FloatService extends Service {
                     lx = e.getX(); ly = e.getY();
                     return true;
                 case MotionEvent.ACTION_MOVE:
+                    if (sbGrab) {
+                        int track = sbTrack();
+                        if (track > 0) {
+                            scrollY = sbAt + Math.round((e.getY() - sbFrom) / track * sbRoom());
+                            clamp(); invalidate();
+                        }
+                        return true;
+                    }
                     if (!pinch.isInProgress() && e.getPointerCount() == 1) {
                         scrollY -= (int) (e.getY() - ly);
                         scrollX -= (int) (e.getX() - lx);
@@ -1238,6 +1447,7 @@ public class FloatService extends Service {
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
                     paperTouched = false;
+                    if (sbGrab) { sbGrab = false; invalidate(); }
                     /* 끌기가 끝났다. 그 사이 통과로 바뀌었다면 여기서 비로소
                        되돌아간다 — 손가락이 닿아 있는 동안은 미뤄 두었다. */
                     applyMode();
@@ -1262,9 +1472,6 @@ public class FloatService extends Service {
         if (wm == null || bar == null) return;
         if (full) {
             defaultGeometry();           // 아직 손대지 않았으면 새 화면에 맞춰 다시
-            /* defaultGeometry 는 펼친 창을 기준으로 잡는다. 접혀 있으면 wx 가
-               가리키는 것은 알약이므로 그 차이만큼 다시 밀어 준다. */
-            if (minimized) wx += tuck();
         }
         place();                         // 손댄 뒤라면 크기는 지키고 안으로만 민다
     }
@@ -1272,6 +1479,8 @@ public class FloatService extends Service {
     @Override
     public void onDestroy() {
         ui.removeCallbacks(hidePct);
+        ui.removeCallbacks(hold);
+        if (foldAnim != null) foldAnim.cancel();
         try { if (picker != null) picker.shutdown(); } catch (Exception ignore) {}
         fetch.shutdownNow();
         try { if (paper != null) paper.close(); } catch (Exception ignore) {}
