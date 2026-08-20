@@ -223,6 +223,14 @@ class PickerView extends LinearLayout {
 
     // ── 줄 그리기 ───────────────────────────────────────────────────────
 
+    /**
+     * 줄마다 <b>폭을 못박아 준다.</b>
+     *
+     * RecyclerView 는 LayoutParams 없이 온 줄에 WRAP_CONTENT 를 물려 준다.
+     * 그러면 줄이 제 내용만큼만 넓어져서, 오른쪽으로 밀어붙이라고 준
+     * 가중치(weight 1)가 밀어낼 여백을 못 찾는다 — 문제·정답·해설이 회차
+     * 이름 바로 뒤에 붙어 회차마다 들쭉날쭉해 보였다.
+     */
     private class Rows extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         @NonNull @Override
         public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int type) {
@@ -244,6 +252,8 @@ class PickerView extends LinearLayout {
             r.setOrientation(HORIZONTAL);
             r.setGravity(Gravity.CENTER_VERTICAL);
             r.setPadding(dp(11), dp(9), dp(11), dp(9));
+            r.setLayoutParams(new RecyclerView.LayoutParams(
+                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             name = new TextView(c);
             name.setTextSize(13);
             name.setTypeface(null, Typeface.BOLD);
@@ -270,6 +280,8 @@ class PickerView extends LinearLayout {
             r.setOrientation(HORIZONTAL);
             r.setGravity(Gravity.CENTER_VERTICAL);
             r.setPadding(dp(11), dp(8), dp(8), dp(8));
+            r.setLayoutParams(new RecyclerView.LayoutParams(
+                    LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             LinearLayout left = new LinearLayout(c);
             left.setOrientation(VERTICAL);
             title = new TextView(c);

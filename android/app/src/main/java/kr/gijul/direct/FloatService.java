@@ -97,6 +97,7 @@ public class FloatService extends Service {
     private boolean pickerOpen;
     private boolean passBefore;                   // 목록을 열기 전 모드
     private String showingUrl;                    // 지금 보고 있는 자료의 주소
+    private int imeLift;                          // 자판을 피해 올려 둔 만큼
     private final ExecutorService fetch = Executors.newSingleThreadExecutor();
     private TextView passBtn, holdBtn;
 
@@ -207,6 +208,7 @@ public class FloatService extends Service {
         wm.addView(content, paperLp);
         wm.addView(bar, barLp);
         wm.addView(grip, gripLp);
+        watchIme();
         place();
         applyMode();
     }
@@ -258,6 +260,11 @@ public class FloatService extends Service {
                         | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
                 PixelFormat.TRANSLUCENT);
         p.gravity = Gravity.TOP | Gravity.START;
+        /* 자판이 뜰 때 시스템이 창을 밀어 올리게 두지 않는다.
+           미는 것은 **초점을 쥔 창 하나**뿐이라, 목록을 열어 글자를 치면
+           종이만 위로 뛰고 바와 손잡이는 제자리에 남아 셋이 흩어졌다.
+           밀 자리는 우리가 정하고(imeLift), 셋을 함께 옮긴다. */
+        p.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
         return p;
     }
 
@@ -282,10 +289,11 @@ public class FloatService extends Service {
 
     private void place() {
         clampWindow();
-        barLp.x = wx;              barLp.y = wy;              barLp.width = ww; barLp.height = barH;
-        paperLp.x = wx;            paperLp.y = wy + barH;     paperLp.width = ww;
+        final int y = wy - imeLift;      // 자판이 떴으면 셋이 함께 그만큼 올라간다
+        barLp.x = wx;              barLp.y = y;               barLp.width = ww; barLp.height = barH;
+        paperLp.x = wx;            paperLp.y = y + barH;      paperLp.width = ww;
         paperLp.height = Math.max(dp(80), wh - barH);
-        gripLp.x = wx;             gripLp.y = wy + wh - gripPx;
+        gripLp.x = wx;             gripLp.y = y + wh - gripPx;
         try {
             wm.updateViewLayout(bar, barLp);
             wm.updateViewLayout(content, paperLp);
@@ -598,6 +606,61 @@ public class FloatService extends Service {
         catch (Exception e) { Log.w(TAG, "종이 갱신 실패", e); }
     }
 
+    // ── 자판 ────────────────────────────────────────────────────────────
+
+    /**
+     * 자판에 가려지지 않을 만큼만 창 셋을 함께 올린다.
+     *
+     * 창이 남은 자리보다 크면 위로는 더 못 간다 — 그때는 화면 맨 위까지만
+     * 올리고 아래가 가려지는 것을 받아들인다. 목록은 위에서부터 읽는 것이라
+     * 찾는 칸과 첫 줄들이 살아남는 편이 낫다.
+     *
+     * 안드로이드 11부터 자판 높이를 물어볼 수 있다. 그 아래에서는 0으로 두는데,
+     * 그러면 아무것도 움직이지 않는다 — 셋이 흩어지는 것보다야 낫다.
+     */
+    private void onIme(int imeH) {
+        int want = 0;
+        if (imeH > 0) {
+            int free = getResources().getDisplayMetrics().heightPixels - imeH;
+            want = Math.min(Math.max(0, wy + wh - free), wy);
+        }
+        if (want == imeLift) return;
+        imeLift = want;
+        place();
+    }
+
+    private void watchIme() {
+        if (Build.VERSION.SDK_INT < 30 || content == null) return;
+        content.setOnApplyWindowInsetsListener((v, in) -> {
+            onIme(in.getInsets(android.view.WindowInsets.Type.ime()).bottom);
+            return in;
+        });
+    }
+
+    /**
+     * 손으로 옮기거나 크기를 바꾸기 직전에, 올려 둔 만큼을 제자리로 친다.
+     *
+     * 그러지 않으면 창은 올라가 있는데 셈은 원래 자리로 하므로, 잡는 순간
+     * 창이 손가락 아래로 뚝 떨어진다. 여기서 지금 보이는 자리를 그대로
+     * 사용자의 자리로 삼으면 손을 따라온다.
+     */
+    private void settle() {
+        if (imeLift == 0) return;
+        wy -= imeLift;
+        imeLift = 0;
+    }
+
+    /** 목록을 닫으면 자판도 함께 내린다. 남겨 두면 아래 앱 위에 혼자 떠 있는다. */
+    private void dropIme() {
+        try {
+            android.view.inputmethod.InputMethodManager im =
+                    getSystemService(android.view.inputmethod.InputMethodManager.class);
+            if (im != null && content != null && content.getWindowToken() != null)
+                im.hideSoftInputFromWindow(content.getWindowToken(), 0);
+        } catch (Exception e) { Log.w(TAG, "자판을 내리지 못했습니다", e); }
+        if (imeLift != 0) { imeLift = 0; place(); }
+    }
+
     // ── 목록 ────────────────────────────────────────────────────────────
 
     private void togglePicker() {
@@ -629,6 +692,7 @@ public class FloatService extends Service {
 
     private void closePicker() {
         pickerOpen = false;
+        dropIme();
         if (picker != null) picker.setVisibility(View.GONE);
         passThrough = passBefore;
         markMenu(false);
@@ -678,6 +742,7 @@ public class FloatService extends Service {
         @Override public boolean onTouch(View v, MotionEvent e) {
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
+                    settle();
                     ox = e.getRawX(); oy = e.getRawY(); sx = wx; sy = wy; return true;
                 case MotionEvent.ACTION_MOVE:
                     wx = sx + (int) (e.getRawX() - ox);
@@ -694,6 +759,7 @@ public class FloatService extends Service {
         @Override public boolean onTouch(View v, MotionEvent e) {
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
+                    settle();
                     ox = e.getRawX(); oy = e.getRawY(); sx = wx; sw = ww; sh = wh; return true;
                 case MotionEvent.ACTION_MOVE:
                     int dx = (int) (e.getRawX() - ox), dy = (int) (e.getRawY() - oy);
