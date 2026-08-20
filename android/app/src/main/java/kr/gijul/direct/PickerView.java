@@ -110,6 +110,9 @@ class PickerView extends LinearLayout {
         list = new RecyclerView(c);
         list.setLayoutManager(new LinearLayoutManager(c));
         list.setAdapter(new Rows());
+        /* 줄 높이가 내용에 따라 변하지 않는다. 알려 주면 줄이 바뀔 때마다
+           목록 전체를 다시 재지 않는다. */
+        list.setHasFixedSize(true);
         addView(list, new LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f));
     }
 
@@ -243,12 +246,28 @@ class PickerView extends LinearLayout {
                     papers = p;
                     say(null);
                     list.getAdapter().notifyDataSetChanged();
+                    /* 보던 회차가 스무 줄 아래에 있으면 목록을 열어 놓고도
+                       또 찾아 내려가야 한다. 그 자리로 데려다 놓는다. */
+                    int at = showingRow();
+                    if (at > 0) ((LinearLayoutManager) list.getLayoutManager())
+                            .scrollToPositionWithOffset(Math.max(0, at - 1), 0);
                 });
             } catch (Exception e) {
                 Log.w(TAG, "회차를 받지 못했습니다: " + s, e);
                 post(() -> { if (open == s) say("회차를 받지 못했습니다 — 연결을 확인해 주십시오"); });
             }
         });
+    }
+
+    /** 지금 보고 있는 자료가 몇 번째 줄인가. 없으면 -1 */
+    private int showingRow() {
+        String now = host.showing();
+        if (now == null || now.isEmpty()) return -1;
+        for (int i = 0; i < papers.size(); i++) {
+            Catalog.Paper p = papers.get(i);
+            if (now.equals(p.problem) || now.equals(p.answer) || now.equals(p.solution)) return i;
+        }
+        return -1;
     }
 
     /** 뒤로. 과목 목록이면 더 갈 데가 없다고 알린다. */

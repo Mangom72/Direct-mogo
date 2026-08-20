@@ -471,10 +471,18 @@ public class FloatService extends Service {
                         ui.post(hold);
                     }
                     break;
+                case MotionEvent.ACTION_MOVE:
+                    /* 손가락이 단추 밖으로 나가면 그만둔다. 안 그러면 누른 채
+                       옆으로 밀어 둔 손이 3초 뒤에 앱을 연다. */
+                    if (e.getX() < 0 || e.getY() < 0
+                            || e.getX() > v.getWidth() || e.getY() > v.getHeight()) dropHold();
+                    break;
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
-                    ui.removeCallbacks(hold);
-                    ui.post(hidePct);
+                    dropHold();
+                    /* 3초를 이미 채웠으면 이 손 떼기는 '누름'이 아니다. 그대로
+                       흘려보내면 눌림이 이어져 방금 닫은 목록이 도로 열린다. */
+                    if (holdFired) { holdFired = false; return true; }
                     break;
             }
             return false;
@@ -729,9 +737,24 @@ public class FloatService extends Service {
      * 구별되지 않는다.
      */
     private int holdLeft;
+    private boolean holdFired;
+
+    private void dropHold() {
+        ui.removeCallbacks(hold);
+        ui.post(hidePct);
+    }
+
     private final Runnable hold = new Runnable() {
         @Override public void run() {
-            if (holdLeft <= 0) { ui.post(hidePct); launchApp(); return; }
+            if (holdLeft <= 0) {
+                holdFired = true;
+                /* 화면을 보고 있지 않을 수도 있다 — 다 찼다는 것은 손끝으로도 알린다 */
+                if (menuBtn != null) menuBtn.performHapticFeedback(
+                        android.view.HapticFeedbackConstants.LONG_PRESS);
+                ui.post(hidePct);
+                launchApp();
+                return;
+            }
             if (pctBubble != null && menuBtn != null) {
                 ui.removeCallbacks(hidePct);
                 pctBubble.setText("앱 열기 " + holdLeft);
@@ -1114,8 +1137,19 @@ public class FloatService extends Service {
         private float zoom = 1f;
         private int scrollY, scrollX;
         private final ExecutorService render = Executors.newSingleThreadExecutor();
-        private final LruCache<Integer, Bitmap> cache = new LruCache<Integer, Bitmap>(4) {
-            @Override protected int sizeOf(Integer k, Bitmap b) { return 1; }
+        /**
+         * 그려 둔 쪽. <b>쪽수가 아니라 킬로바이트로 센다.</b>
+         *
+         * 전에는 '넉 장'이었다. 폭 1600 짜리 한 쪽이 ARGB_8888 로 14MB 가까이
+         * 되므로 넉 장이면 50MB 를 넘는다. 이 창은 남의 앱 위에서 몇 시간씩
+         * 떠 있는 것이라, 그만큼을 붙들고 있으면 정작 쓰던 앱이 대신 죽는다.
+         * 실제로 쓰는 양은 창 폭에 달렸으므로 장수로는 가늠이 안 된다.
+         */
+        private final LruCache<Integer, Bitmap> cache =
+                new LruCache<Integer, Bitmap>(cacheKB()) {
+            @Override protected int sizeOf(Integer k, Bitmap b) {
+                return Math.max(1, b.getByteCount() / 1024);
+            }
         };
         /* 늘려 그리는 동안(핀칭 중)에는 원래 폭과 어긋난다. 필터를 켜 두면
            그때 모난 계단 대신 부드럽게 흐려져서, 다시 그려질 때까지의 몇
@@ -1139,6 +1173,8 @@ public class FloatService extends Service {
         private boolean sbGrab;
         private float sbFrom;
         private int sbAt;
+        private int sbPage = -1;          // 말풍선 글자를 프레임마다 새로 만들지 않으려고
+        private String sbLabel = "";
 
         /* 받는 동안 종이 대신 뜨는 한 줄. 다 받으면 open() 이 지운다. */
         private String msg;
@@ -1156,6 +1192,12 @@ public class FloatService extends Service {
                 postDelayed(resharp, 180);
             }
             clamp();
+        }
+
+        /** 이 기기가 우리에게 허락한 것의 여덟 몫 중 하나, 6~24MB 사이 */
+        private static int cacheKB() {
+            long eighth = Runtime.getRuntime().maxMemory() / 8 / 1024;
+            return (int) Math.max(6 * 1024, Math.min(24 * 1024, eighth));
         }
 
         PaperView(Context c) {
@@ -1216,7 +1258,17 @@ public class FloatService extends Service {
 
         /* 렌더 스레드가 같은 pdf 를 붙들고 있다. 닫는 쪽도 같은 자물쇠를 잡지
            않으면 그리는 도중에 닫혀 죽는다. */
+        /** 그려 둔 쪽을 다 놓는다. 보고 있던 자리와 배율은 그대로다. */
+        void drop() {
+            synchronized (FloatService.this) {
+                cache.evictAll();
+                madeAt.clear();
+            }
+            postInvalidate();
+        }
+
         void close() {
+            stopGlide();
             synchronized (FloatService.this) {
                 cache.evictAll();
                 try { if (pdf != null) pdf.close(); } catch (Exception ignore) {}
@@ -1350,9 +1402,11 @@ public class FloatService extends Service {
             c.drawRoundRect(pill, w / 2, w / 2, sb);
 
             if (!sbGrab || ratio.length < 2) return;
+            int now = pageAt();
+            if (now != sbPage) { sbPage = now; sbLabel = now + " / " + ratio.length; }
             /* 말풍선은 막대 **왼쪽**에 붙인다. 위에 얹으면 잡은 손가락에 가려서
                정작 읽으려는 숫자가 안 보인다. */
-            String t = pageAt() + " / " + ratio.length;
+            String t = sbLabel;
             sb.setTextSize(dp(11));
             float tw = sb.measureText(t), bw = tw + dp(16), bh = dp(20);
             float bx = right - w - pad - dp(7), by = (top + bot) / 2;
@@ -1363,15 +1417,32 @@ public class FloatService extends Service {
             c.drawText(t, bx - bw / 2 - tw / 2, by - (sb.ascent() + sb.descent()) / 2, sb);
         }
 
+        /** 한 쪽이 8MB 를 넘지 않도록 폭을 줄인다 */
+        private int fit(int w, float r) {
+            long px = 8L * 1024 * 1024 / 4;                 // ARGB_8888 한 픽셀 4바이트
+            float rr = Math.max(0.2f, r);
+            if ((long) w * (long) (w * rr) <= px) return w;
+            return Math.max(320, (int) Math.sqrt(px / rr));
+        }
+
         private void want(final int i, final int w) {
             if (pdf == null || i < 0 || i >= ratio.length) return;
-            final int target = Math.min(w, 1600);
+            /* 폭만 재면 아주 긴 쪽에서 한 장이 캐시보다 커진다 — 해설지에는
+               한 쪽이 화면 서너 배 높이인 것이 있다. 넓이로 묶어 둔다. */
+            final int target = fit(Math.min(w, 1600), ratio[i]);
             /* 이미 그 폭으로 들고 있으면 할 일이 없다. 그림이 밀려나 사라졌다면
                madeAt 에 자국이 남아 있어도 다시 그린다. */
             if (cache.get(i) != null && Integer.valueOf(target).equals(madeAt.get(i))) return;
             if (!inFlight.add(i)) return;
             render.execute(() -> {
-                if (cache.get(i) != null) { inFlight.remove(i); return; }
+                /* 큐에 서 있는 동안 누가 먼저 그려 두었을 수 있다. 다만 **그 폭으로**
+                   그려 두었을 때만 해당한다 — 여기서 폭을 안 보고 넘겼더니, 창 크기를
+                   바꾼 뒤 다시 그리라는 요청이 번번이 여기서 되돌아가 옛 폭 그림을
+                   늘려 쓴 채로 영영 남았다. 손을 멎으면 또렷해진다던 것이 그것이다. */
+                if (cache.get(i) != null && Integer.valueOf(target).equals(madeAt.get(i))) {
+                    inFlight.remove(i);
+                    return;
+                }
                 try {
                     Bitmap b;
                     synchronized (FloatService.this) {
@@ -1396,6 +1467,22 @@ public class FloatService extends Service {
         }
 
         private float lx, ly;
+        /* 손을 뗀 자리에서 딱 멈추는 문서는 짧은 것도 길게 느껴진다. 뷰어 쪽은
+           RecyclerView 가 알아서 하는 일을, 이쪽은 직접 그리므로 직접 한다. */
+        private final android.widget.OverScroller glide =
+                new android.widget.OverScroller(FloatService.this);
+        private android.view.VelocityTracker vt;
+
+        @Override public void computeScroll() {
+            if (!glide.computeScrollOffset()) return;
+            scrollX = glide.getCurrX();
+            scrollY = glide.getCurrY();
+            clamp();
+            postInvalidateOnAnimation();
+        }
+
+        private void stopGlide() { if (!glide.isFinished()) glide.forceFinished(true); }
+
         private final ScaleGestureDetector pinch = new ScaleGestureDetector(
                 FloatService.this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
             @Override public boolean onScale(ScaleGestureDetector d) {
@@ -1409,6 +1496,10 @@ public class FloatService extends Service {
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     paperTouched = true;
+                    stopGlide();                       // 미끄러지는 중이면 손이 이긴다
+                    if (vt != null) vt.recycle();
+                    vt = android.view.VelocityTracker.obtain();
+                    vt.addMovement(e);
                     if (e.getX() > getWidth() - dp(SB_BAND) && sbRoom() > 0) {
                         sbGrab = true;
                         int top = sbTop();
@@ -1437,6 +1528,7 @@ public class FloatService extends Service {
                         }
                         return true;
                     }
+                    if (vt != null) vt.addMovement(e);
                     if (!pinch.isInProgress() && e.getPointerCount() == 1) {
                         scrollY -= (int) (e.getY() - ly);
                         scrollX -= (int) (e.getX() - lx);
@@ -1448,6 +1540,19 @@ public class FloatService extends Service {
                 case MotionEvent.ACTION_CANCEL:
                     paperTouched = false;
                     if (sbGrab) { sbGrab = false; invalidate(); }
+                    else if (vt != null && e.getActionMasked() == MotionEvent.ACTION_UP
+                            && !pinch.isInProgress()) {
+                        vt.computeCurrentVelocity(1000, dp(4000));
+                        int vx = (int) vt.getXVelocity(), vy = (int) vt.getYVelocity();
+                        /* 살짝 스친 것까지 미끄러지면 손이 미끄러진 것처럼 느껴진다 */
+                        if (Math.abs(vx) > dp(60) || Math.abs(vy) > dp(60)) {
+                            glide.fling(scrollX, scrollY, -vx, -vy,
+                                    0, Math.max(0, contentW() - getWidth()),
+                                    0, Math.max(0, totalH() - getHeight()));
+                            postInvalidateOnAnimation();
+                        }
+                    }
+                    if (vt != null) { vt.recycle(); vt = null; }
                     /* 끌기가 끝났다. 그 사이 통과로 바뀌었다면 여기서 비로소
                        되돌아간다 — 손가락이 닿아 있는 동안은 미뤄 두었다. */
                     applyMode();
@@ -1474,6 +1579,19 @@ public class FloatService extends Service {
             defaultGeometry();           // 아직 손대지 않았으면 새 화면에 맞춰 다시
         }
         place();                         // 손댄 뒤라면 크기는 지키고 안으로만 민다
+    }
+
+    /**
+     * 기기가 자리에 쪼들리면 그려 둔 쪽을 놓는다.
+     *
+     * 이 창은 남의 앱 위에서 몇 시간씩 산다. 우리가 붙들고 있는 몇십 MB 때문에
+     * 정작 쓰던 앱이 죽으면, 사용자 눈에는 그 앱이 잘못한 것으로 보인다.
+     * 놓아도 다시 그리면 그만이다.
+     */
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        if (level >= TRIM_MEMORY_RUNNING_LOW && paper != null) paper.drop();
     }
 
     @Override

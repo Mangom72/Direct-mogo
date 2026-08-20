@@ -69,6 +69,8 @@ class Catalog {
 
     private final File api, blob;
     private List<Subject> subjects;
+    private Subject lastSub;
+    private List<Paper> lastPapers;
 
     Catalog(File cacheDir) {
         api = new File(cacheDir, "api");
@@ -115,7 +117,15 @@ class Catalog {
         return out;
     }
 
+    /**
+     * 그 과목의 회차. 방금 본 것이면 다시 읽지 않는다.
+     *
+     * 목록에서 과목과 회차 사이를 오가는 것은 몇 걸음 안 되는 일인데, 그때마다
+     * 최대 69KB 짜리 파일을 다시 읽고 다시 파싱했다. 한 벌만 들고 있으면 그
+     * 왕복이 공짜가 된다 — 어차피 사람은 한 번에 한 과목을 본다.
+     */
     List<Paper> papers(Subject s) throws Exception {
+        if (s == lastSub && lastPapers != null) return lastPapers;
         File to = new File(api, s.grade + "-" + s.id + ".json");
         JSONObject o = new JSONObject(text(s.data, to));
         JSONArray arr = o.getJSONArray("papers");
@@ -134,6 +144,7 @@ class Catalog {
             t.solution = p.optString("solution", null);
             out.add(t);
         }
+        lastSub = s; lastPapers = out;
         return out;
     }
 

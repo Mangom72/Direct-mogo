@@ -95,6 +95,7 @@ public class PdfViewActivity extends Activity {
     private TextView status;
     private TextView pageLabel;
     private TextView sbPage;           // 막대를 잡고 있는 동안 뜨는 쪽수
+    private int sbShown = -1;
 
     /* 스크롤 막대 — 띄워 둔 창(FloatService)과 같은 값이다. 한쪽만 고치면 어긋난다. */
     private static final int SB_BAND = FloatService.SB_BAND;
@@ -872,8 +873,24 @@ public class PdfViewActivity extends Activity {
             /* 앱은 물러난다. 띄워 두기의 요점이 '다른 앱을 쓰면서 문제지를
                곁에 두는 것'이라, 뒤에 우리 화면이 남아 있으면 그 앱으로 가는
                데 한 걸음이 더 든다. 완전히 죽는 것은 아니다 — 띄운 창의 ☰ 를
-               3초 누르면 그 자리에서 다시 열린다. */
-            finishAndRemoveTask();
+               3초 누르면 그 자리에서 다시 열린다.
+
+               <b>activity.finishAndRemoveTask() 만으로는 모자랐다.</b> 그것은
+               '내가 속한 태스크'를 지우는데, 우리 시작 화면이 singleTask 라
+               기기에 따라 이 화면과 다른 태스크에 서 있는 수가 있다. 그러면
+               문제지 화면만 닫히고 뒤에 앱이 그대로 남는다. getAppTasks() 는
+               우리 앱의 태스크를 <b>전부</b> 돌려주므로 어느 쪽이든 걸린다. */
+            boolean gone = false;
+            try {
+                android.app.ActivityManager am = getSystemService(android.app.ActivityManager.class);
+                if (am != null) for (android.app.ActivityManager.AppTask t : am.getAppTasks()) {
+                    t.finishAndRemoveTask();
+                    gone = true;
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "태스크를 지우지 못했습니다", e);
+            }
+            if (!gone) finishAndRemoveTask();
         } catch (Exception e) {
             Log.w(TAG, "띄우지 못했습니다", e);
             fail("띄우지 못했습니다");
@@ -1272,7 +1289,10 @@ public class PdfViewActivity extends Activity {
         RecyclerView.Adapter<?> a = list.getAdapter();
         int pages = a == null ? 0 : a.getItemCount();
         if (dragging && pages > 1) {
-            sbPage.setText((visFirst + 1) + " / " + pages);
+            if (visFirst != sbShown) {           // 끄는 내내 같은 글자를 다시 만들지 않는다
+                sbShown = visFirst;
+                sbPage.setText((visFirst + 1) + " / " + pages);
+            }
             sbPage.setVisibility(View.VISIBLE);
             sbPage.setTranslationY(y + (h - sbPage.getHeight()) / 2f);
         } else {
