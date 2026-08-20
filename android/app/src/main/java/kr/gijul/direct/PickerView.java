@@ -59,6 +59,8 @@ class PickerView extends LinearLayout {
     private List<Catalog.Subject> shown = new ArrayList<>();
     private List<Catalog.Paper> papers = new ArrayList<>();
     private Catalog.Subject open;          // null 이면 과목 고르기
+    private String atGrade, atSub;         // 처음 열 때 펼칠 과목
+    private boolean landed;                // 첫 화면을 이미 정했는가
 
     PickerView(Context c, Catalog cat, Host host, boolean night) {
         super(c);
@@ -150,10 +152,16 @@ class PickerView extends LinearLayout {
 
     // ── 화면 둘 ─────────────────────────────────────────────────────────
 
+    /** 창을 띄울 때 보고 있던 과목. 목록을 처음 열면 여기서 시작한다. */
+    void startAt(String grade, String sub) {
+        atGrade = grade;
+        atSub = sub;
+    }
+
     /** 열릴 때 부른다. 지난번에 보던 과목이 있으면 거기로 바로 간다. */
     void enter() {
         if (!allSubjects.isEmpty()) {
-            if (open != null) showPapers(open); else showSubjects();
+            land();
             return;
         }
         say("목록을 받는 중…");
@@ -162,13 +170,34 @@ class PickerView extends LinearLayout {
                 final List<Catalog.Subject> s = cat.subjects();
                 post(() -> {
                     allSubjects = s;
-                    if (open != null) showPapers(open); else showSubjects();
+                    land();
                 });
             } catch (Exception e) {
                 Log.w(TAG, "목록을 받지 못했습니다", e);
                 post(() -> say("목록을 받지 못했습니다 — 연결을 확인해 주십시오"));
             }
         });
+    }
+
+    /**
+     * 목록을 열 때 어느 화면부터 보일지.
+     *
+     * 이 창에서 이미 과목을 골라 본 적이 있으면 그 자리로 돌아간다 — 방금
+     * 고른 데서 이어 보는 것이 자연스럽다. 그런 적이 없으면 <b>창을 띄울 때
+     * 보고 있던 과목</b>을 편다. 둘 다 없으면(받아둔 자료에서 띄웠거나 옛
+     * 페이지에서 왔으면) 전체 목록이다.
+     */
+    private void land() {
+        if (open == null && !landed) open = wanted();
+        landed = true;                     // 한 번만이다 — 전체 목록으로 돌아간 뒤
+        if (open != null) showPapers(open); else showSubjects();
+    }
+
+    private Catalog.Subject wanted() {
+        if (atGrade == null || atSub == null) return null;
+        for (Catalog.Subject s : allSubjects)
+            if (atGrade.equals(s.grade) && atSub.equals(s.id)) return s;
+        return null;                       // 사라진 과목이면 그냥 전체 목록으로
     }
 
     private void say(String msg) {

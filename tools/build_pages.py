@@ -491,7 +491,15 @@ JS = """/* tools/build_pages.py 가 쓴다. 손으로 고치지 말 것.
     var nm = row.dataset.nm + " " + a.textContent.trim()
            + "." + a.href.split("?")[0].split(".").pop().toLowerCase();
     e.preventDefault();
-    try{ GijulNative.openPaper(a.href, nm); }
+    /* 어느 과목 페이지인지는 주소에 이미 있다(/s/<학년>/<과목>.html). 띄워 둔
+       창의 목록이 그 과목의 회차부터 펼치도록 함께 보낸다. 쪽마다 다른 값을
+       심지 않고 주소에서 읽는 것은, 이 스크립트가 과목 페이지 수백 장에서
+       글자 하나까지 같아야 CSP 해시가 하나로 끝나기 때문이다. */
+    var at = location.pathname.match(/\/s\/([^\/]+)\/([^\/]+)\.html?$/);
+    try{
+      if(at && GijulNative.openPaperIn) GijulNative.openPaperIn(a.href, nm, at[1], at[2]);
+      else GijulNative.openPaper(a.href, nm);
+    }
     catch(err){ location.href = a.href; }
   });
 })();

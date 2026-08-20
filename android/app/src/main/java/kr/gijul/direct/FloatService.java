@@ -71,6 +71,8 @@ public class FloatService extends Service {
     static final String EXTRA_FILE = "file";
     static final String EXTRA_NAME = "name";
     static final String EXTRA_URL = "url";      // 목록에서 '지금 보는 중'을 가리기 위해
+    static final String EXTRA_GRADE = "grade";  // 목록의 첫 화면을 어디로 열지
+    static final String EXTRA_SUBJECT = "subject";
     static final String ACTION_STOP = "kr.gijul.direct.FLOAT_STOP";
 
     private static final String CHANNEL = "float";
@@ -95,6 +97,7 @@ public class FloatService extends Service {
     private boolean pickerOpen;
     private boolean passBefore;                   // 목록을 열기 전 모드
     private String showingUrl;                    // 지금 보고 있는 자료의 주소
+    private String atGrade, atSub;                // 보던 과목 — 목록의 첫 화면
     private int imeLift;                          // 자판을 피해 올려 둔 만큼
     private int imeTop;                           // 자판 윗변의 화면 좌표 (0이면 없다)
     private boolean imeFrozen;                    // 손으로 옮긴 뒤로는 건드리지 않는다
@@ -134,6 +137,8 @@ public class FloatService extends Service {
         name = n == null ? "" : n;
         String u = intent.getStringExtra(EXTRA_URL);
         if (u != null && !u.isEmpty()) showingUrl = u;
+        String g = intent.getStringExtra(EXTRA_GRADE), sb = intent.getStringExtra(EXTRA_SUBJECT);
+        if (g != null && sb != null) { atGrade = g; atSub = sb; }
 
         note();
         if (bar == null) build();
@@ -193,7 +198,7 @@ public class FloatService extends Service {
         /* 접으면 ＋와 ✕만 남는다. 바 좌우 여백에 단추 둘, 그 사이 간격 하나. */
         minW = dp(8) * 2 + dp(30) * 2 + dp(6);
 
-        defaultGeometry();
+        if (restore()) full = false; else defaultGeometry();
 
         catalog = new Catalog(getCacheDir());
         paper = new PaperView(this);
@@ -254,6 +259,48 @@ public class FloatService extends Service {
         wh = Math.min(dp(560), (int) (dm.heightPixels * 0.6f));
         wx = (dm.widthPixels - ww) / 2;
         wy = dp(72);
+    }
+
+    /**
+     * 지난번에 맞춰 둔 크기와 자리를 적어 둔다.
+     *
+     * 화면 크기를 열쇠에 함께 넣는다. 세로로 맞춘 크기를 가로에 그대로 물리면
+     * 창이 화면 밖으로 삐져나가거나 우스운 비율이 되는데, 이렇게 두면 세로에서
+     * 맞춘 것은 세로에서, 가로에서 맞춘 것은 가로에서 돌아온다. 처음 보는 화면
+     * 크기라면 적어 둔 것이 없으니 저절로 기본값으로 연다.
+     */
+    private String key(String k) {
+        android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+        return k + "_" + dm.widthPixels + "x" + dm.heightPixels;
+    }
+
+    private void save() {
+        try {
+            /* 접혀 있으면 wx 가 가리키는 것은 알약이다. 펼친 창의 자리로 되돌려
+               적는다 — 다음에 열 때는 펼친 채로 열리므로. */
+            getSharedPreferences("float", MODE_PRIVATE).edit()
+                    .putInt(key("x"), wx - (minimized ? tuck() : 0))
+                    .putInt(key("y"), wy)
+                    .putInt(key("w"), ww)
+                    .putInt(key("h"), wh)
+                    .apply();
+        } catch (Exception e) { Log.w(TAG, "창 크기를 적어 두지 못했습니다", e); }
+    }
+
+    private boolean restore() {
+        try {
+            android.content.SharedPreferences sp = getSharedPreferences("float", MODE_PRIVATE);
+            int w = sp.getInt(key("w"), 0), h = sp.getInt(key("h"), 0);
+            /* 손잡이가 허락하는 가장 작은 크기보다 작으면 적힌 것이 성치 않다. */
+            if (w < dp(200) || h < dp(140)) return false;
+            ww = w; wh = h;
+            wx = sp.getInt(key("x"), 0);
+            wy = sp.getInt(key("y"), 0);
+            return true;                 // 화면 밖이면 clampWindow 가 끌어들인다
+        } catch (Exception e) {
+            Log.w(TAG, "적어 둔 창 크기를 읽지 못했습니다", e);
+            return false;
+        }
     }
 
     /**
@@ -763,6 +810,9 @@ public class FloatService extends Service {
                 @Override public void pick(Catalog.Paper p, int kind) { load(p, kind); }
                 @Override public String showing() { return showingUrl; }
             }, night());
+            /* 보던 과목의 회차부터 펼친다. 찾던 것은 대개 거기 있고, 아니면
+               '‹'로 한 걸음이면 전체 목록이다. */
+            picker.startAt(atGrade, atSub);
             content.addView(picker, new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
@@ -837,6 +887,9 @@ public class FloatService extends Service {
                     wx = sx + (int) (e.getRawX() - ox);
                     wy = sy + (int) (e.getRawY() - oy);
                     placeSoon(); return true;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    save(); return true;
             }
             return false;
         }
@@ -857,6 +910,9 @@ public class FloatService extends Service {
                     wx = sx + (sw - w);                 // 오른쪽 모서리는 제자리에 둔다
                     ww = w; wh = h; full = false;
                     placeSoon(); return true;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    save(); return true;
             }
             return false;
         }

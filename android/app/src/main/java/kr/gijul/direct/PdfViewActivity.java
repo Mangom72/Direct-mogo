@@ -59,6 +59,8 @@ import java.util.concurrent.Executors;
 public class PdfViewActivity extends Activity {
 
     static final String EXTRA_URL = "url";      // 받아서 열 주소
+    static final String EXTRA_GRADE = "grade";  // 어느 학년 · 과목에서 왔는가
+    static final String EXTRA_SUBJECT = "subject";
     static final String EXTRA_FILE = "file";    // 이미 받아둔 파일의 절대 경로
     static final String EXTRA_NAME = "name";    // 표시할 이름
 
@@ -96,6 +98,8 @@ public class PdfViewActivity extends Activity {
     private String name = "";
     /* 받아서 연 것이면 그 주소. 띄워 둘 때 목록에 '지금 보는 중'을 표시하는 데 쓴다. */
     private String src;
+    /* 어느 과목 목록에서 왔는가. 띄워 둔 창의 목록이 첫 화면을 정하는 데 쓴다. */
+    private String grade, subject;
 
     private float zoom = 1f, panX = 0f, panY = 0f;
 
@@ -135,6 +139,8 @@ public class PdfViewActivity extends Activity {
         String path = getIntent().getStringExtra(EXTRA_FILE);
         String url = getIntent().getStringExtra(EXTRA_URL);
         src = url;
+        grade = getIntent().getStringExtra(EXTRA_GRADE);
+        subject = getIntent().getStringExtra(EXTRA_SUBJECT);
         if (path != null) {
             io.execute(() -> load(new File(path)));
         } else if (url != null) {
@@ -806,6 +812,8 @@ public class PdfViewActivity extends Activity {
             i.putExtra(FloatService.EXTRA_FILE, file.getAbsolutePath());
             i.putExtra(FloatService.EXTRA_NAME, name);
             if (src != null) i.putExtra(FloatService.EXTRA_URL, src);
+            if (grade != null) i.putExtra(FloatService.EXTRA_GRADE, grade);
+            if (subject != null) i.putExtra(FloatService.EXTRA_SUBJECT, subject);
             startForegroundService(i);
             finish();
         } catch (Exception e) {

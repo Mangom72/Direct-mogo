@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-LQasTbOCrXh1P9dLEzTmYFC1AGgQ3DCjCrO3iDgTdUU='; img-src 'self' data:; style-src 'self' 'sha256-w9BV3vkb9rMqZEZQpvKwEVevXufihuQnrjMTiA/c0ZY='; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ZRa2zhLbd7GOFKb3wioy+nc3jfeqWSEHhyfmuzcF8zw='; img-src 'self' data:; style-src 'self' 'sha256-w9BV3vkb9rMqZEZQpvKwEVevXufihuQnrjMTiA/c0ZY='; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>고2 경제 기출문제 — 기출 직행</title>
 <meta name="description" content="고2 경제 수능·모의평가·전국연합학력평가 기출 문제지 73회차 (2006~2025년). 문제·정답·해설 원본 PDF로 바로 이동합니다.">
 <link rel="canonical" href="https://mangom72.github.io/Direct-mogo/s/D200/17037.html">
@@ -204,7 +204,15 @@ footer .ln{font-weight:600}
     var nm = row.dataset.nm + " " + a.textContent.trim()
            + "." + a.href.split("?")[0].split(".").pop().toLowerCase();
     e.preventDefault();
-    try{ GijulNative.openPaper(a.href, nm); }
+    /* 어느 과목 페이지인지는 주소에 이미 있다(/s/<학년>/<과목>.html). 띄워 둔
+       창의 목록이 그 과목의 회차부터 펼치도록 함께 보낸다. 쪽마다 다른 값을
+       심지 않고 주소에서 읽는 것은, 이 스크립트가 과목 페이지 수백 장에서
+       글자 하나까지 같아야 CSP 해시가 하나로 끝나기 때문이다. */
+    var at = location.pathname.match(/\/s\/([^\/]+)\/([^\/]+)\.html?$/);
+    try{
+      if(at && GijulNative.openPaperIn) GijulNative.openPaperIn(a.href, nm, at[1], at[2]);
+      else GijulNative.openPaper(a.href, nm);
+    }
     catch(err){ location.href = a.href; }
   });
 })();

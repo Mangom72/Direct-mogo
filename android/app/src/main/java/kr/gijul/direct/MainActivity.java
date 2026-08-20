@@ -450,7 +450,23 @@ public class MainActivity extends Activity {
          * 여전히 주소에서 뽑는다. 그래도 경계를 건너온 값이라 확인은 한다.
          */
         @JavascriptInterface
-        public void openPaper(String url, String name) {
+        public void openPaper(String url, String name) { openPaperIn(url, name, null, null); }
+
+        /**
+         * 같은 뷰어로 열되, <b>어느 과목에서 왔는지</b>도 함께 받는다.
+         *
+         * 띄워 둔 창의 목록이 이 값으로 첫 화면을 정한다 — 보던 과목의 회차부터
+         * 보여주면 대개 찾던 것이 거기 있다. 주소만으로는 알 수 없다. 회차 파일은
+         * 과목마다 따로 있어서, 주소 하나가 어느 과목 것인지 되짚으려면 과목
+         * 파일을 전부 받아 뒤져야 한다.
+         *
+         * <b>이름을 새로 만든 것은 옛 앱을 위해서다.</b> openPaper 에 인자를 둘
+         * 더 붙이면 옛 앱에는 맞는 메서드가 없어 호출이 통째로 실패하고, 페이지는
+         * 앱보다 먼저 갱신되므로 그 사이 자료가 안 열린다. 페이지가 이 이름이
+         * 있는지 보고 고르게 두면 옛 앱은 옛 길로 그대로 간다.
+         */
+        @JavascriptInterface
+        public void openPaperIn(String url, String name, String grade, String sub) {
             String title;
             try {
                 fromEbsi(url);
@@ -463,7 +479,18 @@ public class MainActivity extends Activity {
             Intent i = new Intent(MainActivity.this, PdfViewActivity.class);
             i.putExtra(PdfViewActivity.EXTRA_URL, url);
             i.putExtra(PdfViewActivity.EXTRA_NAME, title);
+            /* 경계를 건너온 값이다. 파일 이름도 주소도 아니고 목록에서 과목을
+               찾아보는 데만 쓰지만, 모양이 아닌 것은 아예 들이지 않는다. */
+            if (tag(grade) && tag(sub)) {
+                i.putExtra(PdfViewActivity.EXTRA_GRADE, grade);
+                i.putExtra(PdfViewActivity.EXTRA_SUBJECT, sub);
+            }
             open(i);
+        }
+
+        private boolean tag(String v) {
+            return v != null && !v.isEmpty() && v.length() <= 32
+                    && v.matches("[A-Za-z0-9_-]+");
         }
 
         /** 파일 하나를 시스템 공유 시트로 넘긴다 */
