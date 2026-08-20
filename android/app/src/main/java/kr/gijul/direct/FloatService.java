@@ -78,7 +78,6 @@ public class FloatService extends Service {
 
     private static final int MIN_OPACITY = 20;    // 더 내리면 글자가 안 보이고 창도 잃는다
     private static final int DEF_OPACITY = 65;
-    private static final long GRACE_MS = 3000;    // ＋/－ 뒤 종이를 만질 수 있는 시간
     private static final float DEF_CAP = 0.8f;    // API 31 미만에서 쓸 기본 상한
 
     private WindowManager wm;
@@ -87,7 +86,6 @@ public class FloatService extends Service {
     private View bar, grip;
     private PaperView paper;
     private WindowManager.LayoutParams barLp, paperLp, gripLp;
-    private View countdown;                        // 유예가 얼마나 남았는지 보이는 실선
     private TextView pctBubble;
     private Slider slider;
     private TextView menuBtn;
@@ -98,6 +96,9 @@ public class FloatService extends Service {
     private boolean passBefore;                   // 목록을 열기 전 모드
     private String showingUrl;                    // 지금 보고 있는 자료의 주소
     private int imeLift;                          // 자판을 피해 올려 둔 만큼
+    private TextView minBtn;
+    private GradientDrawable barBg;
+    private boolean minimized;
     private final ExecutorService fetch = Executors.newSingleThreadExecutor();
     private TextView passBtn, holdBtn;
 
@@ -108,7 +109,6 @@ public class FloatService extends Service {
     private boolean full = true;      // 아직 사용자가 크기를 건드리지 않았다
     private boolean passThrough = true;
     private int opacity = DEF_OPACITY;
-    private long graceUntil = 0;
     private boolean paperTouched = false;          // 종이에 손가락이 닿아 있는가
 
     private String name = "";
@@ -309,10 +309,10 @@ public class FloatService extends Service {
         final int bg  = night ? 0xFF161A22 : 0xFFF3F1EC;
 
         FrameLayout wrap = new FrameLayout(this);
-        GradientDrawable round = new GradientDrawable();
-        round.setColor(bg);
-        round.setCornerRadii(new float[]{dp(12), dp(12), dp(12), dp(12), 0, 0, 0, 0});
-        wrap.setBackground(round);
+        barBg = new GradientDrawable();
+        barBg.setColor(bg);
+        wrap.setBackground(barBg);
+        roundBar();
 
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
@@ -346,14 +346,18 @@ public class FloatService extends Service {
         slp.leftMargin = dp(8); slp.rightMargin = dp(10);
         row.addView(slider, slp);
 
-        row.addView(chip("－", night, v -> zoom(1 / 1.25f)), chipLp());
-        row.addView(chip("＋", night, v -> zoom(1.25f)), chipLp());
-
         View sep = new View(this);
         sep.setBackgroundColor(night ? 0x29ECE7DA : 0x24221F1A);
         LinearLayout.LayoutParams sepLp = new LinearLayout.LayoutParams(dp(1), dp(18));
         sepLp.leftMargin = dp(6); sepLp.rightMargin = dp(4);
         row.addView(sep, sepLp);
+
+        /* 창틀 단추 둘 — 접기와 닫기. 바탕을 지워 다른 조작과 구별한다.
+           이것들은 창 자체를 어찌하는 것이지 문제지를 어찌하는 것이 아니다. */
+        minBtn = chip("－", night, v -> setMin(!minimized));
+        minBtn.setBackground(null);
+        minBtn.setTextColor(night ? 0x99ECE7DA : 0x99221F1A);
+        row.addView(minBtn, chipLp());
 
         TextView close = chip("✕", night, v -> stopSelf());
         close.setBackground(null);
@@ -376,15 +380,6 @@ public class FloatService extends Service {
         wrap.addView(pctBubble, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
                 Gravity.CENTER_VERTICAL | Gravity.START));
-
-        /* 유예가 얼마나 남았는지 — 바 아래 얇은 선이 줄어든다. 글자로 알리면
-           읽는 사이에 시간이 간다. */
-        countdown = new View(this);
-        countdown.setBackgroundColor(0xFFB4342A);
-        countdown.setVisibility(View.GONE);
-        countdown.setPivotX(0);
-        wrap.addView(countdown, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(2), Gravity.BOTTOM | Gravity.START));
 
         wrap.setOnTouchListener(new DragMove());
         updateBar();
@@ -506,7 +501,6 @@ public class FloatService extends Service {
     private void setPass(boolean on) {
         passThrough = on;
         if (on && opacity > capPct()) opacity = capPct();   // 상한 밖이면 끌어내린다
-        graceUntil = 0;
         updateBar();
         applyMode();
     }
@@ -519,38 +513,6 @@ public class FloatService extends Service {
         updateBar();
         applyMode();
     }
-
-    private void zoom(float by) {
-        paper.zoomBy(by);
-        grace();                       // 키운 뒤에는 대개 끌어 옮기고 싶어진다
-    }
-
-    /** 종이를 잠깐 만질 수 있게 한다. 이미 유예 중이면 시간을 다시 채운다. */
-    private void grace() {
-        if (!passThrough) return;      // 조작 모드면 이미 만질 수 있다
-        graceUntil = android.os.SystemClock.uptimeMillis() + GRACE_MS;
-        applyMode();
-        ui.removeCallbacks(tick);
-        ui.post(tick);
-    }
-
-    private final Runnable tick = new Runnable() {
-        @Override public void run() {
-            long left = graceUntil - android.os.SystemClock.uptimeMillis();
-            if (left <= 0) {
-                countdown.setVisibility(View.GONE);
-                /* 끌던 중이면 끝날 때까지 기다린다. 손가락이 닿아 있는 채로
-                   통과 모드로 되돌리면 하던 동작이 도중에 끊긴다. */
-                if (!paperTouched) applyMode();
-                return;
-            }
-            /* setLayoutParams 는 바 전체를 다시 배치한다 — 초당 스물다섯 번씩
-               할 일이 아니다. 배율만 바꾸면 다시 그리기만 한다. */
-            countdown.setScaleX(left / (float) GRACE_MS);
-            countdown.setVisibility(View.VISIBLE);
-            ui.postDelayed(this, 40);
-        }
-    };
 
     private final Runnable hidePct = () -> {
         if (pctBubble != null) pctBubble.setVisibility(View.GONE);
@@ -567,19 +529,16 @@ public class FloatService extends Service {
                 sliderView.getX() + sliderView.getWidth() - pctBubble.getWidth()));
     }
 
-    /** 종이를 만지는 동안에는 유예를 다시 채운다. 손을 놓고 3초가 지나야 통과로 돌아간다. */
-    private void extend() {
-        if (!passThrough || graceUntil == 0) return;
-        graceUntil = android.os.SystemClock.uptimeMillis() + GRACE_MS;
-        ui.removeCallbacks(tick);
-        ui.post(tick);
-    }
 
-    /** 지금 종이가 터치를 받아야 하는가 */
+    /**
+     * 지금 종이가 터치를 받아야 하는가.
+     *
+     * paperTouched 를 함께 보는 것은 끌던 도중에 '통과'로 바뀌는 경우 때문이다.
+     * 그 자리에서 터치를 끊으면 하던 동작이 반쯤에서 사라진다 — 손을 뗄 때까지는
+     * 계속 받고, 마지막 손가락이 떨어진 뒤에 되돌린다.
+     */
     private boolean live() {
-        return !passThrough
-                || android.os.SystemClock.uptimeMillis() < graceUntil
-                || paperTouched;
+        return !passThrough || paperTouched;
     }
 
     private void applyMode() {
@@ -604,6 +563,37 @@ public class FloatService extends Service {
         paperLp.alpha = a;
         try { wm.updateViewLayout(content, paperLp); }
         catch (Exception e) { Log.w(TAG, "종이 갱신 실패", e); }
+    }
+
+    // ── 접기 ────────────────────────────────────────────────────────────
+
+    /**
+     * 바만 남기고 접는다.
+     *
+     * 다른 앱을 잠깐 통째로 봐야 할 때가 있다. 그때마다 닫았다가 다시 띄우면
+     * 보던 자리와 배율을 잃는다 — 종이와 손잡이의 창만 감추면 그대로 있다가
+     * 그 자리로 돌아온다.
+     *
+     * 창을 지우지 않고 보이기만 끄는 까닭이 그것이다. WindowManager 에 붙은
+     * 뷰는 VISIBLE 이 아니면 그리는 면을 내리므로, 자리도 차지하지 않고
+     * 터치도 받지 않는다.
+     */
+    private void setMin(boolean on) {
+        minimized = on;
+        if (on && pickerOpen) closePicker();
+        minBtn.setText(on ? "＋" : "－");
+        content.setVisibility(on ? View.GONE : View.VISIBLE);
+        grip.setVisibility(on ? View.GONE : View.VISIBLE);
+        roundBar();
+        place();
+        applyMode();
+    }
+
+    /** 접었으면 바 혼자 뜨므로 네 귀가 다 둥글고, 폈으면 아래는 종이와 잇는다. */
+    private void roundBar() {
+        if (barBg == null) return;
+        float r = dp(12), b = minimized ? r : 0;
+        barBg.setCornerRadii(new float[]{r, r, r, r, b, b, b, b});
     }
 
     // ── 자판 ────────────────────────────────────────────────────────────
@@ -669,6 +659,7 @@ public class FloatService extends Service {
 
     private void openPicker() {
         if (content == null) return;
+        if (minimized) setMin(false);      // 접힌 채로 열면 목록이 감춰진 창에 뜬다
         if (picker == null) {
             picker = new PickerView(this, catalog, new PickerView.Host() {
                 @Override public void pick(Catalog.Paper p, int kind) { load(p, kind); }
@@ -938,8 +929,6 @@ public class FloatService extends Service {
             }
         }
 
-        void zoomBy(float by) { zoomAt(zoom * by, getWidth() / 2f, getHeight() / 2f); }
-
         /**
          * (fx, fy) 아래에 있던 자리를 그대로 두고 배율만 바꾼다.
          *
@@ -1059,7 +1048,6 @@ public class FloatService extends Service {
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     paperTouched = true;
-                    extend();
                     lx = e.getX(); ly = e.getY();
                     return true;
                 /* 손가락이 늘거나 줄면 기준점을 다시 잡는다. 그러지 않으면 그
@@ -1079,8 +1067,7 @@ public class FloatService extends Service {
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
                     paperTouched = false;
-                    extend();
-                    /* 끌기가 끝났다. 유예가 이미 지났다면 여기서 비로소 통과로
+                    /* 끌기가 끝났다. 그 사이 통과로 바뀌었다면 여기서 비로소
                        되돌아간다 — 손가락이 닿아 있는 동안은 미뤄 두었다. */
                     applyMode();
                     return true;
@@ -1108,7 +1095,7 @@ public class FloatService extends Service {
 
     @Override
     public void onDestroy() {
-        ui.removeCallbacks(tick);
+        ui.removeCallbacks(hidePct);
         try { if (picker != null) picker.shutdown(); } catch (Exception ignore) {}
         fetch.shutdownNow();
         try { if (paper != null) paper.close(); } catch (Exception ignore) {}
