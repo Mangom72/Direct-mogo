@@ -1,8 +1,8 @@
 {
-  "versionCode": 54,
-  "versionName": "6.3",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v6.3/gijul-direct.apk",
-  "size": 1865135,
-  "sha256": "9d75be19f98dda40e01d34e5409590a4348c3db988ea1a7fe704c5e4205c63a3",
-  "notes": "접으면 그 단추가 있던 자리에 그대로 섭니다"
+  "versionCode": 55,
+  "versionName": "6.4",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v6.4/gijul-direct.apk",
+  "size": 1865283,
+  "sha256": "d22295dbd22bca83ee5fa1ecbcbdf614b46c0b2471b684b0c893007b5e814819",
+  "notes": "자판이 뜨면 크기 손잡이가 물러납니다"
 }
