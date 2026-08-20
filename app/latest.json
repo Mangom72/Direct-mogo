@@ -1,8 +1,8 @@
 {
-  "versionCode": 57,
-  "versionName": "6.6",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v6.6/gijul-direct.apk",
-  "size": 1865827,
-  "sha256": "52a78844df0743a260c55aa53f729f64febe329a563e6b81ef32470d1ed5f16f",
-  "notes": "한 번 맞춘 창 크기는 화면이 바뀌어도 남습니다"
+  "versionCode": 58,
+  "versionName": "6.7",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v6.7/gijul-direct.apk",
+  "size": 1870155,
+  "sha256": "cb9ae793f651032655b525abc804a10cb11e4ba3edf20497608624bf44994a67",
+  "notes": "스크롤 막대가 생기고 접기가 부드러워졌습니다"
 }
