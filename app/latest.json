@@ -1,8 +1,8 @@
 {
-  "versionCode": 50,
-  "versionName": "5.9",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v5.9/gijul-direct.apk",
-  "size": 1864975,
-  "sha256": "0f46bf667bba853552f907a55ecff970532d1e07c0c95b67ef2da2c111687bf6",
-  "notes": "자판이 떠도 창 셋이 함께 움직입니다"
+  "versionCode": 51,
+  "versionName": "6.0",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v6.0/gijul-direct.apk",
+  "size": 1864411,
+  "sha256": "e4c9e20765a43ac5ae5f0ab48487ab1c7e44ac22aa59a116c85be44364e83c50",
+  "notes": "창을 접어 두었다 그 자리에 다시 펼 수 있습니다"
 }
