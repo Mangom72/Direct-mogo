@@ -124,6 +124,7 @@ public class FloatService extends Service {
     private float segT;                           // 0 통과 · 1 조작 — 칠이 있는 자리
     private android.animation.ValueAnimator segAnim, opAnim;
     private android.animation.ValueAnimator foldAnim;
+    private boolean swapped;                      // 바 속을 이번 접힘에서 갈아 끼웠는가
     private final ExecutorService fetch = Executors.newSingleThreadExecutor();
     private TextView passBtn, holdBtn;
 
@@ -848,11 +849,7 @@ public class FloatService extends Service {
         
            접혀 가는 동안 오른쪽에 붙여 두면 창만 줄어들고 단추는 가만히 있다. */
         row.setGravity(Gravity.CENTER_VERTICAL | Gravity.END);
-        /* 펼치는 동안에도 접힌 차림 그대로 둔다. 118dp 짜리 바에 슬라이더까지
-           들이밀면 눌려 찌그러진 채로 넓어진다. 다 넓어진 뒤에 채운다. */
-        showFolded(true);
         if (!on) { content.setVisibility(View.VISIBLE); showGrip(); }
-        roundBar();
         fold(on ? 1f : 0f);
     }
 
@@ -883,19 +880,37 @@ public class FloatService extends Service {
         foldAnim = android.animation.ValueAnimator.ofFloat(foldT, to);
         foldAnim.setDuration(Math.round(190 * Math.abs(to - foldT)) + 40);
         foldAnim.setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f));
+        swapped = false;
         foldAnim.addUpdateListener(a -> {
             foldT = (Float) a.getAnimatedValue();
             grip.setAlpha(1f - foldT);
+
+            /* <b>바 속은 반쯤에서 갈아 끼운다.</b>
+            
+               접자마자 ≡ ＋ ✕ 로 바꿔 놓으면, 아직 560dp 인 바 안에 118dp 짜리
+               차림이 덩그러니 떠 있는 그림이 애니메이션 내내 보인다. 펼칠 때는
+               거꾸로, 118dp 안에 슬라이더까지 눌려 들어간 것이 넓어진다.
+               어느 쪽이든 지금 크기에 맞지 않는 차림이라 눈에 걸린다.
+            
+               그래서 흐려졌다가 — 그 바닥에서 갈아 끼우고 — 다시 든다. 바뀌는
+               순간은 아무도 못 본다. 애니메이션이 얼마나 갔는지로 재는 것은,
+               접다 말고 되돌릴 때도 반환점이 한가운데여야 해서다. */
+            float f = a.getAnimatedFraction();
+            row.setAlpha(Math.abs(f - 0.5f) * 2f);
+            if (f >= 0.5f && !swapped) { swapped = true; showFolded(minimized); }
+
+            roundBar();                // 귀도 흰 테도 함께 자란다
             place();
             applyMode();               // 종이는 접히면서 함께 옅어진다
         });
         foldAnim.addListener(new android.animation.AnimatorListenerAdapter() {
             @Override public void onAnimationEnd(android.animation.Animator a) {
+                row.setAlpha(1f);
+                if (!swapped) { swapped = true; showFolded(minimized); }
                 if (minimized) {
                     content.setVisibility(View.GONE);
                     showGrip();
                 } else {
-                    showFolded(false);
                     row.setGravity(Gravity.CENTER_VERTICAL);
                 }
             }
@@ -921,14 +936,19 @@ public class FloatService extends Service {
     /** 펼친 창의 왼쪽 변에서 알약의 왼쪽 변까지 — 접고 펴며 wx 를 옮기는 폭 */
     private int tuck() { return Math.max(0, ww - minW); }
 
-    /** 접었으면 바 혼자 뜨므로 네 귀가 다 둥글고, 폈으면 아래는 종이와 잇는다. */
+    /**
+     * 접힌 만큼 아래 귀가 둥글어지고 흰 테가 자란다.
+     *
+     * 펼쳐져 있으면 아래는 종이와 잇는 자리라 각이고, 접히면 알약 혼자 남으므로
+     * 네 귀가 다 둥글다. 흰 테는 남의 앱 위에 홀로 뜬 알약이 바탕에 묻히지 않게
+     * 하는 것이라 알약일 때만 필요하다 — 종이 위의 손잡이와 같은 수법이다.
+     * 둘 다 foldT 를 따라가므로 접히는 도중에 툭 나타나지 않는다.
+     */
     private void roundBar() {
         if (barBg == null) return;
-        float r = dp(12), b = minimized ? r : 0;
+        float r = dp(12), b = r * foldT;
         barBg.setCornerRadii(new float[]{r, r, r, r, b, b, b, b});
-        /* 접히면 남의 앱 위에 알약 하나만 뜬다. 바탕색이 그쪽과 비슷하면 통째로
-           묻히므로 흰 테를 두른다 — 종이 위의 손잡이와 같은 수법이다. */
-        barBg.setStroke(minimized ? dp(2) : 0, minimized ? 0xE6FFFFFF : 0);
+        barBg.setStroke(Math.round(dp(2) * foldT), 0xE6FFFFFF);
     }
 
     // ── 자판 ────────────────────────────────────────────────────────────
