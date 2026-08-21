@@ -865,6 +865,7 @@ public class FloatService extends Service {
      */
     private void setMin(boolean on) {
         if (minimized == on) return;
+        stopDrift();                     // 접히면 붙잡아 둘 크기가 달라진다
         minimized = on;
         if (on && pickerOpen) closePicker();
         minBtn.setText(on ? "＋" : "－");
@@ -1195,22 +1196,105 @@ public class FloatService extends Service {
     /** 바를 끌면 창이 통째로 움직인다. 바가 곧 손잡이다. */
     private class DragMove implements View.OnTouchListener {
         private float ox, oy; private int sx, sy;
+        private android.view.VelocityTracker vt;
+
+        /**
+         * 속도는 <b>화면 좌표로</b> 재야 한다.
+         *
+         * 끄는 동안 창이 손가락을 따라가므로, 창 안에서 본 손가락은 거의
+         * 제자리에 있다. 그대로 재면 아무리 세게 뿌려도 속도가 0에 가깝다.
+         */
+        private void track(MotionEvent e) {
+            if (vt == null) return;
+            MotionEvent c = MotionEvent.obtain(e);
+            c.setLocation(e.getRawX(), e.getRawY());
+            vt.addMovement(c);
+            c.recycle();
+        }
+
         @Override public boolean onTouch(View v, MotionEvent e) {
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
+                    stopDrift();                    // 미끄러지는 중이면 손이 이긴다
                     settle();
+                    if (vt != null) vt.recycle();
+                    vt = android.view.VelocityTracker.obtain();
+                    track(e);
                     ox = e.getRawX(); oy = e.getRawY(); sx = wx; sy = wy; return true;
                 case MotionEvent.ACTION_MOVE:
+                    track(e);
                     wx = sx + (int) (e.getRawX() - ox);
                     wy = sy + (int) (e.getRawY() - oy);
                     placeSoon(); return true;
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
-                    save(); return true;
+                    if (vt != null && e.getActionMasked() == MotionEvent.ACTION_UP) {
+                        track(e);
+                        vt.computeCurrentVelocity(1000, dp(6000));
+                        int vx = (int) vt.getXVelocity(), vy = (int) vt.getYVelocity();
+                        if (Math.abs(vx) > dp(90) || Math.abs(vy) > dp(90)) drift(vx, vy);
+                    }
+                    if (vt != null) { vt.recycle(); vt = null; }
+                    /* 미끄러지는 중이면 멎은 자리를 그때 적는다. 끄는 내내
+                       적으면 프레임마다 디스크에 쓴다. */
+                    if (!drifting) save();
+                    return true;
             }
             return false;
         }
     }
+
+    // ── 던진 창 ─────────────────────────────────────────────────────────
+
+    /**
+     * 손을 놓아도 가던 만큼 더 간다.
+     *
+     * 창을 화면 건너편으로 옮기는 데 손가락을 끝까지 끌고 가야 하는 것은, 한
+     * 손으로 폰을 들고 있는 사람에게는 못 하는 일에 가깝다. 뿌려 두면 알아서
+     * 가서 멎는다.
+     *
+     * 벽에서는 튕기지 않고 선다. 남의 앱 위에 얹힌 창이 통통 튀면 그건 장난감
+     * 이지 도구가 아니다.
+     */
+    /* 서비스의 필드 초기화는 <b>Context 가 붙기 전에</b> 돈다. OverScroller 는
+       만들 때 화면 밀도를 물어보므로 여기서 바로 만들면 그 자리에서 죽는다.
+       처음 던질 때 만든다. */
+    private android.widget.OverScroller drift;
+    private boolean drifting;
+
+    private void stopDrift() {
+        if (!drifting || drift == null) return;
+        drift.forceFinished(true);
+        drifting = false;
+    }
+
+    private void drift(int vx, int vy) {
+        if (drift == null) drift = new android.widget.OverScroller(this);
+        android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+        int lead = lead(), w = barW(), h = minimized ? barH : wh;
+        drift.forceFinished(true);
+        drift.fling(wx, wy, vx, vy,
+                -lead, Math.max(-lead, dm.widthPixels - w - lead),
+                0, Math.max(0, dm.heightPixels - h));
+        drifting = true;
+        android.view.Choreographer.getInstance().postFrameCallback(driftStep);
+    }
+
+    private final android.view.Choreographer.FrameCallback driftStep =
+            new android.view.Choreographer.FrameCallback() {
+        @Override public void doFrame(long t) {
+            if (!drifting || drift == null) return;
+            if (!drift.computeScrollOffset()) {
+                drifting = false;
+                save();                   // 멎은 자리를 적어 둔다
+                return;
+            }
+            wx = drift.getCurrX();
+            wy = drift.getCurrY();
+            place();
+            android.view.Choreographer.getInstance().postFrameCallback(this);
+        }
+    };
 
     /** 좌하단 손잡이 — 왼쪽 모서리와 아래 모서리를 끈다. */
     private class DragResize implements View.OnTouchListener {
@@ -1842,6 +1926,7 @@ public class FloatService extends Service {
         ui.removeCallbacks(hidePct);
         ui.removeCallbacks(hold);
         ui.removeCallbacks(hint);
+        stopDrift();
         if (foldAnim != null) foldAnim.cancel();
         try { if (picker != null) picker.shutdown(); } catch (Exception ignore) {}
         fetch.shutdownNow();
