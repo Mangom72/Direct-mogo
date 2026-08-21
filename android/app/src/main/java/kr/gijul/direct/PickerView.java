@@ -163,8 +163,6 @@ class PickerView extends LinearLayout {
         atTitle = title;
     }
 
-    /** 전체 목록을 보고 있는가 */
-    boolean atTop() { return open == null; }
 
     /** 열릴 때 부른다. 지난번에 보던 과목이 있으면 거기로 바로 간다. */
     void enter() {

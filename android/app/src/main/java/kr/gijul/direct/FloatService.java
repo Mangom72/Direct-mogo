@@ -460,20 +460,21 @@ public class FloatService extends Service {
         row.addView(gripMark, new LinearLayout.LayoutParams(dp(30), dp(30)));
 
         menuBtn = chip("☰", night, v -> togglePicker());
-        /* 전체 목록을 보는 중에 3초 누르면 앱이 열린다. 여기 둔 것은, 목록을
-           끝까지 거슬러 올라간 사람이 찾는 것이 대개 '앱 화면'이어서다.
+        /* 목록을 열어 둔 채로 1초 누르면 앱이 열린다. 과목을 고르는 화면이든
+           회차를 고르는 화면이든 마찬가지다 — 목록을 뒤지고 있다는 것 자체가
+           '더 넓은 데서 고르고 싶다'는 뜻이라, 어느 쪽인지 가릴 이유가 없다.
            onTouch 가 false 를 돌려주므로 짧게 누르는 것은 평소대로 눌린다. */
         menuBtn.setOnTouchListener((v, e) -> {
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
-                    if (pickerOpen && picker != null && picker.atTop()) {
-                        holdLeft = 3;
-                        ui.post(hold);
+                    if (pickerOpen && picker != null) {
+                        ui.postDelayed(hint, 200);
+                        ui.postDelayed(hold, HOLD_MS);
                     }
                     break;
                 case MotionEvent.ACTION_MOVE:
                     /* 손가락이 단추 밖으로 나가면 그만둔다. 안 그러면 누른 채
-                       옆으로 밀어 둔 손이 3초 뒤에 앱을 연다. */
+                       옆으로 밀어 둔 손이 1초 뒤에 앱을 연다. */
                     if (e.getX() < 0 || e.getY() < 0
                             || e.getX() > v.getWidth() || e.getY() > v.getHeight()) dropHold();
                     break;
@@ -726,44 +727,45 @@ public class FloatService extends Service {
     // ── 앱으로 ──────────────────────────────────────────────────────────
 
     /**
-     * ☰ 를 3초 누르면 앱 화면이 열린다.
+     * ☰ 를 1초 누르면 앱 화면이 열린다.
      *
      * 문제지를 띄우면 앱은 물러난다. 되부를 길이 하나는 있어야 하는데, 바에
      * 단추를 하나 더 놓기에는 44dp 밖에 없는 자리가 이미 빡빡하다. 그래서
-     * 목록의 맨 위 — 곧 사람이 '더 넓은 데서 고르고 싶다'고 느끼는 바로 그
-     * 자리 — 에서만 듣는 몸짓으로 두었다.
-     *
-     * 몇 초 남았는지 숫자로 알린다. 아무 표시가 없으면 3초는 '안 되는 것'과
-     * 구별되지 않는다.
+     * 목록을 열어 둔 동안에만 듣는 몸짓으로 두었다 — 목록을 뒤지고 있다는 것이
+     * 곧 '더 넓은 데서 고르고 싶다'는 뜻이다.
      */
-    private int holdLeft;
+    private static final long HOLD_MS = 1000;
     private boolean holdFired;
 
     private void dropHold() {
+        ui.removeCallbacks(hint);
         ui.removeCallbacks(hold);
         ui.post(hidePct);
     }
 
-    private final Runnable hold = new Runnable() {
-        @Override public void run() {
-            if (holdLeft <= 0) {
-                holdFired = true;
-                /* 화면을 보고 있지 않을 수도 있다 — 다 찼다는 것은 손끝으로도 알린다 */
-                if (menuBtn != null) menuBtn.performHapticFeedback(
-                        android.view.HapticFeedbackConstants.LONG_PRESS);
-                ui.post(hidePct);
-                launchApp();
-                return;
-            }
-            if (pctBubble != null && menuBtn != null) {
-                ui.removeCallbacks(hidePct);
-                pctBubble.setText("앱 열기 " + holdLeft);
-                pctBubble.setVisibility(View.VISIBLE);
-                pctBubble.setTranslationX(menuBtn.getX() + menuBtn.getWidth() + dp(4));
-            }
-            holdLeft--;
-            ui.postDelayed(this, 1000);
-        }
+    /**
+     * 누르고 있는 것이 그냥 누른 것이 아니라는 표시.
+     *
+     * 1초는 짧아서 숫자를 셀 자리가 없다. 대신 손이 머물기 시작하면 곧바로
+     * 무엇이 일어날지 이름을 띄운다 — 아무 표시가 없으면 '누르고 있으면 되는
+     * 것'과 '아무것도 아닌 것'이 구별되지 않는다. 200ms 를 두는 것은, 그보다
+     * 빠른 것은 누른 것이지 누르고 있는 것이 아니어서다.
+     */
+    private final Runnable hint = () -> {
+        if (pctBubble == null || menuBtn == null) return;
+        ui.removeCallbacks(hidePct);
+        pctBubble.setText("앱 열기");
+        pctBubble.setVisibility(View.VISIBLE);
+        pctBubble.setTranslationX(menuBtn.getX() + menuBtn.getWidth() + dp(4));
+    };
+
+    private final Runnable hold = () -> {
+        holdFired = true;
+        /* 화면을 보고 있지 않을 수도 있다 — 다 찼다는 것은 손끝으로도 알린다 */
+        if (menuBtn != null) menuBtn.performHapticFeedback(
+                android.view.HapticFeedbackConstants.LONG_PRESS);
+        ui.post(hidePct);
+        launchApp();
     };
 
     private void launchApp() {
@@ -1598,6 +1600,7 @@ public class FloatService extends Service {
     public void onDestroy() {
         ui.removeCallbacks(hidePct);
         ui.removeCallbacks(hold);
+        ui.removeCallbacks(hint);
         if (foldAnim != null) foldAnim.cancel();
         try { if (picker != null) picker.shutdown(); } catch (Exception ignore) {}
         fetch.shutdownNow();
