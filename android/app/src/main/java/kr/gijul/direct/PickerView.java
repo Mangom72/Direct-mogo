@@ -118,6 +118,38 @@ class PickerView extends LinearLayout {
 
     private int dp(float v) { return Math.round(v * getResources().getDisplayMetrics().density); }
 
+    /**
+     * 눌린 동안 자리가 짙어진다.
+     *
+     * 이 목록은 눌러도 곧바로 화면이 바뀌지 않는다 — 회차는 받아 와야 하고,
+     * 과목도 파일을 열어야 한다. 그 사이에 아무 반응이 없으면 안 눌렸다고
+     * 여겨 한 번 더 누르게 된다.
+     */
+    /** 평소 색과 눌린 색 한 쌍 */
+    private android.content.res.ColorStateList sunk(int rest) {
+        int down = rest == Color.TRANSPARENT
+                ? (night ? 0x24ECE7DA : 0x1A221F1A)     // 테만 있는 단추는 옅게 채운다
+                : (rest & 0xFF000000) | dim(rest, 16);  // 칠이 있으면 그 칠을 어둡게
+        return new android.content.res.ColorStateList(
+                new int[][]{{android.R.attr.state_pressed}, {}}, new int[]{down, rest});
+    }
+
+    private static int dim(int c, int r) {
+        int rr = ((c >> 16) & 0xFF) * (100 - r) / 100;
+        int gg = ((c >> 8) & 0xFF) * (100 - r) / 100;
+        int bb = (c & 0xFF) * (100 - r) / 100;
+        return (rr << 16) | (gg << 8) | bb;
+    }
+
+    private android.graphics.drawable.Drawable tap(int rest) {
+        android.graphics.drawable.StateListDrawable d =
+                new android.graphics.drawable.StateListDrawable();
+        d.addState(new int[]{android.R.attr.state_pressed},
+                new android.graphics.drawable.ColorDrawable(night ? 0x24ECE7DA : 0x1A221F1A));
+        d.addState(new int[0], new android.graphics.drawable.ColorDrawable(rest));
+        return d;
+    }
+
     private View buildSearch() {
         LinearLayout row = new LinearLayout(getContext());
         row.setOrientation(HORIZONTAL);
@@ -320,6 +352,7 @@ class PickerView extends LinearLayout {
         void bind(final Catalog.Subject s) {
             name.setText(s.gradeLabel + " · " + s.name);
             count.setText(s.count + "회차");
+            itemView.setBackground(tap(Color.TRANSPARENT));
             itemView.setOnClickListener(v -> showPapers(s));
         }
     }
@@ -365,29 +398,33 @@ class PickerView extends LinearLayout {
             boolean here = now != null && (now.equals(p.problem) || now.equals(p.answer) || now.equals(p.solution));
             title.setText(p.title + "  " + p.source);
             when.setText(p.date.replace('-', '.') + (here ? " · 지금 보는 중" : ""));
-            itemView.setBackgroundColor(here ? (night ? 0xFF232A36 : 0xFFF2ECE0) : Color.TRANSPARENT);
+            itemView.setBackground(tap(here ? (night ? 0xFF232A36 : 0xFFF2ECE0) : Color.TRANSPARENT));
             for (int k = 0; k < 3; k++) {
                 final int kind = k;
                 String u = p.url(k);
                 final boolean on = u != null && !u.isEmpty();
                 TextView t = chips[k];
                 GradientDrawable g = new GradientDrawable();
-                g.setCornerRadius(dp(2));
+                g.setCornerRadius(dp(5));
+                int fill;
                 if (!on) {
-                    g.setColor(Color.TRANSPARENT);
+                    fill = Color.TRANSPARENT;
                     g.setStroke(dp(1.2f), night ? 0x33ECE7DA : 0xFFD9D2C4);
                     t.setTextColor(night ? 0x55ECE7DA : 0xFFBDB5A4);
                 } else if (kind == 1) {
-                    g.setColor(0xFFB4342A);
+                    fill = 0xFFB4342A;
                     t.setTextColor(0xFFFFFFFF);
                 } else if (kind == 0) {
-                    g.setColor(ink);
+                    fill = ink;
                     t.setTextColor(card);
                 } else {
-                    g.setColor(Color.TRANSPARENT);
+                    fill = Color.TRANSPARENT;
                     g.setStroke(dp(1.2f), ink);
                     t.setTextColor(ink);
                 }
+                /* 눌린 동안 짙어진다. 누르면 받아 오는 데 한참 걸리는 단추라,
+                   반응이 없으면 안 눌렸다고 여겨 한 번 더 누르게 된다. */
+                g.setColor(on ? sunk(fill) : android.content.res.ColorStateList.valueOf(fill));
                 t.setBackground(g);
                 t.setClickable(on);
                 t.setOnClickListener(on ? v -> host.pick(p, kind) : null);

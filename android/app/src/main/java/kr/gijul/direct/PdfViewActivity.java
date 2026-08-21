@@ -96,6 +96,20 @@ public class PdfViewActivity extends Activity {
     private TextView pageLabel;
     private TextView sbPage;           // 막대를 잡고 있는 동안 뜨는 쪽수
     private int sbShown = -1;
+    /* 잡힌 정도 — 굵기가 툭 바뀌면 잡힌 것인지 손이 미끄러진 것인지 모른다 */
+    private float sbT;
+    private android.animation.ValueAnimator sbAnim;
+
+    private void grabbed(boolean on) {
+        if (sbAnim != null) sbAnim.cancel();
+        sbAnim = android.animation.ValueAnimator.ofFloat(sbT, on ? 1f : 0f);
+        sbAnim.setDuration(on ? 110 : 160);
+        sbAnim.addUpdateListener(a -> {
+            sbT = (Float) a.getAnimatedValue();
+            if (scrollbar != null) scrollbar.invalidate();
+        });
+        sbAnim.start();
+    }
 
     /* 스크롤 막대 — 띄워 둔 창(FloatService)과 같은 값이다. 한쪽만 고치면 어긋난다. */
     private static final int SB_BAND = FloatService.SB_BAND;
@@ -283,12 +297,12 @@ public class PdfViewActivity extends Activity {
             private final RectF r = new RectF();
             @Override protected void onDraw(Canvas c) {
                 float pad = dp(SB_HALO), right = getWidth() - dp(4);
-                float w = dp(dragging ? SB_GRAB : SB_REST);
+                float w = dp(SB_REST) + (dp(SB_GRAB) - dp(SB_REST)) * sbT;
                 r.set(right - w - pad, pad - pad, right + pad, getHeight() - pad + pad);
                 sp.setColor(0xCCFFFFFF);
                 c.drawRoundRect(r, r.width() / 2, r.width() / 2, sp);
                 r.set(right - w, pad, right, getHeight() - pad);
-                sp.setColor(dragging ? 0xC7221F1A : 0x8C221F1A);
+                sp.setColor(sbT < 0.5f ? 0x8C221F1A : 0xC7221F1A);
                 c.drawRoundRect(r, w / 2, w / 2, sp);
             }
         };
@@ -310,7 +324,7 @@ public class PdfViewActivity extends Activity {
                         grabY = e.getRawY();
                         grabOffset = list.computeVerticalScrollOffset();
                         dragging = true;
-                        v.invalidate();
+                        grabbed(true);
                         syncScrollbar();
                         return true;
                     case MotionEvent.ACTION_MOVE: {
@@ -323,8 +337,9 @@ public class PdfViewActivity extends Activity {
                     case MotionEvent.ACTION_UP:
                     case MotionEvent.ACTION_CANCEL:
                         dragging = false;
-                        v.invalidate();
-                        sbPage.setVisibility(View.GONE);
+                        grabbed(false);
+                        sbPage.animate().alpha(0f).setDuration(140)
+                                .withEndAction(() -> sbPage.setVisibility(View.GONE)).start();
                         resharp();       // 놓은 자리를 제대로 그린다
                         return true;
                 }
@@ -398,6 +413,22 @@ public class PdfViewActivity extends Activity {
         return b;
     }
 
+    /** 뜨고 지는 것을 살짝 흐리게 — 문제지 위에 얹히는 것이라 툭 나타나면 놀란다 */
+    private void fade(View v, boolean on) {
+        if (v == null) return;
+        boolean now = v.getVisibility() == View.VISIBLE && v.getAlpha() > 0.5f;
+        if (now == on) return;
+        v.animate().cancel();
+        if (on) {
+            v.setAlpha(0f);
+            v.setVisibility(View.VISIBLE);
+            v.animate().alpha(1f).setDuration(140).start();
+        } else {
+            v.animate().alpha(0f).setDuration(120)
+                    .withEndAction(() -> v.setVisibility(View.GONE)).start();
+        }
+    }
+
     private TextView pill(String text) {
         TextView t = new TextView(this);
         t.setText(text);
@@ -418,7 +449,7 @@ public class PdfViewActivity extends Activity {
         chrome = on;
         bar.setVisibility(on ? View.VISIBLE : View.GONE);
         zoomPill.setVisibility(on ? View.VISIBLE : View.GONE);
-        topBtn.setVisibility(on && visFirst > 0 ? View.VISIBLE : View.GONE);
+        fade(topBtn, on && visFirst > 0);
         systemBars(on);
         stage.post(this::fitHeight);        // 무대가 커졌으니 목록 높이도 다시 잡는다
     }
@@ -753,7 +784,7 @@ public class PdfViewActivity extends Activity {
         if (i == RecyclerView.NO_POSITION) i = f;
         pageLabel.setText((i + 1) + " / " + a.getItemCount());
         pageLabel.setVisibility(View.VISIBLE);
-        topBtn.setVisibility(chrome && i > 0 ? View.VISIBLE : View.GONE);
+        fade(topBtn, chrome && i > 0);
     }
 
     // ── 읽어들이기 ──────────────────────────────────────────────────────
@@ -1293,7 +1324,11 @@ public class PdfViewActivity extends Activity {
                 sbShown = visFirst;
                 sbPage.setText((visFirst + 1) + " / " + pages);
             }
-            sbPage.setVisibility(View.VISIBLE);
+            if (sbPage.getVisibility() != View.VISIBLE) {
+                sbPage.setAlpha(0f);
+                sbPage.setVisibility(View.VISIBLE);
+                sbPage.animate().alpha(1f).setDuration(110).start();
+            }
             sbPage.setTranslationY(y + (h - sbPage.getHeight()) / 2f);
         } else {
             sbPage.setVisibility(View.GONE);

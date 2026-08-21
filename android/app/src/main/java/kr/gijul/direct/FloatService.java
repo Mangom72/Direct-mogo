@@ -114,11 +114,14 @@ public class FloatService extends Service {
     private GradientDrawable barBg;
     private boolean minimized;
     private LinearLayout seg;                     // 통과|조작
+    private LinearLayout row;                     // 바 안의 한 줄
     private View sep;                             // 창틀 단추 앞의 실선
     private int minW;                             // 접었을 때의 바 너비
     private int seam;                             // 종이가 바 밑으로 파고든 깊이
     private View gripMark;                        // 접었을 때의 ≡ 자국
     private float foldT;                          // 0 펼침 · 1 접힘 — 그 사이가 다 있다
+    private float segT;                           // 0 통과 · 1 조작 — 칠이 있는 자리
+    private android.animation.ValueAnimator segAnim, opAnim;
     private android.animation.ValueAnimator foldAnim;
     private final ExecutorService fetch = Executors.newSingleThreadExecutor();
     private TextView passBtn, holdBtn;
@@ -425,7 +428,7 @@ public class FloatService extends Service {
         wrap.setBackground(barBg);
         roundBar();
 
-        LinearLayout row = new LinearLayout(this);
+        row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(dp(8), 0, dp(8), 0);
@@ -434,7 +437,21 @@ public class FloatService extends Service {
 
         /* 통과 | 조작 — 켬/끔 스위치로 두면 '켜짐'이 어느 쪽인지 헷갈린다.
            두 낱말을 나란히 놓고 지금 것을 칠하면 읽을 것이 없다. */
-        seg = new LinearLayout(this);
+        /* 고른 쪽에 칠이 <b>미끄러져</b> 간다. 두 낱말 중 어느 쪽이 켜졌는지는
+           칠 하나로만 구별되는데, 그것이 순간이동하면 무엇이 무엇으로 바뀌었는지
+           눈이 좇을 것이 없다. 움직이면 '이쪽에서 저쪽으로'가 그냥 보인다. */
+        seg = new LinearLayout(this) {
+            private final Paint sp = new Paint(Paint.ANTI_ALIAS_FLAG);
+            private final RectF rr = new RectF();
+            @Override protected void onDraw(Canvas c) {
+                if (getChildCount() < 2) return;
+                float w = getWidth() / 2f;
+                rr.set(segT * w, 0, segT * w + w, getHeight());
+                sp.setColor(night ? 0xFFECE7DA : 0xFF221F1A);
+                c.drawRoundRect(rr, dp(8), dp(8), sp);
+            }
+        };
+        seg.setWillNotDraw(false);
         seg.setOrientation(LinearLayout.HORIZONTAL);
         GradientDrawable segBg = new GradientDrawable();
         segBg.setColor(night ? 0x1FECE7DA : 0x17221F1A);
@@ -577,22 +594,11 @@ public class FloatService extends Service {
     private void updateBar() {
         boolean night = night();
         int on = night ? 0xFF161A22 : 0xFFF3F1EC;
-        int onBg = night ? 0xFFECE7DA : 0xFF221F1A;
         int off = night ? 0x8CECE7DA : 0x8C221F1A;
-        for (int i = 0; i < 2; i++) {
-            TextView t = i == 0 ? passBtn : holdBtn;
-            boolean sel = (i == 0) == passThrough;
-            if (sel) {
-                GradientDrawable g = new GradientDrawable();
-                g.setColor(onBg);
-                g.setCornerRadius(dp(8));
-                t.setBackground(g);
-                t.setTextColor(on);
-            } else {
-                t.setBackground(null);
-                t.setTextColor(off);
-            }
-        }
+        /* 칠은 seg 가 직접 그린다. 여기서는 글자색만 — 칠이 지나가는 동안
+           글자도 함께 넘어가도록 절반을 지날 때 바뀐다. */
+        passBtn.setTextColor(segT < 0.5f ? on : off);
+        holdBtn.setTextColor(segT < 0.5f ? off : on);
         if (pctBubble != null) pctBubble.setText(opacity + "%");
         /* 값만 고치고 말면 슬라이더는 옛 자리를 그대로 그리고 있는다. 조작에서
            100을 찍고 통과로 돌아오면 상한까지 깎이는데, 손잡이는 100에 남아
@@ -658,12 +664,42 @@ public class FloatService extends Service {
 
     private void setPass(boolean on) {
         passThrough = on;
-        if (on && opacity > capPct()) opacity = capPct();   // 상한 밖이면 끌어내린다
-        updateBar();
-        applyMode();
+        slide(on ? 0f : 1f);
+        /* 통과로 돌아오면 투명도가 상한까지 깎인다. 값만 갈아 끼우면 화면이 한
+           번 툭 밝아지는데, 그 순간 무엇이 왜 바뀌었는지가 안 보인다. 손잡이가
+           상한까지 미끄러지고 종이가 그만큼 흐려지면 두 가지가 한 몸으로 읽힌다. */
+        if (on && opacity > capPct()) glideOpacity(capPct());
+        else { updateBar(); applyMode(); }
+    }
+
+    private void slide(float to) {
+        if (segAnim != null) segAnim.cancel();
+        segAnim = android.animation.ValueAnimator.ofFloat(segT, to);
+        segAnim.setDuration(150);
+        segAnim.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        segAnim.addUpdateListener(a -> {
+            segT = (Float) a.getAnimatedValue();
+            if (seg != null) seg.invalidate();
+            updateBar();
+        });
+        segAnim.start();
+    }
+
+    private void glideOpacity(int to) {
+        if (opAnim != null) opAnim.cancel();
+        opAnim = android.animation.ValueAnimator.ofInt(opacity, to);
+        opAnim.setDuration(170);
+        opAnim.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        opAnim.addUpdateListener(a -> {
+            opacity = (Integer) a.getAnimatedValue();
+            updateBar();
+            applyMode();
+        });
+        opAnim.start();
     }
 
     private void setOpacity(int pct) {
+        if (opAnim != null) opAnim.cancel();       // 손이 이긴다
         int max = passThrough ? capPct() : 100;
         int v = Math.max(MIN_OPACITY, Math.min(max, pct));
         if (v == opacity) return;          // 상한에 붙은 채로 계속 끌 때가 대부분이다
@@ -802,17 +838,31 @@ public class FloatService extends Service {
         if (on && pickerOpen) closePicker();
         minBtn.setText(on ? "＋" : "－");
 
-        /* 종이가 없는데 투명도와 통과 여부를 물어봐야 소용이 없다. 접으면
-           남는 것은 잡는 자국과 되돌릴 단추와 닫을 단추뿐이다. */
-        int vis = on ? View.GONE : View.VISIBLE;
+        /* <b>여기가 좌우로 깜빡이던 자리다.</b>
+        
+           접는 순간 나머지를 감추면 바에는 셋만 남는데, LinearLayout 은 남는
+           자리를 <b>왼쪽에 몰아 준다</b>. 창은 아직 560dp 인데 내용은 118dp 라
+           단추들이 왼쪽 끝으로 튀고, 그다음 창이 줄어들며 제자리로 돌아온다 —
+           한 번 갔다 오는 것이 눈에는 깜빡임으로 보인다.
+        
+           접혀 가는 동안 오른쪽에 붙여 두면 창만 줄어들고 단추는 가만히 있다. */
+        row.setGravity(Gravity.CENTER_VERTICAL | Gravity.END);
+        /* 펼치는 동안에도 접힌 차림 그대로 둔다. 118dp 짜리 바에 슬라이더까지
+           들이밀면 눌려 찌그러진 채로 넓어진다. 다 넓어진 뒤에 채운다. */
+        showFolded(true);
+        if (!on) { content.setVisibility(View.VISIBLE); showGrip(); }
+        roundBar();
+        fold(on ? 1f : 0f);
+    }
+
+    /** 접힌 차림(≡ ＋ ✕)과 펼친 차림(☰ 통과·조작 슬라이더 － ✕)을 오간다 */
+    private void showFolded(boolean f) {
+        int vis = f ? View.GONE : View.VISIBLE;
         menuBtn.setVisibility(vis);
         seg.setVisibility(vis);
         slider.setVisibility(vis);
         sep.setVisibility(vis);
-        gripMark.setVisibility(on ? View.VISIBLE : View.GONE);
-        if (!on) { content.setVisibility(View.VISIBLE); showGrip(); }
-        roundBar();
-        fold(on ? 1f : 0f);
+        gripMark.setVisibility(f ? View.VISIBLE : View.GONE);
     }
 
     /**
@@ -840,7 +890,13 @@ public class FloatService extends Service {
         });
         foldAnim.addListener(new android.animation.AnimatorListenerAdapter() {
             @Override public void onAnimationEnd(android.animation.Animator a) {
-                if (minimized) { content.setVisibility(View.GONE); showGrip(); }
+                if (minimized) {
+                    content.setVisibility(View.GONE);
+                    showGrip();
+                } else {
+                    showFolded(false);
+                    row.setGravity(Gravity.CENTER_VERTICAL);
+                }
             }
         });
         foldAnim.start();
@@ -982,7 +1038,16 @@ public class FloatService extends Service {
         passBefore = passThrough;
         passThrough = false;
         pickerOpen = true;
+        /* 종이 위로 살짝 올라오며 든다. 같은 자리를 두 화면이 나눠 쓰는 터라,
+           갈아 끼우듯 바뀌면 종이가 어디로 갔는지 알 수 없다. */
         picker.setVisibility(View.VISIBLE);
+        picker.animate().cancel();
+        picker.setAlpha(0f);
+        picker.setTranslationY(dp(12));
+        picker.animate().alpha(1f).translationY(0)
+                .setDuration(170)
+                .setInterpolator(new android.view.animation.DecelerateInterpolator())
+                .start();
         content.requestFocus();
         markMenu(true);
         updateBar();
@@ -993,7 +1058,13 @@ public class FloatService extends Service {
     private void closePicker() {
         pickerOpen = false;
         dropIme();
-        if (picker != null) picker.setVisibility(View.GONE);
+        if (picker != null) {
+            final View p = picker;
+            p.animate().cancel();
+            p.animate().alpha(0f).translationY(dp(8)).setDuration(110)
+                    .withEndAction(() -> { if (!pickerOpen) p.setVisibility(View.GONE); })
+                    .start();
+        }
         passThrough = passBefore;
         markMenu(false);
         updateBar();
@@ -1177,6 +1248,28 @@ public class FloatService extends Service {
         private int sbAt;
         private int sbPage = -1;          // 말풍선 글자를 프레임마다 새로 만들지 않으려고
         private String sbLabel = "";
+        /* 잡힌 정도. 굵기도 짙기도 말풍선도 여기서 나온다 — 툭 바뀌면 잡힌
+           것인지 손이 미끄러진 것인지 구별이 안 된다. */
+        private float sbT;
+        private android.animation.ValueAnimator sbAnim;
+
+        private void grabbed(boolean on) {
+            if (sbAnim != null) sbAnim.cancel();
+            sbAnim = android.animation.ValueAnimator.ofFloat(sbT, on ? 1f : 0f);
+            sbAnim.setDuration(on ? 110 : 160);
+            sbAnim.addUpdateListener(a -> { sbT = (Float) a.getAnimatedValue(); invalidate(); });
+            sbAnim.start();
+        }
+
+        /** 두 색 사이 — 알파까지 함께 섞는다 */
+        private int mix(int from, int to, float t) {
+            int r = 0;
+            for (int sh = 0; sh <= 24; sh += 8) {
+                int a = (from >>> sh) & 0xFF, b = (to >>> sh) & 0xFF;
+                r |= (a + Math.round((b - a) * t)) << sh;
+            }
+            return r;
+        }
 
         /* 받는 동안 종이 대신 뜨는 한 줄. 다 받으면 open() 이 지운다. */
         private String msg;
@@ -1392,7 +1485,7 @@ public class FloatService extends Service {
         private void bar(Canvas c) {
             if (sbRoom() <= 0) return;
             float pad = dp(SB_HALO), right = getWidth() - dp(4);
-            float w = dp(sbGrab ? SB_GRAB : SB_REST);
+            float w = dp(SB_REST) + (dp(SB_GRAB) - dp(SB_REST)) * sbT;
             float top = sbTop() + pad, bot = top + dp(SB_LEN) - pad * 2;
 
             sb.setStyle(Paint.Style.FILL);
@@ -1400,10 +1493,10 @@ public class FloatService extends Service {
             sb.setColor(0xCCFFFFFF);
             c.drawRoundRect(pill, pill.width() / 2, pill.width() / 2, sb);
             pill.set(right - w, top, right, bot);
-            sb.setColor(sbGrab ? 0xC7221F1A : 0x8C221F1A);
+            sb.setColor(mix(0x8C221F1A, 0xC7221F1A, sbT));
             c.drawRoundRect(pill, w / 2, w / 2, sb);
 
-            if (!sbGrab || ratio.length < 2) return;
+            if (sbT <= 0.01f || ratio.length < 2) return;
             int now = pageAt();
             if (now != sbPage) { sbPage = now; sbLabel = now + " / " + ratio.length; }
             /* 말풍선은 막대 **왼쪽**에 붙인다. 위에 얹으면 잡은 손가락에 가려서
@@ -1413,9 +1506,9 @@ public class FloatService extends Service {
             float tw = sb.measureText(t), bw = tw + dp(16), bh = dp(20);
             float bx = right - w - pad - dp(7), by = (top + bot) / 2;
             pill.set(bx - bw, by - bh / 2, bx, by + bh / 2);
-            sb.setColor(0xF2221F1A);
+            sb.setColor(mix(0x00221F1A, 0xF2221F1A, sbT));
             c.drawRoundRect(pill, dp(6), dp(6), sb);
-            sb.setColor(0xFFF3F1EC);
+            sb.setColor(mix(0x00F3F1EC, 0xFFF3F1EC, sbT));
             c.drawText(t, bx - bw / 2 - tw / 2, by - (sb.ascent() + sb.descent()) / 2, sb);
         }
 
@@ -1510,7 +1603,7 @@ public class FloatService extends Service {
                         if (e.getY() < top || e.getY() > top + dp(SB_LEN))
                             seek(e.getY() - dp(SB_LEN) / 2f);
                         sbFrom = e.getY(); sbAt = scrollY;
-                        invalidate();
+                        grabbed(true);
                         return true;
                     }
                     lx = e.getX(); ly = e.getY();
@@ -1541,7 +1634,7 @@ public class FloatService extends Service {
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
                     paperTouched = false;
-                    if (sbGrab) { sbGrab = false; invalidate(); }
+                    if (sbGrab) { sbGrab = false; grabbed(false); }
                     else if (vt != null && e.getActionMasked() == MotionEvent.ACTION_UP
                             && !pinch.isInProgress()) {
                         vt.computeCurrentVelocity(1000, dp(4000));
