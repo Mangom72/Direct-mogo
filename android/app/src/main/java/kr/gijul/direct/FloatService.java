@@ -883,7 +883,29 @@ public class FloatService extends Service {
         swapped = false;
         foldAnim.addUpdateListener(a -> {
             foldT = (Float) a.getAnimatedValue();
-            grip.setAlpha(1f - foldT);
+
+            /* <b>종이도 함께 오므라든다.</b>
+            
+               전에는 바만 오른쪽으로 줄고 종이는 제자리에서 옅어지기만 했다.
+               큰 흰 판이 가만히 있는 채로 바가 저 혼자 달아나니, 하나가 접히는
+               것이 아니라 둘이 따로 노는 것으로 보였다 — 크기가 먼저 변하고
+               자리는 나중에 맞추는 것처럼 느껴진 것이 그것이다.
+            
+               알약이 설 자리는 창의 <b>오른쪽 위</b>다. 그 모서리를 못으로 박고
+               바가 줄어드는 만큼 종이도 줄이면, 창 하나가 그 자리로 접힌다.
+            
+               창 크기는 건드리지 않고 그리기만 줄인다. 창을 줄이면 프레임마다
+               시스템에 다녀와야 하고, 종이는 새 폭으로 다시 그리라는 일감까지
+               쌓는다 — 어차피 사라질 그림에 그럴 까닭이 없다. */
+            float k = ww > 0 ? barW() / (float) ww : 1f;
+            content.setPivotX(content.getWidth());
+            content.setPivotY(0f);
+            content.setScaleX(k);
+            content.setScaleY(k);
+
+            /* 손잡이는 반대쪽 구석에 있다. 다 같이 오른쪽 위로 접히는데 저만
+               왼쪽 아래에 남아 옅어지면 눈이 그리로 끌린다. 먼저 치운다. */
+            grip.setAlpha(Math.max(0f, 1f - foldT * 3f));
 
             /* <b>바 속은 반쯤에서 갈아 끼운다.</b>
             
