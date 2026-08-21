@@ -1,8 +1,8 @@
 {
-  "versionCode": 64,
-  "versionName": "7.3",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.3/gijul-direct.apk",
-  "size": 1874743,
-  "sha256": "ca6b0e1ff6e5957de136a708c4b6853b41ed65f1409a931a3ab153856d05a2ad",
-  "notes": "접힐 때 종이도 함께 오므라듭니다"
+  "versionCode": 65,
+  "versionName": "7.4",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.4/gijul-direct.apk",
+  "size": 1875027,
+  "sha256": "571628b1e083a47bd61281a719010a9c0d372940a8a14b0f725463f3a87fe7c3",
+  "notes": "접는 동안 창이 흔들리던 것을 고쳤습니다"
 }
