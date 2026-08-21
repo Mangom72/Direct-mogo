@@ -1,8 +1,8 @@
 {
-  "versionCode": 67,
-  "versionName": "7.6",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.6/gijul-direct.apk",
-  "size": 1876135,
-  "sha256": "619818650ac0e781bafb9f93b6d852b5bb28b4f2ee0717c6869120553cab0bc5",
-  "notes": "창을 던지면 미끄러져 멈춥니다"
+  "versionCode": 68,
+  "versionName": "7.7",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.7/gijul-direct.apk",
+  "size": 1876111,
+  "sha256": "eac4bd575d99535a8b3b8108e2eada6f79f0d61e620d9e7e96e98c75a3038b4c",
+  "notes": "던진 창이 덜 미끄러집니다"
 }
