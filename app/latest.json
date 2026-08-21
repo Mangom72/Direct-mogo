@@ -1,8 +1,8 @@
 {
-  "versionCode": 60,
-  "versionName": "6.9",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v6.9/gijul-direct.apk",
-  "size": 1871255,
-  "sha256": "33494ae10f6b20eeb0079b5b9fe619a4df94c1fc2c6d6f70b1b329d24fea41e3",
-  "notes": "메뉴 단추를 1초만 눌러도 앱이 열립니다"
+  "versionCode": 61,
+  "versionName": "7.0",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.0/gijul-direct.apk",
+  "size": 1873583,
+  "sha256": "14313681c27c8e446f23db8e01246b87204eb77cb014be86f9c88703ba425f87",
+  "notes": "바뀌는 것들이 눈에 보이게 움직입니다"
 }
