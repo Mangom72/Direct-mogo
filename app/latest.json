@@ -1,8 +1,8 @@
 {
-  "versionCode": 62,
-  "versionName": "7.1",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.1/gijul-direct.apk",
-  "size": 1874691,
-  "sha256": "82e267b741b10de2b787df0fb539e70b4262d43857909842ff56034576d8b2e1",
-  "notes": "띄운 창에서도 두 번 두드려 확대합니다"
+  "versionCode": 63,
+  "versionName": "7.2",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.2/gijul-direct.apk",
+  "size": 1874775,
+  "sha256": "db1ead9a477bdcd78c81e1c464167ce247882e0c19b2f904112375593e967881",
+  "notes": "접히는 동안 바 안쪽도 함께 넘어갑니다"
 }
