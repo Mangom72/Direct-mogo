@@ -396,7 +396,19 @@ public class FloatService extends Service {
     private void place() {
         clampWindow();
         final int y = wy - imeLift;      // 자판이 떴으면 셋이 함께 그만큼 올라간다
-        move(bar, barLp, wx + lead(), y, barW(), barH);
+
+        /* 알약의 오른쪽 변은 늘 펼친 창의 오른쪽 변이다. 접히는 동안에는 창을
+           그대로 두고 그리기로만 줄이므로(위 wrap 참고), 여기서 창에 알리는 것은
+           움직임이 끝난 뒤의 크기뿐이다 — 그 사이에는 같은 값이 다시 가므로
+           move() 가 걸러 낸다. */
+        final int right = wx + ww, bw = barW();
+        int bx = right - bw, bwin = bw;
+        if (foldAnim != null && foldAnim.isRunning()) {
+            bx = Math.max(0, wx);
+            bwin = Math.max(bw, right - bx);
+        }
+        move(bar, barLp, bx, y, bwin, barH);
+        if (bar != null) bar.invalidate();               // 칠할 자리가 프레임마다 바뀐다
         /* 종이는 바 밑으로 seam 만큼 파고들어 있다 — 아래 setPadding 을 보라. */
         move(content, paperLp, wx, y + barH - seam, ww,
                 Math.max(dp(80), wh - barH) + seam);
@@ -424,10 +436,27 @@ public class FloatService extends Service {
         final int ink = night ? 0xFFECE7DA : 0xFF221F1A;
         final int bg  = night ? 0xFF161A22 : 0xFFF3F1EC;
 
-        FrameLayout wrap = new FrameLayout(this);
+        /* 바탕을 창에 맡기지 않고 **직접 그린다.**
+
+           접는 동안 창 폭을 프레임마다 줄이면, 안드로이드는 새 그림이 준비될
+           때까지 이전 것을 새 크기에 맞춰 늘려 보여 준다. 그 늘어난 몇 프레임이
+           '먼저 축소됐다가 자리를 맞추는' 것으로 보이고, 창이 좌우로 흔들린다.
+
+           알약 모양을 그리기로 내면 창은 그대로 두어도 된다. 접히는 내내 창은
+           펼친 크기 그대로고, 오른쪽 끝에서 barW() 만큼만 칠한다. 다 접힌 뒤에
+           창을 알약 크기로 줄이는데, 그때 칠해져 있던 자리와 정확히 같으므로
+           그 순간은 눈에 띄지 않는다. */
+        FrameLayout wrap = new FrameLayout(this) {
+            @Override protected void onDraw(Canvas c) {
+                if (barBg == null) return;
+                int w = Math.min(getWidth(), barW());
+                barBg.setBounds(getWidth() - w, 0, getWidth(), getHeight());
+                barBg.draw(c);
+            }
+        };
+        wrap.setWillNotDraw(false);
         barBg = new GradientDrawable();
         barBg.setColor(bg);
-        wrap.setBackground(barBg);
         roundBar();
 
         row = new LinearLayout(this);
