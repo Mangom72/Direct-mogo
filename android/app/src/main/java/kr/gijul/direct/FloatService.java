@@ -1230,7 +1230,7 @@ public class FloatService extends Service {
                 case MotionEvent.ACTION_CANCEL:
                     if (vt != null && e.getActionMasked() == MotionEvent.ACTION_UP) {
                         track(e);
-                        vt.computeCurrentVelocity(1000, dp(6000));
+                        vt.computeCurrentVelocity(1000, dp(2200));
                         int vx = (int) vt.getXVelocity(), vy = (int) vt.getYVelocity();
                         if (Math.abs(vx) > dp(90) || Math.abs(vy) > dp(90)) drift(vx, vy);
                     }
@@ -1272,10 +1272,26 @@ public class FloatService extends Service {
         if (drift == null) drift = new android.widget.OverScroller(this);
         android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
         int lead = lead(), w = barW(), h = minimized ? barH : wh;
-        drift.forceFinished(true);
-        drift.fling(wx, wy, vx, vy,
-                -lead, Math.max(-lead, dm.widthPixels - w - lead),
-                0, Math.max(0, dm.heightPixels - h));
+        int x0 = -lead, x1 = Math.max(-lead, dm.widthPixels - w - lead);
+        int y1 = Math.max(0, dm.heightPixels - h);
+
+        /* 기본 마찰은 <b>긴 목록을 굴리라고</b> 맞춰 둔 값이다. 창에 그대로 쓰면
+           살짝 튕겨도 화면을 가로질러 미끄러진다 — 얼음판이 된다. */
+        drift.setFriction(android.view.ViewConfiguration.getScrollFriction() * 5f);
+
+        /* 그래도 세게 뿌리면 멀리 간다. 미끄러질 거리를 화면의 삼분의 일로
+           묶는다 — 속도와 거리는 비례하지 않으므로, 넘으면 속도를 줄여 다시
+           재 본다. 몇 번이면 들어온다. */
+        int cap = Math.round(Math.min(dm.widthPixels, dm.heightPixels) / 3f);
+        for (int i = 0; i < 6; i++) {
+            drift.forceFinished(true);
+            drift.fling(wx, wy, vx, vy, x0, x1, 0, y1);
+            int far = Math.max(Math.abs(drift.getFinalX() - wx),
+                               Math.abs(drift.getFinalY() - wy));
+            if (far <= cap) break;
+            vx = Math.round(vx * 0.75f);
+            vy = Math.round(vy * 0.75f);
+        }
         drifting = true;
         android.view.Choreographer.getInstance().postFrameCallback(driftStep);
     }
