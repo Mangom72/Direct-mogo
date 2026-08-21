@@ -25,6 +25,7 @@ import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.util.LruCache;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -1298,6 +1299,8 @@ public class FloatService extends Service {
         PaperView(Context c) {
             super(c);
             setBackgroundColor(Color.WHITE);
+            /* 두 번째 두드림을 그대로 끌면 한 손으로 배율을 잡는다 */
+            pinch.setQuickScaleEnabled(true);
             say.setColor(0xFF6B7280);
             say.setTextSize(dp(14));
             say.setTextAlign(Paint.Align.CENTER);
@@ -1364,6 +1367,7 @@ public class FloatService extends Service {
 
         void close() {
             stopGlide();
+            stopZoom();
             synchronized (FloatService.this) {
                 cache.evictAll();
                 try { if (pdf != null) pdf.close(); } catch (Exception ignore) {}
@@ -1581,17 +1585,73 @@ public class FloatService extends Service {
         private final ScaleGestureDetector pinch = new ScaleGestureDetector(
                 FloatService.this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
             @Override public boolean onScale(ScaleGestureDetector d) {
+                scaled = true;
+                stopZoom();                     // 손이 배율 애니메이션을 이긴다
                 zoomAt(zoom * d.getScaleFactor(), d.getFocusX(), d.getFocusY());
                 return true;
             }
         });
 
+        /**
+         * 두 번 두드려 키우고 줄인다.
+         *
+         * 이 창에는 확대 단추가 없다 — 44dp 바에 자리가 없어서 뺐다. 손가락
+         * 둘로 벌리는 것만 남으면 한 손으로 들고 볼 때 할 수 있는 것이 없다.
+         *
+         * <b>두 번째 두드림을 끌면 그건 두드림이 아니다.</b> 그대로 위아래로
+         * 끌어 한 손으로 배율을 잡는 몸짓(quick scale)이 ScaleGestureDetector 에
+         * 들어 있어서, 손가락이 움직이지 않았을 때만 두드림으로 친다. 안 그러면
+         * 끌기 시작하는 순간 2배로 튀었다가 거기서부터 확대된다.
+         */
+        private final GestureDetector taps = new GestureDetector(FloatService.this,
+                new GestureDetector.SimpleOnGestureListener() {
+            private float ax, ay;
+            @Override public boolean onDown(MotionEvent e) { return true; }
+            @Override public boolean onDoubleTapEvent(MotionEvent e) {
+                switch (e.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        ax = e.getX(); ay = e.getY();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if (Math.hypot(e.getX() - ax, e.getY() - ay) < dp(16))
+                            zoomTo(zoom > 1.2f ? 1f : 2f, e.getX(), e.getY());
+                        break;
+                }
+                return true;
+            }
+        });
+
+        private android.animation.ValueAnimator zoomAnim;
+        private boolean scaled;           // 이번 손짓이 배율을 건드렸는가
+
+        private void stopZoom() { if (zoomAnim != null) zoomAnim.cancel(); }
+
+        /** 그 자리를 붙들고 배율만 옮긴다. 툭 바뀌면 어디를 보고 있었는지 잃는다. */
+        private void zoomTo(float want, final float fx, final float fy) {
+            stopZoom();
+            zoomAnim = android.animation.ValueAnimator.ofFloat(
+                    zoom, Math.max(1f, Math.min(4f, want)));
+            zoomAnim.setDuration(210);
+            zoomAnim.setInterpolator(new android.view.animation.DecelerateInterpolator());
+            zoomAnim.addUpdateListener(a -> zoomAt((Float) a.getAnimatedValue(), fx, fy));
+            zoomAnim.start();
+        }
+
         @Override public boolean onTouchEvent(MotionEvent e) {
-            if (!sbGrab) pinch.onTouchEvent(e);   // 막대를 잡은 손은 확대가 아니다
+            /* 막대를 잡은 손은 확대도 두드림도 아니다. 누른 자리가 막대 폭 안이면
+               그 손이 놓일 때까지 손짓 감지기에는 아무것도 넘기지 않는다. */
+            boolean onBar = sbGrab || (e.getActionMasked() == MotionEvent.ACTION_DOWN
+                    && e.getX() > getWidth() - dp(SB_BAND) && sbRoom() > 0);
+            if (!onBar) {
+                pinch.onTouchEvent(e);
+                taps.onTouchEvent(e);
+            }
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                     paperTouched = true;
                     stopGlide();                       // 미끄러지는 중이면 손이 이긴다
+                    stopZoom();
+                    scaled = false;
                     if (vt != null) vt.recycle();
                     vt = android.view.VelocityTracker.obtain();
                     vt.addMovement(e);
@@ -1635,7 +1695,11 @@ public class FloatService extends Service {
                 case MotionEvent.ACTION_CANCEL:
                     paperTouched = false;
                     if (sbGrab) { sbGrab = false; grabbed(false); }
-                    else if (vt != null && e.getActionMasked() == MotionEvent.ACTION_UP
+                    /* 한 손 확대(quick scale)는 손가락 하나가 위아래로 끄는 것이라,
+                       그대로 두면 손을 뗄 때 그 속도로 종이가 미끄러진다. 배율을
+                       잡은 손짓이었으면 미끄러뜨리지 않는다. */
+                    else if (vt != null && !scaled
+                            && e.getActionMasked() == MotionEvent.ACTION_UP
                             && !pinch.isInProgress()) {
                         vt.computeCurrentVelocity(1000, dp(4000));
                         int vx = (int) vt.getXVelocity(), vy = (int) vt.getYVelocity();
