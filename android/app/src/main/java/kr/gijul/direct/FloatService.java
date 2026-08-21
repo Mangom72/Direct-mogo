@@ -707,7 +707,7 @@ public class FloatService extends Service {
         if (segAnim != null) segAnim.cancel();
         segAnim = android.animation.ValueAnimator.ofFloat(segT, to);
         segAnim.setDuration(150);
-        segAnim.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        segAnim.setInterpolator(ease());
         segAnim.addUpdateListener(a -> {
             segT = (Float) a.getAnimatedValue();
             if (seg != null) seg.invalidate();
@@ -720,7 +720,7 @@ public class FloatService extends Service {
         if (opAnim != null) opAnim.cancel();
         opAnim = android.animation.ValueAnimator.ofInt(opacity, to);
         opAnim.setDuration(170);
-        opAnim.setInterpolator(new android.view.animation.DecelerateInterpolator());
+        opAnim.setInterpolator(ease());
         opAnim.addUpdateListener(a -> {
             opacity = (Integer) a.getAnimatedValue();
             updateBar();
@@ -908,7 +908,7 @@ public class FloatService extends Service {
         if (foldAnim != null) foldAnim.cancel();
         foldAnim = android.animation.ValueAnimator.ofFloat(foldT, to);
         foldAnim.setDuration(Math.round(190 * Math.abs(to - foldT)) + 40);
-        foldAnim.setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f));
+        foldAnim.setInterpolator(ease());
         swapped = false;
         foldAnim.addUpdateListener(a -> {
             foldT = (Float) a.getAnimatedValue();
@@ -967,6 +967,21 @@ public class FloatService extends Service {
             }
         });
         foldAnim.start();
+    }
+
+    /**
+     * 움직이는 것들이 함께 쓰는 가속 곡선.
+     *
+     * DecelerateInterpolator 는 <b>맨 처음이 가장 빠르다.</b> 그래서 접기를
+     * 프레임 단위로 재 보면 첫 프레임에서 벌써 40% 가까이 가 있다 — 눈에는
+     * 한 번 튄 다음에 미끄러지는 것으로 보인다. 세상에 처음부터 최고 속도인
+     * 물건은 없다.
+     *
+     * 잠깐 힘을 받고 길게 멎는 곡선으로 바꾼다. 시작이 조용해지는 만큼 어디서
+     * 어디로 가는지가 그대로 보인다.
+     */
+    private static android.view.animation.Interpolator ease() {
+        return new android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f);
     }
 
     private int barW() { return Math.round(ww + (minW - ww) * foldT); }
@@ -1117,9 +1132,7 @@ public class FloatService extends Service {
         picker.setAlpha(0f);
         picker.setTranslationY(dp(12));
         picker.animate().alpha(1f).translationY(0)
-                .setDuration(170)
-                .setInterpolator(new android.view.animation.DecelerateInterpolator())
-                .start();
+                .setDuration(170).setInterpolator(ease()).start();
         content.requestFocus();
         markMenu(true);
         updateBar();
@@ -1703,7 +1716,7 @@ public class FloatService extends Service {
             zoomAnim = android.animation.ValueAnimator.ofFloat(
                     zoom, Math.max(1f, Math.min(4f, want)));
             zoomAnim.setDuration(210);
-            zoomAnim.setInterpolator(new android.view.animation.DecelerateInterpolator());
+            zoomAnim.setInterpolator(ease());
             zoomAnim.addUpdateListener(a -> zoomAt((Float) a.getAnimatedValue(), fx, fy));
             zoomAnim.start();
         }
