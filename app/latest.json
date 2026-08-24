@@ -1,8 +1,8 @@
 {
-  "versionCode": 72,
-  "versionName": "8.1",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.1/gijul-direct.apk",
-  "size": 2143819,
-  "sha256": "49d0c9ae91798f5071df396bb1f2df6ffe5cadc48c8fd97c6900b13d0a89a021",
-  "notes": "위젯 글자가 카드 크기만큼 커집니다. 달력 제목의 글꼴이 갈리던 것도 고쳤습니다"
+  "versionCode": 73,
+  "versionName": "8.2",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.2/gijul-direct.apk",
+  "size": 2146535,
+  "sha256": "8c58233340c1159da821cab1065b3a73860e5d7044af3c940c06d34dbc4d3367",
+  "notes": "누르는 자리를 손가락 크기로 넓히고, 달력을 Esc 로 닫을 수 있게 했습니다"
 }
