@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="@drawable/w_bg"
+    android:padding="10dp">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:baselineAligned="true">
+        <TextView android:id="@+id/title"
+            android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+            android:textSize="13.5sp" android:textStyle="bold" android:textColor="@color/w_ink"
+            android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/count"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="10.5sp" android:textStyle="bold" android:textColor="@color/w_mark" />
+    </LinearLayout>
+
+    <!-- 격자는 RemoteViews 로 낼 수가 없다(뷰가 마흔 개를 넘고, 칸마다 이름표가
+         또 여럿이다). 한 장으로 그려 넣는다. -->
+    <ImageView android:id="@+id/art"
+        android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:layout_marginTop="5dp"
+        android:scaleType="fitXY" android:contentDescription="@string/w_cal" />
+
+    <TextView android:id="@+id/foot"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:paddingTop="6dp"
+        android:textSize="10.5sp" android:textColor="@color/w_ink2"
+        android:maxLines="1" android:ellipsize="end" />
+</LinearLayout>

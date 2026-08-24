@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 위젯 고르는 화면에 이 이름과 설명이 뜬다. 여섯이 나란히 서므로 무엇이
+     다른지가 한 줄로 갈려야 한다. -->
+<resources>
+    <string name="w_cal">달력</string>
+    <string name="w_cal_d">한 달을 통째로. 푼 회차가 날마다 붙습니다</string>
+    <string name="w_week">이번 주</string>
+    <string name="w_week_d">오늘 했는지, 며칠째 이어지는지</string>
+    <string name="w_turf">잔디밭</string>
+    <string name="w_turf_d">열다섯 주. 어디서 끊겼는지가 한눈에</string>
+    <string name="w_recent">최근 푼 것</string>
+    <string name="w_recent_d">방금 무엇을 풀었는지</string>
+    <string name="w_dday">D-day와 진도</string>
+    <string name="w_dday_d">수능까지 남은 날과 이번 달</string>
+    <string name="w_next">다음에 풀 것</string>
+    <string name="w_next_d">내 과목에서 아직 안 푼 최신 회차</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="w_card">#1F2531</color>
+    <color name="w_ink">#ECE7DA</color>
+    <color name="w_ink2">#AEB5C2</color>
+    <color name="w_rule">#3A4353</color>
+    <color name="w_mark">#F08379</color>
+    <color name="w_gov">#8AC6EA</color>
+    <color name="w_edu">#A6D48D</color>
+    <color name="w_sel">#394354</color>
+</resources>

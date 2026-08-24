@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-knjqXGxyhAO1LRPQlD8v4nqiKz3gNFar57toCfeleO0=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-/6TsG4a7C6bUcwDCgBYvGQwbkg5XnIiHBF96hiiomQY=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -2364,7 +2364,7 @@ out.addEventListener("click", e=>{
   if(chk){
     const k=chk.dataset.k;
     if(SOLVED[k]) delete SOLVED[k]; else SOLVED[k]=today();
-    saveSolved();
+    saveSolved(); tellSolved();
     render();
     /* 방금 찍은 회차가 '안 푼 것만' 때문에 사라지면 초점 둘 데가 없다.
        그때만 목록으로 돌린다. */
@@ -2384,6 +2384,59 @@ out.addEventListener("click", e=>{
   }
   if(st) delete st.dataset.opened;
 });
+
+/* ── 위젯에 건네기 ──────────────────────────────────────────────────
+   홈 화면 위젯은 <b>다른 프로세스</b>라 이 페이지의 localStorage 에 손이 닿지
+   않는다. 그래서 통째로 건네준다 — 앱이 제 저장소에 적고 위젯은 그것만 읽는다.
+
+   숨길 수 없는 결과가 하나 따라온다. <b>페이지를 한 번은 열어야</b> 위젯이
+   최신이 된다. 웹에서만 찍은 것은 앱을 열기 전까지 위젯에 안 보인다.
+
+   과목 이름과 '다음에 풀 것'을 함께 보내는 것은, 그 둘을 아는 것이 여기뿐이라서다.
+   앱이 알아내려면 자료를 받아 와야 하는데 홈 화면에 뜨는 것이 망을 타는 것은
+   옳지 않다. 표시에 실제로 나오는 과목만 담으므로 몇 줄 되지 않는다. */
+function tellSolved(){
+  if(!(NATIVE && NATIVE.setSolved)) return;
+  try{
+    const subs = {};
+    for(const k in SOLVED){
+      const p = k.split("/");
+      if(p.length < 4) continue;
+      const who = p[0] + "/" + p[1], meta = SUBINDEX[who];
+      if(meta) subs[who] = meta.name;
+    }
+    NATIVE.setSolved(JSON.stringify({ v:1, marks:SOLVED, subs, next:nextUp() }));
+  }catch(e){}
+}
+
+/* 내 과목에서 아직 안 푼 최신 회차 셋. 내 과목이 없으면 지금 보고 있는 과목. */
+function nextUp(){
+  if(!DB) return [];
+  const want = favs.length ? favs.map(f=>({g:f.g, s:f.s}))
+                           : [{g:sel.grade, s:sel.sub}];
+  const out = [];
+  for(const {g, s} of want){
+    const meta = SUBINDEX[g+"/"+s];
+    const years = (DB[g] || {})[s] || {};
+    if(!meta) continue;
+    let best = null;
+    for(const y of Object.keys(years).sort((a,b)=>b-a)){
+      for(const [title, date] of years[y]){
+        const key = g + "/" + s + "/" + date + "/"
+                  + title.replace(ODDEVEN, "").replace(/\s+/g," ").trim();
+        if(okDate(SOLVED[key])) continue;
+        if(!best || date > best.date) best = { title, date };
+      }
+      if(best) break;                 /* 최신 해에서 찾았으면 더 뒤질 것 없다 */
+    }
+    if(best) out.push({
+      t: shortName(best.date.slice(0,4), best.title, meta.name),
+      g, s, k: kindOf(best.title),
+    });
+    if(out.length >= 3) break;
+  }
+  return out;
+}
 
 /* ── 푼 날 달력 ─────────────────────────────────────────────────────
    찍어 둔 것을 날짜로 되짚는다. 과목을 가리지 않는다 — 한 과목의 진도는 이미
@@ -2552,7 +2605,7 @@ function editStamp(st){
     if(done) return; done=true;
     if(save && /^\d{4}-\d{2}-\d{2}$/.test(box.value)){
       SOLVED[k]=box.value.replace(/-/g,"");
-      saveSolved();
+      saveSolved(); tellSolved();
     }
     render();
     const back=out.querySelector(`.stamp[data-k="${(window.CSS && CSS.escape) ? CSS.escape(k) : k}"]`);
@@ -3017,6 +3070,9 @@ if("serviceWorker" in navigator){
     fillYears();          /* 자료 없는 연도를 가리켰다면 여기서 '전체'로 내려앉는다 */
     render();
     syncURL();            /* #subs= 였다면 이 시점에 보통 주소로 정리된다 */
+    /* 위젯은 이 한 번으로 최신이 된다. 자료가 있어야 '다음에 풀 것'을 고를 수
+       있어서 여기까지 미룬다. */
+    tellSolved();
     if(incoming) offerImport(incoming);
   }catch(e){
     out.innerHTML=`<div class="empty">자료를 불러오지 못했습니다. (${esc(e.message)})<br>

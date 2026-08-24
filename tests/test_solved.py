@@ -180,6 +180,48 @@ with sync_playwright() as pw:
     ck(pg.eval_on_selector_all('.chk[aria-pressed="true"]', "e=>e.length") == 2,
        "옮긴 뒤에도 두 줄이 함께 찍혀 있어야 합니다")
 
+    # ── 위젯에 건네는 꾸러미 ────────────────────────────────────────
+    # 위젯은 다른 프로세스라 이 페이지의 저장소를 못 본다. 건네는 것이 유일한
+    # 길이므로, 꼴이 어긋나면 위젯이 통째로 빈 채로 뜬다 — 그러고도 앱은 멀쩡히
+    # 돌아서 알아차릴 방법이 없다.
+    ctx2 = b.new_context(viewport={"width": 412, "height": 900}, service_workers="block")
+    ctx2.add_init_script("""
+      window.__sent = [];
+      window.GijulNative = {
+        systemDark:()=>false, where:()=>'/기출 직행', listSaved:()=>'[]',
+        setSolved:(j)=>{ window.__sent.push(j); },
+        appVersion:()=>'{"code":68,"name":"7.7"}', checkUpdate:()=>{}, installUpdate:()=>{}
+      };
+    """)
+    pg2 = ctx2.new_page()
+    pg2.on("pageerror", lambda e: errs.append(str(e)[:140]))
+    pg2.goto(SITE, wait_until="load")
+    pg2.wait_for_selector(".item .chk", timeout=25000)
+    pg2.wait_for_timeout(300)
+    first = pg2.evaluate("()=>window.__sent.length")
+    pg2.eval_on_selector_all(".item .chk", "e=>e[0].click()")
+    pg2.wait_for_timeout(300)
+    sent = pg2.evaluate("()=>window.__sent[window.__sent.length-1]")
+    import json as _json
+    pack = _json.loads(sent)
+    print("15. 건넨 꾸러미 열쇠:", sorted(pack.keys()), "· 처음 열 때도 보냈는가:", first > 0)
+    ck(first > 0, "페이지를 열 때 위젯에 아무것도 안 건넸습니다")
+    ck(set(pack) >= {"marks", "subs", "next"},
+       f"꾸러미에 빠진 것이 있습니다: {sorted(pack.keys())}")
+    ck(len(pack["marks"]) == 1, f"찍은 하나가 안 담겼습니다: {pack['marks']}")
+
+    mk = list(pack["marks"])[0]
+    who = "/".join(mk.split("/")[:2])
+    print("16. 과목 이름:", pack["subs"].get(who), "· 다음에 풀 것:", [x.get("t") for x in pack["next"]])
+    ck(pack["subs"].get(who), f"과목 이름이 안 담겼습니다: {pack['subs']}")
+    ck(pack["next"], "위젯에 내놓을 '다음에 풀 것'이 비었습니다")
+    import re as _re
+    ck(all(_re.match(r"^\d{2} \S+ \S+$", x.get("t","")) for x in pack["next"]),
+       f"'다음에 풀 것'의 이름 꼴이 아닙니다: {[x.get('t') for x in pack['next']]}")
+    # 방금 찍은 회차가 '다음에 풀 것'에 남아 있으면 안 된다
+    ck(not any(x.get("t") == "" for x in pack["next"]), "빈 이름이 있습니다")
+    ctx2.close()
+
     pg.screenshot(path=str(SHOT / "solved.png"))
     print("   오류:", errs or "없음")
     ck(not errs, f"스크립트 오류: {errs}")

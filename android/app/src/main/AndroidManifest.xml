@@ -65,6 +65,83 @@
                 android:value="floating_paper_overlay" />
         </service>
 
+        <!-- 홈 화면 위젯 여섯 벌. 하나로 합치지 않은 것은 홈 화면의 자리가 사람마다
+             달라서다 — 넷을 나란히 놓는 사람도, 2×2 하나만 두는 사람도 있다.
+             updatePeriodMillis 는 0이다. 스스로 깨어날 까닭이 없다 — 표시가 바뀌는
+             것은 페이지를 열었을 때뿐이고, 그때 앱이 직접 깨운다. 날이 바뀌는 것만
+             자정에 한 번 맞춰 주면 된다(WidgetBase 의 알람). -->
+        <receiver
+            android:name=".CalWidget"
+            android:exported="false"
+            android:label="@string/w_cal">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/w_cal_info" />
+        </receiver>
+
+        <receiver
+            android:name=".WeekWidget"
+            android:exported="false"
+            android:label="@string/w_week">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/w_week_info" />
+        </receiver>
+
+        <receiver
+            android:name=".TurfWidget"
+            android:exported="false"
+            android:label="@string/w_turf">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/w_turf_info" />
+        </receiver>
+
+        <receiver
+            android:name=".RecentWidget"
+            android:exported="false"
+            android:label="@string/w_recent">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/w_recent_info" />
+        </receiver>
+
+        <receiver
+            android:name=".DdayWidget"
+            android:exported="false"
+            android:label="@string/w_dday">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/w_dday_info" />
+        </receiver>
+
+        <receiver
+            android:name=".NextWidget"
+            android:exported="false"
+            android:label="@string/w_next">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/w_next_info" />
+        </receiver>
+
         <!-- 받아둔 파일을 외부 뷰어에 넘기려면 content:// 로 줘야 한다 (file:// 는 API 24+에서 막힘) -->
         <provider
             android:name="androidx.core.content.FileProvider"

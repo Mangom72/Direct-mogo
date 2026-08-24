@@ -501,6 +501,26 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean systemDark() { return isNight(); }
 
+        /**
+         * 찍어 둔 '푼 회차'를 앱 쪽에 옮겨 적는다.
+         *
+         * 위젯은 <b>다른 프로세스</b>라 웹뷰의 localStorage 에 손이 닿지 않는다.
+         * 페이지가 열릴 때마다 통째로 건네주면 앱이 제 저장소에 적고, 위젯은
+         * 그것만 읽는다. 숨길 수 없는 결과가 하나 따라온다 — <b>페이지를 한 번은
+         * 열어야</b> 위젯이 최신이 된다.
+         *
+         * 바뀐 것이 없으면 아무것도 하지 않는다. 페이지를 열 때마다 홈 화면의
+         * 위젯을 다시 그리게 하면, 아무것도 안 바뀐 날에도 그 일이 돈다.
+         */
+        @JavascriptInterface
+        public void setSolved(String json) {
+            try {
+                if (Solved.put(MainActivity.this, json)) Widgets.refresh(MainActivity.this);
+            } catch (Exception e) {
+                Log.w(TAG, "표시를 옮겨 적지 못했습니다", e);
+            }
+        }
+
         /** 저장 위치를 사람이 읽을 형태로 */
         @JavascriptInterface
         public String where() { return root().getAbsolutePath(); }

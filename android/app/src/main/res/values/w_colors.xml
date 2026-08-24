@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 위젯 색. 페이지의 밝은 테마와 같은 값이다 — 홈 화면에 뜨는 것이 앱을 열었을
+     때와 다른 색이면 같은 앱으로 안 보인다. 어두운 쪽은 values-night 에 있고,
+     시스템 다크모드를 따라 안드로이드가 알아서 골라 준다. -->
+<resources>
+    <color name="w_card">#FCFAF4</color>
+    <color name="w_ink">#191713</color>
+    <color name="w_ink2">#6B6353</color>
+    <color name="w_rule">#CFC6AC</color>
+    <color name="w_mark">#B4342A</color>
+    <color name="w_gov">#1D4E6B</color>
+    <color name="w_edu">#4A6B3D</color>
+    <color name="w_sel">#E4DCC6</color>
+</resources>

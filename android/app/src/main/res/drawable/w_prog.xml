@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 진도 막대. ProgressBar 는 RemoteViews 가 다룰 수 있는 몇 안 되는 뷰다 —
+     비율을 그림 없이 낼 수 있는 유일한 길이라 여기에 쓴다. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle"><solid android:color="@color/w_rule" /></shape>
+    </item>
+    <item android:id="@android:id/progress">
+        <clip><shape android:shape="rectangle"><solid android:color="@color/w_mark" /></shape></clip>
+    </item>
+</layer-list>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 위젯 바탕. 런처가 저마다 다른 모서리를 쓰므로 우리 것도 둥글게 둔다. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/w_card" />
+    <corners android:radius="18dp" />
+</shape>
