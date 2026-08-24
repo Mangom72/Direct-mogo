@@ -118,6 +118,68 @@ with sync_playwright() as pw:
     ck(pg.eval_on_selector_all(".stamp", "e=>e.length") == 0,
        "날짜가 아닌 값에 도장이 찍혔습니다")
 
+    # ── 홀수형·짝수형은 한 회차 ─────────────────────────────────────
+    # 문항 순서만 다른 같은 시험지다. 따로 세면 다 풀어도 진도가 안 찬다.
+    pg.evaluate("()=>{ SOLVED={}; localStorage.removeItem(SOLVED_KEY);"
+                "pickSub('D300','80003'); render(); }")           # 고3 영어
+    pg.wait_for_selector(".item .chk", timeout=10000)
+    pair = pg.evaluate("""()=>{
+        const t=[...document.querySelectorAll('.item .nm')].map(e=>e.textContent.trim());
+        const i=t.findIndex(x=>x.includes('홀수형'));
+        return i<0 ? null : {i, odd:t[i], even:t[i+1]};}""")
+    print("10. 홀짝 짝지음:", pair and (pair["odd"], pair["even"]))
+    ck(pair and "짝수형" in (pair["even"] or ""), "홀수형 다음 줄이 짝수형이어야 합니다")
+
+    if pair:
+        before = pg.eval_on_selector(".tally .sm", "e=>e.textContent")
+        pg.eval_on_selector_all(".item .chk", f"e=>e[{pair['i']}].click()")
+        pg.wait_for_selector(".stamp", timeout=5000)
+        keys = pg.evaluate("()=>Object.keys(SOLVED)")
+        stamps = pg.eval_on_selector_all(".stamp", "e=>e.length")
+        pressed = pg.eval_on_selector_all('.chk[aria-pressed="true"]', "e=>e.length")
+        print(f"11. 홀수형만 찍음 · 열쇠 {keys} · 도장 {stamps}개 · 찍힌 줄 {pressed}개")
+        ck(len(keys) == 1, f"한 회차인데 열쇠가 {len(keys)}개입니다")
+        ck("홀수형" not in keys[0] and "짝수형" not in keys[0],
+           f"열쇠에 홀짝이 남아 있습니다: {keys[0]}")
+        ck(pressed == 2, f"같은 회차의 두 줄이 함께 찍혀야 하는데 {pressed}줄입니다")
+
+        prog = pg.eval_on_selector(".tally .prog", "e=>e.textContent.replace(/\\s+/g,' ').trim()")
+        rows = pg.eval_on_selector_all(".item", "e=>e.length")
+        m = int(prog.split("/")[1].split()[0])
+        print(f"12. 진도 {prog} · 화면의 줄 {rows}개 · {before.strip()}")
+        ck(prog.strip().startswith("1"), f"홀·짝을 하나로 세야 합니다: {prog!r}")
+        ck(m < rows, f"분모가 줄 수({rows})와 같습니다 — 홀짝이 안 묶였습니다: {prog!r}")
+
+        # 홀짝 쌍은 해마다 있다. 다른 해 것은 그대로 남아야 하므로
+        # '몇 개 줄었는가'로 본다.
+        cnt = """()=>{const t=[...document.querySelectorAll('.item .nm')]
+            .map(e=>e.textContent);
+            return [t.filter(x=>x.includes('홀수형')).length,
+                    t.filter(x=>x.includes('짝수형')).length];}"""
+        was = pg.evaluate(cnt)
+        pg.click("#onlyBtn")
+        pg.wait_for_timeout(200)
+        now = pg.evaluate(cnt)
+        print(f"13. 안 푼 것만 — 홀수형 {was[0]}→{now[0]} · 짝수형 {was[1]}→{now[1]}")
+        ck(now[0] == was[0] - 1, "푼 회차의 홀수형이 안 빠졌습니다")
+        ck(now[1] == was[1] - 1, "짝만 안 풀었다고 남기면 안 됩니다 — 같은 회차입니다")
+        pg.click("#onlyBtn")
+        pg.wait_for_timeout(150)
+
+    # ── 옛 열쇠(홀짝이 붙은 것)를 옮겨 오는가 ───────────────────────
+    pg.evaluate("""()=>{ localStorage.setItem(SOLVED_KEY,
+        JSON.stringify({'D300/80003/20251113/수능 홀수형':'20250101'})); }""")
+    pg.reload(wait_until="load")
+    pg.wait_for_selector(".item", timeout=25000)
+    pg.evaluate("()=>{ pickSub('D300','80003'); render(); }")
+    pg.wait_for_selector(".item .chk", timeout=10000)
+    moved = pg.evaluate("()=>Object.keys(SOLVED)")
+    print("14. 옛 열쇠 옮김:", moved)
+    ck(len(moved) == 1 and "홀수형" not in moved[0],
+       f"홀짝이 붙은 옛 열쇠가 그대로입니다: {moved}")
+    ck(pg.eval_on_selector_all('.chk[aria-pressed="true"]', "e=>e.length") == 2,
+       "옮긴 뒤에도 두 줄이 함께 찍혀 있어야 합니다")
+
     pg.screenshot(path=str(SHOT / "solved.png"))
     print("   오류:", errs or "없음")
     ck(not errs, f"스크립트 오류: {errs}")

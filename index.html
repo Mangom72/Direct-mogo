@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-Gcr912cI99AgdwiTQ/PeQ+BuebhxQ/8Wia7pEe1aV0s=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-uwj1SqU1FxqfGHAGlqQ7kyPHe39iQZ3L/BxYUmGxyvA=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -1108,15 +1108,42 @@ let SOLVED = {}, onlyLeft = false;
 function loadSolved(){
   try{
     const o = JSON.parse(localStorage.getItem(SOLVED_KEY) || "{}");
-    return (o && typeof o === "object" && !Array.isArray(o)) ? o : {};
+    if(!o || typeof o !== "object" || Array.isArray(o)) return {};
+    if(mergeOddEven(o)) localStorage.setItem(SOLVED_KEY, JSON.stringify(o));
+    return o;
   }catch(e){ return {}; }
 }
 /* 시크릿 모드나 저장소 차단 시 예외가 나므로 실패해도 화면은 계속 동작시킨다 */
 function saveSolved(){
   try{ localStorage.setItem(SOLVED_KEY, JSON.stringify(SOLVED)); }catch(e){}
 }
+/* 홀수형·짝수형은 <b>문항 순서만 다른 같은 시험지</b>다. 하나를 풀었으면 그
+   회차를 푼 것이라, 열쇠에서 떼어 내 둘이 한 열쇠를 쓰게 한다 — 찍으면 둘 다
+   찍히고, 셈에도 하나로 든다.
+
+   가형·나형과 A형·B형은 떼지 않는다. 그쪽은 문제가 서로 다르다.
+   2013년 수능 영어의 'A형 홀수형'처럼 둘이 겹치기도 해서, 홀짝만 골라 떼고
+   나머지는 그대로 둔다. */
+const ODDEVEN = /\s*(홀수형|짝수형)/g;
 function solvedKey(date, title){
-  return sel.grade + "/" + sel.sub + "/" + date + "/" + title;
+  return sel.grade + "/" + sel.sub + "/" + date + "/"
+       + title.replace(ODDEVEN, "").replace(/\s+/g, " ").trim();
+}
+
+/* 홀짝을 떼기 전에 적어 둔 것을 옮긴다. 그대로 두면 찍어 둔 회차가 하루아침에
+   안 찍힌 것이 된다. 옮기고 나면 이 함수는 할 일이 없어진다 — 언젠가 지운다. */
+function mergeOddEven(o){
+  let moved = false;
+  for(const k of Object.keys(o)){
+    if(!ODDEVEN.test(k)) continue;
+    ODDEVEN.lastIndex = 0;
+    const to = k.replace(ODDEVEN, "").replace(/\s+/g, " ").trim();
+    /* 홀·짝을 따로 찍어 두었으면 먼저 푼 날을 남긴다 */
+    if(!o[to] || o[to] > o[k]) o[to] = o[k];
+    delete o[k];
+    moved = true;
+  }
+  return moved;
 }
 function today(){
   const d = new Date();
@@ -2345,14 +2372,18 @@ function render(){
   syncPickText();
   const saved = savedFolders();
   ROWS.length=0;
-  let total=0, html="", allDone=0, shownAll=0;
+  /* 셈은 <b>회차</b> 단위다 — 홀수형과 짝수형은 두 줄이지만 한 회차다.
+     열쇠에 시행일이 들어 있어 해가 달라도 서로 섞이지 않는다. */
+  let total=0, html="", shownAll=0;
+  const allSeen = new Set(), allDoneSet = new Set();
   for(const y of keys){
     const rows=years[y].filter(r => sel.kind==="all" || kindOf(r[0])===sel.kind);
     if(!rows.length) continue;
     total+=rows.length;
     /* 그 해의 진도는 줄을 다 만든 뒤에야 알 수 있다. 자리만 잡아 두고
        나중에 끼워 넣는다 — 두 번 도는 것보다 이 편이 싸다. */
-    let done=0, shown=0;
+    const seen = new Set(), doneSet = new Set();
+    let shown=0;
     const slot = "\u0001yr" + y + "\u0001";
     html += `<div class="yr"><div class="yr-head">
         <span class="y">${y}년</span>
@@ -2388,7 +2419,8 @@ function render(){
       /* 푼 회차 — 표시와, 푼 날 */
       const sk = solvedKey(date, title);
       const sv = okDate(SOLVED[sk]) ? SOLVED[sk] : "";
-      if(sv) done++;
+      seen.add(sk); allSeen.add(sk);
+      if(sv){ doneSet.add(sk); allDoneSet.add(sk); }
       if(onlyLeft && sv) continue;      /* 세고 나서 거른다 — 셈은 사실대로 */
       shown++;
       const stamp = sv
@@ -2419,12 +2451,13 @@ function render(){
     /* 한 해가 통째로 걸러졌으면 그 해의 머리도 지운다 — 아무것도 없는
        연도 딱지만 남으면 목록에 구멍이 뚫린 것처럼 보인다. */
     html += `</div>`;
-    const pct = rows.length ? Math.round(done / rows.length * 100) : 0;
+    const done = doneSet.size, of = seen.size;
+    const pct = of ? Math.round(done / of * 100) : 0;
     html = html.replace(new RegExp("\u0001yr" + y + "\u0001"), done
       ? `<span class="bar" aria-hidden="true"><i style="width:${pct}%"></i></span>
-         <span class="cnt">${done} / ${rows.length}</span>`
+         <span class="cnt">${done} / ${of}</span>`
       : "");
-    allDone += done; shownAll += shown;
+    shownAll += shown;
 
   }
 
@@ -2445,9 +2478,10 @@ function render(){
     : "";
   /* 표제의 진도 — 지금 걸러 놓은 범위 안에서 몇을 풀었는가. 하나도 안 찍은
      과목에는 아무것도 띄우지 않는다. 처음 온 사람에게 0 / 42 는 숙제다. */
+  const allDone = allDoneSet.size, allOf = allSeen.size;
   const prog = allDone
-    ? `<span class="prog"><span class="bar" aria-hidden="true"><i style="width:${Math.round(allDone/total*100)}%"></i></span>
-         <b>${allDone}</b> / ${total} 풂</span>` : "";
+    ? `<span class="prog"><span class="bar" aria-hidden="true"><i style="width:${Math.round(allDone/allOf*100)}%"></i></span>
+         <b>${allDone}</b> / ${allOf} 풂</span>` : "";
   /* 거르개는 찍은 것이 있을 때만 뜬다. 켜 둔 채로 다른 과목에 가면 그 과목은
      아직 아무것도 안 찍었을 수 있는데, 그때도 단추는 있어야 끌 수 있다. */
   const only = (allDone || onlyLeft)
