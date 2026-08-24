@@ -1,8 +1,8 @@
 {
-  "versionCode": 70,
-  "versionName": "7.9",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.9/gijul-direct.apk",
-  "size": 1984443,
-  "sha256": "a2aa3099a3a1565683bc4c9825f1634b062984e497c2991ff41478439f804417",
-  "notes": "위젯 고르는 화면에 미리보기가 뜨고, 위젯을 누르면 달력이나 그 과목으로 바로 갑니다"
+  "versionCode": 71,
+  "versionName": "8.0",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.0/gijul-direct.apk",
+  "size": 2142271,
+  "sha256": "f3f34764af8cbc725537e4eed1de3f77f09e71851b7f80b87bc6f420ec7eccd1",
+  "notes": "위젯이 앱과 같은 글꼴로 그려지고, 화면 크기에 맞게 자랍니다. 안 올라가던 두 벌도 고쳤습니다"
 }
