@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-Wu+iFZKwCUPZsCCRjH/c75XHU5irW3T6uQsvYCEwkz4=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-Gcr912cI99AgdwiTQ/PeQ+BuebhxQ/8Wia7pEe1aV0s=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -374,6 +374,53 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 .badge{padding:1px 7px;border:1px solid currentColor;font-size:10px;font-weight:600;letter-spacing:.5px}
 .k-gov .badge{color:var(--gov)}
 .k-edu .badge{color:var(--edu)}
+
+/* ── 푼 회차 ────────────────────────────────────────────────────────
+   손으로 찍는다. 자료를 받았다고 푼 것도, 열어 봤다고 푼 것도 아니라서
+   기계가 대신 판단할 수 있는 일이 아니다.
+
+   붉은색은 이 화면에서 이미 '채점'의 색이다 — 정답지 단추가 그 색이다.
+   푼 회차를 **흐리게 하지 않는다.** 한 번 푼 문제지는 다시 풀 것이기도 해서,
+   끝난 것으로 치워 두는 대신 표시만 남긴다. */
+.chk{
+  background:none;border:0;padding:0 2px;margin-left:2px;cursor:pointer;line-height:1;
+  color:var(--rule);transition:color .12s,transform .12s;
+  display:inline-flex;align-items:center;
+}
+.chk svg{
+  width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.1;
+  stroke-linecap:round;stroke-linejoin:round;display:block;
+}
+.chk:hover{color:var(--ink2)}
+.chk[aria-pressed="true"]{color:var(--mark);transform:scale(1.12)}
+.chk:focus-visible{outline:2.5px solid var(--mark);outline-offset:3px}
+.stamp{
+  font:inherit;font-size:10.5px;font-weight:700;color:var(--mark);letter-spacing:.4px;
+  border:1px solid var(--mark);border-radius:999px;padding:0 7px;background:transparent;
+  cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+}
+.stamp:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+.stamp.hint{color:var(--ink2);border-color:var(--rule)}
+.stampin{
+  font:inherit;font-size:11px;padding:0 4px;border:1.2px solid var(--mark);
+  background:var(--btn);color:var(--ink);border-radius:999px;
+}
+/* 연도 머리의 진도 — 굴려 내려가며 그 해가 얼마나 남았는지 */
+.yr-head .bar{flex:none;width:64px;height:4px;background:var(--rule);position:relative;overflow:hidden}
+.yr-head .bar i{position:absolute;inset:0 auto 0 0;background:var(--mark)}
+.yr-head .cnt{font-size:11px;font-weight:700;color:var(--mark);font-variant-numeric:tabular-nums}
+/* 표제의 진도와 거르개 */
+.tally .prog{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink2)}
+.tally .prog .bar{flex:none;width:84px;height:5px;background:var(--rule);position:relative;overflow:hidden}
+.tally .prog .bar i{position:absolute;inset:0 auto 0 0;background:var(--mark)}
+.tally .prog b{color:var(--mark);font-variant-numeric:tabular-nums;font-weight:700}
+.onlyleft{
+  font:inherit;font-size:12px;font-weight:600;padding:5px 12px;cursor:pointer;
+  border:1.2px solid var(--rule);background:var(--btn);color:var(--ink2);border-radius:999px;
+  white-space:nowrap;
+}
+.onlyleft[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--card)}
+.onlyleft:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 
 .acts{display:flex;gap:6px}
 .acts a{font-size:12.5px;font-weight:600;padding:8px 13px;text-decoration:none;border:1.2px solid var(--ink);color:var(--ink);background:var(--btn);white-space:nowrap}
@@ -1044,6 +1091,42 @@ GRADES.forEach(([g])=>{
 
 let favs = [], editing = false, focusKey = null;
 
+/* ── 푼 회차 ────────────────────────────────────────────────────────
+   { "<학년>/<과목>/<시행일>/<회차이름>" : "<푼 날 YYYYMMDD>" }
+
+   회차 하나를 가리키려면 넷이 다 필요하다. 같은 날에 다른 과목이 시행되고,
+   같은 과목 같은 날에 가형·나형이 따로 있던 해가 있다 — 이름까지 넣어야
+   서로를 덮지 않는다.
+
+   푼 날을 값으로 두는 것은 그 자체가 쓸모 있어서다. '언제 풀었더라'는
+   다시 풀 때가 됐는지를 정하는 유일한 실마리인데, 참·거짓만 적어 두면
+   그것을 영영 잃는다. */
+const SOLVED_KEY = "gijul.solved.v1";
+const ONLY_KEY   = "gijul.onlyleft.v1";
+let SOLVED = {}, onlyLeft = false;
+
+function loadSolved(){
+  try{
+    const o = JSON.parse(localStorage.getItem(SOLVED_KEY) || "{}");
+    return (o && typeof o === "object" && !Array.isArray(o)) ? o : {};
+  }catch(e){ return {}; }
+}
+/* 시크릿 모드나 저장소 차단 시 예외가 나므로 실패해도 화면은 계속 동작시킨다 */
+function saveSolved(){
+  try{ localStorage.setItem(SOLVED_KEY, JSON.stringify(SOLVED)); }catch(e){}
+}
+function solvedKey(date, title){
+  return sel.grade + "/" + sel.sub + "/" + date + "/" + title;
+}
+function today(){
+  const d = new Date();
+  return d.getFullYear() +
+         String(d.getMonth()+1).padStart(2,"0") +
+         String(d.getDate()).padStart(2,"0");
+}
+/* 적힌 것이 날짜 꼴이 아니면 없는 것으로 친다 — 손으로 고친 저장소에서 온다 */
+function okDate(v){ return typeof v === "string" && /^\d{8}$/.test(v); }
+
 function loadFavs(){
   try{
     const arr = JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
@@ -1325,6 +1408,13 @@ function url(code, date){
    올렸을 때 글자와 같이 색이 옮아간다. 읽어 줄 것은 aria-label 에 있다. */
 const EXT_ARROW = '<svg viewBox="0 0 10 10" aria-hidden="true" focusable="false">'
   + '<path d="M2.2 7.8 7.8 2.2M4.2 2.2h3.6v3.6"/></svg>';
+
+/* 푼 표시. 글자 ✓(U+2713)를 쓰지 않는 것은 <b>우리 글꼴 다섯 벌 어디에도
+   그 글자가 없어서</b>다 — IBM Plex Sans KR 에도 명조에도 없다. 그대로 두면
+   기기마다 다른 시스템 글꼴로 떨어지고, 어떤 기기에서는 색색의 그림글자가
+   된다. 바깥 링크 화살표와 같이 직접 그린다. */
+const TICK = '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">'
+  + '<path d="M2.4 6.5 4.9 9 9.6 3.3"/></svg>';
 
 const SCV_FROM = "20220324";
 function scvUrl(grade, date){
@@ -2102,8 +2192,111 @@ function closeSheet(){
 
 out.addEventListener("click", e=>{
   const b=e.target.closest(".send");
-  if(b) openSheet(ROWS[+b.dataset.i], b);
+  if(b){ openSheet(ROWS[+b.dataset.i], b); return; }
+
+  const only=e.target.closest("#onlyBtn");
+  if(only){
+    onlyLeft = !onlyLeft;
+    try{ localStorage.setItem(ONLY_KEY, onlyLeft ? "1" : "0"); }catch(err){}
+    render();
+    /* 다시 그리면 누르던 단추가 사라진다. 같은 자리의 새 단추로 초점을 옮겨야
+       자판만 쓰는 사람이 목록 맨 위로 튕기지 않는다. */
+    const again = $("#onlyBtn");
+    if(again) again.focus();
+    return;
+  }
+
+  const chk=e.target.closest(".chk");
+  if(chk){
+    const k=chk.dataset.k;
+    if(SOLVED[k]) delete SOLVED[k]; else SOLVED[k]=today();
+    saveSolved();
+    render();
+    /* 방금 찍은 회차가 '안 푼 것만' 때문에 사라지면 초점 둘 데가 없다.
+       그때만 목록으로 돌린다. */
+    const same = out.querySelector(`.chk[data-k="${(window.CSS && CSS.escape) ? CSS.escape(k) : k}"]`);
+    (same || out).focus();
+    return;
+  }
+
+  /* 도장을 짧게 누르면 아무 일도 없다 — 그러면 눌러 본 사람이 막다른 데
+     선다. 무엇을 해야 하는지 그 자리에서 한 번 일러 준다. */
+  const st=e.target.closest(".stamp");
+  if(st && !st.dataset.opened){
+    const was=st.textContent;
+    st.textContent="길게 누르세요";
+    st.classList.add("hint");
+    setTimeout(()=>{ st.textContent=was; st.classList.remove("hint"); }, 1400);
+  }
+  if(st) delete st.dataset.opened;
 });
+
+/* ── 푼 날 고치기 ──────────────────────────────────────────────────
+   도장을 꾹 누르면 그 자리가 날짜 칸이 된다. 새 창을 띄우지 않는 것은,
+   고치려는 값과 고치는 자리가 같아야 무엇을 만지는지 헷갈리지 않아서다.
+
+   짧게 누르는 것으로는 열리지 않는다. 이 도장은 이미 찍힌 회차에만 있고
+   목록을 훑다 손이 스치기 쉬운 자리라, 스칠 때마다 날짜 칸이 열리면
+   그게 더 성가시다. 자판으로는 Enter 로 곧장 연다 — 자판에는 '스친다'가 없다. */
+function editStamp(st){
+  const k=st.dataset.k, d=st.dataset.d;
+  const box=document.createElement("input");
+  box.type="date"; box.className="stampin";
+  box.value=d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6,8);
+  box.setAttribute("aria-label","푼 날");
+  let done=false;
+  const close=(save)=>{
+    if(done) return; done=true;
+    if(save && /^\d{4}-\d{2}-\d{2}$/.test(box.value)){
+      SOLVED[k]=box.value.replace(/-/g,"");
+      saveSolved();
+    }
+    render();
+    const back=out.querySelector(`.stamp[data-k="${(window.CSS && CSS.escape) ? CSS.escape(k) : k}"]`);
+    (back || out).focus();
+  };
+  box.addEventListener("change", ()=>close(true));
+  box.addEventListener("blur", ()=>close(true));
+  box.addEventListener("keydown", ev=>{
+    if(ev.key==="Escape"){ ev.preventDefault(); close(false); }
+    if(ev.key==="Enter"){ ev.preventDefault(); close(true); }
+  });
+  st.replaceWith(box);
+  box.focus();
+  /* 안드로이드에서는 칸만 띄우면 달력이 안 뜬다. 있으면 바로 연다. */
+  try{ box.showPicker(); }catch(e){}
+}
+
+(function(){
+  let timer=null, sx=0, sy=0, on=null;
+  const stop=()=>{ clearTimeout(timer); timer=null; on=null; };
+  out.addEventListener("pointerdown", e=>{
+    const st=e.target.closest(".stamp");
+    if(!st) return;
+    on=st; sx=e.clientX; sy=e.clientY;
+    timer=setTimeout(()=>{
+      timer=null;
+      if(!on) return;
+      on.dataset.opened="1";     /* 이 뒤에 오는 click 은 안내가 아니다 */
+      /* 열렸다는 것을 손끝으로도 알린다 — 화면은 아직 그대로다 */
+      try{ navigator.vibrate && navigator.vibrate(12); }catch(err){}
+      editStamp(on);
+      on=null;
+    }, 500);
+  });
+  /* 굴리려고 짚은 손은 누른 것이 아니다 */
+  out.addEventListener("pointermove", e=>{
+    if(timer && (Math.abs(e.clientX-sx)>10 || Math.abs(e.clientY-sy)>10)) stop();
+  });
+  ["pointerup","pointercancel","pointerleave"].forEach(t=>out.addEventListener(t, stop));
+  out.addEventListener("keydown", e=>{
+    if(e.key!=="Enter" && e.key!==" ") return;
+    const st=e.target.closest(".stamp");
+    if(!st) return;
+    e.preventDefault();
+    editStamp(st);
+  });
+})();
 
 /* 앱에서는 문제·정답·해설을 창구로 넘긴다. 그래야 뷰어 제목에 EBSi 원본 이름
    대신 사람이 읽는 이름이 뜬다 — 주소만 넘어가면 앱이 알 수 있는 건 파일명뿐이라
@@ -2152,15 +2345,19 @@ function render(){
   syncPickText();
   const saved = savedFolders();
   ROWS.length=0;
-  let total=0, html="";
+  let total=0, html="", allDone=0, shownAll=0;
   for(const y of keys){
     const rows=years[y].filter(r => sel.kind==="all" || kindOf(r[0])===sel.kind);
     if(!rows.length) continue;
     total+=rows.length;
+    /* 그 해의 진도는 줄을 다 만든 뒤에야 알 수 있다. 자리만 잡아 두고
+       나중에 끼워 넣는다 — 두 번 도는 것보다 이 편이 싸다. */
+    let done=0, shown=0;
+    const slot = "\u0001yr" + y + "\u0001";
     html += `<div class="yr"><div class="yr-head">
         <span class="y">${y}년</span>
         <span class="hak">${+y+1}학년도</span>
-        <span class="ln"></span></div>`;
+        <span class="ln"></span>${slot}</div>`;
     for(const [title,date,p,a,h] of rows){
       const k=kindOf(title);
       const pu=url(p,date), au=url(a,date), hu=url(h,date);
@@ -2188,14 +2385,28 @@ function render(){
          없을 때 무엇을 볼 수 있는지 목록에서 바로 보이게. */
       const inVault = saved.has(folderName(y, title, subName));
 
+      /* 푼 회차 — 표시와, 푼 날 */
+      const sk = solvedKey(date, title);
+      const sv = okDate(SOLVED[sk]) ? SOLVED[sk] : "";
+      if(sv) done++;
+      if(onlyLeft && sv) continue;      /* 세고 나서 거른다 — 셈은 사실대로 */
+      shown++;
+      const stamp = sv
+        ? `<button type="button" class="stamp" data-k="${esc(sk)}" data-d="${sv}"
+             aria-label="${+sv.slice(4,6)}월 ${+sv.slice(6,8)}일에 풂 — 길게 눌러 날짜 고치기"
+             title="길게 눌러 날짜 고치기">${+sv.slice(4,6)}.${+sv.slice(6,8)} 풂</button>`
+        : "";
+
       html += `<div class="item k-${k}">
         <div>
           <div class="nm">${su
             ? `<a class="ext" href="${esc(su)}" target="_blank" rel="noopener"
                   title="EBSi 풀서비스에서 이 회차의 등급컷과 문항별 정답률을 봅니다 (새 창)"
                   aria-label="${esc(title)} 등급컷·정답률 — EBSi에서 새 창으로">${esc(title)}${EXT_ARROW}</a>`
-            : esc(title)}</div>
-          <div class="meta"><span class="badge">${kindLabel(k)}</span><span>${date.slice(0,4)}.${date.slice(4,6)}.${date.slice(6,8)}${hak}</span>${inVault?`<span class="kept">담김</span>`:""}</div>
+            : esc(title)}<button type="button" class="chk" data-k="${esc(sk)}"
+              aria-pressed="${sv ? "true" : "false"}"
+              aria-label="${esc(title)} 푼 것으로 표시">${TICK}</button></div>
+          <div class="meta"><span class="badge">${kindLabel(k)}</span><span>${date.slice(0,4)}.${date.slice(4,6)}.${date.slice(6,8)}${hak}</span>${inVault?`<span class="kept">담김</span>`:""}${stamp}</div>
         </div>
         <div class="acts">
           ${pu?`<a class="q" href="${esc(pu)}" data-nm="${esc(nmOf["문제"])}" target="_blank" rel="noopener">문제</a>`:`<span class="off">문제</span>`}
@@ -2205,7 +2416,16 @@ function render(){
         </div>
       </div>`;
     }
+    /* 한 해가 통째로 걸러졌으면 그 해의 머리도 지운다 — 아무것도 없는
+       연도 딱지만 남으면 목록에 구멍이 뚫린 것처럼 보인다. */
     html += `</div>`;
+    const pct = rows.length ? Math.round(done / rows.length * 100) : 0;
+    html = html.replace(new RegExp("\u0001yr" + y + "\u0001"), done
+      ? `<span class="bar" aria-hidden="true"><i style="width:${pct}%"></i></span>
+         <span class="cnt">${done} / ${rows.length}</span>`
+      : "");
+    allDone += done; shownAll += shown;
+
   }
 
   const gradeName=GRADES.find(g=>g[0]===sel.grade)[1];
@@ -2223,12 +2443,24 @@ function render(){
     ? `<a class="onepage" href="s/${sel.grade}/${sel.sub}.html"
          aria-label="${esc(subName)} 전 회차를 한 장에 — 연도를 오가지 않고 찾을 수 있습니다">한 장으로</a>`
     : "";
-  const acts = (onePage || vaultBtn)
-    ? `<span class="tally-acts">${onePage}${vaultBtn}</span>` : "";
+  /* 표제의 진도 — 지금 걸러 놓은 범위 안에서 몇을 풀었는가. 하나도 안 찍은
+     과목에는 아무것도 띄우지 않는다. 처음 온 사람에게 0 / 42 는 숙제다. */
+  const prog = allDone
+    ? `<span class="prog"><span class="bar" aria-hidden="true"><i style="width:${Math.round(allDone/total*100)}%"></i></span>
+         <b>${allDone}</b> / ${total} 풂</span>` : "";
+  /* 거르개는 찍은 것이 있을 때만 뜬다. 켜 둔 채로 다른 과목에 가면 그 과목은
+     아직 아무것도 안 찍었을 수 있는데, 그때도 단추는 있어야 끌 수 있다. */
+  const only = (allDone || onlyLeft)
+    ? `<button type="button" class="onlyleft" id="onlyBtn" aria-pressed="${onlyLeft}">안 푼 것만</button>` : "";
+  const acts = (onePage || vaultBtn || only)
+    ? `<span class="tally-acts">${only}${onePage}${vaultBtn}</span>` : "";
   $("#cntPaper").textContent=total;
 
   out.innerHTML = total
-    ? `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · ${total}개 회차</span>${acts}</div>` + html
+    ? `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · ${total}개 회차</span>${prog}${acts}</div>`
+      + (onlyLeft && !shownAll
+         ? `<div class="empty">이 조건의 회차를 모두 푸셨습니다.<br>'안 푼 것만'을 끄면 다시 보입니다.</div>`
+         : html)
     : `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · 0개 회차</span>${acts}</div>
        <div class="empty">해당 조건으로 수록된 회차가 없습니다.<br>선택한 학년에서 그 과목이 시행되지 않았거나, 연도·기관 조건을 좁게 설정하셨을 수 있습니다.</div>`;
 
@@ -2454,6 +2686,8 @@ if("serviceWorker" in navigator){
 
 (async ()=>{
   favs = loadFavs();
+  SOLVED = loadSolved();
+  try{ onlyLeft = localStorage.getItem(ONLY_KEY) === "1"; }catch(e){}
   const incoming = parseSubs();                       /* #subs= 로 들어온 링크 */
   const start = (!incoming && parseHash()) || loadLast();
   if(start) applyState(start); else fillGroups();

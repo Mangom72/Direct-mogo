@@ -2,7 +2,7 @@
 
 ```bash
 pip install playwright "fonttools[woff]" brotli && playwright install chromium
-python3 tests/run.py              # 전부 (3분 남짓, 29종)
+python3 tests/run.py              # 전부 (3분 남짓, 30종)
 python3 tests/run.py sw stale     # 이름에 그 말이 든 것만
 python3 tests/run.py -v           # 출력까지 그대로
 ```
@@ -55,6 +55,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 | `test_back` | 앱 뒤로가기가 열어 둔 것부터 하나씩 닫는가 |
 | `test_dday` | 수능까지 며칠인가 — 셈한 날이 역대 실제 시행일과 맞는가, 자정을 넘기면 그 자리에서 바뀌는가 |
 | `test_scv` | 회차 이름의 EBSi 링크가 **실제로 열리는 회차에만** 걸리는가, 바깥으로 나가는 것이 보이는가 |
+| `test_solved` | 푼 회차 표시 — 찍은 것이 남는가, 거른 뒤에도 셈이 사실대로인가, 푼 날을 고칠 수 있는가 |
 
 ## 왜 `test_glyphs`가 따로 있는가
 
@@ -102,7 +103,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 빨갛게 뜹니다.
 
 **화면 쪽**(`tests.yml`)은 `index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로
-main에 올라갈 때 29종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
+main에 올라갈 때 30종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
 남아, 손에서 재현되지 않는 실패도 눈으로 볼 수 있습니다.
 
 어느 쪽이든 CI는 마지막 그물입니다. 고친 자리에서 `python3 tests/run.py`를 먼저
