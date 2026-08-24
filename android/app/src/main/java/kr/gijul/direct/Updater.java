@@ -36,7 +36,9 @@ import java.util.Arrays;
  * 아무 APK나 설치 화면에 올리면 안 된다. 그래서 설치 직전에 받은 파일을 직접 뜯어
  * 세 가지를 확인한다:
  *
- *   1. SHA-256이 명세와 같은가 (전송 중 손상·중간자)
+ *   1. SHA-256이 명세와 같은가 (전송 중 손상·중간자). 명세에 지문이 없으면
+ *      거기서 멈춘다 — 지문을 적는 것도 명세라, 없으면 넘어가게 두면 명세를
+ *      갈아치울 수 있는 쪽이 그 한 줄만 빼서 검사를 끌 수 있다.
  *   2. 패키지 이름이 우리 것인가 (다른 앱을 설치시키려는 시도)
  *   3. 서명 인증서가 지금 실행 중인 앱과 같은가 (우리 키로 서명된 빌드인가)
  *
@@ -131,9 +133,14 @@ class Updater {
             if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("임시 폴더를 만들지 못했습니다");
             download(m.getString("url"), apk);
 
+            /* 예전에는 명세에 지문이 없으면 이 검사를 건너뛰었다. 그런데 지문을
+               적는 것도 명세이므로, 명세를 갈아치울 수 있는 쪽은 그 한 줄만 빼면
+               검사를 통째로 끌 수 있었다. 없으면 없는 대로 넘기는 검사는 검사가
+               아니다 — 아래 서명 확인이 마지막 문이지만, 문을 하나 열어 두고
+               다음 문을 믿을 까닭이 없다. */
             String want = m.optString("sha256", "");
-            String got = sha256(apk);
-            if (!want.isEmpty() && !want.equalsIgnoreCase(got))
+            if (want.length() != 64) throw new Exception("명세에 지문이 없습니다");
+            if (!want.equalsIgnoreCase(sha256(apk)))
                 throw new Exception("내려받은 파일이 손상되었습니다");
 
             verifyIsOurs(apk);
@@ -214,14 +221,7 @@ class Updater {
     }
 
     private static HttpURLConnection open(String url) throws Exception {
-        if (!url.startsWith("https://")) throw new Exception("안전하지 않은 주소입니다");
-        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
-        c.setConnectTimeout(15000);
-        c.setReadTimeout(60000);
-        c.setInstanceFollowRedirects(true);
-        int code = c.getResponseCode();
-        if (code != 200) { c.disconnect(); throw new Exception("HTTP " + code); }
-        return c;
+        return Net.open(url, Net.RELEASE);
     }
 
     private static String sha256(File f) throws Exception {

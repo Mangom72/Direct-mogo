@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 클라우드 백업에서 뺄 것 (안드로이드 12 아래).
+
+     받아둔 문제지는 EBSi 에서 다시 받을 수 있고, 회차 하나가 몇 MB 씩이라 몇
+     회차만 담아도 백업 할당량(앱당 25MB)을 넘긴다. 넘기면 그 앱의 백업이 통째로
+     꺼지므로, 정작 다시 만들 수 없는 것 — 내 과목·푼 회차 표시·테마 — 까지
+     함께 사라진다. 그것들은 웹뷰의 localStorage 에 있고 여기서 빼지 않는다. -->
+<full-backup-content>
+    <exclude domain="file" path="." />
+    <exclude domain="external" path="." />
+</full-backup-content>

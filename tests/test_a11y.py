@@ -83,6 +83,51 @@ async def main():
             print(f"5. [{mode}] '자료 없음' 대비: {off}")
             if off and off<4.5: bad.append(f"[{mode}] .off 대비 {off} < 4.5")
             await c2.close()
+        # ---- 6. 손가락이 닿을 만한가 (WCAG 2.5.8 은 24×24 CSS px 를 최소로 본다)
+        #
+        # ✓ 와 도장은 글자 크기가 10.5~11px 이라 그대로 두면 21×17 · 52×17 이다.
+        # 여백으로 닿는 자리만 넓혀 두었는데, 그 여백은 화면에 안 보이므로
+        # 누군가 '쓸데없는 여백'으로 보고 지우기 쉽다. 지우면 아무 데도 안
+        # 깨지고 손가락만 빗나간다 — 그래서 여기서 잰다.
+        c3=await b.new_context(viewport={"width":412,"height":900})
+        pg3=await c3.new_page()
+        await pg3.goto(B+"/#/D300/158/all/all", wait_until="load")
+        await pg3.wait_for_selector(".item .chk", timeout=25000)
+        await pg3.evaluate("""()=>{const ks=[];document.querySelectorAll('.item .chk').forEach(c=>ks.push(c.dataset.k));
+          SOLVED={}; ks.slice(0,3).forEach(k=>SOLVED[k]='20260824'); saveSolved(); render();}""")
+        await pg3.wait_for_timeout(250)
+        sizes=await pg3.evaluate("""()=>{
+          const it=document.querySelector('.item'), out={};
+          for(const sel of ['.chk','.stamp','.nm a.ext']){
+            const e=it.querySelector(sel);
+            if(!e) continue;
+            const r=e.getBoundingClientRect();
+            out[sel]=[Math.round(r.width), Math.round(r.height)];
+          }
+          return out;}""")
+        print("6. 누르는 자리:", sizes)
+        for sel,(w,h) in sizes.items():
+            if w<24 or h<24: bad.append(f"{sel} 이 {w}×{h} — 24×24 보다 작습니다")
+
+        # 서로 겹치면 엉뚱한 것이 눌린다
+        who=await pg3.evaluate("""()=>{
+          const it=document.querySelector('.item');
+          it.scrollIntoView({block:'center'});
+          const name=e=>{ if(!e) return 'null';
+            for(const c of ['chk','stamp','ext']) if(e.closest('.'+c)) return c;
+            return e.tagName; };
+          const at=(x,y)=>name(document.elementFromPoint(x,y));
+          const c=it.querySelector('.chk').getBoundingClientRect();
+          const s=it.querySelector('.stamp').getBoundingClientRect();
+          return { chk: at(c.left+c.width/2, c.top+c.height/2),
+                   stamp: at(s.left+s.width/2, s.top+s.height/2),
+                   gap: Math.round(s.top - c.bottom) };}""")
+        print("   가운데를 누르면:", who)
+        if who["chk"]!="chk" or who["stamp"]!="stamp":
+            bad.append(f"누르는 자리가 서로 겹칩니다: {who}")
+        if who["gap"] < 0: bad.append(f"✓ 와 도장이 {-who['gap']}px 겹칩니다")
+        await c3.close()
+
         print("\n=== 남은 문제:", bad or "없음")
         await b.close()
 asyncio.run(main())

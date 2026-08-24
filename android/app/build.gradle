@@ -20,8 +20,8 @@ android {
         applicationId 'kr.gijul.direct'
         minSdk 24               // SAF(문서 트리) 지속 권한이 안정적으로 되는 하한
         targetSdk 34
-        versionCode 72
-        versionName '8.1'
+        versionCode 73
+        versionName '8.2'
     }
     signingConfigs {
         release {

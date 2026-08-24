@@ -267,15 +267,8 @@ class Catalog {
 
     /** 우리 사이트만. 색인이 엉뚱한 곳을 가리켜도 여기서 걸린다. */
     private static void get(String url, File out) throws Exception {
-        Uri u = Uri.parse(url);
-        if (!"https".equals(u.getScheme()) || !HOST.equals(u.getHost()))
-            throw new Exception("허용되지 않는 주소입니다");
-        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
-        c.setConnectTimeout(15000);
-        c.setReadTimeout(30000);
-        c.setInstanceFollowRedirects(true);
+        HttpURLConnection c = Net.open(url, Net.SITE);
         try {
-            if (c.getResponseCode() != 200) throw new Exception("HTTP " + c.getResponseCode());
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             try (InputStream in = c.getInputStream()) {
                 byte[] b = new byte[16384];

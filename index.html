@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-0hy8txM5lafAQPBZZ5dMzyKq2b6p3NFFcjag0JUxNwk=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-qm6EPR7+0WFuW/Ho8gveMOyt3NcVRL2fvF8laObu8r4=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -369,7 +369,7 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 .item.k-gov{border-left-color:var(--gov)}
 .item.k-edu{border-left-color:var(--edu)}
 .item .nm{font-family:"Song Myung",serif;font-size:16.5px;font-weight:700}
-.item .meta{font-size:11px;color:var(--ink2);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.item .meta{font-size:11px;color:var(--ink2);margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 /* 앱에 이미 받아둔 회차 */
 .item .meta .kept{font-weight:700;color:var(--edu);border:1px solid var(--edu);border-radius:999px;padding:0 7px;font-size:10px;letter-spacing:.5px}
 .badge{padding:1px 7px;border:1px solid currentColor;font-size:10px;font-weight:600;letter-spacing:.5px}
@@ -449,8 +449,13 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
    붉은색은 이 화면에서 이미 '채점'의 색이다 — 정답지 단추가 그 색이다.
    푼 회차를 **흐리게 하지 않는다.** 한 번 푼 문제지는 다시 풀 것이기도 해서,
    끝난 것으로 치워 두는 대신 표시만 남긴다. */
+/* ✓ 와 도장은 글자 크기대로 두면 21×17 · 52×17 이다 — 손가락으로 누르라고
+   내놓을 크기가 아니다(WCAG 2.5.8 은 24×24 를 최소로 본다). 보이는 크기는
+   그대로 두고 여백으로 닿는 자리만 넓힌다. 음수 바깥여백이 그만큼을 도로
+   거둬 줄 사이가 벌어지지 않는다. */
 .chk{
-  background:none;border:0;padding:0 2px;margin-left:2px;cursor:pointer;line-height:1;
+  background:none;border:0;cursor:pointer;line-height:1;
+  padding:9px 8px 4px;margin:-9px -6px -4px 2px;
   color:var(--rule);transition:color .12s,transform .12s;
   display:inline-flex;align-items:center;
 }
@@ -463,7 +468,8 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 .chk:focus-visible{outline:2.5px solid var(--mark);outline-offset:3px}
 .stamp{
   font:inherit;font-size:10.5px;font-weight:700;color:var(--mark);letter-spacing:.4px;
-  border:1px solid var(--mark);border-radius:999px;padding:0 7px;background:transparent;
+  border:1px solid var(--mark);border-radius:999px;background:transparent;
+  padding:4px 9px;margin:-4px 0;
   cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
 }
 .stamp:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
@@ -518,6 +524,7 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
    '여기서 나갑니다'로 굳어진 꼴이다. 손을 올리면 점선이 실선이 되고 색이
    눌린 자리 색으로 옮아간다. */
 .item .nm a.ext{
+  padding:8px 0 4px;                 /* 인라인이라 줄 높이는 그대로, 닿는 자리만 넓어진다 */
   color:inherit;text-decoration:underline;text-decoration-style:dotted;
   text-decoration-thickness:1.5px;text-underline-offset:4px;
   text-decoration-color:var(--rule);
@@ -918,9 +925,9 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
 
 <!-- 푼 날 달력. 목록과 달리 **과목을 가리지 않는다** — 한 과목의 진도는 이미
      그 목록에 있고, 달력이 답하는 질문은 '요즘 하고 있나'다. -->
-<div class="cal" id="cal" hidden>
+<div class="cal" id="cal" hidden role="dialog" aria-modal="true" aria-labelledby="calT">
   <div class="cal-head">
-    <span class="t">푼 날</span>
+    <span class="t" id="calT">푼 날</span>
     <button type="button" class="cal-x" id="calX">닫기</button>
   </div>
   <div class="cal-body">
@@ -1215,8 +1222,20 @@ function loadSolved(){
   }catch(e){ return {}; }
 }
 /* 시크릿 모드나 저장소 차단 시 예외가 나므로 실패해도 화면은 계속 동작시킨다 */
+/* 브라우저가 저장을 거절하는 일이 있다 — 사생활 보호 창이나 저장 공간이 꽉
+   찬 경우다. 예전에는 조용히 삼켰다. 찍은 표시가 화면에는 남고 저장은 안 되어,
+   다음에 열면 사라져 있는 것이 가장 나쁜 결말이다. 한 번만 알린다. */
+let storageWarned = false;
+function saveFailed(){
+  if(storageWarned) return;
+  storageWarned = true;
+  showNotice("이 브라우저가 저장을 거절했습니다. 찍은 표시가 다음에 열 때 남지 않습니다"
+    + " — 시크릿 창이거나 저장 공간이 찼을 수 있습니다.",
+    "알겠습니다", null, null, { key:"storage" });
+}
 function saveSolved(){
-  try{ localStorage.setItem(SOLVED_KEY, JSON.stringify(SOLVED)); }catch(e){}
+  try{ localStorage.setItem(SOLVED_KEY, JSON.stringify(SOLVED)); }
+  catch(e){ saveFailed(); }
 }
 /* 홀수형·짝수형은 <b>문항 순서만 다른 같은 시험지</b>다. 하나를 풀었으면 그
    회차를 푼 것이라, 열쇠에서 떼어 내 둘이 한 열쇠를 쓰게 한다 — 찍으면 둘 다
@@ -1268,9 +1287,11 @@ function loadFavs(){
     });
   }catch(e){ return []; }
 }
-/* 시크릿 모드나 저장소 차단 시 예외가 나므로 실패해도 화면은 계속 동작시킨다 */
+/* 시크릿 모드나 저장소 차단 시 예외가 나므로 실패해도 화면은 계속 동작시킨다.
+   다만 조용히 넘기지는 않는다 — 위 saveFailed 참고. */
 function saveFavs(){
-  try{ localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }catch(e){}
+  try{ localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }
+  catch(e){ saveFailed(); }
 }
 function favIndex(){ return favs.findIndex(f=>f.g===sel.grade && f.s===sel.sub); }
 
@@ -2701,15 +2722,24 @@ if(NATIVE && NATIVE.openPaper){
 }
 sheetBg.onclick=closeSheet;
 sheetX.onclick=closeSheet;
-document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !closeLens()) closeSheet(); });
-sheet.addEventListener("keydown", e=>{
-  if(e.key!=="Tab") return;
-  const f=[...sheet.querySelectorAll("button")];
-  if(!f.length) return;
-  const first=f[0], last=f[f.length-1];
-  if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
-  else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+/* 덮인 순서대로 하나씩 닫는다 — 크게 보기 → 시트 → 달력. 안드로이드 뒤로가기가
+   gijulBack()으로 하는 것과 같은 차례다. 한쪽에만 있으면 키보드로 연 사람은
+   달력에 갇힌다. */
+document.addEventListener("keydown", e=>{
+  if(e.key === "Escape") gijulBack();
 });
+function trapTab(box){
+  box.addEventListener("keydown", e=>{
+    if(e.key!=="Tab") return;
+    const f=[...box.querySelectorAll("button")].filter(b=>b.offsetParent !== null);
+    if(!f.length) return;
+    const first=f[0], last=f[f.length-1];
+    if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+  });
+}
+trapTab(sheet);
+trapTab($("#cal"));
 
 function render(){
   if(!DB) return;

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 안드로이드 12부터는 클라우드 백업과 기기 간 전송을 따로 적는다.
+     까닭은 backup_rules.xml 과 같다 — 다시 받을 수 있는 것이 다시 만들 수 없는
+     것을 밀어내지 않게 한다. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="." />
+        <exclude domain="external" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="." />
+        <exclude domain="external" path="." />
+    </device-transfer>
+</data-extraction-rules>

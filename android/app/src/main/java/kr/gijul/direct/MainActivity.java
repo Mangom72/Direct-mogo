@@ -67,6 +67,14 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);          // localStorage — 내 과목·테마 저장에 필요
         s.setSupportMultipleWindows(false);
+        /* 창구(GijulNative)가 붙어 있는 웹뷰다. 여는 것은 우리 사이트뿐이고 그
+           밖은 shouldOverrideUrlLoading 이 넘기지만, 열 수 있는 것을 좁혀 두는
+           일과 열지 않기로 하는 일은 다르다. file:// 과 content:// 는 이 앱이
+           쓸 일이 없으므로 아예 닫는다 — 안드로이드 10 아래에서는 기본이 켜짐이다. */
+        s.setAllowFileAccess(false);
+        s.setAllowContentAccess(false);
+        s.setGeolocationEnabled(false);
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         /* WebView가 색에 손대지 못하게 확실히 막는다.
            켜두면 시스템이 다크일 때, 사용자가 '밝게'를 골라 페이지가 밝은 스타일을
            내놓아도 그 위에 강제 반전을 덧씌워 화면이 뒤집혔다. 테마는 페이지가
@@ -240,13 +248,8 @@ public class MainActivity extends Activity {
      */
     static void download(String url, File out) throws Exception {
         File tmp = new File(out.getParentFile(), out.getName() + ".part");
-        HttpURLConnection c = (HttpURLConnection) new URL(fromEbsi(url)).openConnection();
-        c.setConnectTimeout(20000);
-        c.setReadTimeout(60000);
-        c.setInstanceFollowRedirects(true);
+        HttpURLConnection c = Net.open(url, Net.EBSI);
         try {
-            int code = c.getResponseCode();
-            if (code != 200) throw new Exception("HTTP " + code);
             long total = 0;
             try (InputStream in = c.getInputStream(); OutputStream os = new FileOutputStream(tmp)) {
                 byte[] buf = new byte[16384];
