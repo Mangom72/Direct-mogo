@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-uwj1SqU1FxqfGHAGlqQ7kyPHe39iQZ3L/BxYUmGxyvA=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-knjqXGxyhAO1LRPQlD8v4nqiKz3gNFar57toCfeleO0=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -375,6 +375,72 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 .k-gov .badge{color:var(--gov)}
 .k-edu .badge{color:var(--edu)}
 
+/* ── 푼 날 달력 ─────────────────────────────────────────────────────
+   태블릿은 왼쪽에 달, 오른쪽에 그날. 폰은 오른쪽에 낼 자리가 없어 그 아래로
+   펼친다 — 시트를 띄우면 달력이 가려져 '어느 날을 보고 있는지'가 화면에서
+   사라지고, 다른 날로 옮길 때마다 되돌아와야 한다. */
+.cal{position:fixed;inset:0;z-index:60;background:var(--paper);display:flex;flex-direction:column}
+.cal[hidden]{display:none}
+.cal-head{display:flex;align-items:center;gap:12px;padding:12px 16px;
+  border-bottom:1.5px solid var(--ink);background:var(--card);flex:none}
+.cal-head .t{font-family:"Song Myung",serif;font-size:20px;font-weight:700}
+.cal-x{font:inherit;font-size:12.5px;font-weight:600;margin-left:auto;
+  padding:7px 14px;border:1.2px solid var(--ink);background:var(--btn);color:var(--ink);cursor:pointer}
+.cal-x:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+.cal-body{flex:1;min-height:0;display:flex;overflow:hidden}
+.cal-left{flex:1;min-width:0;padding:12px 14px;display:flex;flex-direction:column;overflow:auto}
+.cal-right{width:290px;flex:none;border-left:1.5px solid var(--rule);
+  padding:16px;overflow:auto;background:var(--card)}
+.calnav{display:flex;align-items:center;gap:9px;margin-bottom:9px;flex:none}
+.calnav .m{font-family:"Song Myung",serif;font-size:20px}
+.calnav .sum{font-size:11.5px;color:var(--mark);font-weight:700;font-variant-numeric:tabular-nums}
+.calnav .ln{flex:1;height:1px;background:var(--rule)}
+.calnav button{font:inherit;font-size:13px;font-weight:700;min-width:28px;height:28px;padding:0 8px;
+  border:1.2px solid var(--rule);background:var(--btn);color:var(--ink);cursor:pointer}
+.calnav #calToday{font-size:11.5px}
+.calnav button:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+/* 줄 높이를 못박는다. 내용을 따라 늘어나게 두면 회차를 많이 찍은 날의 줄만
+   길어져 달이 들쭉날쭉해지고, 무엇보다 <b>넘칠 일이 없어져 +n 이 안 걸린다.</b> */
+.cal .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;
+  background:var(--rule);border:1px solid var(--rule);
+  grid-template-rows:auto;grid-auto-rows:minmax(var(--rowh,78px),1fr);flex:1}
+.cal .dow{background:var(--card);text-align:center;font-size:10.5px;font-weight:700;
+  color:var(--ink2);padding:4px 0}
+.cal .dow.sun{color:var(--mark)}
+.cell{background:var(--card);padding:3px 3px 2px;display:flex;flex-direction:column;gap:2px;
+  border:0;font:inherit;text-align:left;cursor:pointer;color:inherit;overflow:hidden;min-height:0}
+.cell.pad{background:var(--paper);cursor:default}
+.cell .d{font-size:11px;color:var(--ink2);font-variant-numeric:tabular-nums;flex:none}
+.cell.sun .d{color:var(--mark)}
+.cell.today .d{background:var(--ink);color:var(--card);border-radius:999px;padding:0 6px;align-self:flex-start}
+.cell[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:-2px;background:var(--sel)}
+.cell:focus-visible{outline:2.5px solid var(--mark);outline-offset:-2px}
+.chip{font-size:10px;line-height:1.5;padding:1px 4px;border-left:3px solid var(--gov);
+  background:color-mix(in srgb,var(--gov) 15%,transparent);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none;
+  font-variant-numeric:tabular-nums}
+.chip.edu{border-left-color:var(--edu);background:color-mix(in srgb,var(--edu) 15%,transparent)}
+.more{font-size:9.5px;color:var(--ink2);padding-left:4px;flex:none;font-weight:600}
+.cal-right .dt{font-family:"Song Myung",serif;font-size:22px;margin:0 0 2px}
+.cal-right .ds{font-size:11.5px;color:var(--ink2);margin:0 0 14px}
+.dlist{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.dlist button{width:100%;display:flex;gap:10px;align-items:stretch;text-align:left;
+  font:inherit;color:inherit;background:none;border:0;padding:2px 0;cursor:pointer}
+.dlist .bar{width:3px;background:var(--gov);flex:none;border-radius:2px}
+.dlist .edu .bar{background:var(--edu)}
+.dlist .nm{font-size:13.5px;font-weight:600;line-height:1.45}
+.dlist .sb{font-size:11.5px;color:var(--ink2)}
+.dlist button:hover .nm{text-decoration:underline}
+.dlist button:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+.dnone{font-size:12.5px;color:var(--ink2);margin:0}
+@media (max-width:899px){
+  .cal-body{flex-direction:column;overflow:auto}
+  .cal-left{overflow:visible;flex:none}
+  .cal .grid{--rowh:56px;grid-auto-rows:var(--rowh);flex:none}
+  .cal-right{width:auto;border-left:none;border-top:1.5px solid var(--rule);
+    background:var(--paper);overflow:visible;flex:none}
+}
+
 /* ── 푼 회차 ────────────────────────────────────────────────────────
    손으로 찍는다. 자료를 받았다고 푼 것도, 열어 봤다고 푼 것도 아니라서
    기계가 대신 판단할 수 있는 일이 아니다.
@@ -410,7 +476,10 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 .yr-head .bar i{position:absolute;inset:0 auto 0 0;background:var(--mark)}
 .yr-head .cnt{font-size:11px;font-weight:700;color:var(--mark);font-variant-numeric:tabular-nums}
 /* 표제의 진도와 거르개 */
-.tally .prog{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink2)}
+.tally .prog{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink2);
+  font-family:inherit;border:0;background:none;padding:0;cursor:pointer}
+.tally .prog:hover b{text-decoration:underline}
+.tally .prog:focus-visible{outline:2.5px solid var(--mark);outline-offset:3px}
 .tally .prog .bar{flex:none;width:84px;height:5px;background:var(--rule);position:relative;overflow:hidden}
 .tally .prog .bar i{position:absolute;inset:0 auto 0 0;background:var(--mark)}
 .tally .prog b{color:var(--mark);font-variant-numeric:tabular-nums;font-weight:700}
@@ -836,6 +905,29 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
        class="boot" 은 목록이 들어설 자리를 첫 그림부터 잡아 두는 표시다.
        render()가 처음 그릴 때 뗀다. -->
   <main id="out" class="boot" tabindex="-1"></main>
+</div>
+
+<!-- 푼 날 달력. 목록과 달리 **과목을 가리지 않는다** — 한 과목의 진도는 이미
+     그 목록에 있고, 달력이 답하는 질문은 '요즘 하고 있나'다. -->
+<div class="cal" id="cal" hidden>
+  <div class="cal-head">
+    <span class="t">푼 날</span>
+    <button type="button" class="cal-x" id="calX">닫기</button>
+  </div>
+  <div class="cal-body">
+    <div class="cal-left">
+      <div class="calnav">
+        <button type="button" id="calPrev" aria-label="이전 달">‹</button>
+        <span class="m" id="calM"></span>
+        <span class="sum" id="calSum"></span>
+        <span class="ln"></span>
+        <button type="button" id="calToday">오늘</button>
+        <button type="button" id="calNext" aria-label="다음 달">›</button>
+      </div>
+      <div class="grid" id="calGrid"></div>
+    </div>
+    <div class="cal-right" id="calDay"></div>
+  </div>
 </div>
 
 <div class="sheet" id="sheet" hidden>
@@ -1384,6 +1476,38 @@ function kindOf(title){
   return (title.startsWith("수능") || title.includes("평가원")) ? "gov" : "edu";
 }
 function kindLabel(k){ return k==="gov" ? "평가원" : "교육청"; }
+
+/* ── 이름 줄이기 ────────────────────────────────────────────────────
+   달력 칸 하나가 100px도 안 된다. '2026학년도 6월 모의평가 · 확률과 통계'는
+   들어갈 자리가 없고, 줄이면 '26 6평 확통' 여덟 자다.
+
+   앞의 두 자리는 <b>둘 다 학년도</b>(시행 연도 + 1)다. 학생이 말하는 '26 3모'가
+   2025년 3월에 치른 그것이라, 줄여 부를 때는 이쪽이 맞는다. 목록 화면이 시행
+   연도로 적는 것과 다르므로, <b>자리가 넉넉한 곳에서는 줄이지 않는다.</b>
+
+   평가원은 '평'(6평·9평), 교육청은 '모'(3모·7모·10모). 학평의 지역은 뗀다 —
+   같은 달의 전국연합은 시행 교육청이 하나뿐이라 지역이 회차를 가르지 않는다. */
+const SHORT_SUB = {
+  "화법과 작문":"화작","언어와 매체":"언매","확률과 통계":"확통","미적분":"미적",
+  "생활과 윤리":"생윤","윤리와 사상":"윤사","한국지리":"한지","세계지리":"세지",
+  "동아시아사":"동사","세계사":"세사","정치와 법":"정법","사회·문화":"사문",
+  "통합사회":"통사","통합과학":"통과",
+  "물리학Ⅰ":"물1","물리학Ⅱ":"물2","화학Ⅰ":"화1","화학Ⅱ":"화2",
+  "생명과학Ⅰ":"생1","생명과학Ⅱ":"생2","지구과학Ⅰ":"지1","지구과학Ⅱ":"지2",
+};
+function shortSub(name){ return SHORT_SUB[name] || name; }
+function shortRound(title){
+  return title
+    .replace(/(\d+)월\s*모평(\(평가원\))?/, "$1평")
+    .replace(/(\d+)월\s*학평(\([^)]*\))?/, "$1모")
+    .replace(/\s*\(평가원\)/, "")
+    .replace(/\s*(홀수형|짝수형)/g, "")     /* 홀짝은 한 회차라 뗀다 */
+    .replace(/\s+/g, " ").trim();
+}
+/* year 는 시행 연도. 줄인 이름에서는 학년도로 적는다. */
+function shortName(year, title, subName){
+  return String(+year + 1).slice(2) + " " + shortRound(title) + " " + shortSub(subName);
+}
 /* 페이로드는 EBSi에서 긁어온 값이라 우리가 쓴 글이 아니다. 화면에 꽂기 전에
    막을 것은 여기서 막는다 — 스크래퍼가 무엇을 통과시키든 이 줄에서 멈춘다. */
 /**
@@ -2200,6 +2324,7 @@ $("#logBtn").onclick = e => openLog(e.currentTarget);
 window.gijulBack = function(){
   try{
     if(closeLens()) return true;
+    if(closeCal()) return true;
     if(!sheet.hidden){ closeSheet(); return true; }
     if(!notice.hidden){ closeNotice(null); return true; }
     if(editing){ favEdit.click(); return true; }
@@ -2220,6 +2345,8 @@ function closeSheet(){
 out.addEventListener("click", e=>{
   const b=e.target.closest(".send");
   if(b){ openSheet(ROWS[+b.dataset.i], b); return; }
+
+  if(e.target.closest("#progBtn")){ openCal(); return; }
 
   const only=e.target.closest("#onlyBtn");
   if(only){
@@ -2256,6 +2383,155 @@ out.addEventListener("click", e=>{
     setTimeout(()=>{ st.textContent=was; st.classList.remove("hint"); }, 1400);
   }
   if(st) delete st.dataset.opened;
+});
+
+/* ── 푼 날 달력 ─────────────────────────────────────────────────────
+   찍어 둔 것을 날짜로 되짚는다. 과목을 가리지 않는다 — 한 과목의 진도는 이미
+   그 목록에 있고, 달력이 답하는 질문은 '요즘 하고 있나'다.
+
+   자료(DB)를 뒤지지 않는다. 열쇠 자체가 학년·과목·시행일·회차이름을 다 들고
+   있어서, 저장소만 읽어도 달력을 그릴 수 있다. */
+const DOWK = ["일","월","화","수","목","금","토"];
+let calCur = null, calSel = null;
+
+function calLog(){
+  const out = {};
+  for(const k in SOLVED){
+    const on = SOLVED[k];
+    if(!okDate(on)) continue;
+    const p = k.split("/");
+    if(p.length < 4) continue;
+    const [g, sub, date] = p;
+    const title = p.slice(3).join("/");
+    const meta = SUBINDEX[g+"/"+sub];
+    (out[on] = out[on] || []).push({
+      g, sub, date, title,
+      name: meta ? meta.name : sub,
+      k: kindOf(title),
+    });
+  }
+  /* 하루 안에서는 평가원이 먼저, 그다음 시행일 순 */
+  for(const d in out) out[d].sort((a,b)=>
+    (a.k===b.k ? b.date.localeCompare(a.date) : (a.k==="gov" ? -1 : 1)));
+  return out;
+}
+function ymdOf(d){
+  return d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
+}
+
+/* 칸에 들어가는 만큼만 남기고 나머지는 +n 으로 접는다. 몇 개가 들어갈지는
+   화면 크기와 글자 크기에 달렸으므로 미리 정하지 않고 그린 뒤에 잰다. */
+function calFit(cell){
+  const chips = [...cell.querySelectorAll(".chip")];
+  if(chips.length < 2) return;
+  const room = cell.clientHeight - cell.firstElementChild.offsetHeight - 4;
+  let used = 0, keep = 0;
+  for(const c of chips){
+    const h = c.offsetHeight + 2;
+    if(used + h > room) break;
+    used += h; keep++;
+  }
+  if(keep >= chips.length) return;
+  if(keep > 0 && used + 14 > room) keep--;      /* +n 도 한 줄을 먹는다 */
+  chips.slice(keep).forEach(c => c.remove());
+  const tag = document.createElement("span");
+  tag.className = "more";
+  tag.textContent = "+" + (chips.length - keep);
+  cell.appendChild(tag);
+}
+
+function drawCal(){
+  const LOG = calLog();
+  const y = calCur.getFullYear(), m = calCur.getMonth();
+  const first = new Date(y,m,1).getDay(), last = new Date(y,m+1,0).getDate();
+  const today = ymdOf(new Date());
+  /* 폰에서는 칸이 낮아 이름표가 한둘뿐이다. 회차는 아래 목록에서 보므로
+     칸 안에서는 과목만 적는다. */
+  const wide = innerWidth >= 900;
+
+  let n = 0, cells = DOWK.map((w,i)=>`<div class="dow${i===0?" sun":""}">${w}</div>`).join("");
+  for(let i=0;i<first;i++) cells += `<div class="cell pad"></div>`;
+  for(let d=1; d<=last; d++){
+    const key = ymdOf(new Date(y,m,d)), it = LOG[key] || [], dow = new Date(y,m,d).getDay();
+    n += it.length;
+    cells += `<button type="button" class="cell${dow===0?" sun":""}${key===today?" today":""}"
+        data-k="${key}" aria-pressed="${key===calSel}"
+        aria-label="${m+1}월 ${d}일${it.length?` · ${it.length}회차`:""}">
+      <span class="d">${d}</span>
+      ${it.map(x=>`<span class="chip ${x.k}">${esc(wide
+          ? shortName(x.date.slice(0,4), x.title, x.name) : shortSub(x.name))}</span>`).join("")}
+      </button>`;
+  }
+  const tail = (7 - (first + last) % 7) % 7;
+  for(let i=0;i<tail;i++) cells += `<div class="cell pad"></div>`;
+
+  $("#calM").textContent = `${y}년 ${m+1}월`;
+  $("#calSum").textContent = n ? `${n}회차` : "";
+  $("#calGrid").innerHTML = cells;
+  $("#calGrid").querySelectorAll(".cell[data-k]").forEach(c=>{
+    c.onclick = ()=>{ calSel = c.dataset.k; drawCal(); };
+    calFit(c);
+  });
+
+  const day = LOG[calSel] || [];
+  const sd = new Date(+calSel.slice(0,4), +calSel.slice(4,6)-1, +calSel.slice(6,8));
+  $("#calDay").innerHTML =
+    `<h3 class="dt">${sd.getMonth()+1}월 ${sd.getDate()}일 ${DOWK[sd.getDay()]}요일</h3>
+     <p class="ds">${day.length ? day.length + "회차" : "표시된 것이 없습니다"}</p>` +
+    (day.length
+      ? `<ul class="dlist">${day.map(x=>`<li class="${x.k}"><button type="button"
+            data-g="${esc(x.g)}" data-s="${esc(x.sub)}" data-y="${x.date.slice(0,4)}">
+            <span class="bar"></span>
+            <span><span class="nm">${esc(yearLabel(x))} ${esc(x.title)}</span><br>
+              <span class="sb">${esc(x.name)}</span></span></button></li>`).join("")}</ul>`
+      : `<p class="dnone">이 날은 찍어 둔 회차가 없습니다.</p>`);
+  /* 누르면 그 과목의 그 해로 간다 — 달력에서 본 것을 바로 다시 열 수 있게 */
+  $("#calDay").querySelectorAll(".dlist button").forEach(b => b.onclick = ()=>{
+    closeCal();
+    pickSub(b.dataset.g, b.dataset.s);
+    sel.year = b.dataset.y;
+    fillYears(); render(); syncURL();
+  });
+}
+
+/* 오른쪽 칸은 자리가 넉넉하다 — 여기서는 줄이지 않고, 목록 화면과 같은 표기를
+   쓴다(평가원은 학년도 병기, 교육청은 시행 연도). */
+function yearLabel(x){
+  const y = +x.date.slice(0,4);
+  return x.k === "gov" ? `${y}년(${y+1}학년도)` : `${y}년`;
+}
+
+function openCal(){
+  calCur = new Date();
+  calCur.setDate(1);
+  calSel = ymdOf(new Date());
+  $("#cal").hidden = false;
+  document.body.style.overflow = "hidden";
+  drawCal();
+  $("#calX").focus();
+}
+function closeCal(){
+  if($("#cal").hidden) return false;
+  $("#cal").hidden = true;
+  document.body.style.overflow = "";
+  const back = $("#progBtn");
+  if(back) back.focus();
+  return true;
+}
+$("#calX").onclick = closeCal;
+$("#calPrev").onclick = ()=>{ calCur.setMonth(calCur.getMonth()-1); drawCal(); };
+$("#calNext").onclick = ()=>{ calCur.setMonth(calCur.getMonth()+1); drawCal(); };
+$("#calToday").onclick = ()=>{
+  const t = new Date();
+  calCur = new Date(t.getFullYear(), t.getMonth(), 1);
+  calSel = ymdOf(t);
+  drawCal();
+};
+/* 창 폭이 바뀌면 들어가는 이름표 수도 바뀐다 */
+addEventListener("resize", ()=>{
+  if($("#cal").hidden) return;
+  clearTimeout(window.__calT);
+  window.__calT = setTimeout(drawCal, 150);
 });
 
 /* ── 푼 날 고치기 ──────────────────────────────────────────────────
@@ -2479,9 +2755,12 @@ function render(){
   /* 표제의 진도 — 지금 걸러 놓은 범위 안에서 몇을 풀었는가. 하나도 안 찍은
      과목에는 아무것도 띄우지 않는다. 처음 온 사람에게 0 / 42 는 숙제다. */
   const allDone = allDoneSet.size, allOf = allSeen.size;
+  /* 진도를 누르면 달력이 열린다. 달력을 찾을 사람은 진도를 보다 찾을 사람이고,
+     이 줄에 단추를 더 두면 '한 장으로'와 '받아둔 자료'가 그만큼 좁아진다. */
   const prog = allDone
-    ? `<span class="prog"><span class="bar" aria-hidden="true"><i style="width:${Math.round(allDone/allOf*100)}%"></i></span>
-         <b>${allDone}</b> / ${allOf} 풂</span>` : "";
+    ? `<button type="button" class="prog" id="progBtn" aria-label="푼 날 달력 열기">
+         <span class="bar" aria-hidden="true"><i style="width:${Math.round(allDone/allOf*100)}%"></i></span>
+         <b>${allDone}</b> / ${allOf} 풂</button>` : "";
   /* 거르개는 찍은 것이 있을 때만 뜬다. 켜 둔 채로 다른 과목에 가면 그 과목은
      아직 아무것도 안 찍었을 수 있는데, 그때도 단추는 있어야 끌 수 있다. */
   const only = (allDone || onlyLeft)

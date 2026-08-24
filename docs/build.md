@@ -19,10 +19,10 @@
 | `tools/build_fonts.py` | 저장소 안의 글자를 모아 웹폰트를 잘라 만듭니다 |
 | `tools/check_csp.py` | 인라인 스크립트 해시가 CSP와 맞는지 봅니다 |
 | `tools/publish_apk.py` | 빌드된 릴리스 APK를 읽어 `app/latest.json`을 씁니다 |
-| `tests/` | 회귀 시험 30종 ([tests/README.md](../tests/README.md)) |
+| `tests/` | 회귀 시험 31종 ([tests/README.md](../tests/README.md)) |
 | `android/` | WebView 앱 ([docs/android.md](android.md)) |
 | `.github/workflows/refresh-data.yml` | 매일 23시(KST) 자료 갱신 |
-| `.github/workflows/tests.yml` | 화면을 고쳐 main에 밀면 30종을 돌립니다 |
+| `.github/workflows/tests.yml` | 화면을 고쳐 main에 밀면 31종을 돌립니다 |
 | `.github/workflows/android.yml` | APK 빌드·서명·릴리스 (main 푸시·수동 실행) |
 
 자료를 `index.html` 안에 넣어둔 덕분에 **이 파일 하나만 캐시하면 조회·필터가
@@ -38,7 +38,7 @@ PDF는 EBSi가 `Access-Control-Allow-Origin: *`를 주기 때문에 페이지가
 
 | 바꾼 것 | 도는 것 | 하는 일 |
 |---|---|---|
-| `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 30종. 실패하면 그때의 화면 그림을 artifact로 남깁니다 |
+| `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 31종. 실패하면 그때의 화면 그림을 artifact로 남깁니다 |
 | `android/**` | `android.yml` | 서명 빌드 → **지문 확인** → 릴리스 생성 → APK 첨부 → 글꼴 다시 만들기 → `app/latest.json`·`fonts/` 커밋 |
 | (매일 23시 KST) | `refresh-data.yml` | EBSi에서 새 회차 수집 → JSON·과목 페이지·글꼴 → `test_fields`·`test_stable` → 커밋 → 수능 날짜 대조 → 예약 유지 |
 
@@ -105,11 +105,11 @@ python3 tools/build_fonts.py              # → fonts/
 ## 고치고 나면
 
 ```bash
-python3 tests/run.py        # 회귀 시험 30종, 3분 남짓
+python3 tests/run.py        # 회귀 시험 31종, 3분 남짓
 ```
 
 무엇을 지키는 시험인지는 [tests/README.md](../tests/README.md)에 있습니다.
-`index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로 main에 올라가면 같은 30종이
+`index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로 main에 올라가면 같은 31종이
 CI에서도 한 번 더 돕니다. 실패하면 그때의 화면 그림이 artifact로 남습니다.
 
 기존 기록의 **있는 값은 고치지 않습니다.** 새 시행일을 덧붙이고, 이미 있는 회차는
@@ -209,6 +209,16 @@ python3 -m http.server 8000
 | `gijul.solved.v1` | 푼 회차와 푼 날 |
 | `gijul.onlyleft.v1` | '안 푼 것만'을 켜 두었는지 |
 | `gijul.apk.v1` | 앱 설치 안내를 껐는지 |
+
+**줄인 이름은 학년도로 적습니다.** 달력 칸 하나가 100px도 안 되어
+`2026학년도 6월 모의평가 · 확률과 통계`가 들어갈 자리가 없습니다. 줄이면
+`26 6평 확통`입니다 — 평가원은 **평**(6평·9평), 교육청은 **모**(3모·7모),
+학평의 지역은 뗍니다(같은 달의 전국연합은 시행 교육청이 하나뿐입니다).
+
+앞 두 자리는 **둘 다 학년도**(시행 연도 + 1)입니다. 학생이 말하는 `26 3모`가
+2025년 3월에 치른 그것이라 줄여 부를 때는 이쪽이 맞습니다. **목록 화면은 지금도
+시행 연도로 적으므로**(`2025.03.27`) 두 표기가 한 화면에 섞이지 않도록, 자리가
+넉넉한 곳에서는 —달력의 오른쪽 칸, 폰의 아래 목록— 줄이지 않고 그대로 씁니다.
 
 **홀수형과 짝수형은 한 회차입니다.** 문항 순서만 다른 같은 시험지라, 열쇠에서
 떼어 내 둘이 한 열쇠를 씁니다 — 어느 쪽을 찍든 둘 다 찍히고 셈에도 하나로 듭니다.
