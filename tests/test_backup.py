@@ -1,0 +1,184 @@
+"""백업 — 내보낸 것이 돌아오는가, 합칠 때 이 기기 것을 안 지우는가.
+
+<h3>왜 이것을 지키는가</h3>
+계정도 서버도 없으므로 사람마다 다른 것은 전부 그 기기에만 있다. 이 기능이
+조용히 망가지면 **되돌릴 방법이 없다** — 파일은 만들어졌는데 안이 비어 있거나,
+가져오기가 이 기기에서 찍은 것을 지워 버리거나 하는 결말이 그렇다. 어느 쪽도
+그 자리에서는 멀쩡해 보이고, 알아차릴 때는 이미 늦다.
+
+세 가지를 본다.
+
+1. **왕복.** 내보낸 것을 그대로 가져오면 처음과 같아지는가.
+2. **합치기는 더하기다.** 다른 기기의 것을 가져올 때 여기서 찍은 것이 남는가.
+   덮어쓰기를 기본으로 두면 그 순간 조용히 사라진다.
+3. **아무것이나 받지 않는다.** 파일은 사람이 손으로 고칠 수 있고, 엉뚱한 파일을
+   고를 수도 있다.
+"""
+import json, sys, pathlib
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from harness import CHROME, SHOT, site
+_srv, SITE = site()
+from playwright.sync_api import sync_playwright
+
+BAD = []
+def ck(cond, msg):
+    if not cond:
+        BAD.append(msg)
+
+def state(pg):
+    return pg.evaluate("()=>[Object.keys(SOLVED).sort(), favs.map(f=>f.g+'/'+f.s).sort()]")
+
+with sync_playwright() as pw:
+    b = pw.chromium.launch(executable_path=CHROME)
+    ctx = b.new_context(viewport={"width": 412, "height": 900},
+                        service_workers="block", accept_downloads=True)
+    pg = ctx.new_page()
+    errs = []
+    pg.on("pageerror", lambda e: errs.append(str(e)[:180]))
+    pg.goto(SITE, wait_until="load")
+    pg.wait_for_selector(".item .chk", timeout=25000)
+
+    # 표시 다섯, 내 과목 하나
+    pg.evaluate("""()=>{
+      const ks=[]; document.querySelectorAll('.item .chk').forEach(c=>ks.push(c.dataset.k));
+      SOLVED={}; ks.slice(0,5).forEach((k,i)=>SOLVED[k]='2026082'+(i%9)); saveSolved();
+      favs.length=0; favs.push({g:sel.grade, s:sel.sub}); saveFavs(); syncFav(); render();}""")
+    before = state(pg)
+    print("1. 처음:", len(before[0]), "회차 ·", len(before[1]), "과목")
+
+    # ---- 내보내기 ----
+    pg.click("#bakBtn")
+    pg.wait_for_selector("#sheet:not([hidden])", timeout=5000)
+    pg.wait_for_timeout(150)
+    with pg.expect_download() as dl:
+        pg.click(".sfile .go")
+    d = dl.value
+    path = pathlib.Path(SHOT) / "backup.json"
+    d.save_as(str(path))
+    obj = json.loads(path.read_text(encoding="utf-8"))
+    print("2. 내보낸 파일:", d.suggested_filename, "·", len(json.dumps(obj)), "바이트")
+    ck(d.suggested_filename.startswith("기출직행-백업-"), f"파일 이름이 이상합니다: {d.suggested_filename}")
+    ck(obj.get("v") == 1, "판 번호가 없습니다")
+    ck(len(obj.get("solved", {})) == len(before[0]), "푼 회차가 파일에 다 안 담겼습니다")
+    ck(len(obj.get("subs", [])) == len(before[1]), "내 과목이 파일에 다 안 담겼습니다")
+
+    # ---- 전부 지우고 가져오기 ----
+    pg.evaluate("()=>{ SOLVED={}; favs.length=0; saveSolved(); saveFavs(); syncFav(); render(); }")
+    pg.evaluate("t=>takeBackup(t)", path.read_text(encoding="utf-8"))
+    pg.wait_for_timeout(200)
+    print("3. 미리보기:", pg.eval_on_selector(".sfile .k", "e=>e.textContent"))
+    pg.eval_on_selector_all(".sfile .go", "e=>e[0].click()")     # 합치기
+    pg.wait_for_timeout(300)
+    after = state(pg)
+    print("   되살린 뒤:", len(after[0]), "회차 ·", len(after[1]), "과목")
+    ck(after == before, f"왕복이 어긋납니다: {before} → {after}")
+
+    # ---- 합치기는 여기 것을 지우지 않는다 ----
+    mine = pg.evaluate("""()=>{
+      const ks=[]; document.querySelectorAll('.item .chk').forEach(c=>ks.push(c.dataset.k));
+      SOLVED={}; SOLVED[ks[9]]='20260101'; saveSolved(); render(); return ks[9];}""")
+    pg.evaluate("t=>takeBackup(t)", path.read_text(encoding="utf-8"))
+    pg.wait_for_timeout(150)
+    pg.eval_on_selector_all(".sfile .go", "e=>e[0].click()")     # 합치기
+    pg.wait_for_timeout(300)
+    kept = pg.evaluate("k=>SOLVED[k]", mine)
+    n = pg.evaluate("()=>Object.keys(SOLVED).length")
+    print(f"4. 합치기 — 여기서 찍은 것 남음: {kept} · 전체 {n}개")
+    ck(kept == "20260101", "합쳤더니 이 기기에서 찍은 것이 사라졌습니다")
+    ck(n == len(before[0]) + 1, f"합친 개수가 맞지 않습니다: {n}")
+
+    # ---- 덮어쓰기는 실제로 바꾼다 ----
+    pg.evaluate("t=>takeBackup(t)", path.read_text(encoding="utf-8"))
+    pg.wait_for_timeout(150)
+    pg.eval_on_selector_all(".sfile .go", "e=>e[1].click()")     # 덮어쓰기
+    pg.wait_for_timeout(300)
+    n2 = pg.evaluate("()=>Object.keys(SOLVED).length")
+    gone = pg.evaluate("k=>!(k in SOLVED)", mine)
+    print(f"5. 덮어쓰기 — 전체 {n2}개 · 여기 것 사라짐: {gone}")
+    ck(n2 == len(before[0]) and gone, "덮어쓰기가 파일의 것으로 바꾸지 않았습니다")
+
+    # ---- 아무것이나 받지 않는다 ----
+    cases = [
+        ("판이 다른 파일", json.dumps({"v": 99, "solved": {}, "subs": []})),
+        ("JSON 이 아닌 것", "이건 그냥 글입니다"),
+        ("내용이 빈 것", "null"),
+    ]
+    for name, text in cases:
+        pg.evaluate("t=>takeBackup(t)", text)
+        pg.wait_for_timeout(120)
+        note = pg.text_content("#sheetNote")
+        ok = "읽지 못했습니다" in note
+        print(f"6. {name}: {'거절' if ok else '받아들임 — ' + note[:40]}")
+        ck(ok, f"{name} 을 거절하지 않았습니다")
+
+    # 이상한 값이 섞여 있으면 그것만 버리고 나머지는 살린다
+    dirty = json.loads(path.read_text(encoding="utf-8"))
+    dirty["solved"]["없는/과목/20250101/수능"] = "20260101"
+    dirty["solved"]["망가진열쇠"] = "20260101"
+    dirty["solved"]["D300/158/20250101/수능"] = "날짜아님"
+    dirty["subs"].append({"g": "ZZZ", "s": "9999"})
+    pg.evaluate("()=>{ SOLVED={}; favs.length=0; saveSolved(); saveFavs(); render(); }")
+    pg.evaluate("t=>takeBackup(t)", json.dumps(dirty))
+    pg.wait_for_timeout(150)
+    pg.eval_on_selector_all(".sfile .go", "e=>e[0].click()")
+    pg.wait_for_timeout(300)
+    got = state(pg)
+    print("7. 이상한 값이 섞인 파일 →", len(got[0]), "회차 ·", len(got[1]), "과목")
+    ck("망가진열쇠" not in got[0], "열쇠 꼴이 아닌 것이 들어왔습니다")
+    ck(not any(x.startswith("ZZZ") for x in got[1]), "없는 과목이 들어왔습니다")
+    # 모르는 과목의 표시는 <b>일부러 남긴다</b>. 과목 코드는 교육과정이 바뀔 때
+    # 실제로 바뀌는데, 못 알아본다고 지우면 그 한 번에 그동안 찍은 것이 날아간다.
+    # 알약과 달리 표시는 그 과목을 열지 않는 한 화면에 나타나지도 않는다.
+    ck(len(got[0]) == len(before[0]) + 1,
+       f"성한 것까지 버렸거나 모르는 과목 표시를 지웠습니다: {len(got[0])}")
+
+    pg.screenshot(path=str(pathlib.Path(SHOT) / "backup.png"))
+    print("   오류:", errs or "없음")
+    ck(not errs, f"스크립트 오류: {errs}")
+    ctx.close()
+
+    # ---- 8. 앱 사본에서 되살리기 ----
+    #
+    # 앱은 페이지가 건넨 표시를 사본으로 들고 있다(위젯이 읽는 그것이다).
+    # 웹뷰의 자료가 날아가도 이쪽은 남으므로, 화면이 비었는데 사본에 있으면
+    # 되살릴지 묻는다. 백업을 안 해 둔 사람에게 남는 마지막 줄이다.
+    ctx2 = b.new_context(viewport={"width": 412, "height": 900}, service_workers="block")
+    ctx2.add_init_script("""
+      window.GijulNative = {
+        systemDark: () => false,
+        savedSolved: () => JSON.stringify({ v:1, at:"2026-08-20T00:00:00Z", subs:[],
+          solved:{ "D300/140117/20211118/수능":"20260801",
+                   "D300/140117/20211012/10월 학평(서울)":"20260802" } }),
+      };""")
+    pg2 = ctx2.new_page()
+    e2 = []
+    pg2.on("pageerror", lambda e: e2.append(str(e)[:180]))
+    pg2.goto(SITE, wait_until="load")
+    pg2.wait_for_selector(".item", timeout=25000)
+    pg2.wait_for_timeout(900)
+    asked = pg2.eval_on_selector("#notice", "e=>!e.hidden")
+    print("8. 앱 사본이 남아 있을 때 되살릴지 묻는가:", asked)
+    ck(asked, "앱에 표시가 있는데 되살리자고 묻지 않습니다")
+    if asked:
+        ck("2개" in pg2.text_content("#noticeText"), "몇 개인지 말하지 않습니다")
+        pg2.click("#noticeYes")
+        pg2.wait_for_timeout(400)
+        n8 = pg2.evaluate("()=>Object.keys(SOLVED).length")
+        print("   되살린 뒤:", n8, "개")
+        ck(n8 == 2, f"되살아난 것이 {n8}개입니다")
+    ck(not e2, f"스크립트 오류: {e2}")
+
+    # 화면에 이미 있으면 묻지 않는다 — 있는 것을 두고 또 물으면 성가시기만 하다
+    pg2.reload(wait_until="load")
+    pg2.wait_for_selector(".item", timeout=25000)
+    pg2.wait_for_timeout(900)
+    again = pg2.eval_on_selector("#notice", "e=>!e.hidden")
+    print("9. 화면에 이미 있을 때 또 묻는가:", again)
+    ck(not again, "화면에 표시가 있는데도 되살리자고 묻습니다")
+    ctx2.close()
+    b.close()
+
+print("\n=== 문제:", "없음" if not BAD else "")
+for x in BAD:
+    print("  ★", x)
+sys.exit(1 if BAD else 0)

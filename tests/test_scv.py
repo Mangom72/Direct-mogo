@@ -175,7 +175,11 @@ with sync_playwright() as pw:
         const r=e.getBoundingClientRect(), g=as.find(a=>a.href.includes('github.com'));
         return {글자:e.textContent.trim(), 주소:e.href, 아이콘:!!e.querySelector('svg'),
                 설명:e.getAttribute('aria-label')||'', target:e.target, rel:e.rel,
-                깃허브오른쪽:!!g && r.left >= g.getBoundingClientRect().left,
+                /* 읽는 순서로 본다. 줄이 하나일 때는 x 만 봐도 됐지만, 푸터에
+                   단추가 늘어 좁은 화면에서 접히면 x 비교는 뜻을 잃는다 —
+                   둘째 줄 첫 칸이 첫째 줄 끝보다 왼쪽에 있는 것은 당연하다. */
+                깃허브뒤:!!g && (()=>{ const q=g.getBoundingClientRect();
+                  return r.top > q.top + 4 || (Math.abs(r.top-q.top) <= 4 && r.left >= q.left); })(),
                 높이같음:!!g && Math.abs(r.height-g.getBoundingClientRect().height) < 2};}""")
     print("10. 푸터 원본 단추:", foot)
     ck(foot, "푸터에 EBSi 단추가 없습니다")
@@ -184,7 +188,7 @@ with sync_playwright() as pw:
         ck(foot["target"] == "_blank" and "noopener" in foot["rel"], "새 창으로 열지 않습니다")
         ck("EBSi" in foot["설명"] and "새 창" in foot["설명"],
            f"어디로 가는지 읽어 주지 않습니다: {foot['설명']!r}")
-        ck(foot["깃허브오른쪽"], "GitHub 단추 왼쪽에 있습니다")
+        ck(foot["깃허브뒤"], "GitHub 단추보다 앞에 있습니다")
         ck(foot["높이같음"], "GitHub 단추와 높이가 다릅니다 — 같은 꼴이어야 합니다")
 
     b.close()

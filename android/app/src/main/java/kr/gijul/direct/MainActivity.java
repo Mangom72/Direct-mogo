@@ -533,6 +533,87 @@ public class MainActivity extends Activity {
         }
 
         /** 저장 위치를 사람이 읽을 형태로 */
+        /**
+         * 백업 파일을 만들어 공유 시트로 넘긴다.
+         *
+         * 웹에서는 {@code <a download>} 한 줄이면 되는데 웹뷰에서는 아무 일도
+         * 일어나지 않는다 — 내려받기를 받아 줄 것이 붙어 있지 않아서다. 그런데
+         * 백업이 가장 절실한 쪽이 앱 사용자다(브라우저와 달리 앱을 지우면 통째로
+         * 사라진다). 그래서 여기로 받는다.
+         */
+        @JavascriptInterface
+        public void saveBackup(String json, String name) {
+            io.execute(() -> {
+                try {
+                    File dir = new File(getCacheDir(), "share");
+                    if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("임시 폴더를 만들지 못했습니다");
+                    File f = new File(dir, safe(name));
+                    try (OutputStream os = new FileOutputStream(f)) {
+                        os.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    }
+                    Uri u = FileProvider.getUriForFile(MainActivity.this, AUTHORITY, f);
+                    Intent i = new Intent(Intent.ACTION_SEND);
+                    i.setType("application/json");
+                    i.putExtra(Intent.EXTRA_STREAM, u);
+                    i.putExtra(Intent.EXTRA_TITLE, name);
+                    i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    Intent chooser = Intent.createChooser(i, name);
+                    chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    open(chooser);
+                    shareDone(true, "");
+                } catch (Exception e) {
+                    Log.w(TAG, "백업을 내보내지 못했습니다", e);
+                    shareDone(false, "내보내지 못했습니다: " + e.getMessage());
+                }
+            });
+        }
+
+        /** 백업 파일을 고르게 한다. 고른 것은 onActivityResult 가 페이지로 넘긴다. */
+        @JavascriptInterface
+        public void pickBackup() {
+            runOnUiThread(() -> {
+                try {
+                    Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    i.addCategory(Intent.CATEGORY_OPENABLE);
+                    /* 내보낼 때 json 으로 적었지만, 저장한 앱에 따라 종류가 다르게
+                       붙어 오는 일이 있다. 걸러 놓고 못 고르는 것보다 낫다. */
+                    i.setType("*/*");
+                    startActivityForResult(i, REQ_BACKUP);
+                } catch (Exception e) {
+                    Log.w(TAG, "파일 고르기를 열지 못했습니다", e);
+                    backupPicked(null);
+                }
+            });
+        }
+
+        /**
+         * 앱이 들고 있는 표시 사본. 위젯이 읽는 그것이다.
+         *
+         * 웹뷰의 자료가 날아가도 이 사본은 남는다. 페이지가 비었는데 여기 있으면
+         * 되살릴지 묻는다 — 백업을 안 해 둔 사람에게 남는 마지막 줄이다.
+         * 페이지가 읽을 수 있게 <b>백업 파일과 같은 모양</b>으로 돌려준다.
+         */
+        @JavascriptInterface
+        public String savedSolved() {
+            try {
+                android.content.SharedPreferences pr = Solved.prefs(MainActivity.this);
+                String raw = pr.getString("json", null);
+                if (raw == null) return "{}";
+                JSONObject marks = new JSONObject(raw).optJSONObject("marks");
+                if (marks == null) return "{}";
+                return new JSONObject()
+                        .put("v", 1)
+                        .put("at", new java.text.SimpleDateFormat(
+                                "yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US)
+                                .format(new java.util.Date(pr.getLong("at", 0))))
+                        .put("subs", new JSONArray())
+                        .put("solved", marks)
+                        .toString();
+            } catch (Exception e) {
+                return "{}";
+            }
+        }
+
         @JavascriptInterface
         public String where() { return root().getAbsolutePath(); }
 
@@ -670,6 +751,42 @@ public class MainActivity extends Activity {
             Log.w(TAG, "공유 실패: " + name, e);
             shareDone(false, "공유하지 못했습니다: " + e.getMessage());
         }
+    }
+
+    private static final int REQ_BACKUP = 4101;
+    /** 백업 파일 한도. 표시가 5,059개라도 300KB 남짓이라 이 위는 우리 것이 아니다. */
+    private static final int MAX_BACKUP = 4 * 1024 * 1024;
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (req != REQ_BACKUP) return;
+        final Uri u = (res == RESULT_OK && data != null) ? data.getData() : null;
+        if (u == null) { backupPicked(null); return; }
+        io.execute(() -> {
+            try (InputStream in = getContentResolver().openInputStream(u)) {
+                if (in == null) throw new Exception("파일을 열지 못했습니다");
+                java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[16384];
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    b.write(buf, 0, n);
+                    if (b.size() > MAX_BACKUP) throw new Exception("파일이 너무 큽니다");
+                }
+                backupPicked(new String(b.toByteArray(), java.nio.charset.StandardCharsets.UTF_8));
+            } catch (Exception e) {
+                Log.w(TAG, "백업 파일을 읽지 못했습니다", e);
+                backupPicked(null);
+            }
+        });
+    }
+
+    /* 읽은 내용을 그대로 페이지에 넘긴다. 무엇이 맞는 백업인지는 페이지가 안다 —
+       과목 번호와 회차 열쇠를 아는 쪽이 거기라, 여기서 또 보면 규칙이 두 벌이 된다. */
+    private void backupPicked(String text) {
+        String js = "window.gijulBackupPicked && window.gijulBackupPicked("
+                + (text == null ? "null" : JSONObject.quote(text)) + ")";
+        runOnUiThread(() -> web.evaluateJavascript(js, null));
     }
 
     private void shareDone(boolean ok, String message) {
