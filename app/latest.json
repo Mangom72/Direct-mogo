@@ -1,8 +1,8 @@
 {
-  "versionCode": 69,
-  "versionName": "7.8",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.8/gijul-direct.apk",
-  "size": 1901199,
-  "sha256": "8ab3e7bb07a4166e69bb4bd21b6b81be96ef81c2473d4cb1be2af6a53f8e3811",
-  "notes": "홈 화면 위젯이 생겼습니다 — 여섯 벌 중에 골라 놓으세요"
+  "versionCode": 70,
+  "versionName": "7.9",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.9/gijul-direct.apk",
+  "size": 1984443,
+  "sha256": "a2aa3099a3a1565683bc4c9825f1634b062984e497c2991ff41478439f804417",
+  "notes": "위젯 고르는 화면에 미리보기가 뜨고, 위젯을 누르면 달력이나 그 과목으로 바로 갑니다"
 }
