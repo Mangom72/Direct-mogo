@@ -1,7 +1,7 @@
 /* 기출 직행 서비스 워커
    자료 3,800여 건이 index.html 안에 들어 있으므로, 이 파일 하나만 쥐고 있으면
    조회·필터는 네트워크 없이 전부 동작한다. 네트워크가 필요한 것은 PDF뿐이다. */
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL = `gijul-shell-${VERSION}`;
 const FILES = `gijul-files-${VERSION}`;
 const KEEP = [SHELL, FILES];
@@ -66,6 +66,26 @@ async function shell(req){
   return res || Response.error();
 }
 
+/* 글꼴은 자라는 파일이다 — 페이지에 새 글자가 늘면 tools/build_fonts.py 가
+   부분집합을 다시 만들어 같은 이름으로 내보낸다. 셸은 캐시 우선이라 한 번 받아
+   두면 다시 묻지 않으므로, 그대로 두면 기기에 처음 깔릴 때의 글꼴이 영영 남는다.
+   그 뒤에 늘어난 글자는 전부 시스템 글꼴로 떨어져, 한 제목 안에서 글꼴이 갈린다
+   ('푼 날'의 '날'이 그랬다).
+
+   그래서 갱신을 물어보는 김에 글꼴도 함께 조건부로 확인한다. 바뀐 것이 없으면
+   서버가 304만 돌려주므로 값이 거의 들지 않는다. */
+const FONT_URLS = SHELL_URLS.filter(u => u.indexOf("/fonts/") >= 0);
+
+async function freshenFonts(){
+  const cache = await caches.open(SHELL);
+  await Promise.all(FONT_URLS.map(async u => {
+    try{
+      const res = await fetch(new URL(u, self.location).href, { cache:"no-cache" });
+      if(res && res.ok) await cache.put(new URL(u, self.location).href, res);
+    }catch(e){}
+  }));
+}
+
 /* 페이지가 뜬 뒤 명시적으로 물어볼 때만 돈다. 내용이 달라졌으면 캐시를 갈아끼우고 참을 준다.
 
    reload가 아니라 no-cache다. 둘 다 서버에 물어보지만 reload는 HTTP 캐시를 통째로
@@ -127,6 +147,13 @@ self.addEventListener("message", e=>{
      않는다. 저절로 도는 확인에서는 페이지가 이 답을 그냥 흘려보낸다. */
   e.waitUntil(Promise.all([
     sweep(),
-    check().then(changed=> e.source.postMessage({ type: changed ? "updated" : "current" }))
+    check().then(changed=>{
+      e.source.postMessage({ type: changed ? "updated" : "current" });
+      /* 문서가 바뀌었으면 글자도 늘었을 수 있다. 알림을 먼저 보내고 이어서
+         받는다 — 페이지는 기다릴 것이 없고, waitUntil 안이라 다 받기 전에
+         워커가 잠들지도 않는다. 이번 화면은 이미 그려졌으므로 새 글꼴은
+         다음에 열 때 쓰인다. */
+      if(changed) return freshenFonts();
+    })
   ]));
 });

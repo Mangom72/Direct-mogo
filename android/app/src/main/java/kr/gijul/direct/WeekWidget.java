@@ -44,8 +44,13 @@ public class WeekWidget extends WidgetBase {
         v.setTextViewText(R.id.foot, "수능 D-" + Widgets.dday() + " · 이번 주 " + sum + "회차");
 
         int[] wh = size(c, m, id, 250, 110);
+        float k = grow(wh, 250, 110);
+        sp(v, R.id.big, 24f * k);
+        sp(v, R.id.title, 11f * k);
+        sp(v, R.id.foot, 10.5f * k);
         v.setImageViewBitmap(R.id.art, bars(c, n,
-                px(c, Math.max(140, wh[0] - 20)), px(c, Math.max(34, wh[1] - 66))));
+                px(c, Math.max(140, wh[0] - 20)),
+                px(c, Math.max(34, wh[1] - Math.round(66 * k)))));
     }
 
     private int streakDays(Map<String, List<Solved.Item>> log) { return Solved.streak(log); }
@@ -62,12 +67,12 @@ public class WeekWidget extends WidgetBase {
         int max = 1;
         for (int x : n) max = Math.max(max, x);
 
-        float lab = fit(c, h, 0.22f, 10f, 17f), foot = fit(c, h, 0.20f, 9f, 15f);
-        float txt = fit(c, h, 0.14f, 8f, 12f);
+        float lab = fit(c, h, 0.22f, 10f, 26f), foot = fit(c, h, 0.20f, 9f, 22f);
+        float txt = fit(c, h, 0.16f, 8f, 20f);
         float area = Math.max(1, h - lab - foot);      /* 막대가 설 높이 */
         /* 폭을 다 나눠 가지면 막대가 아니라 널찍한 판이 일곱 개 서 있는 꼴이
            된다. 서는 높이보다 넓어지지 않게 묶어 둔다. */
-        float cw = Math.min((w - px(c, 5) * 6) / 7f, Math.min(px(c, 28), area * 0.55f));
+        float cw = Math.min((w - px(c, 5) * 6) / 7f, Math.min(px(c, 64), area * 0.8f));
         /* 남는 폭은 사이로 흘린다. 막대만 좁혀 놓고 가운데로 모으면 넓은 위젯에서
            양옆이 통째로 비어, 자리를 차지하고도 아무 말을 안 하는 꼴이 된다. */
         float gap = Math.max(px(c, 5), Math.min((w - cw * 7) / 6f, cw * 1.1f));

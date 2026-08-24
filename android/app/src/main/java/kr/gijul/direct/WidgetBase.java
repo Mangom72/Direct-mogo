@@ -174,6 +174,40 @@ abstract class WidgetBase extends AppWidgetProvider {
         return Math.max(px(c, min), Math.min(px(c, max), span * ratio));
     }
 
+    /**
+     * 위젯이 기준 크기의 몇 배인가. 진짜 글자로 내는 위젯은 이것으로 글자 크기를
+     * 곱한다.
+     *
+     * <h3>왜 곱해야 하는가</h3>
+     * {@code sp} 로 못박은 글자는 위젯이 커져도 그대로다. 태블릿에서 4×3 위젯은
+     * 폰의 네 배 넓이가 되는데 글자만 그대로라, 카드는 크고 글씨는 좁쌀만 한
+     * 꼴이 된다. 안 쓰는 자리가 넓다는 것은 그 위젯이 자리값을 못 하고 있다는
+     * 뜻이다.
+     *
+     * 가로·세로 중 <b>덜 자란 쪽</b>을 따른다. 넓기만 하고 낮은 칸에서 글자를
+     * 너비에 맞춰 키우면 줄이 서로 겹친다.
+     */
+    static float grow(int[] wh, float wBase, float hBase) {
+        float k = Math.min(wh[0] / wBase, wh[1] / hBase);
+        return Math.max(1f, Math.min(2.4f, k));
+    }
+
+    static void sp(RemoteViews v, int id, float size) {
+        v.setTextViewTextSize(id, android.util.TypedValue.COMPLEX_UNIT_SP, size);
+    }
+
+    /**
+     * 줄을 카드 높이에 고루 펴는 여백(px). 줄마다 위아래로 이만큼 넣는다.
+     *
+     * 줄을 위에 몰아 두고 아래를 비워 두면, 글자를 키워도 여전히 '위쪽에 조금
+     * 적혀 있는' 꼴이다. 남는 높이를 줄 수만큼 나눠 갖는다.
+     */
+    static int spread(Context c, int[] wh, int rows, float chromeDp, float rowDp) {
+        if (rows <= 0) return 0;
+        float room = wh[1] - chromeDp - rows * rowDp;
+        return px(c, Math.max(0, Math.min(14, room / (2f * rows))));
+    }
+
     static int color(Context c, int id) {
         return c.getResources().getColor(id, c.getTheme());
     }

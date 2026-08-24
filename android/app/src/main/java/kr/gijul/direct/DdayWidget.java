@@ -40,5 +40,14 @@ public class DdayWidget extends WidgetBase {
            달을 통째로 채워 버려 '얼마나 꾸준한가'가 안 보인다. */
         v.setProgressBar(R.id.prog, days, hit, false);
         v.setTextViewText(R.id.foot, (mo + 1) + "월 " + hit + "일 · " + n + "회차");
+
+        int[] wh = size(c, m, id, 110, 110);
+        float k = grow(wh, 110, 110);
+        sp(v, R.id.big, 30f * k);
+        sp(v, R.id.title, 10.5f * k);
+        sp(v, R.id.foot, 10.5f * k);
+        if (android.os.Build.VERSION.SDK_INT >= 31) {
+            v.setViewLayoutHeight(R.id.prog, 5 * k, android.util.TypedValue.COMPLEX_UNIT_DIP);
+        }
     }
 }

@@ -239,15 +239,17 @@ def turf(c):
     k.foot(f"수능 D-{DDAY} · {weeks}주 {sum(pat)}회차")
 
     x0, y0, w, h = 10, 34, 230, 46
-    gap = 2
-    cell = min((w - gap * (weeks - 1)) / weeks, (h - gap * 6) / 7)
+    cell = (h - 2 * 6) / 7
+    gap = max(2, cell * 0.16)
+    cell = (h - gap * 6) / 7
     for col in range(weeks):
         for row in range(7):
             n = pat[col * 7 + row]
             t = {0: 0, 1: .38, 2: .68, 3: 1.0}[n]
             fill = c["rule"] if n == 0 else mix(c["rule"], c["mark"], t)
             x, y = x0 + col * (cell + gap), y0 + row * (cell + gap)
-            k.g.rounded_rectangle([px(x), px(y), px(x + cell), px(y + cell)], px(1.5), fill=fill)
+            k.g.rounded_rectangle([px(x), px(y), px(x + cell), px(y + cell)],
+                                  px(max(1.5, cell * 0.18)), fill=fill)
     return k.img
 
 

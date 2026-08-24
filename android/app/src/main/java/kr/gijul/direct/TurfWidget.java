@@ -33,24 +33,38 @@ public class TurfWidget extends WidgetBase {
         v.setTextViewText(R.id.count, Solved.streak(log) + "일째");
 
         int[] wh = size(c, m, id, 250, 110);
+        float k = grow(wh, 250, 110);
+        sp(v, R.id.title, 13.5f * k);
+        sp(v, R.id.count, 10.5f * k);
+        sp(v, R.id.foot, 10.5f * k);
+
+        /* 칸 크기는 일곱 줄이 정하므로 높이가 결정한다. 그러고 나면 넓은 카드에는
+           너비가 남는데, 칸을 늘여 채우는 대신 <b>주를 더 보여</b> 채운다 —
+           잔디밭이 답하는 질문이 '어디서 끊겼나'라 길수록 낫다. */
+        int artW = Math.max(140, wh[0] - 20), artH = Math.max(40, wh[1] - Math.round(62 * k));
+        float cellDp = (artH - 2 * 6) / 7f, gapDp = Math.max(2, cellDp * 0.16f);
+        cellDp = (artH - gapDp * 6) / 7f;
+        int weeks = (int) Math.floor((artW + gapDp) / (cellDp + gapDp));
+        weeks = Math.max(WEEKS, Math.min(53, weeks));
         int sum = 0;
         Calendar end = Calendar.getInstance();
         end.add(Calendar.DAY_OF_MONTH, 7 - end.get(Calendar.DAY_OF_WEEK));
         Calendar walk = (Calendar) end.clone();
-        walk.add(Calendar.DAY_OF_MONTH, -(WEEKS * 7 - 1));
-        for (int i = 0; i < WEEKS * 7; i++) {
+        walk.add(Calendar.DAY_OF_MONTH, -(weeks * 7 - 1));
+        for (int i = 0; i < weeks * 7; i++) {
             sum += Solved.on(log, Solved.ymd(walk));
             walk.add(Calendar.DAY_OF_MONTH, 1);
         }
-        v.setTextViewText(R.id.foot, "수능 D-" + Widgets.dday() + " · " + WEEKS + "주 " + sum + "회차");
-        v.setImageViewBitmap(R.id.art, turf(c, log, end,
-                px(c, Math.max(140, wh[0] - 20)), px(c, Math.max(40, wh[1] - 62))));
+        v.setTextViewText(R.id.foot, "수능 D-" + Widgets.dday() + " · " + weeks + "주 " + sum + "회차");
+        v.setImageViewBitmap(R.id.art, turf(c, log, end, px(c, artW), px(c, artH), weeks));
     }
 
-    private Bitmap turf(Context c, Map<String, List<Solved.Item>> log, Calendar end, int w, int h) {
-        float gap = px(c, 2);
-        float cell = Math.min((w - gap * (WEEKS - 1)) / (float) WEEKS, (h - gap * 6) / 7f);
-        int bw = Math.round(cell * WEEKS + gap * (WEEKS - 1));
+    private Bitmap turf(Context c, Map<String, List<Solved.Item>> log, Calendar end, int w, int h,
+                        int weeks) {
+        float cell = (h - px(c, 2) * 6) / 7f;
+        float gap = Math.max(px(c, 2), cell * 0.16f);
+        cell = (h - gap * 6) / 7f;
+        int bw = Math.round(cell * weeks + gap * (weeks - 1));
         int bh = Math.round(cell * 7 + gap * 6);
         Bitmap b = Bitmap.createBitmap(Math.max(1, bw), Math.max(1, bh), Bitmap.Config.ARGB_8888);
         Canvas g = new Canvas(b);
@@ -58,15 +72,16 @@ public class TurfWidget extends WidgetBase {
 
         int rule = color(c, R.color.w_rule), mark = color(c, R.color.w_mark);
         Calendar d = (Calendar) end.clone();
-        d.add(Calendar.DAY_OF_MONTH, -(WEEKS * 7 - 1));
-        for (int col = 0; col < WEEKS; col++) {
+        d.add(Calendar.DAY_OF_MONTH, -(weeks * 7 - 1));
+        for (int col = 0; col < weeks; col++) {
             for (int row = 0; row < 7; row++) {
                 int n = Solved.on(log, Solved.ymd(d));
                 /* 하루에 몇 회차인지를 짙기로 낸다. 셋을 넘으면 더 짙어지지 않는다 —
                    여덟을 푼 날과 넉을 푼 날을 색으로 가릴 일이 아니다. */
                 p.setColor(n == 0 ? rule : blend(rule, mark, n == 1 ? .38f : n == 2 ? .68f : 1f));
                 float x = col * (cell + gap), y = row * (cell + gap);
-                g.drawRoundRect(x, y, x + cell, y + cell, px(c, 1.5f), px(c, 1.5f), p);
+                float rr = Math.max(px(c, 1.5f), cell * 0.18f);
+                g.drawRoundRect(x, y, x + cell, y + cell, rr, rr, p);
                 d.add(Calendar.DAY_OF_MONTH, 1);
             }
         }

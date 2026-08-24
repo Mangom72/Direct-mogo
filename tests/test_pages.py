@@ -6,6 +6,8 @@ _srv, SITE = site()
 import asyncio, re, pathlib
 from playwright.async_api import async_playwright
 CH = CHROME
+# 통 이름에 붙는 판. sw.js 에서 읽는다 — 여기에 적어 두면 판을 올릴 때마다 깨진다.
+V = re.search(r'VERSION = "(v\d+)"', (ROOT / "sw.js").read_text(encoding="utf-8")).group(1)
 B = SITE.rstrip("/")
 D=str(SHOT)
 async def main():
@@ -79,8 +81,8 @@ async def sw_check():
             ok = want in h1
             print(f"   {path:22} h1='{h1}'  기대대로: {ok}")
         # 셸이 s/ 를 캐시에 끌어들이지 않았는가
-        keys=await pg.evaluate("""async()=>{const c=await caches.open('gijul-shell-v1');
-            return (await c.keys()).map(r=>new URL(r.url).pathname).filter(u=>u.includes('/s/'));}""")
+        keys=await pg.evaluate("""async()=>{const c=await caches.open('gijul-shell-%s');
+            return (await c.keys()).map(r=>new URL(r.url).pathname).filter(u=>u.includes('/s/'));}""" % V)
         print("   셸 캐시에 섞여 든 과목 페이지:", keys or "없음")
         await b.close()
 asyncio.run(sw_check())

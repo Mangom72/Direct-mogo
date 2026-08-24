@@ -47,6 +47,13 @@ public class NextWidget extends WidgetBase {
         }
 
         int n = next == null ? 0 : next.length();
+        int[] wh = size(c, m, id, 250, 122);
+        float k = grow(wh, 250, 122);
+        sp(v, R.id.title, 13.5f * k);
+        sp(v, R.id.count, 10.5f * k);
+        sp(v, R.id.foot, 10.5f * k);
+        sp(v, R.id.empty, 11.5f * k);
+        int pad = spread(c, wh, Math.max(1, Math.min(n, ROW.length)), 46 * k, 21 * k);
         v.setViewVisibility(R.id.empty, n == 0 ? View.VISIBLE : View.GONE);
         if (n == 0) {
             v.setTextViewText(R.id.empty,
@@ -56,7 +63,13 @@ public class NextWidget extends WidgetBase {
             JSONObject x = (next != null && i < n) ? next.optJSONObject(i) : null;
             if (x == null) { v.setViewVisibility(ROW[i], View.GONE); continue; }
             v.setViewVisibility(ROW[i], View.VISIBLE);
+            v.setViewPadding(ROW[i], 0, pad, 0, pad);
             v.setTextViewText(TXT[i], x.optString("t", ""));
+            sp(v, TXT[i], 12f * k);
+            if (android.os.Build.VERSION.SDK_INT >= 31) {
+                v.setViewLayoutWidth(BAR[i], 3 * k, android.util.TypedValue.COMPLEX_UNIT_DIP);
+                v.setViewLayoutHeight(BAR[i], 15 * k, android.util.TypedValue.COMPLEX_UNIT_DIP);
+            }
             v.setInt(BAR[i], "setBackgroundResource",
                     "gov".equals(x.optString("k")) ? R.drawable.w_bar_gov : R.drawable.w_bar_edu);
             /* 줄마다 가는 곳이 다르다. 바탕에 걸어 둔 것(첫 화면)을 줄에서 덮어쓴다 —

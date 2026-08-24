@@ -50,8 +50,13 @@ public class CalWidget extends WidgetBase {
         v.setTextViewText(R.id.foot, footer(c, log));
 
         int[] wh = size(c, m, id, 250, 250);
+        float k = grow(wh, 250, 250);
+        sp(v, R.id.title, 13.5f * k);
+        sp(v, R.id.count, 10.5f * k);
+        sp(v, R.id.foot, 10.5f * k);
         v.setImageViewBitmap(R.id.art, month(c, log, y, mo,
-                px(c, Math.max(140, wh[0] - 20)), px(c, Math.max(120, wh[1] - 62))));
+                px(c, Math.max(140, wh[0] - 20)),
+                px(c, Math.max(120, wh[1] - Math.round(62 * k)))));
     }
 
     /** 격자 한 장. 칸에 들어가는 만큼 이름표를 넣고 나머지는 +n 으로 접는다. */
@@ -80,7 +85,7 @@ public class CalWidget extends WidgetBase {
         float ch0 = h / (weeks + 0.55f);
         float head = ch0 * 0.55f, ch = ch0;
 
-        float dowSize = fit(c, head, 0.62f, 8f, 13f);
+        float dowSize = fit(c, head, 0.62f, 8f, 22f);
         p.setTextSize(dowSize);
         p.setTextAlign(Paint.Align.CENTER);
         p.setTypeface(font(c, true));
@@ -93,8 +98,8 @@ public class CalWidget extends WidgetBase {
         String today = Solved.ymd(Calendar.getInstance());
         p.setTextAlign(Paint.Align.LEFT);
         float pad = Math.max(px(c, 2), cw * 0.045f);
-        float daySize = fit(c, ch, 0.17f, 8.5f, 14f);
-        float chipText = fit(c, ch, 0.15f, 7.5f, 12f);
+        float daySize = fit(c, ch, 0.26f, 8.5f, 26f);
+        float chipText = fit(c, ch, 0.21f, 7.5f, 21f);
         float chipH = chipText * 1.55f, gapY = chipH * 0.16f;
 
         for (int d = 1; d <= last; d++) {
