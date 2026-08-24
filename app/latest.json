@@ -1,8 +1,8 @@
 {
-  "versionCode": 68,
-  "versionName": "7.7",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.7/gijul-direct.apk",
-  "size": 1876111,
-  "sha256": "eac4bd575d99535a8b3b8108e2eada6f79f0d61e620d9e7e96e98c75a3038b4c",
-  "notes": "던진 창이 덜 미끄러집니다"
+  "versionCode": 69,
+  "versionName": "7.8",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v7.8/gijul-direct.apk",
+  "size": 1901199,
+  "sha256": "8ab3e7bb07a4166e69bb4bd21b6b81be96ef81c2473d4cb1be2af6a53f8e3811",
+  "notes": "홈 화면 위젯이 생겼습니다 — 여섯 벌 중에 골라 놓으세요"
 }
