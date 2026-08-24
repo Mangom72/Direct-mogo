@@ -1,8 +1,8 @@
 {
-  "versionCode": 71,
-  "versionName": "8.0",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.0/gijul-direct.apk",
-  "size": 2142271,
-  "sha256": "f3f34764af8cbc725537e4eed1de3f77f09e71851b7f80b87bc6f420ec7eccd1",
-  "notes": "위젯이 앱과 같은 글꼴로 그려지고, 화면 크기에 맞게 자랍니다. 안 올라가던 두 벌도 고쳤습니다"
+  "versionCode": 72,
+  "versionName": "8.1",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.1/gijul-direct.apk",
+  "size": 2143819,
+  "sha256": "49d0c9ae91798f5071df396bb1f2df6ffe5cadc48c8fd97c6900b13d0a89a021",
+  "notes": "위젯 글자가 카드 크기만큼 커집니다. 달력 제목의 글꼴이 갈리던 것도 고쳤습니다"
 }
