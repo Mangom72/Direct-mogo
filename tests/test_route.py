@@ -38,7 +38,7 @@ with sync_playwright() as pw:
     s = state(pg)
     print("1. #/D200/17022/2023/edu ->", {k: s[k] for k in ("grade","grpName","subName","kind","year")})
     print("   맞음:", (s["grade"], s["sub"], s["kind"], s["year"]) == (1, "17022", "edu", "2023"),
-          "| 표제:", pg.text_content(".tally .big"), "|", pg.text_content(".tally .sm"))
+          "| 표제:", pg.text_content(".tally .big"), "| 연도:", pg.input_value("#yr"))
 
     # ---- 2. filter change updates hash
     pg.select_option("#yr", "2021")
@@ -119,8 +119,8 @@ with sync_playwright() as pw:
     # ---- 8d. 실행 중 화면 딥링크
     pg2.evaluate("location.hash = '/D300/140121/2019/gov'")
     pg2.wait_for_timeout(250)
-    print("8d. 실행 중 화면 딥링크 ->", pg2.text_content(".tally .big"), "|",
-          pg2.text_content(".tally .sm"))
+    print("8d. 실행 중 화면 딥링크 ->", pg2.text_content(".tally .big"),
+          "| 연도:", pg2.input_value("#yr"))
 
     # ---- 9. 뒤로가기가 필터 이력에 갇히지 않는지 (replaceState)
     n = pg2.evaluate("history.length")

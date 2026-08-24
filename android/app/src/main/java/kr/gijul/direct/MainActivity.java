@@ -115,6 +115,14 @@ public class MainActivity extends Activity {
     protected void onNewIntent(Intent i) {
         super.onNewIntent(i);
         setIntent(i);
+        String frag = i == null ? null : i.getStringExtra("gijul_frag");
+        /* 달력은 주소가 아니라 화면 위에 뜨는 것이라, 주소만 바꿔서는 열리지
+           않는다. 이미 떠 있는 페이지에 직접 이른다. 과목(#/…)은 페이지의
+           hashchange 가 받으므로 그냥 실어 보내면 된다. */
+        if (Widgets.CAL.equals(frag)) {
+            web.evaluateJavascript("window.gijulOpenCal&&window.gijulOpenCal()", null);
+            return;
+        }
         String go = startUrl(i);
         if (!SITE.equals(go)) web.loadUrl(go);
     }

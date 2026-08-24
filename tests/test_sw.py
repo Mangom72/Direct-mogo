@@ -53,8 +53,8 @@ try:
         pg.select_option("#sub", label="지구과학Ⅰ")
         pg.select_option("#yr", index=2)
         pg.wait_for_timeout(150)
-        print("   오프라인 필터 동작:", pg.text_content(".tally .big"), "|",
-              pg.text_content(".tally .sm"))
+        print("   오프라인 필터 동작:", pg.text_content(".tally .big"),
+              "| 연도:", pg.input_value("#yr"))
         print("   내 과목/보내기 버튼 살아있음:",
               pg.is_visible("#favToggle"), pg.eval_on_selector_all(".send", "e=>e.length") > 0)
         ctx.set_offline(False)

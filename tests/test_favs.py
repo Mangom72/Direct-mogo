@@ -49,7 +49,7 @@ with sync_playwright() as pw:
           pg.eval_on_selector_all("#gradeBox button", "e=>e.map(x=>x.getAttribute('aria-pressed'))"),
           "grp =", pg.input_value("#grp"), "sub =", pg.input_value("#sub"),
           "| pills:", pills(pg))
-    print("   tally:", pg.text_content(".tally .big"), "|", pg.text_content(".tally .sm"))
+    print("   tally:", pg.text_content(".tally .big"), "| 연도:", pg.input_value("#yr"))
 
     pg.screenshot(path=SHOT + "shot-mobile.png", full_page=False)
 

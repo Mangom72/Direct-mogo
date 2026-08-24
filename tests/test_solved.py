@@ -131,7 +131,7 @@ with sync_playwright() as pw:
     ck(pair and "짝수형" in (pair["even"] or ""), "홀수형 다음 줄이 짝수형이어야 합니다")
 
     if pair:
-        before = pg.eval_on_selector(".tally .sm", "e=>e.textContent")
+        before = pg.eval_on_selector(".tally .big", "e=>e.textContent")
         pg.eval_on_selector_all(".item .chk", f"e=>e[{pair['i']}].click()")
         pg.wait_for_selector(".stamp", timeout=5000)
         keys = pg.evaluate("()=>Object.keys(SOLVED)")

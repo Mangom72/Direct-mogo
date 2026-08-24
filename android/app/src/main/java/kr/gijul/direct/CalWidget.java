@@ -25,6 +25,9 @@ import java.util.Map;
  */
 public class CalWidget extends WidgetBase {
 
+    /* 푼 것을 보여 주던 위젯이니 눌렀을 때 갈 곳은 달력이다 */
+    @Override String where() { return Widgets.CAL; }
+
     @Override int layout() { return R.layout.w_cal; }
 
     @Override
@@ -117,7 +120,10 @@ public class CalWidget extends WidgetBase {
             float top = ty + px(c, 2), room = y0 + ch - top - px(c, 1);
             int fits = (int) Math.floor(room / (chipH + gapY));
             int show = Math.min(fits, it.size());
-            if (show < it.size() && show > 0) show--;      /* +n 도 한 줄을 먹는다 */
+            /* '+n' 도 한 줄을 먹지만 이름표보다 낮다. 이름표 하나를 물리기 전에
+               남은 틈으로 되는지 먼저 본다 — 한 칸밖에 못 넣는 크기에서 무턱대고
+               물리면 이름은 하나도 없이 '+2'만 남는다. */
+            if (show < it.size() && show > 0 && room - show * (chipH + gapY) < px(c, 7.5f)) show--;
 
             p.setTextSize(px(c, 7.5f));
             for (int i = 0; i < show; i++) {

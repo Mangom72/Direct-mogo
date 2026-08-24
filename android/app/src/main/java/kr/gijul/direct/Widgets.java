@@ -41,12 +41,39 @@ final class Widgets {
         }
     }
 
-    /** 위젯을 누르면 앱이 열린다. 위젯이 스스로 할 수 있는 일은 없다. */
-    static PendingIntent open(Context c) {
+    /**
+     * 위젯을 누르면 앱이 <b>그 위젯이 말하던 자리</b>로 열린다.
+     *
+     * 푼 것을 보여 주던 위젯은 달력으로, 회차를 짚어 주던 위젯은 그 과목으로.
+     * 갈 데가 마땅치 않으면 첫 화면이다. 홈 화면에서 눌렀는데 아무 데나 열리면
+     * 위젯을 놓아 둔 값이 절반은 사라진다.
+     *
+     * 자리는 주소의 조각(#…)으로 건넨다 — 페이지가 이미 그것으로 화면을 되살린다.
+     *
+     * @param where 조각. null 이면 첫 화면.
+     * @param slot  같은 위젯 안에서 누른 자리마다 다른 PendingIntent 를 만들려면
+     *              요청 코드가 달라야 한다. 같으면 마지막 것이 앞의 것을 덮는다.
+     */
+    static PendingIntent open(Context c, String where, int slot) {
         Intent i = new Intent(c, MainActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        return PendingIntent.getActivity(c, 0, i,
+        if (where != null) i.putExtra("gijul_frag", where);
+        /* 조각을 데이터에도 실어 둔다. 이것이 없으면 안드로이드가 '같은 인텐트'로
+           보아 FLAG_UPDATE_CURRENT 로도 앞의 것을 안 갈아 끼운다 — 달력 위젯과
+           D-day 위젯이 같은 곳으로 열리는 그 버그다. */
+        i.setData(android.net.Uri.parse("gijul://widget/" + slot + (where == null ? "" : where)));
+        return PendingIntent.getActivity(c, slot, i,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    static PendingIntent open(Context c) { return open(c, null, 0); }
+
+    /** 달력을 펴고 연다 */
+    static final String CAL = "#cal";
+
+    /** 그 과목의 목록으로 */
+    static String subject(String grade, String sub) {
+        return "#/" + grade + "/" + sub + "/all/all";
     }
 
     /**

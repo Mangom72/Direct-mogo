@@ -7,5 +7,5 @@
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/w_week"
     android:description="@string/w_week_d"
-    android:previewLayout="@layout/w_week"
+    android:previewImage="@drawable/w_pre_week"
     android:widgetCategory="home_screen" />

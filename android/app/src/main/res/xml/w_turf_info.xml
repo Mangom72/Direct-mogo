@@ -7,5 +7,5 @@
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/w_turf"
     android:description="@string/w_turf_d"
-    android:previewLayout="@layout/w_turf"
+    android:previewImage="@drawable/w_pre_turf"
     android:widgetCategory="home_screen" />

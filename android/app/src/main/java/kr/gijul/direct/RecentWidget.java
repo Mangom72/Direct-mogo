@@ -23,6 +23,9 @@ public class RecentWidget extends WidgetBase {
     private static final int[] BAR = {R.id.b0, R.id.b1, R.id.b2, R.id.b3, R.id.b4};
     private static final int[] TXT = {R.id.t0, R.id.t1, R.id.t2, R.id.t3, R.id.t4};
 
+    /* 푼 것을 보여 주던 위젯이니 눌렀을 때 갈 곳은 달력이다 */
+    @Override String where() { return Widgets.CAL; }
+
     @Override int layout() { return R.layout.w_recent; }
 
     @Override

@@ -20,6 +20,9 @@ import java.util.Map;
  */
 public class WeekWidget extends WidgetBase {
 
+    /* 푼 것을 보여 주던 위젯이니 눌렀을 때 갈 곳은 달력이다 */
+    @Override String where() { return Widgets.CAL; }
+
     @Override int layout() { return R.layout.w_week; }
 
     @Override

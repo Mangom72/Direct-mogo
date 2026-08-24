@@ -37,8 +37,8 @@ SEED = """()=>{
 }"""
 
 def open_cal(pg):
-    pg.wait_for_selector("#progBtn", timeout=10000)
-    pg.click("#progBtn")
+    pg.wait_for_selector("#calBtn", timeout=10000)
+    pg.click("#calBtn")
     pg.wait_for_selector("#cal:not([hidden])", timeout=5000)
     pg.wait_for_timeout(250)
 
@@ -53,8 +53,8 @@ with sync_playwright() as pw:
     pg.goto(SITE, wait_until="load")
     pg.wait_for_selector(".item .chk", timeout=25000)
 
-    ck(pg.eval_on_selector_all("#progBtn", "e=>e.length") == 0,
-       "아무것도 안 찍었는데 진도 단추가 있습니다")
+    ck(pg.eval_on_selector_all("#calBtn", "e=>e.length") == 0,
+       "아무것도 안 찍었는데 달력 단추가 있습니다")
     pg.evaluate(SEED)
     open_cal(pg)
     print("1. 진도를 눌러 달력이 열림")

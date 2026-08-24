@@ -59,6 +59,13 @@ public class NextWidget extends WidgetBase {
             v.setTextViewText(TXT[i], x.optString("t", ""));
             v.setInt(BAR[i], "setBackgroundResource",
                     "gov".equals(x.optString("k")) ? R.drawable.w_bar_gov : R.drawable.w_bar_edu);
+            /* 줄마다 가는 곳이 다르다. 바탕에 걸어 둔 것(첫 화면)을 줄에서 덮어쓴다 —
+               '다음에 풀 것'을 눌렀는데 첫 화면이 열리면 한 번 더 골라야 한다. */
+            String g = x.optString("g", ""), sub = x.optString("s", "");
+            if (!g.isEmpty() && !sub.isEmpty()) {
+                v.setOnClickPendingIntent(ROW[i],
+                        Widgets.open(c, Widgets.subject(g, sub), slot() + 1 + i));
+            }
         }
     }
 }

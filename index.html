@@ -80,7 +80,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-/6TsG4a7C6bUcwDCgBYvGQwbkg5XnIiHBF96hiiomQY=';
+  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-0hy8txM5lafAQPBZZ5dMzyKq2b6p3NFFcjag0JUxNwk=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -338,11 +338,12 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 
 .tally{display:flex;align-items:baseline;gap:10px;margin:22px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
 .tally .big{font-family:"Song Myung",serif;font-size:23px;font-weight:700}
-.tally .sm{font-size:12px;color:var(--ink2)}
 .tally{flex-wrap:wrap}
 /* 표제 오른쪽 끝에 붙는 단추들. 하나였을 때는 .vault가 직접 margin-left:auto를
    들고 있었는데, 둘이 되면 남는 자리를 사이좋게 나눠 가져 서로 멀어진다.
    묶어서 그 묶음만 오른쪽으로 민다. */
+/* 진도는 표제 바로 옆에 붙고, 단추들은 오른쪽 끝으로 밀린다 */
+.tally .prog{margin-left:10px}
 .tally-acts{margin-left:auto;flex:none;display:flex;gap:6px;align-items:center}
 .vault,.onepage{
   font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.5px;cursor:pointer;
@@ -476,10 +477,18 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
 .yr-head .bar i{position:absolute;inset:0 auto 0 0;background:var(--mark)}
 .yr-head .cnt{font-size:11px;font-weight:700;color:var(--mark);font-variant-numeric:tabular-nums}
 /* 표제의 진도와 거르개 */
-.tally .prog{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink2);
-  font-family:inherit;border:0;background:none;padding:0;cursor:pointer}
-.tally .prog:hover b{text-decoration:underline}
-.tally .prog:focus-visible{outline:2.5px solid var(--mark);outline-offset:3px}
+.tally .prog{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink2)}
+.calbtn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:29px;height:29px;padding:0;margin-left:1px;flex:none;cursor:pointer;
+  border:1.2px solid var(--rule);background:var(--btn);color:var(--ink2);
+}
+.calbtn:hover{border-color:var(--ink);color:var(--ink)}
+.calbtn:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+.calbtn svg{
+  width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.4;
+  stroke-linecap:round;stroke-linejoin:round;display:block;
+}
 .tally .prog .bar{flex:none;width:84px;height:5px;background:var(--rule);position:relative;overflow:hidden}
 .tally .prog .bar i{position:absolute;inset:0 auto 0 0;background:var(--mark)}
 .tally .prog b{color:var(--mark);font-variant-numeric:tabular-nums;font-weight:700}
@@ -1567,6 +1576,12 @@ const EXT_ARROW = '<svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"
 const TICK = '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">'
   + '<path d="M2.4 6.5 4.9 9 9.6 3.3"/></svg>';
 
+/* 달력. 이것도 글자가 아니라 그림이다 — 달력 기호(U+1F4C5)는 우리 글꼴에
+   없을뿐더러 기기에 따라 색색의 그림글자로 나온다. */
+const CAL_ICON = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">'
+  + '<rect x="1.6" y="3" width="12.8" height="11.4" rx="1.6"/>'
+  + '<path d="M1.6 6.6h12.8M5 1.6v2.6M11 1.6v2.6"/></svg>';
+
 const SCV_FROM = "20220324";
 function scvUrl(grade, date){
   if(grade !== "D300" || date < SCV_FROM) return "";
@@ -1693,6 +1708,8 @@ function applyState(s){
    (우리가 쓰는 replaceState는 이 이벤트를 발생시키지 않으므로 되돌이 걱정은 없다) */
 addEventListener("hashchange", ()=>{
   if(!DB) return;
+  /* 달력 위젯을 눌렀는데 앱이 이미 떠 있던 경우 */
+  if(location.hash === "#cal"){ gijulOpenCal(); syncURL(); return; }
   const list = parseSubs();
   if(list){ offerImport(list); syncURL(); return; }
   const st = parseHash();
@@ -2346,7 +2363,7 @@ out.addEventListener("click", e=>{
   const b=e.target.closest(".send");
   if(b){ openSheet(ROWS[+b.dataset.i], b); return; }
 
-  if(e.target.closest("#progBtn")){ openCal(); return; }
+  if(e.target.closest("#calBtn")){ openCal(); return; }
 
   const only=e.target.closest("#onlyBtn");
   if(only){
@@ -2567,11 +2584,15 @@ function closeCal(){
   if($("#cal").hidden) return false;
   $("#cal").hidden = true;
   document.body.style.overflow = "";
-  const back = $("#progBtn");
+  const back = $("#calBtn");
   if(back) back.focus();
   return true;
 }
 $("#calX").onclick = closeCal;
+/* 위젯이 부른다. 앱이 이미 떠 있으면 주소가 안 바뀌므로 이 창구가 유일한 길이다. */
+window.gijulOpenCal = function(){
+  try{ if($("#cal").hidden) openCal(); }catch(e){}
+};
 $("#calPrev").onclick = ()=>{ calCur.setMonth(calCur.getMonth()-1); drawCal(); };
 $("#calNext").onclick = ()=>{ calCur.setMonth(calCur.getMonth()+1); drawCal(); };
 $("#calToday").onclick = ()=>{
@@ -2808,12 +2829,13 @@ function render(){
   /* 표제의 진도 — 지금 걸러 놓은 범위 안에서 몇을 풀었는가. 하나도 안 찍은
      과목에는 아무것도 띄우지 않는다. 처음 온 사람에게 0 / 42 는 숙제다. */
   const allDone = allDoneSet.size, allOf = allSeen.size;
-  /* 진도를 누르면 달력이 열린다. 달력을 찾을 사람은 진도를 보다 찾을 사람이고,
-     이 줄에 단추를 더 두면 '한 장으로'와 '받아둔 자료'가 그만큼 좁아진다. */
+  /* 진도는 읽는 것이고, 달력은 가는 곳이다. 하나로 묶으면 무엇을 누르는
+     것인지가 흐려져서, 진도 옆에 달력 아이콘을 따로 둔다. */
   const prog = allDone
-    ? `<button type="button" class="prog" id="progBtn" aria-label="푼 날 달력 열기">
-         <span class="bar" aria-hidden="true"><i style="width:${Math.round(allDone/allOf*100)}%"></i></span>
-         <b>${allDone}</b> / ${allOf} 풂</button>` : "";
+    ? `<span class="prog"><span class="bar" aria-hidden="true"><i style="width:${Math.round(allDone/allOf*100)}%"></i></span>
+         <span><b>${allDone}</b> / ${allOf} 풂</span>
+         <button type="button" class="calbtn" id="calBtn"
+                 title="푼 날 달력" aria-label="푼 날 달력 열기">${CAL_ICON}</button></span>` : "";
   /* 거르개는 찍은 것이 있을 때만 뜬다. 켜 둔 채로 다른 과목에 가면 그 과목은
      아직 아무것도 안 찍었을 수 있는데, 그때도 단추는 있어야 끌 수 있다. */
   const only = (allDone || onlyLeft)
@@ -2822,12 +2844,14 @@ function render(){
     ? `<span class="tally-acts">${only}${onePage}${vaultBtn}</span>` : "";
   $("#cntPaper").textContent=total;
 
+  /* 표제에서 '전체 연도 · 21개 회차'를 뺐다. 회차 수는 위 통계에 이미 있고,
+     연도는 바로 위 고르개에서 방금 고른 것이다 — 같은 말이 세 번 나온다. */
   out.innerHTML = total
-    ? `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · ${total}개 회차</span>${prog}${acts}</div>`
+    ? `<div class="tally"><span class="big">${gradeName} · ${subName}</span>${prog}${acts}</div>`
       + (onlyLeft && !shownAll
          ? `<div class="empty">이 조건의 회차를 모두 푸셨습니다.<br>'안 푼 것만'을 끄면 다시 보입니다.</div>`
          : html)
-    : `<div class="tally"><span class="big">${gradeName} · ${subName}</span><span class="sm">${scope} · 0개 회차</span>${acts}</div>
+    : `<div class="tally"><span class="big">${gradeName} · ${subName}</span>${acts}</div>
        <div class="empty">해당 조건으로 수록된 회차가 없습니다.<br>선택한 학년에서 그 과목이 시행되지 않았거나, 연도·기관 조건을 좁게 설정하셨을 수 있습니다.</div>`;
 
   /* 자리를 잡아 두던 표시를 뗀다. 그리기 전까지만 필요한 것이라, 그대로 두면
@@ -3066,6 +3090,8 @@ if("serviceWorker" in navigator){
   syncPickText();
   out.innerHTML=`<div class="empty">자료를 불러오는 중입니다…</div>`;
   try{
+    /* syncURL()이 주소를 '#/과목/…' 꼴로 정리해 버리므로 먼저 챙겨 둔다 */
+    const wantCal = location.hash === "#cal";
     DB = await loadDB();
     fillYears();          /* 자료 없는 연도를 가리켰다면 여기서 '전체'로 내려앉는다 */
     render();
@@ -3073,6 +3099,8 @@ if("serviceWorker" in navigator){
     /* 위젯은 이 한 번으로 최신이 된다. 자료가 있어야 '다음에 풀 것'을 고를 수
        있어서 여기까지 미룬다. */
     tellSolved();
+    /* 달력 위젯을 눌러서 들어왔으면 그 자리로 */
+    if(wantCal) gijulOpenCal();
     if(incoming) offerImport(incoming);
   }catch(e){
     out.innerHTML=`<div class="empty">자료를 불러오지 못했습니다. (${esc(e.message)})<br>

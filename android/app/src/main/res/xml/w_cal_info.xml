@@ -7,5 +7,5 @@
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/w_cal"
     android:description="@string/w_cal_d"
-    android:previewLayout="@layout/w_cal"
+    android:previewImage="@drawable/w_pre_cal"
     android:widgetCategory="home_screen" />

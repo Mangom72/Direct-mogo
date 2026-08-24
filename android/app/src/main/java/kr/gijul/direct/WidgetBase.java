@@ -37,13 +37,21 @@ abstract class WidgetBase extends AppWidgetProvider {
 
     abstract int layout();
 
+    /** 이 위젯을 누르면 갈 자리. null 이면 첫 화면. */
+    String where() { return null; }
+
+    /** PendingIntent 를 서로 구별하는 번호. 위젯마다 달라야 한다. */
+    int slot() { return getClass().getName().hashCode() & 0xFFFF; }
+
     @Override
     public void onUpdate(Context c, AppWidgetManager m, int[] ids) {
         Map<String, List<Solved.Item>> log = Solved.byDay(c);
         for (int id : ids) {
             try {
                 RemoteViews v = new RemoteViews(c.getPackageName(), layout());
-                v.setOnClickPendingIntent(R.id.root, Widgets.open(c));
+                /* 위젯마다 가는 곳이 다르다. 누르는 자리가 여럿인 위젯은
+                   draw() 안에서 줄마다 다시 건다. */
+                v.setOnClickPendingIntent(R.id.root, Widgets.open(c, where(), slot()));
                 draw(c, m, id, v, log);
                 m.updateAppWidget(id, v);
             } catch (Exception e) {

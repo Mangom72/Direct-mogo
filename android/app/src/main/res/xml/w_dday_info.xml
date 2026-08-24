@@ -7,5 +7,5 @@
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/w_dday"
     android:description="@string/w_dday_d"
-    android:previewLayout="@layout/w_dday"
+    android:previewImage="@drawable/w_pre_dday"
     android:widgetCategory="home_screen" />

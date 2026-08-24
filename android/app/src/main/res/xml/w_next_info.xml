@@ -7,5 +7,5 @@
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/w_next"
     android:description="@string/w_next_d"
-    android:previewLayout="@layout/w_next"
+    android:previewImage="@drawable/w_pre_next"
     android:widgetCategory="home_screen" />
