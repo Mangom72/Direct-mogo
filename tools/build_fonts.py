@@ -28,6 +28,13 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "fonts"
 
+# 홈 화면 위젯은 웹뷰가 아니라 안드로이드가 직접 그린다 — woff2 를 읽지 못하므로
+# 같은 글자를 담은 ttf 를 res/font 에 함께 낸다. 위젯만 시스템 글꼴로 뜨면 홈
+# 화면에서 다른 앱처럼 보인다. 굵기는 위젯이 쓰는 둘만 낸다.
+ANDROID_OUT = ROOT / "android/app/src/main/res/font"
+ANDROID_FACES = [("GijulSans-500.woff2", "gijul_500.ttf"),
+                 ("GijulSans-700.woff2", "gijul_700.ttf")]
+
 # 제목은 명조(신문 지면), 본문은 고딕. 굵기는 CSS가 쓰는 것만.
 #
 # 세 번째 칸이 우리가 쓰는 이름이다. IBM Plex 는 OFL에 Reserved Font Name "Plex"가
@@ -194,7 +201,31 @@ def build(chars):
         subprocess.run(["curl", "-fsS", "-m", "60", url,
                         "-o", str(OUT / f"OFL-{slug}.txt")], check=True)
     (OUT / "fonts.css").write_text(css_text(), encoding="utf-8")
+    android_fonts()
     print(f"  {'합계':<22}{total:7.1f}KB · 글자 {len(chars)}자")
+
+
+def android_fonts():
+    """방금 만든 woff2 를 위젯이 읽을 수 있는 ttf 로 함께 낸다.
+
+    같은 글자, 같은 이름표다 — 압축만 벗긴다. 원본을 따로 자르지 않는 것은 두
+    벌이 서로 어긋날 자리를 만들지 않기 위해서다. 웹에 없는 글자는 위젯에도
+    없어야 맞다.
+
+    날짜 도장은 여기서도 지운다. 그러지 않으면 글자가 그대로여도 파일 바이트가
+    달라져 매일 도는 갱신이 날마다 ttf 두 개를 새로 커밋한다.
+    """
+    from fontTools.ttLib import TTFont
+
+    ANDROID_OUT.mkdir(parents=True, exist_ok=True)
+    for src, name in ANDROID_FACES:
+        font = TTFont(OUT / src)
+        font.recalcTimestamp = False
+        font["head"].modified = font["head"].created
+        font.flavor = None
+        font.save(ANDROID_OUT / name)
+        kb = (ANDROID_OUT / name).stat().st_size / 1024
+        print(f"  {'위젯 ' + name:<22}{kb:7.1f}KB")
 
 
 def finalize(path, family, weight, rename):

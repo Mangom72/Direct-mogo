@@ -5,25 +5,35 @@
     android:orientation="vertical" android:background="@drawable/w_bg"
     android:padding="10dp">
 
-    <TextView android:id="@+id/big"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:gravity="center" android:layout_marginTop="4dp"
-        android:textSize="30sp" android:textStyle="bold" android:textColor="@color/w_mark" />
-    <TextView android:id="@+id/title"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:gravity="center" android:textSize="10.5sp" android:textColor="@color/w_ink2" />
+    <!-- 남은 날은 카드 한가운데에 둔다. 위에 붙여 두면 큰 화면에서 아래가
+         통째로 비어, 자리를 차지하고도 아무 말을 안 하는 꼴이 된다. -->
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1" android:orientation="vertical"
+        android:gravity="center">
+        <TextView android:id="@+id/big"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="30sp" android:textStyle="bold" android:textColor="@color/w_mark"
+            android:fontFamily="@font/gijul_700" />
+        <TextView android:id="@+id/title"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center" android:textSize="10.5sp" android:textColor="@color/w_ink2"
+            android:fontFamily="@font/gijul_500" />
 
-    <!-- ProgressBar 는 RemoteViews 가 다룰 수 있는 몇 안 되는 뷰다. 비율을
-         그림 없이 낼 수 있는 유일한 길이라 여기에 쓴다. -->
-    <ProgressBar android:id="@+id/prog"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent" android:layout_height="5dp"
-        android:layout_marginTop="9dp"
-        android:max="100" android:progressDrawable="@drawable/w_prog" />
+        <!-- ProgressBar 는 RemoteViews 가 다룰 수 있는 몇 안 되는 뷰다. 비율을
+             그림 없이 낼 수 있는 유일한 길이라 여기에 쓴다. -->
+        <ProgressBar android:id="@+id/prog"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent" android:layout_height="5dp"
+            android:layout_marginTop="11dp"
+            android:max="100" android:progressDrawable="@drawable/w_prog" />
+    </LinearLayout>
 
     <TextView android:id="@+id/foot"
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="6dp" android:paddingTop="6dp"
+        android:gravity="center" android:paddingTop="6dp"
         android:textSize="10.5sp" android:textColor="@color/w_ink2"
-        android:maxLines="1" android:ellipsize="end" />
+        android:maxLines="1" android:ellipsize="end"
+        android:fontFamily="@font/gijul_500" />
 </LinearLayout>

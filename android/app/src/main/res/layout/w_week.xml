@@ -9,11 +9,13 @@
         android:orientation="horizontal" android:baselineAligned="true">
         <TextView android:id="@+id/big"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:textSize="24sp" android:textStyle="bold" android:textColor="@color/w_mark" />
+            android:textSize="24sp" android:textStyle="bold" android:textColor="@color/w_mark"
+            android:fontFamily="@font/gijul_700" />
         <TextView android:id="@+id/title"
             android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
             android:layout_marginStart="6dp"
-            android:textSize="11sp" android:textColor="@color/w_ink2" />
+            android:textSize="11sp" android:textColor="@color/w_ink2"
+            android:fontFamily="@font/gijul_500" />
     </LinearLayout>
 
     <!-- 일곱 칸의 막대. 높이를 프레임마다 정해야 하는데 setViewLayoutHeight 는
@@ -21,11 +23,12 @@
     <ImageView android:id="@+id/art"
         android:layout_width="match_parent" android:layout_height="0dp"
         android:layout_weight="1" android:layout_marginTop="6dp"
-        android:scaleType="fitXY" android:contentDescription="@string/w_week" />
+        android:scaleType="fitCenter" android:contentDescription="@string/w_week" />
 
     <TextView android:id="@+id/foot"
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_marginTop="6dp" android:paddingTop="6dp"
         android:textSize="10.5sp" android:textColor="@color/w_ink2"
-        android:maxLines="1" android:ellipsize="end" />
+        android:maxLines="1" android:ellipsize="end"
+        android:fontFamily="@font/gijul_500" />
 </LinearLayout>

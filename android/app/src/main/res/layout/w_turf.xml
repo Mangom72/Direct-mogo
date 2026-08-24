@@ -10,21 +10,24 @@
         <TextView android:id="@+id/title"
             android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
             android:textSize="13.5sp" android:textStyle="bold" android:textColor="@color/w_ink"
-            android:maxLines="1" android:ellipsize="end" />
+            android:maxLines="1" android:ellipsize="end"
+            android:fontFamily="@font/gijul_700" />
         <TextView android:id="@+id/count"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:textSize="10.5sp" android:textStyle="bold" android:textColor="@color/w_mark" />
+            android:textSize="10.5sp" android:textStyle="bold" android:textColor="@color/w_mark"
+            android:fontFamily="@font/gijul_700" />
     </LinearLayout>
 
     <ImageView android:id="@+id/art"
         android:layout_width="match_parent" android:layout_height="0dp"
         android:layout_weight="1" android:layout_marginTop="6dp"
-        android:scaleType="fitCenter" android:adjustViewBounds="true"
+        android:scaleType="fitStart" android:adjustViewBounds="true"
         android:contentDescription="@string/w_turf" />
 
     <TextView android:id="@+id/foot"
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_marginTop="6dp" android:paddingTop="6dp"
         android:textSize="10.5sp" android:textColor="@color/w_ink2"
-        android:maxLines="1" android:ellipsize="end" />
+        android:maxLines="1" android:ellipsize="end"
+        android:fontFamily="@font/gijul_500" />
 </LinearLayout>

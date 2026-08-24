@@ -85,6 +85,12 @@ def px(dp):
     return dp * S
 
 
+def fit(span, ratio, lo, hi):
+    """칸 크기에 맞춰 자란다. 자바 쪽 WidgetBase.fit 과 같은 셈이다 — 두 곳의
+    숫자가 어긋나면 미리보기가 진짜와 다른 그림이 된다."""
+    return max(lo, min(hi, span * ratio))
+
+
 def mix(a, b, t):
     a, b = a.lstrip("#"), b.lstrip("#")
     return "#" + "".join(
@@ -128,77 +134,93 @@ class Card:
 
 # ── 여섯 장 ────────────────────────────────────────────────────────────
 
-def cal(c):
-    k = Card(250, 250, c)
+def cal(c, w=250, h=250):
+    k = Card(w, h, c)
     n = sum(len(v) for v in CAL.values())
     k.head(f"{MONTH}월", f"{n}회차")
     k.foot(f"수능 D-{DDAY} · 오늘 {len(CAL[TODAY])}회차")
 
-    x0, y0, w = 10, 33, 230
-    head, weeks = 13, 5
-    ch = (250 - 21 - 6 - y0 - head) / weeks
-    cw = w / 7
+    x0, y0 = 10, 33
+    gw, gh = w - 20, h - 21 - 6 - y0
+    weeks = 5
+    cw = gw / 7
+    ch0 = gh / (weeks + 0.55)
+    head, ch = ch0 * 0.55, ch0
+
+    dow = fit(head, 0.62, 8, 13)
     for i, d in enumerate(DOW):
-        k.text(x0 + cw * (i + .5), y0 + head - 11, d, 500, 8.5,
+        k.text(x0 + cw * (i + .5), y0 + head - dow * 0.35 - dow, d, 700, dow,
                c["mark"] if i == 0 else c["ink2"], anchor="ma")
 
-    pad, chip_h, gap = 2, 9.5, 1.5
-    for day in range(1, 32):
-        col, row = (day - 1) % 7, (day - 1) // 7
+    pad = max(2, cw * 0.045)
+    day = fit(ch, 0.17, 8.5, 14)
+    chip_t = fit(ch, 0.15, 7.5, 12)
+    chip_h, gap = chip_t * 1.55, chip_t * 1.55 * 0.16
+
+    for d in range(1, 32):
+        col, row = (d - 1) % 7, (d - 1) // 7
         cx, cy = x0 + cw * col, y0 + head + ch * row
         k.g.rectangle([px(cx), px(cy), px(cx + cw), px(cy + ch)], outline=c["rule"], width=S)
-        ty = cy + 3
-        if day == TODAY:
-            r = 6.5
-            k.g.ellipse([px(cx + pad - 1), px(ty - 1), px(cx + pad - 1 + r * 2), px(ty - 1 + r * 2)],
-                        fill=c["ink"])
-            k.text(cx + pad + r - 1, ty + r - 1, str(day), 700, 8.5, c["card"], anchor="mm")
+        ty = cy + pad + day                        # 글자 밑선
+        if d == TODAY:
+            rr = day * 0.78
+            ccx, ccy = cx + pad + rr, ty - day * 0.36
+            k.g.ellipse([px(ccx - rr), px(ccy - rr), px(ccx + rr), px(ccy + rr)], fill=c["ink"])
+            k.text(ccx, ccy, str(d), 700, day, c["card"], anchor="mm")
         else:
-            k.text(cx + pad, ty, str(day), 500, 8.5,
+            k.text(cx + pad, ty - day, str(d), 500, day,
                    c["mark"] if col == 0 else c["ink2"])
 
-        it = CAL.get(day)
+        it = CAL.get(d)
         if not it:
             continue
-        top = ty + 12
-        room = cy + ch - top - 1
+        top = ty + day * 0.45
+        room = cy + ch - top - pad
         fits = int(room // (chip_h + gap))
         show = min(fits, len(it))
-        if show < len(it) and show > 0 and room - show * (chip_h + gap) < 7.5:
-            show -= 1                     # '+n' 이 들어갈 틈이 없으면 하나 물린다
+        if show < len(it) and show > 0 and room - show * (chip_h + gap) < chip_t:
+            show -= 1
         for i in range(show):
             name, gov = it[i]
             bar = c["gov"] if gov else c["edu"]
             cyy = top + i * (chip_h + gap)
+            bw = max(1.6, cw * 0.018)
             k.blend([px(cx + pad), px(cyy), px(cx + cw - pad), px(cyy + chip_h)], bar, .19)
-            k.g.rectangle([px(cx + pad), px(cyy), px(cx + pad + 1.6), px(cyy + chip_h)], fill=bar)
-            k.text(cx + pad + 2.6, cyy + .8, name, 500, 7.5, c["ink"])
+            k.g.rectangle([px(cx + pad), px(cyy), px(cx + pad + bw), px(cyy + chip_h)], fill=bar)
+            k.text(cx + pad + bw * 1.7, cyy + (chip_h - chip_t) * 0.38, name, 500, chip_t, c["ink"])
         if show < len(it):
-            k.text(cx + pad + 1, top + show * (chip_h + gap), f"+{len(it) - show}",
-                   500, 7, c["ink2"])
+            k.text(cx + pad, top + show * (chip_h + gap), f"+{len(it) - show}",
+                   500, chip_t * 0.94, c["ink2"])
     return k.img
 
 
-def week(c):
-    k = Card(250, 110, c)
+def week(c, w=250, h=110):
+    k = Card(w, h, c)
     k.text(10, 9, f"{STREAK}일째", 700, 24, c["mark"])
     k.text(10 + k.wide(f"{STREAK}일째", 700, 24) + 6, 21, "이어서 풀고 있습니다", 500, 11, c["ink2"])
     k.foot(f"수능 D-{DDAY} · 이번 주 {sum(WEEK)}회차")
 
-    x0, top, bot, w = 10, 50, 72, 230
-    gap = 5
-    cw = (w - gap * 6) / 7
+    x0, y0 = 10, 40
+    aw, ah = w - 20, h - 26 - y0
+    lab, foot = fit(ah, 0.22, 10, 17), fit(ah, 0.20, 9, 15)
+    txt = fit(ah, 0.14, 8, 12)
+    area = max(1, ah - lab - foot)
+    cw = min((aw - 5 * 6) / 7, min(28, area * 0.55))
+    gap = max(5, min((aw - cw * 7) / 6, cw * 1.1))
+    left = x0 + (aw - (cw * 7 + gap * 6)) / 2
+    top, bot = y0 + lab, y0 + ah - foot
+    rnd = min(6, cw * 0.28)
     hi = max(1, max(WEEK))
     for i, n in enumerate(WEEK):
-        x = x0 + i * (cw + gap)
-        k.text(x + cw / 2, top - 11, DOW[i], 500, 8,
+        x = left + i * (cw + gap)
+        k.text(x + cw / 2, top - txt * 1.45, DOW[i], 700, txt,
                c["mark"] if i == 0 else c["ink2"], anchor="ma")
-        k.g.rounded_rectangle([px(x), px(top), px(x + cw), px(bot)], px(3), fill=c["rule"])
+        k.g.rounded_rectangle([px(x), px(top), px(x + cw), px(bot)], px(rnd), fill=c["rule"])
         if n:
-            fill = (bot - top) * n / hi
-            k.g.rounded_rectangle([px(x), px(bot - fill), px(x + cw), px(bot)], px(3), fill=c["mark"])
-            k.text(x + cw / 2, bot + 6, str(n), 500, 8, c["ink2"], anchor="ma")
-        if i == 2:                        # 오늘은 밑줄로 — 막대 색을 바꾸면 '많이 푼 날'과 헷갈린다
+            fill = max(rnd * 2, (bot - top) * n / hi)
+            k.g.rounded_rectangle([px(x), px(bot - fill), px(x + cw), px(bot)], px(rnd), fill=c["mark"])
+            k.text(x + cw / 2, bot + foot * 0.2, str(n), 500, txt, c["ink2"], anchor="ma")
+        if i == 2:      # 오늘은 밑줄로 — 막대 색을 바꾸면 '많이 푼 날'과 헷갈린다
             k.g.rectangle([px(x), px(bot + 2), px(x + cw), px(bot + 3.5)], fill=c["ink"])
     return k.img
 

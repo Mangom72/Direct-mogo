@@ -111,17 +111,67 @@ abstract class WidgetBase extends AppWidgetProvider {
         return Math.round(dp * c.getResources().getDisplayMetrics().density);
     }
 
-    /** 위젯이 지금 차지한 크기(dp). 런처가 안 알려주면 최소 크기로 친다. */
-    static int[] size(AppWidgetManager m, int id, int wDefault, int hDefault) {
+    /**
+     * 위젯이 <b>지금</b> 차지한 크기(dp). 런처가 안 알려주면 최소 크기로 친다.
+     *
+     * <h3>네 값 중 둘을 골라야 한다</h3>
+     * 런처가 주는 것은 한 크기가 아니라 넷이다 — MIN_WIDTH·MAX_HEIGHT 가
+     * <b>세로일 때</b>의 크기이고, MAX_WIDTH·MIN_HEIGHT 가 <b>가로일 때</b>다.
+     * 짝을 섞으면 세로의 너비에 세로의 높이를 재는 대신 세로 너비에 가로 높이를
+     * 재게 되어, 비율이 어긋난 그림을 늘여 붙이게 된다. 태블릿을 가로로 두면
+     * 글자가 옆으로 늘어나 보이던 것이 이것이었다.
+     *
+     * 안드로이드 12부터는 아예 목록으로 준다(OPTION_APPWIDGET_SIZES). 그쪽이
+     * 있으면 그것을 쓴다 — 런처가 실제로 재 놓은 값이라 가장 정확하다.
+     */
+    static int[] size(Context c, AppWidgetManager m, int id, int wDefault, int hDefault) {
         try {
             Bundle o = m.getAppWidgetOptions(id);
-            int w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
-            int h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0);
+            boolean land = c.getResources().getConfiguration().orientation
+                    == android.content.res.Configuration.ORIENTATION_LANDSCAPE;
+            if (android.os.Build.VERSION.SDK_INT >= 31) {
+                java.util.List<android.util.SizeF> all =
+                        o.getParcelableArrayList(AppWidgetManager.OPTION_APPWIDGET_SIZES);
+                if (all != null && !all.isEmpty()) {
+                    /* 목록은 보통 [세로, 가로] 두 벌이다. 가로면 넓은 쪽을 고른다. */
+                    android.util.SizeF pick = all.get(0);
+                    for (android.util.SizeF x : all) {
+                        boolean wider = x.getWidth() > pick.getWidth();
+                        if (land == wider) pick = x;
+                    }
+                    return new int[]{Math.round(pick.getWidth()), Math.round(pick.getHeight())};
+                }
+            }
+            int w = o.getInt(land ? AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH
+                                  : AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
+            int h = o.getInt(land ? AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT
+                                  : AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0);
+            if (w == 0) w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
             if (h == 0) h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0);
             return new int[]{ w > 0 ? w : wDefault, h > 0 ? h : hDefault };
         } catch (Exception e) {
             return new int[]{wDefault, hDefault};
         }
+    }
+
+    /**
+     * 그림에 쓸 글꼴. 진짜 글자로 내는 위젯은 layout 의 fontFamily 가 맡고,
+     * 한 장으로 그리는 위젯은 이것으로 맞춘다 — 한 위젯 안에서 두 글꼴이
+     * 섞이면 그림 부분만 남의 앱처럼 보인다.
+     */
+    static android.graphics.Typeface font(Context c, boolean bold) {
+        try {
+            return androidx.core.content.res.ResourcesCompat.getFont(
+                    c, bold ? R.font.gijul_700 : R.font.gijul_500);
+        } catch (Exception e) {
+            return android.graphics.Typeface.defaultFromStyle(
+                    bold ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+        }
+    }
+
+    /** 칸 크기에 맞춰 자란다. 고정 dp 로 두면 큰 화면에서 글자만 남아 작아 보인다. */
+    static float fit(Context c, float span, float ratio, float min, float max) {
+        return Math.max(px(c, min), Math.min(px(c, max), span * ratio));
     }
 
     static int color(Context c, int id) {

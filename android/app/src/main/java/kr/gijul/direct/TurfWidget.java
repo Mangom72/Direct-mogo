@@ -32,7 +32,7 @@ public class TurfWidget extends WidgetBase {
         v.setTextViewText(R.id.title, "푼 날");
         v.setTextViewText(R.id.count, Solved.streak(log) + "일째");
 
-        int[] wh = size(m, id, 250, 110);
+        int[] wh = size(c, m, id, 250, 110);
         int sum = 0;
         Calendar end = Calendar.getInstance();
         end.add(Calendar.DAY_OF_MONTH, 7 - end.get(Calendar.DAY_OF_WEEK));
