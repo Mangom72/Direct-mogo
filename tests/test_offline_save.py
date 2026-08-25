@@ -89,6 +89,9 @@ with sync_playwright() as pw:
     pg.wait_for_selector(".svault", timeout=10000)
     print("   보관함:", repr(pg.text_content("#sheetSb")),
           "| 회차:", repr(pg.text_content(".svault .nm")))
+    pg.wait_for_selector("#sheetNote .vspace", timeout=10000)
+    print("   남은 자리 안내:", pg.text_content("#sheetNote .vspace"))
+
     kinds = pg.eval_on_selector_all(".svault .row button:not(.del)", "e=>e.map(x=>x.textContent)")
     print("   단추:", kinds)
     assert kinds == ["문제", "정답", "해설", "내려받기"], kinds
@@ -112,6 +115,20 @@ with sync_playwright() as pw:
     print("3. 지운 뒤 — 통:", len(pg.evaluate(BOXES)),
           "개 | '담김' 표시:", pg.eval_on_selector_all(".item .meta .kept", "e=>e.length"),
           "개 | 안내:", pg.text_content("#sheetNote")[:20])
+    print("   ERRORS:", pg.errs or "none")
+    pg.context.close()
+
+    # ---- 3b. 목록이 없는 통은 없는 것으로 치고 치운다
+    #      담는 중에 브라우저가 죽으면 통만 남을 수 있다. 그때 '담김'이 붙었는데
+    #      열면 아무것도 없는 것이 제일 나쁘다.
+    pg = page()
+    pg.evaluate("async () => { await caches.open('gijul-vault:유령 회차'); }")
+    print("3b. 빈 통을 심고 다시 훑기 —", pg.evaluate(BOXES))
+    pg.evaluate("async () => { await Vault.sync(); }")
+    left = pg.evaluate(BOXES)
+    print("    훑은 뒤:", left, "| 담김 표시:",
+          pg.eval_on_selector_all(".item .meta .kept", "e=>e.length"), "개")
+    assert left == [], left
     print("   ERRORS:", pg.errs or "none")
     pg.context.close()
 

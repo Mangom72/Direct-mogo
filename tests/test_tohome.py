@@ -15,6 +15,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from harness import CHROME, ROOT, SHOT, site, Serve
 _srv, SITE = site()
 from playwright.sync_api import sync_playwright
+import json
 URL = SITE
 
 IPHONE = ("Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 "
@@ -27,7 +28,7 @@ ANDROID = ("Mozilla/5.0 (Linux; Android 14; SM-S918N) AppleWebKit/537.36 (KHTML,
 MAC = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
        "Chrome/126 Safari/537.36")
 
-def look(b, ua=IPHONE, touch=5, home=False, seen=None):
+def look(b, ua=IPHONE, touch=5, home=False, seen=None, marks=0):
     c = b.new_context(viewport={"width": 402, "height": 874}, user_agent=ua,
                       has_touch=touch > 0, service_workers="block")
     c.add_init_script(f"Object.defineProperty(navigator,'maxTouchPoints',{{get:()=>{touch}}});")
@@ -40,6 +41,10 @@ def look(b, ua=IPHONE, touch=5, home=False, seen=None):
             "removeEventListener(){}}:mm.call(window,q);")
     if seen:
         c.add_init_script(f"try{{localStorage.setItem('{seen}','off');}}catch(e){{}}")
+    if marks:
+        got = {f"D300/158/2024{i:02d}01/수능": "20240101" for i in range(1, marks + 1)}
+        c.add_init_script(
+            "try{localStorage.setItem('gijul.solved.v1'," + repr(json.dumps(got)) + ");}catch(e){}")
     p = c.new_page()
     p.goto(URL, wait_until="commit")
     p.wait_for_timeout(2600)
@@ -108,6 +113,20 @@ with sync_playwright() as pw:
     ok = ok and hidden
     print("   저장소가 갈리지 않는 곳이므로 조용함:", hidden)
     c.close()
+
+    print("6. 사파리 탭에서는 백업을 더 일찍 권한다")
+    #    이레 규칙 때문에 여기서는 '이 기기에만 있다'가 아니라 '없어질 수 있다'가 맞다.
+    for name, kw, want in [("사파리 · 5개", dict(seen="gijul.pwa.v1", marks=5), True),
+                           ("사파리 · 3개", dict(seen="gijul.pwa.v1", marks=3), False),
+                           ("홈 화면 · 5개", dict(seen="gijul.pwa.v1", marks=5, home=True), False)]:
+        c, p = look(b, **kw)
+        t = bar(p) or ""
+        got = "지워질 수 있습니다" in t
+        good = got == want
+        ok = ok and good
+        print(f"   {name:<14} 막대 {('없어질 수 있다' if got else ('없음' if not t else '다른 것')):<10}"
+              f" → {'통과' if good else '어긋남'}")
+        c.close()
 
     print("전체:", "통과" if ok else "실패")
     b.close()
