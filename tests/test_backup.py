@@ -168,6 +168,57 @@ with sync_playwright() as pw:
         ck(n8 == 2, f"되살아난 것이 {n8}개입니다")
     ck(not e2, f"스크립트 오류: {e2}")
 
+    # ---- 9b. 어디 있는지 알아야 쓴다 ----
+    #
+    # 처음에는 푸터에 두었다. 7.8화면을 내려야 닿았고, 그래서 있는 줄 모르는
+    # 기능이 되었다. 표제 옆으로 올렸지만 올리는 것만으로는 모자라다 — 눌러 볼
+    # 까닭이 없으면 그냥 지나친다. 값이 쌓인 뒤에 한 번만 말을 건다.
+    ctx5 = b.new_context(viewport={"width": 412, "height": 900}, service_workers="block")
+    pg5 = ctx5.new_page()
+    e5 = []
+    pg5.on("pageerror", lambda e: e5.append(str(e)[:180]))
+    pg5.goto(SITE, wait_until="load")
+    pg5.wait_for_selector(".item .chk", timeout=25000)
+
+    where = pg5.evaluate("""()=>{const e=document.getElementById('bakBtn');
+      if(!e) return null; const b=e.getBoundingClientRect();
+      return { 첫화면: b.bottom <= innerHeight && b.top >= 0,
+               크기: [Math.round(b.width), Math.round(b.height)] };}""")
+    print("9b. 백업 단추:", where)
+    ck(where, "백업 단추가 없습니다")
+    ck(where and where["첫화면"], "백업 단추가 첫 화면에 없습니다 — 내려야 닿으면 못 찾습니다")
+    ck(where and min(where["크기"]) >= 24, f"백업 단추가 작습니다: {where}")
+
+    # 글꼴에 없는 글자를 아이콘으로 쓰면 기기에 따라 두부가 된다(✓ 때의 그것)
+    ico = pg5.evaluate("()=>!!document.querySelector('#bakBtn svg')")
+    print("    아이콘이 그림인가:", ico)
+    ck(ico, "백업 아이콘이 글자입니다 — 글꼴에 없으면 두부가 됩니다")
+
+    pg5.evaluate("""()=>{const ks=[];document.querySelectorAll('.item .chk').forEach(c=>ks.push(c.dataset.k));
+      SOLVED={}; ks.slice(0,19).forEach(k=>SOLVED[k]='20260824'); saveSolved(); offerBackup();}""")
+    pg5.wait_for_timeout(250)
+    early = pg5.eval_on_selector("#notice", "e=>!e.hidden")
+    print("    19개일 때 권하는가:", early)
+    ck(not early, "얼마 안 찍었는데 벌써 백업하라고 합니다")
+
+    pg5.evaluate("""()=>{const ks=[];document.querySelectorAll('.item .chk').forEach(c=>ks.push(c.dataset.k));
+      ks.slice(0,25).forEach(k=>SOLVED[k]='20260824'); saveSolved(); offerBackup();}""")
+    pg5.wait_for_timeout(300)
+    asked5 = pg5.eval_on_selector("#notice", "e=>!e.hidden")
+    print("    쌓인 뒤:", asked5, "|", pg5.text_content("#noticeText") if asked5 else "")
+    ck(asked5, "많이 찍었는데도 백업하라는 말이 없습니다")
+
+    # 물어본 것을 또 묻는 것이 가장 성가시다
+    pg5.click("#noticeNo")
+    pg5.wait_for_timeout(200)
+    pg5.evaluate("()=>offerBackup()")
+    pg5.wait_for_timeout(250)
+    again5 = pg5.eval_on_selector("#notice", "e=>!e.hidden")
+    print("    아니오 뒤 또 묻는가:", again5)
+    ck(not again5, "'아니오'라고 했는데 또 묻습니다")
+    ck(not e5, f"스크립트 오류: {e5}")
+    ctx5.close()
+
     # ---- 10. 자동 백업 (앱에만 있는 줄) ----
     #
     # 사람이 기억해서 눌러야 하는 백업은 결국 안 하게 되고, 안 한 것을 알아차리는
