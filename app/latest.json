@@ -1,8 +1,8 @@
 {
-  "versionCode": 78,
-  "versionName": "8.7",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.7/gijul-direct.apk",
-  "size": 2153623,
-  "sha256": "0ac448e1d28d03c959133996c391b9a8034a9fedcf48bfede479662c5cf608aa",
-  "notes": "표제 옆 칸을 가르는 선 하나가 빠져 있던 것을 고쳤습니다"
+  "versionCode": 79,
+  "versionName": "8.8",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.8/gijul-direct.apk",
+  "size": 2165291,
+  "sha256": "532a24ec9e7c4c20a6d64cdf5e0ab31125fd1f29131fe268f4f1a585d3db41e4",
+  "notes": "시험 시간을 잽니다. 뷰어의 타이머 아이콘으로 시작하고, 끝내면 회차에 남습니다"
 }
