@@ -1,8 +1,8 @@
 {
-  "versionCode": 74,
-  "versionName": "8.3",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.3/gijul-direct.apk",
-  "size": 2148555,
-  "sha256": "d25fc4df46535f603604fdde13b2f7f77c5055962d17fc3d9a0dc4f7fbafd643",
-  "notes": "백업이 생겼습니다. 내 과목과 푼 회차를 파일 하나로 옮기실 수 있습니다"
+  "versionCode": 75,
+  "versionName": "8.4",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.4/gijul-direct.apk",
+  "size": 2152011,
+  "sha256": "e6ca1f6947fb2add6bc86afa39c8fd56a58eb717d5887877b9adc28780fac543",
+  "notes": "자동 백업이 생겼습니다. 자리를 한 번 고르면 그 뒤로는 저절로 씁니다"
 }
