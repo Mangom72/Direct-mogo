@@ -1,8 +1,8 @@
 {
-  "versionCode": 77,
-  "versionName": "8.6",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.6/gijul-direct.apk",
-  "size": 2152979,
-  "sha256": "1a368c8b6a8339b716751403d7613ee11f84f78ecd72b0fdcc7f006cf0c380bb",
-  "notes": "백업이 표제 옆으로 올라왔습니다. 푸터 맨 아래에 있어 찾기 어려웠습니다"
+  "versionCode": 78,
+  "versionName": "8.7",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.7/gijul-direct.apk",
+  "size": 2153623,
+  "sha256": "0ac448e1d28d03c959133996c391b9a8034a9fedcf48bfede479662c5cf608aa",
+  "notes": "표제 옆 칸을 가르는 선 하나가 빠져 있던 것을 고쳤습니다"
 }
