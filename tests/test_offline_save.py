@@ -90,8 +90,18 @@ with sync_playwright() as pw:
     print("   보관함:", repr(pg.text_content("#sheetSb")),
           "| 회차:", repr(pg.text_content(".svault .nm")))
     kinds = pg.eval_on_selector_all(".svault .row button:not(.del)", "e=>e.map(x=>x.textContent)")
-    print("   열기 단추:", kinds)
-    assert kinds == ["문제", "정답", "해설"], kinds
+    print("   단추:", kinds)
+    assert kinds == ["문제", "정답", "해설", "내려받기"], kinds
+
+    # 밖으로 꺼내는 길이 늘 함께 있다 — 브라우저가 blob 을 제 뷰어로 펴 주는지에
+    # 기대지 않는다(iOS 사파리가 PDF blob 을 어떻게 다루는지는 판마다 달랐다).
+    out = []
+    pg.on("download", lambda d: out.append(d.suggested_filename))
+    pg.click(".svault .row button >> nth=3")
+    pg.wait_for_timeout(2600)
+    print("   내려받기:", len(out), "개 | 통은 그대로:", len(pg.evaluate(BOXES)), "개")
+    assert len(out) == 3, out
+    assert len(pg.evaluate(BOXES)) == 1
 
     # ---- 3. 지우면 통도 표시도 함께 사라진다
     pg.click(".svault .row .del")          # 한 번 더 물어본다

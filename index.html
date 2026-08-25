@@ -97,7 +97,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-1Ow8B5xot1peaqDJjTKrv+crD0WjB9RLS2INuHYTXWw=';
+  script-src 'self' 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-Dpk/l0em0Y2iTVnI1Yxdd9Sf4wntInc70O5jXzlmEC0=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -2034,7 +2034,7 @@ function webVault(){
     note: NOTE_WEB,
     busy: "받는 중입니다…",
     kept: "이 회차는 이미 담아 두었습니다. '받아둔 자료'에서 열 수 있습니다.",
-    listNote: "누르면 새 탭에서 열립니다. 브라우저의 저장 공간을 비우면 함께 사라집니다.",
+    listNote: "문제·정답·해설을 누르면 새 탭에서 열립니다. 브라우저가 바로 펴지 못하면 파일로 떨어지고, <b>내려받기</b>로 언제든 꺼낼 수도 있습니다. 브라우저의 저장 공간을 비우면 함께 사라집니다.",
     emptyNote: `회차를 눌러 <b>보관함에 담기</b>를 누르면 이곳에 모입니다.`,
     folders(){ return known; },
     forget(){},
@@ -2084,16 +2084,41 @@ function webVault(){
       }
       return done.reduce((a,f)=>a + f.size, 0);
     },
-    async open(folder, name){
+    async grab(folder, name){
       const c = await caches.open(box(folder));
       const it = (await meta(c)).find(x => x.name === name);
       const res = it && await c.match(it.url);
       if(!res) throw new Error("담아둔 파일을 찾지 못했습니다");
-      const blob = await res.blob();
+      return res.blob();
+    },
+    /* 브라우저가 blob 을 제 뷰어로 펴 주기를 기대한다. 데스크톱에서는 그렇게
+       되지만 **iOS 사파리가 PDF blob 을 어떻게 다루는지는 판마다 달랐다** —
+       인라인으로 그린 판도 있고 내려받기로 떨어뜨린 판도 있다.
+
+       그래서 여기에 걸지 않는다. 팝업이 막히면 곧바로 내려받기로 떨어지고,
+       그와 별개로 목록에 '내려받기'가 늘 함께 있다(아래 dump). 어느 쪽으로
+       굴러도 파일은 손에 들어온다 — 기기 없이 고를 수 있는 유일한 설계다. */
+    async open(folder, name){
+      const blob = await this.grab(folder, name);
       const u = URL.createObjectURL(blob);
-      /* 팝업이 막히면 내려받기로 떨어진다 — 어느 쪽이든 손에는 들어온다 */
       if(!window.open(u, "_blank")) saveBlob(blob, name);
       setTimeout(()=>URL.revokeObjectURL(u), 60000);
+    },
+    /* 담아둔 회차를 진짜 파일로 꺼낸다. 보관함은 우리 화면 안에서만 열리므로,
+       밖으로 가져갈 길이 하나는 있어야 한다. */
+    async dump(folder, step){
+      const c = await caches.open(box(folder));
+      const list = await meta(c);
+      let n = 0;
+      for(const f of list){
+        if(step) step(++n, list.length);
+        const res = await c.match(f.url);
+        if(!res) continue;
+        saveBlob(await res.blob(), f.name);
+        /* 연달아 부르면 브라우저가 뒤쪽 다운로드를 흘린다 */
+        await new Promise(r => setTimeout(r, 400));
+      }
+      return n;
     },
     async remove(folder){
       if(folder) await caches.delete(box(folder));
@@ -2199,6 +2224,24 @@ async function openVault(opener){
       };
       row.appendChild(b);
     });
+
+    /* 여는 것과 별개로 밖으로 꺼내는 길을 늘 함께 둔다. 브라우저가 blob 을
+       제 뷰어로 펴 줄지는 판마다 다른데, 그 차이에 사용자를 걸어 둘 수 없다. */
+    if(Vault.web){
+      const out=document.createElement("button");
+      out.type="button"; out.textContent="내려받기";
+      out.setAttribute("aria-label", `${folder} 파일로 내려받기`);
+      out.onclick=()=>{
+        if(out.dataset.busy) return;
+        out.dataset.busy="1";
+        Vault.dump(folder, (i,n)=>{ out.textContent = `${i}/${n}`; })
+          .then(n=>{ out.textContent="내려받기"; out.dataset.busy="";
+                     sheetNote.textContent = `${n}개 파일을 내려받았습니다.`; })
+          .catch(err=>{ out.textContent="내려받기"; out.dataset.busy="";
+                        sheetNote.textContent = "내려받지 못했습니다: " + err.message; });
+      };
+      row.appendChild(out);
+    }
 
     const del=document.createElement("button");
     del.type="button"; del.className="del"; del.textContent="지우기";
