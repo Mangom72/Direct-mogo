@@ -526,13 +526,16 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void setSolved(String json) {
             try {
-                if (Solved.put(MainActivity.this, json)) Widgets.refresh(MainActivity.this);
+                if (!Solved.put(MainActivity.this, json)) return;
+                Widgets.refresh(MainActivity.this);
+                /* 바뀐 때만 쓴다. 페이지는 열 때마다 한 번씩 건네므로, 안 바뀐
+                   것까지 쓰면 아무 일도 안 한 날에도 파일 시각이 움직인다. */
+                io.execute(MainActivity.this::writeAuto);
             } catch (Exception e) {
                 Log.w(TAG, "표시를 옮겨 적지 못했습니다", e);
             }
         }
 
-        /** 저장 위치를 사람이 읽을 형태로 */
         /**
          * 백업 파일을 만들어 공유 시트로 넘긴다.
          *
@@ -614,6 +617,55 @@ public class MainActivity extends Activity {
             }
         }
 
+        /**
+         * 자동 백업할 자리를 한 번 고르게 한다.
+         *
+         * 고르고 나면 그 뒤로는 표시가 바뀔 때마다 앱이 조용히 덮어쓴다. 사람이
+         * 기억해서 눌러야 하는 백업은 결국 안 하게 되는데, 안 한 것을 알아차리는
+         * 때는 이미 늦은 뒤다.
+         *
+         * 고른 자리를 드라이브·원드라이브 같은 동기화 폴더로 두면 그것이 곧
+         * 클라우드 백업이 된다 — 로그인도 심사도 없이.
+         */
+        @JavascriptInterface
+        public void pickAutoBackup() {
+            runOnUiThread(() -> {
+                try {
+                    Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    i.addCategory(Intent.CATEGORY_OPENABLE);
+                    i.setType("application/json");
+                    i.putExtra(Intent.EXTRA_TITLE, "기출직행-백업.json");
+                    i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                    startActivityForResult(i, REQ_AUTO);
+                } catch (Exception e) {
+                    Log.w(TAG, "자동 백업 자리를 고르지 못했습니다", e);
+                    autoState();
+                }
+            });
+        }
+
+        /** 지금 어디에 쓰고 있는지. 없으면 빈 이름. */
+        @JavascriptInterface
+        public String autoBackup() { return autoJson(); }
+
+        /** 그만둔다. 권한도 함께 놓는다 — 안 쓸 자리를 붙들고 있을 까닭이 없다. */
+        @JavascriptInterface
+        public void stopAutoBackup() {
+            Uri u = autoUri();
+            if (u != null) {
+                try {
+                    getContentResolver().releasePersistableUriPermission(u,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                } catch (Exception ignored) { }
+            }
+            prefs().edit().remove(AUTO_URI).remove(AUTO_NAME).remove(AUTO_FAIL).apply();
+            autoState();
+        }
+
+        /** 저장 위치를 사람이 읽을 형태로 */
         @JavascriptInterface
         public String where() { return root().getAbsolutePath(); }
 
@@ -754,12 +806,99 @@ public class MainActivity extends Activity {
     }
 
     private static final int REQ_BACKUP = 4101;
+    private static final int REQ_AUTO = 4102;
+    private static final String AUTO_URI = "auto.uri";
+    private static final String AUTO_NAME = "auto.name";
+    private static final String AUTO_FAIL = "auto.fail";
+
+    private android.content.SharedPreferences prefs() {
+        return getSharedPreferences("app", MODE_PRIVATE);
+    }
+
+    private Uri autoUri() {
+        String s = prefs().getString(AUTO_URI, null);
+        try { return s == null ? null : Uri.parse(s); } catch (Exception e) { return null; }
+    }
+
+    /**
+     * 자동 백업 파일을 덮어쓴다.
+     *
+     * <b>실패를 삼키지 않는다.</b> 사람이 고른 자리는 나중에 사라질 수 있다 —
+     * 파일을 지웠거나, 그 앱을 지웠거나, 권한이 풀렸거나. 조용히 멈춘 자동 백업은
+     * 없는 것보다 나쁘다. 되고 있다고 믿게 만들기 때문이다. 그래서 어긋난 것을
+     * 적어 두고 화면이 그것을 말한다.
+     */
+    private void writeAuto() {
+        Uri u = autoUri();
+        if (u == null) return;
+        String json = Solved.backup(this);
+        if (json == null) return;
+        try (OutputStream os = getContentResolver().openOutputStream(u, "wt")) {
+            if (os == null) throw new Exception("열지 못했습니다");
+            os.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            if (prefs().getString(AUTO_FAIL, null) != null) {
+                prefs().edit().remove(AUTO_FAIL).apply();
+                autoState();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "자동 백업을 쓰지 못했습니다", e);
+            prefs().edit().putString(AUTO_FAIL,
+                    e.getMessage() == null ? "쓰지 못했습니다" : e.getMessage()).apply();
+            autoState();
+        }
+    }
+
+    /** 고른 자리의 사람이 읽는 이름. 못 읽으면 주소 끝자락이라도. */
+    private String autoName(Uri u) {
+        try (android.database.Cursor c = getContentResolver().query(u,
+                new String[]{android.provider.OpenableColumns.DISPLAY_NAME},
+                null, null, null)) {
+            if (c != null && c.moveToFirst() && !c.isNull(0)) return c.getString(0);
+        } catch (Exception ignored) { }
+        String s = u.getLastPathSegment();
+        return s == null ? "고른 자리" : s.substring(s.lastIndexOf('/') + 1);
+    }
+
+    private String autoJson() {
+        try {
+            Uri u = autoUri();
+            return new JSONObject()
+                    .put("on", u != null)
+                    .put("name", prefs().getString(AUTO_NAME, ""))
+                    .put("error", prefs().getString(AUTO_FAIL, ""))
+                    .toString();
+        } catch (Exception e) { return "{\"on\":false}"; }
+    }
+
+    private void autoState() {
+        String js = "window.gijulAutoBackup && window.gijulAutoBackup(" + autoJson() + ")";
+        runOnUiThread(() -> web.evaluateJavascript(js, null));
+    }
+
     /** 백업 파일 한도. 표시가 5,059개라도 300KB 남짓이라 이 위는 우리 것이 아니다. */
     private static final int MAX_BACKUP = 4 * 1024 * 1024;
 
     @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
+        if (req == REQ_AUTO) {
+            Uri picked = (res == RESULT_OK && data != null) ? data.getData() : null;
+            if (picked == null) { autoState(); return; }
+            try {
+                getContentResolver().takePersistableUriPermission(picked,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            } catch (Exception e) {
+                /* 권한을 못 잡으면 지금은 써져도 다음 실행에는 못 쓴다. 그때 가서
+                   조용히 실패하느니 여기서 안 된다고 말하는 편이 낫다. */
+                Log.w(TAG, "자리 권한을 이어받지 못했습니다", e);
+                prefs().edit().putString(AUTO_FAIL, "이 자리는 다음 실행에 다시 물어봅니다").apply();
+            }
+            prefs().edit().putString(AUTO_URI, picked.toString())
+                    .putString(AUTO_NAME, autoName(picked)).apply();
+            io.execute(() -> { writeAuto(); autoState(); });
+            return;
+        }
         if (req != REQ_BACKUP) return;
         final Uri u = (res == RESULT_OK && data != null) ? data.getData() : null;
         if (u == null) { backupPicked(null); return; }

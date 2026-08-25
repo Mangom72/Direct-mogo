@@ -168,6 +168,119 @@ with sync_playwright() as pw:
         ck(n8 == 2, f"되살아난 것이 {n8}개입니다")
     ck(not e2, f"스크립트 오류: {e2}")
 
+    # ---- 10. 자동 백업 (앱에만 있는 줄) ----
+    #
+    # 사람이 기억해서 눌러야 하는 백업은 결국 안 하게 되고, 안 한 것을 알아차리는
+    # 때는 이미 늦은 뒤다. 자리를 한 번 고르면 그 뒤로는 앱이 조용히 덮어쓴다.
+    #
+    # **막힌 것을 말하는지**가 특히 중요하다. 조용히 멈춘 자동 백업은 없는 것보다
+    # 나쁘다 — 되고 있다고 믿게 만들기 때문이다.
+    ctx3 = b.new_context(viewport={"width": 412, "height": 900}, service_workers="block")
+    ctx3.add_init_script("""
+      window.__auto = { on:false, name:"", error:"" };
+      window.GijulNative = {
+        systemDark: () => false,
+        setSolved: () => {},
+        autoBackup: () => JSON.stringify(window.__auto),
+        pickAutoBackup: () => { window.__auto = {on:true, name:"기출직행-백업.json", error:""};
+                                window.gijulAutoBackup(window.__auto); },
+        stopAutoBackup: () => { window.__auto = {on:false, name:"", error:""};
+                                window.gijulAutoBackup(window.__auto); },
+      };""")
+    pg3 = ctx3.new_page()
+    e3 = []
+    pg3.on("pageerror", lambda e: e3.append(str(e)[:180]))
+    pg3.goto(SITE, wait_until="load")
+    pg3.wait_for_selector(".item .chk", timeout=25000)
+
+    # 앱에 건네는 꾸러미에 favs·theme 이 실려야 자동 백업 파일이 반쪽이 안 된다.
+    # marks·subs·next 는 옛 앱의 위젯이 읽는 이름이라 그대로 있어야 한다.
+    keys = pg3.evaluate("""()=>{ let seen=null;
+      const old = GijulNative.setSolved;
+      GijulNative.setSolved = j => { seen = JSON.parse(j); };
+      tellSolved();
+      GijulNative.setSolved = old;
+      return seen ? Object.keys(seen).sort() : []; }""")
+    print("10. 앱에 건네는 열쇠:", keys)
+    for want in ("marks", "subs", "next", "favs", "theme"):
+        ck(want in keys, f"꾸러미에 {want} 가 없습니다 — {keys}")
+
+    pg3.click("#bakBtn")
+    pg3.wait_for_selector("#sheet:not([hidden])", timeout=5000)
+    pg3.wait_for_timeout(250)
+    rows3 = pg3.eval_on_selector_all(".sfile .k", "e=>e.map(x=>x.textContent)")
+    print("    시트 줄:", rows3)
+    ck(rows3 and rows3[0] == "자동 백업", f"자동 백업 줄이 맨 위에 없습니다: {rows3}")
+
+    pg3.eval_on_selector_all(".sfile .go", "e=>e[0].click()")     # 자리 고르기
+    pg3.wait_for_timeout(300)
+    on = pg3.eval_on_selector_all(".sfile .x", "e=>e.map(x=>x.textContent)")[0]
+    btn = pg3.eval_on_selector_all(".sfile .go", "e=>e[0].textContent")
+    print("    고른 뒤:", on, "·", btn)
+    ck("저절로" in on and "기출직행-백업.json" in on, f"어디에 쓰는지 안 보입니다: {on}")
+    ck(btn == "그만두기", f"단추가 그만두기로 안 바뀝니다: {btn}")
+
+    # 막혔을 때 — 조용히 넘어가면 안 된다
+    pg3.evaluate("""()=>{ window.__auto = {on:true, name:"기출직행-백업.json",
+      error:"열지 못했습니다"}; window.gijulAutoBackup(window.__auto); }""")
+    pg3.wait_for_timeout(250)
+    bad3 = pg3.eval_on_selector_all(".sfile .x", "e=>e.map(x=>x.textContent)")[0]
+    mark = pg3.eval_on_selector_all(".sfile .go", "e=>e[0].dataset.state")
+    print("    막혔을 때:", bad3, "· 눈에 띄게:", mark)
+    ck("막혔습니다" in bad3, f"막힌 것을 말하지 않습니다: {bad3}")
+    ck(mark == "confirm", "막혔는데 단추가 예사롭게 보입니다")
+
+    pg3.evaluate("()=>{ window.__auto = {on:true, name:'기출직행-백업.json', error:''};"
+                 " window.gijulAutoBackup(window.__auto); }")
+    pg3.wait_for_timeout(200)
+    pg3.eval_on_selector_all(".sfile .go", "e=>e[0].click()")     # 그만두기
+    pg3.wait_for_timeout(300)
+    off = pg3.eval_on_selector_all(".sfile .x", "e=>e.map(x=>x.textContent)")[0]
+    print("    그만둔 뒤:", off)
+    ck("한 번 고르면" in off, f"그만둔 뒤 안내가 돌아오지 않습니다: {off}")
+    ck(not e3, f"스크립트 오류: {e3}")
+    ctx3.close()
+
+    # ---- 11. 바뀌면 앱이 안다 ----
+    #
+    # 예전에는 표시를 찍을 때만 알렸다. 그래서 과목을 ★로 저장해 놓고 아무것도
+    # 안 찍으면 '다음에 풀 것' 위젯은 옛 과목을 계속 짚고 있었고, 자동 백업
+    # 파일에도 그 과목이 들어가지 않았다. 어느 쪽도 화면에서는 티가 안 난다.
+    ctx4 = b.new_context(viewport={"width": 412, "height": 900}, service_workers="block")
+    ctx4.add_init_script("""
+      window.__sent = [];
+      window.GijulNative = { systemDark: () => false,
+        setSolved: j => window.__sent.push(JSON.parse(j)) };""")
+    pg4 = ctx4.new_page()
+    e4 = []
+    pg4.on("pageerror", lambda e: e4.append(str(e)[:180]))
+    pg4.goto(SITE, wait_until="load")
+    pg4.wait_for_selector(".item", timeout=25000)
+    pg4.wait_for_timeout(500)
+
+    # 자료가 오기 전에 부르면 nextUp() 이 빈손이라 위젯을 지웠다 채우게 된다
+    boot = pg4.evaluate("()=>window.__sent.length")
+    print("11. 부팅 중 앱에 알린 횟수:", boot)
+    ck(boot == 1, f"부팅에 {boot}번 알렸습니다 — 자료가 온 뒤 한 번이어야 합니다")
+
+    pg4.evaluate("()=>{ window.__sent.length = 0; }")
+    pg4.click("#favToggle")
+    pg4.wait_for_timeout(300)
+    favs4 = pg4.evaluate("()=>window.__sent.map(x=>x.favs.length)")
+    # ★ 를 출력에 쓰지 않는다 — run.py 가 출력의 ★ 를 실패 표시로 읽는다.
+    # 검사는 다 통과했는데 장식 글자 하나에 시험이 진 적이 있다.
+    print("    내 과목 단추를 눌렀을 때:", favs4)
+    ck(favs4 and favs4[-1] == 1, f"내 과목을 바꿨는데 앱이 모릅니다: {favs4}")
+
+    pg4.evaluate("()=>{ window.__sent.length = 0; }")
+    pg4.click("#thBtn")
+    pg4.wait_for_timeout(300)
+    th4 = pg4.evaluate("()=>window.__sent.map(x=>x.theme)")
+    print("    테마 바꿨을 때:", th4)
+    ck(th4 and th4[-1] != "auto", f"테마를 바꿨는데 앱이 모릅니다: {th4}")
+    ck(not e4, f"스크립트 오류: {e4}")
+    ctx4.close()
+
     # 화면에 이미 있으면 묻지 않는다 — 있는 것을 두고 또 물으면 성가시기만 하다
     pg2.reload(wait_until="load")
     pg2.wait_for_selector(".item", timeout=25000)

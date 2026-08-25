@@ -66,6 +66,44 @@ final class Solved {
         return true;
     }
 
+    /** 마지막으로 받은 때 */
+    static long at(Context c) { return prefs(c).getLong(AT, 0); }
+
+    /**
+     * 들고 있는 것을 <b>백업 파일과 같은 모양</b>으로 낸다.
+     *
+     * 쓰이는 데가 둘이다 — 웹뷰의 자료가 날아갔을 때 되살리는 데(savedSolved),
+     * 그리고 자동 백업 파일을 쓰는 데. 옮겨 적는 자리를 하나로 두는 것이
+     * 요점이다. 두 벌이 되면 한쪽만 고치는 날이 오고, 그날 백업 파일은
+     * 만들어지기는 하는데 안이 반쪽이 된다.
+     *
+     * 무엇이 맞는 백업인지는 페이지가 안다 — 과목 번호와 회차 열쇠를 아는 쪽이
+     * 거기다. 여기서는 받은 것을 모양만 바꿔 내놓는다.
+     */
+    static String backup(Context c) {
+        try {
+            String raw = prefs(c).getString(KEY, null);
+            if (raw == null) return null;
+            JSONObject o = new JSONObject(raw);
+            JSONObject marks = o.optJSONObject("marks");
+            if (marks == null) return null;
+            return new JSONObject()
+                    .put("app", "기출 직행")
+                    .put("v", 1)
+                    .put("at", new java.text.SimpleDateFormat(
+                            "yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US)
+                            .format(new java.util.Date(at(c))))
+                    .put("subs", o.optJSONArray("favs") == null
+                            ? new org.json.JSONArray() : o.optJSONArray("favs"))
+                    .put("solved", marks)
+                    .put("theme", o.optString("theme", "auto"))
+                    .toString();
+        } catch (Exception e) {
+            Log.w(TAG, "백업 모양으로 바꾸지 못했습니다", e);
+            return null;
+        }
+    }
+
     /** 한 회차 — 위젯이 그리는 데 필요한 만큼만 */
     static final class Item {
         final String grade, sub, date, title, day, name;
