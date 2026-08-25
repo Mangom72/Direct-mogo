@@ -21,16 +21,23 @@ import java.net.URL;
  */
 final class Net {
 
-    interface Allow { boolean ok(Uri u); }
+    /**
+     * 어느 자리에서 받아도 되는가.
+     *
+     * {@code Uri} 가 아니라 <b>호스트 글자</b>를 받는다. 셈 자체는 안드로이드와
+     * 아무 상관이 없는데 {@code android.net.Uri} 를 받으면 기기 없이는 값을 넣어
+     * 볼 수가 없다. 여기는 틀려도 조용히 틀리는 자리라 —
+     * {@code endsWith("ebsi.co.kr")} 는 {@code notebsi.co.kr} 도 받아 준다 —
+     * 값을 넣어 보는 일이 특히 값지다({@code app/src/test} 참고).
+     */
+    interface Allow { boolean ok(String host); }
 
     /** 문제지는 EBSi 에서만 */
-    static final Allow EBSI = u -> {
-        String h = u.getHost();
-        return h != null && (h.equals("ebsi.co.kr") || h.endsWith(".ebsi.co.kr"));
-    };
+    static final Allow EBSI = h ->
+            h != null && (h.equals("ebsi.co.kr") || h.endsWith(".ebsi.co.kr"));
 
     /** 회차 목록·과목 자료는 우리 사이트에서만 */
-    static final Allow SITE = u -> "mangom72.github.io".equals(u.getHost());
+    static final Allow SITE = h -> "mangom72.github.io".equals(h);
 
     /**
      * 새 판 APK. 명세는 우리 사이트에 있고 자산은 릴리스에 있는데, github.com 이
@@ -40,11 +47,9 @@ final class Net {
      * 그 도메인 아래를 받는다. 못박아 두었으면 이름이 바뀐 날 <b>모두의 자동
      * 갱신이 조용히 멈췄을 것</b>이다.
      */
-    static final Allow RELEASE = u -> {
-        String h = u.getHost();
-        return h != null && (h.equals("mangom72.github.io") || h.equals("github.com")
-                || h.equals("githubusercontent.com") || h.endsWith(".githubusercontent.com"));
-    };
+    static final Allow RELEASE = h ->
+            h != null && (h.equals("mangom72.github.io") || h.equals("github.com")
+                    || h.equals("githubusercontent.com") || h.endsWith(".githubusercontent.com"));
 
     private static final int MAX_HOPS = 5;
 
@@ -55,7 +60,7 @@ final class Net {
         String at = url;
         for (int hop = 0; ; hop++) {
             Uri u = Uri.parse(at == null ? "" : at);
-            if (!"https".equals(u.getScheme()) || u.getHost() == null || !allow.ok(u))
+            if (!"https".equals(u.getScheme()) || !allow.ok(u.getHost()))
                 throw new Exception("허용되지 않는 주소입니다");
 
             HttpURLConnection c = (HttpURLConnection) new URL(at).openConnection();

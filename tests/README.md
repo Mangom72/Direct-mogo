@@ -60,6 +60,16 @@ python3 tests/run.py -v           # 출력까지 그대로
 | `test_backup` | **내보낸 것이 돌아오는가, 합칠 때 이 기기 것을 안 지우는가, 자동 백업이 막힌 것을 말하는가** |
 | `test_twins` | **화면과 위젯에 두 벌로 적힌 규칙이 어긋나지 않았는가** (브라우저를 안 씀) |
 
+## 안드로이드 쪽은 여기 없습니다
+
+여기 33종은 전부 브라우저를 띄웁니다. 자바를 확인하는 것은
+`android/app/src/test` 에 따로 있고(`gradle testDebugUnitTest`, 8초),
+`android.yml` 이 돌립니다. 무엇을 지키는지는
+[docs/android.md](../docs/android.md#기기-없이-확인하는-것)에 있습니다.
+
+`test_twins` 만 예외입니다 — 두 쪽을 견주는 시험이라 여기에도 있고 `android.yml`
+에서도 돕니다.
+
 ## 출력에 ★ 를 쓰지 마십시오
 
 `run.py` 는 종료 코드만 보지 않습니다. 출력에 `★`·`문제: 있음`·`ERRORS: [`·

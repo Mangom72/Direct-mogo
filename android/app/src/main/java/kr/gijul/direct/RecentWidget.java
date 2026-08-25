@@ -71,11 +71,5 @@ public class RecentWidget extends WidgetBase {
         v.setViewLayoutHeight(id, 15 * k, android.util.TypedValue.COMPLEX_UNIT_DIP);
     }
 
-    static String mmdd(String ymd) {
-        try {
-            return Integer.parseInt(ymd.substring(4, 6)) + "." + Integer.parseInt(ymd.substring(6, 8));
-        } catch (Exception e) {
-            return "";
-        }
-    }
+    static String mmdd(String ymd) { return Names.mmdd(ymd); }
 }

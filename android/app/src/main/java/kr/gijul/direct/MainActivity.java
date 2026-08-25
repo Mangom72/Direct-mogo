@@ -214,12 +214,9 @@ public class MainActivity extends Activity {
      */
 
     /** 폴더·파일 이름 한 마디. 경로를 벗어나게 만드는 글자는 전부 막는다. */
-    static String safe(String s) throws Exception {
-        if (s == null || s.isEmpty() || s.equals(".") || s.equals("..")
-                || s.indexOf('/') >= 0 || s.indexOf('\\') >= 0 || s.indexOf('\0') >= 0)
-            throw new Exception("허용되지 않는 이름입니다");
-        return s;
-    }
+    /* 셈 자체는 Names 에 있다 — 안드로이드 없이 값을 넣어 볼 수 있어야 해서다.
+       여기 이름은 부르는 자리가 아홉 곳이라 그대로 둔다. */
+    static String safe(String s) throws Exception { return Names.safe(s); }
 
     /* ── 받기와 캐시 ────────────────────────────────────────────────────
      *

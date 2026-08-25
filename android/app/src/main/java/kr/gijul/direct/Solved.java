@@ -81,8 +81,11 @@ final class Solved {
      * 거기다. 여기서는 받은 것을 모양만 바꿔 내놓는다.
      */
     static String backup(Context c) {
+        return backup(prefs(c).getString(KEY, null), at(c));
+    }
+
+    static String backup(String raw, long at) {
         try {
-            String raw = prefs(c).getString(KEY, null);
             if (raw == null) return null;
             JSONObject o = new JSONObject(raw);
             JSONObject marks = o.optJSONObject("marks");
@@ -92,7 +95,7 @@ final class Solved {
                     .put("v", 1)
                     .put("at", new java.text.SimpleDateFormat(
                             "yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US)
-                            .format(new java.util.Date(at(c))))
+                            .format(new java.util.Date(at)))
                     .put("subs", o.optJSONArray("favs") == null
                             ? new org.json.JSONArray() : o.optJSONArray("favs"))
                     .put("solved", marks)
@@ -118,8 +121,19 @@ final class Solved {
 
     /** 푼 날("YYYYMMDD") → 그날 찍은 것들. 없으면 빈 map. */
     static Map<String, List<Item>> byDay(Context c) {
+        return byDay(prefs(c).getString(KEY, null));
+    }
+
+    /**
+     * 적어 둔 글자에서 바로 읽는다.
+     *
+     * {@code Context} 를 받는 쪽과 나눠 둔 것은, 여기가 <b>틀려도 조용한 자리</b>이기
+     * 때문이다 — 열쇠를 잘못 가르면 위젯 여섯이 전부 엉뚱한 것을 그리는데 오류는
+     * 하나도 안 난다. 기기 없이 값을 넣어 볼 수 있어야 한다
+     * ({@code app/src/test} 참고).
+     */
+    static Map<String, List<Item>> byDay(String json) {
         Map<String, List<Item>> out = new HashMap<>();
-        String json = prefs(c).getString(KEY, null);
         if (json == null) return out;
         try {
             JSONObject all = new JSONObject(json);

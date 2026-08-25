@@ -20,8 +20,8 @@ android {
         applicationId 'kr.gijul.direct'
         minSdk 24               // SAF(문서 트리) 지속 권한이 안정적으로 되는 하한
         targetSdk 34
-        versionCode 75
-        versionName '8.4'
+        versionCode 76
+        versionName '8.5'
     }
     signingConfigs {
         release {
@@ -52,10 +52,23 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+    /* 단위 시험은 기기 없이 평범한 JVM에서 돈다. 안드로이드 클래스는 껍데기라
+       부르면 던지는데, 여기서 확인하는 것들은 값을 넣으면 답이 정해지는 셈이라
+       그 껍데기에 닿지 않는다. 다만 클래스를 불러오는 것만으로 걸리는 일이
+       없도록 기본값을 돌려주게 해 둔다. */
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 dependencies {
     implementation 'androidx.core:core:1.13.1'      // FileProvider
     implementation 'androidx.webkit:webkit:1.11.0'  // 다크모드 연동
     implementation 'androidx.recyclerview:recyclerview:1.3.2'  // 문제지 페이지를 필요한 만큼만 그린다
+
+    testImplementation 'junit:junit:4.13.2'
+    /* android.jar 의 org.json 은 부르면 던지는 껍데기다. 진짜를 시험 쪽에만
+       얹어 둔다 — 앱에 들어가지 않으므로 APK 는 그대로다. */
+    testImplementation 'org.json:json:20231013'
 }
