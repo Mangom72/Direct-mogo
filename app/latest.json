@@ -1,8 +1,8 @@
 {
-  "versionCode": 75,
-  "versionName": "8.4",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.4/gijul-direct.apk",
-  "size": 2152011,
-  "sha256": "e6ca1f6947fb2add6bc86afa39c8fd56a58eb717d5887877b9adc28780fac543",
-  "notes": "자동 백업이 생겼습니다. 자리를 한 번 고르면 그 뒤로는 저절로 씁니다"
+  "versionCode": 76,
+  "versionName": "8.5",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.5/gijul-direct.apk",
+  "size": 2152283,
+  "sha256": "cfb73e3e0edaaefa83a44ce5d61a349292a2cedb0d15084dd031f175e292a0a7",
+  "notes": "겉으로 달라지는 것은 없습니다. 앱 안쪽을 확인하는 시험이 붙었습니다"
 }
