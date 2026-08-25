@@ -127,6 +127,8 @@ public class FloatService extends Service {
     private boolean swapped;                      // 바 속을 이번 접힘에서 갈아 끼웠는가
     private final ExecutorService fetch = Executors.newSingleThreadExecutor();
     private TextView passBtn, holdBtn;
+    private TextView timeChip;                    // 재고 있는 시험의 남은 시간
+    private final android.os.Handler beat = new android.os.Handler(android.os.Looper.getMainLooper());
 
     /* 창 자리. 셋이 이 하나를 나눠 쓴다. */
     private int wx, wy, ww, wh;
@@ -157,8 +159,14 @@ public class FloatService extends Service {
         if (g != null && sb != null) { atGrade = g; atSub = sb; }
 
         note();
-        if (bar == null) build();
+        if (bar == null) {
+            build();
+            androidx.core.content.ContextCompat.registerReceiver(this, timerWatch,
+                    new android.content.IntentFilter(Timing.CHANGED),
+                    androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
+        }
         if (paper != null) paper.open(new File(path));
+        drawTime();
         return START_NOT_STICKY;
     }
 
@@ -551,6 +559,24 @@ public class FloatService extends Service {
         LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(0, dp(30), 1f);
         slp.leftMargin = dp(8); slp.rightMargin = dp(10);
         row.addView(slider, slp);
+
+        /* 시험 시간을 재고 있으면 남은 시간이 여기 앉는다. 새로 뜨는 것 없이
+           이미 있는 줄에 글자 한 칸만 는다 — 창을 띄워 놓고 푸는 사람에게는
+           이것이 시계다. */
+        timeChip = new TextView(this);
+        timeChip.setTextSize(12.5f);
+        timeChip.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+        timeChip.setTextColor(night ? 0xFFECE7DA : 0xFF191713);
+        timeChip.setPadding(dp(6), 0, dp(6), 0);
+        timeChip.setVisibility(View.GONE);
+        timeChip.setOnClickListener(v -> {
+            Clock k = Timing.clock(this);
+            if (!k.on()) return;
+            if (k.paused()) Timing.resume(this); else Timing.pause(this);
+            Timing.changed(this);
+            drawTime();
+        });
+        row.addView(timeChip);
 
         sep = new View(this);
         sep.setBackgroundColor(night ? 0x29ECE7DA : 0x24221F1A);
@@ -1937,8 +1963,31 @@ public class FloatService extends Service {
         if (level >= TRIM_MEMORY_RUNNING_LOW && paper != null) paper.drop();
     }
 
+    /** 남은 시간을 그린다. 셈은 Timing 한 곳에서만 흐르고 여기서는 읽어 그릴 뿐이다. */
+    private void drawTime() {
+        if (timeChip == null) return;
+        beat.removeCallbacksAndMessages(null);
+        Clock k = Timing.clock(this);
+        if (!k.on()) { timeChip.setVisibility(View.GONE); return; }
+        long now = System.currentTimeMillis();
+        long left = k.left(now);
+        timeChip.setVisibility(View.VISIBLE);
+        timeChip.setText(k.paused() ? "❙❙ " + Clock.face(left) : Clock.face(left));
+        boolean night = (getResources().getConfiguration().uiMode
+                & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
+                == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+        timeChip.setTextColor(left < 0 ? 0xFFB4342A : (night ? 0xFFECE7DA : 0xFF191713));
+        if (k.running()) beat.postDelayed(this::drawTime, 1000 - (k.spent(now) % 1000));
+    }
+
+    private final android.content.BroadcastReceiver timerWatch = new android.content.BroadcastReceiver() {
+        @Override public void onReceive(android.content.Context c, Intent i) { drawTime(); }
+    };
+
     @Override
     public void onDestroy() {
+        beat.removeCallbacksAndMessages(null);
+        try { unregisterReceiver(timerWatch); } catch (Exception ignore) {}
         ui.removeCallbacks(hidePct);
         ui.removeCallbacks(hold);
         ui.removeCallbacks(hint);

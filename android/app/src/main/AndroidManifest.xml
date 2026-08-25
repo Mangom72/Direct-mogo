@@ -6,6 +6,13 @@
          안드로이드 8+에서는 사용자가 이 앱에 한 번 '이 출처 허용'을 줘야 동작한다. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- 시험 시간이 다 되면 손끝으로 알린다. 소리는 안 낸다 — 독서실에서 풀다가
+         갑자기 울리면 곤란하고, 알림 채널이 IMPORTANCE_LOW 라 소리도 안 난다. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- 시험 시간 알림. 안드로이드 13부터 물어야 하며, 거절해도 재는 것은
+         그대로다 — 뷰어의 칩과 띄운 창의 바가 남는다. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!-- 문제지를 다른 앱 위에 반투명하게 띄우는 기능. 사용자가 설정에서 직접 켜야
          하는 권한이라, 켜지 않으면 그 단추만 동작하지 않고 나머지는 그대로다. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -142,6 +149,14 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/w_next_info" />
+        </receiver>
+
+        <!-- 시험 시간 알림의 단추(일시정지·10분 추가·끝내기). 우리 알림에서만
+             오므로 밖으로 열지 않는다. -->
+        <receiver android:name=".Timing$Buttons" android:exported="false">
+            <intent-filter>
+                <action android:name="kr.gijul.direct.TIMER" />
+            </intent-filter>
         </receiver>
 
         <!-- 받아둔 파일을 외부 뷰어에 넘기려면 content:// 로 줘야 한다 (file:// 는 API 24+에서 막힘) -->

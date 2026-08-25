@@ -151,6 +151,16 @@ public class MainActivity extends Activity {
         return go;
     }
 
+    /* 뷰어에서 시간을 재고 돌아오면 그것을 페이지가 가져가야 한다. 웹뷰의
+       visibilitychange 만 믿지 않고 여기서도 한 번 깨운다 — 둘 다 와도 탈이
+       없다(가져간 것은 앱 쪽에서 지워지므로 두 번째는 빈손이다). */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (web != null) web.evaluateJavascript(
+                "(function(){try{if(window.takeTimings&&takeTimings())render()}catch(e){}})()", null);
+    }
+
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
 
     /* 뒤로가기.
@@ -461,6 +471,23 @@ public class MainActivity extends Activity {
         public void openPaper(String url, String name) { openPaperIn(url, name, null, null); }
 
         /**
+         * 같은 뷰어로 열되 <b>회차 열쇠</b>까지 받는다. 잰 시간을 그 회차에
+         * 남기려면 어느 회차인지 알아야 하는데, 주소만으로는 알 수 없다.
+         *
+         * 인자를 더 붙인 메서드를 따로 내는 것은, 있던 메서드에 인자를 더하면
+         * 옛 앱에서 맞는 메서드가 없어 통째로 실패하기 때문이다. 페이지는 앱보다
+         * 먼저 갱신되므로 그 사이 자료가 안 열린다.
+         */
+        @JavascriptInterface
+        public void openPaperAt(String url, String name, String grade, String sub, String key) {
+            open(paperIntent(url, name, grade, sub, key));
+        }
+
+        /** 앱이 재어 둔 시간을 페이지가 가져간다. 한 번 넘긴 것은 지운다. */
+        @JavascriptInterface
+        public String takeTimings() { return Timing.takeRecords(MainActivity.this); }
+
+        /**
          * 같은 뷰어로 열되, <b>어느 과목에서 왔는지</b>도 함께 받는다.
          *
          * 띄워 둔 창의 목록이 이 값으로 첫 화면을 정한다 — 보던 과목의 회차부터
@@ -475,31 +502,10 @@ public class MainActivity extends Activity {
          */
         @JavascriptInterface
         public void openPaperIn(String url, String name, String grade, String sub) {
-            String title;
-            try {
-                fromEbsi(url);
-                title = safe(name);
-            } catch (Exception e) {
-                Log.w(TAG, "열 수 없는 자료: " + url, e);
-                report(false, 0, "열 수 없는 자료입니다");
-                return;
-            }
-            Intent i = new Intent(MainActivity.this, PdfViewActivity.class);
-            i.putExtra(PdfViewActivity.EXTRA_URL, url);
-            i.putExtra(PdfViewActivity.EXTRA_NAME, title);
-            /* 경계를 건너온 값이다. 파일 이름도 주소도 아니고 목록에서 과목을
-               찾아보는 데만 쓰지만, 모양이 아닌 것은 아예 들이지 않는다. */
-            if (tag(grade) && tag(sub)) {
-                i.putExtra(PdfViewActivity.EXTRA_GRADE, grade);
-                i.putExtra(PdfViewActivity.EXTRA_SUBJECT, sub);
-            }
-            open(i);
+            open(paperIntent(url, name, grade, sub, null));
         }
 
-        private boolean tag(String v) {
-            return v != null && !v.isEmpty() && v.length() <= 32
-                    && v.matches("[A-Za-z0-9_-]+");
-        }
+
 
         /** 파일 하나를 시스템 공유 시트로 넘긴다 */
         @JavascriptInterface
@@ -800,6 +806,40 @@ public class MainActivity extends Activity {
             Log.w(TAG, "공유 실패: " + name, e);
             shareDone(false, "공유하지 못했습니다: " + e.getMessage());
         }
+    }
+
+    /** 학년·과목처럼 자리 이름으로 쓰이는 값인가. 모양이 아닌 것은 아예 안 들인다. */
+    private static boolean tag(String v) {
+        return v != null && !v.isEmpty() && v.length() <= 32
+                && v.matches("[A-Za-z0-9_-]+");
+    }
+
+    /** 뷰어로 보낼 인텐트. openPaper·openPaperIn·openPaperAt 이 함께 쓴다. */
+    private Intent paperIntent(String url, String name, String grade, String sub, String key) {
+        String title;
+        try {
+            fromEbsi(url);
+            title = safe(name);
+        } catch (Exception e) {
+            Log.w(TAG, "열 수 없는 자료: " + url, e);
+            report(false, 0, "열 수 없는 자료입니다");
+            return null;
+        }
+        Intent i = new Intent(MainActivity.this, PdfViewActivity.class);
+        i.putExtra(PdfViewActivity.EXTRA_URL, url);
+        i.putExtra(PdfViewActivity.EXTRA_NAME, title);
+        /* 경계를 건너온 값이다. 파일 이름도 주소도 아니고 목록에서 과목을
+           찾아보는 데만 쓰지만, 모양이 아닌 것은 아예 들이지 않는다. */
+        if (tag(grade) && tag(sub)) {
+            i.putExtra(PdfViewActivity.EXTRA_GRADE, grade);
+            i.putExtra(PdfViewActivity.EXTRA_SUBJECT, sub);
+        }
+        /* 열쇠는 '학년/과목/시행일/회차이름'이다. 잰 시간을 페이지에 돌려줄 때
+           그대로 되돌려 보낼 뿐 파일을 만드는 데는 쓰지 않지만, 길이는 본다. */
+        if (key != null && !key.isEmpty() && key.length() < 300) {
+            i.putExtra(PdfViewActivity.EXTRA_KEY, key);
+        }
+        return i;
     }
 
     private static final int REQ_BACKUP = 4101;

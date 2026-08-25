@@ -2,6 +2,11 @@ package kr.gijul.direct;
 
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -24,6 +29,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -66,6 +72,7 @@ public class PdfViewActivity extends Activity {
     static final String EXTRA_SUBJECT = "subject";
     static final String EXTRA_FILE = "file";    // 이미 받아둔 파일의 절대 경로
     static final String EXTRA_NAME = "name";    // 표시할 이름
+    static final String EXTRA_KEY = "key";      // 푼 회차 표시의 열쇠 — 잰 시간을 여기에 남긴다
 
     private static final String TAG = "기출직행";
     private static final float MAX_ZOOM = 2.5f;
@@ -94,6 +101,11 @@ public class PdfViewActivity extends Activity {
     private RecyclerView list;
     private TextView status;
     private TextView pageLabel;
+    private String paperKey;
+    private TextView timerChip;        // 막대 안 남은 시간
+    private View timerLine;            // 그 아래 줄어드는 실선
+    private ImageButton timerBtn;
+    private final android.os.Handler beat = new android.os.Handler(android.os.Looper.getMainLooper());
     private TextView sbPage;           // 막대를 잡고 있는 동안 뜨는 쪽수
     private int sbShown = -1;
     /* 잡힌 정도 — 굵기가 툭 바뀌면 잡힌 것인지 손이 미끄러진 것인지 모른다 */
@@ -167,6 +179,7 @@ public class PdfViewActivity extends Activity {
         src = url;
         grade = getIntent().getStringExtra(EXTRA_GRADE);
         subject = getIntent().getStringExtra(EXTRA_SUBJECT);
+        paperKey = getIntent().getStringExtra(EXTRA_KEY);
         if (path != null) {
             io.execute(() -> load(new File(path)));
         } else if (url != null) {
@@ -217,6 +230,23 @@ public class PdfViewActivity extends Activity {
         /* 글자 단추 둘이 나란히 있으면 제목이 설 자리를 그만큼 잡아먹는다. 하는 일이
            둘 다 한마디로 그려지는 것이라 표로 바꿨다. 오른쪽 끝이 화면 넓히기 —
            읽는 중에 가장 자주 누르는 것이 손이 닿기 쉬운 자리에 온다. */
+        /* 재고 있으면 남은 시간이 아이콘 자리에 대신 앉는다. 읽는 동안 가장
+           자주 보는 것이라 제목 바로 옆이다. */
+        timerChip = new TextView(this);
+        timerChip.setTextColor(ink);
+        timerChip.setTextSize(13.5f);
+        timerChip.setTypeface(timerChip.getTypeface(), android.graphics.Typeface.BOLD);
+        timerChip.setPadding(dp(9), dp(3), dp(9), dp(3));
+        timerChip.setVisibility(View.GONE);
+        timerChip.setOnClickListener(v -> tapTimer());
+        bar.addView(timerChip);
+
+        /* 읽기 전에 누르는 것이라 띄우기·다른 앱·가리기 셋보다 앞이다 */
+        timerBtn = iconBtn(R.drawable.ic_timer, "시험 시간 재기", ink);
+        timerBtn.setOnClickListener(v -> tapTimer());
+        timerBtn.setOnLongClickListener(v -> { askTime(); return true; });
+        bar.addView(timerBtn, new LinearLayout.LayoutParams(dp(44), dp(44)));
+
         ImageButton flo = iconBtn(R.drawable.ic_float, "다른 앱 위에 띄우기", ink);
         flo.setOnClickListener(v -> floatIt());
         bar.addView(flo, new LinearLayout.LayoutParams(dp(44), dp(44)));
@@ -231,6 +261,13 @@ public class PdfViewActivity extends Activity {
 
         root.addView(bar, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        /* 숫자만으로는 '얼마나 남았나'가 한눈에 안 들어온다. 줄어드는 선 하나가
+           그것을 말해 준다 — 종이 위가 아니라 막대 아래라 문제지를 안 가린다. */
+        timerLine = new View(this);
+        timerLine.setBackgroundColor(0xFFB4342A);
+        timerLine.setVisibility(View.GONE);
+        root.addView(timerLine, new LinearLayout.LayoutParams(0, dp(2)));
 
         stage = new Stage(this);
         /* 배치가 끝난 뒤에 크기를 묻는 유일한 자리. 화면 회전이든 창 크기 조절이든
@@ -397,6 +434,172 @@ public class PdfViewActivity extends Activity {
      * 표는 24dp인데 단추는 44dp로 잡는다. 표를 그만큼 키우면 막대가 두꺼워지고,
      * 표에 맞춰 단추를 줄이면 손가락으로 겨누기 어렵다.
      */
+    // ── 시험 시간 ────────────────────────────────────────────────────────
+    //
+    // 시간은 Timing 한 곳에서만 흐른다. 여기서는 그것을 읽어 그릴 뿐이다 —
+    // 얼굴이 셋인데(칩·띄운 창의 바·알림) 저마다 세면 조금씩 어긋나고,
+    // 어긋나는 것을 아무도 못 본다.
+
+    /** 아이콘이나 칩을 누르면 — 안 재고 있으면 시작, 재고 있으면 멈추고 잇는다 */
+    private void tapTimer() {
+        if (Timing.mine(this, paperKey)) {
+            Clock k = Timing.clock(this);
+            if (k.paused()) Timing.resume(this); else Timing.pause(this);
+            Timing.changed(this);
+            drawTimer();
+            return;
+        }
+        int m = remembered();
+        if (m > 0) startTimer(m); else askTime();
+    }
+
+    /* 한 번 고른 것은 그 과목에 기억된다. 다음부터는 누르는 즉시 시작한다 —
+       같은 과목을 여러 회차 푸는 동안 매번 같은 것을 묻지 않는다. */
+    private SharedPreferences timePrefs() {
+        return getSharedPreferences("timer.pick", MODE_PRIVATE);
+    }
+
+    private int remembered() {
+        return timePrefs().getInt(subject == null ? "" : subject, 0);
+    }
+
+    private void askTime() {
+        Exam.Choice[] cs = Exam.choices(subject);
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setTitle(subject == null || subject.isEmpty() ? "시험 시간" : subject);
+        if (cs.length > 0) b.setMessage(Exam.says(subject));
+
+        String[] items = new String[cs.length + 1];
+        for (int i = 0; i < cs.length; i++) items[i] = cs[i].label;
+        items[cs.length] = "직접 정하기";
+
+        b.setItems(items, (d, which) -> {
+            if (which < cs.length) startTimer(cs[which].minutes);
+            else customTime();
+        });
+        if (Timing.mine(this, paperKey)) b.setNeutralButton("끝내기", (d, w) -> finishTimer());
+        b.setNegativeButton("그냥 열기", null);
+        b.show();
+    }
+
+    /* 옛 회차는 시험 시간이 지금과 다르다(2013년 이전 언어영역은 90분이었다).
+       표로 못박으면 조용히 틀리므로, 아는 것만 담고 나머지는 여기로 연다. */
+    private void customTime() {
+        final EditText in = new EditText(this);
+        in.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        in.setHint("분");
+        int m = remembered();
+        if (m > 0) in.setText(String.valueOf(m));
+        int p = dp(20);
+        FrameLayout box = new FrameLayout(this);
+        box.setPadding(p, dp(8), p, 0);
+        box.addView(in);
+        new AlertDialog.Builder(this)
+                .setTitle("몇 분으로 잴까요")
+                .setView(box)
+                .setPositiveButton("시작", (d, w) -> {
+                    try {
+                        int v = Integer.parseInt(in.getText().toString().trim());
+                        if (v > 0 && v <= 600) startTimer(v);
+                    } catch (Exception ignored) { }
+                })
+                .setNegativeButton("그만", null)
+                .show();
+    }
+
+    private void startTimer(int minutes) {
+        timePrefs().edit().putInt(subject == null ? "" : subject, minutes).apply();
+        /* 앞서 재던 것이 있으면 남기지 않고 물린다 — 다른 회차를 열어서 밀려난
+           것을 '풀었다'고 적으면 안 푼 회차에 시간이 붙는다. */
+        if (Timing.clock(this).on() && !Timing.mine(this, paperKey)) Timing.stop(this, false);
+        Timing.start(this, paperKey, name, subject, minutes);
+        alerted = false;
+        Timing.changed(this);
+        drawTimer();
+        askNotify();
+    }
+
+    private void finishTimer() {
+        Timing.stop(this, true);
+        Timing.changed(this);
+        drawTimer();
+    }
+
+    private boolean alerted;
+
+    private void drawTimer() {
+        if (timerChip == null) return;
+        boolean on = Timing.mine(this, paperKey);
+        timerChip.setVisibility(on ? View.VISIBLE : View.GONE);
+        timerBtn.setVisibility(on ? View.GONE : View.VISIBLE);
+        timerLine.setVisibility(on ? View.VISIBLE : View.GONE);
+        beat.removeCallbacksAndMessages(null);
+        if (!on) return;
+
+        Clock k = Timing.clock(this);
+        long now = System.currentTimeMillis();
+        long left = k.left(now);
+        timerChip.setText(k.paused() ? "❙❙ " + Clock.face(left) : Clock.face(left));
+
+        boolean over = left < 0;
+        timerChip.setTextColor(over ? 0xFFB4342A : (night() ? 0xFFECE7DA : 0xFF191713));
+        ViewGroup.LayoutParams lp = timerLine.getLayoutParams();
+        lp.width = Math.round(getResources().getDisplayMetrics().widthPixels * k.ratio(now));
+        timerLine.setLayoutParams(lp);
+        timerLine.setBackgroundColor(over ? 0xFF191713 : 0xFFB4342A);
+
+        /* 0이 되는 순간에 한 번만 알린다. 프로세스가 살아 있을 때만 울리는데,
+           숫자는 어느 경우에도 계속 흐르므로 넘긴 것은 눈으로 보인다. */
+        if (over && !alerted) {
+            alerted = true;
+            buzz();
+            android.widget.Toast.makeText(this, "시간이 다 되었습니다", android.widget.Toast.LENGTH_LONG).show();
+        }
+        if (k.running()) beat.postDelayed(this::drawTimer, 1000 - (k.spent(now) % 1000));
+    }
+
+    /* 알림의 단추로 멈췄다 이었다 하면 화면도 따라가야 한다 */
+    private final BroadcastReceiver timerWatch = new BroadcastReceiver() {
+        @Override public void onReceive(Context c, Intent i) { drawTimer(); }
+    };
+
+    /* 알림이 없어도 재는 것은 그대로지만, 나갔을 때 볼 자리가 사라진다.
+       재기 시작한 뒤에 한 번만 묻는다 — 열자마자 묻는 것은 아직 쓰지도 않은
+       기능의 권한을 들이미는 일이다. */
+    private void askNotify() {
+        if (Build.VERSION.SDK_INT < 33) return;
+        if (!Timing.mine(this, paperKey)) return;
+        if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                == android.content.pm.PackageManager.PERMISSION_GRANTED) return;
+        if (askedNotify) return;
+        askedNotify = true;
+        try {
+            requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 71);
+        } catch (Exception ignored) { }
+    }
+
+    private boolean askedNotify;
+
+    /** 시간이 다 됐다고 손끝으로 알린다. 소리는 안 낸다 — 독서실에서 곤란하다. */
+    @SuppressWarnings("deprecation")
+    private void buzz() {
+        long[] beat = {0, 220, 140, 220};
+        try {
+            android.os.Vibrator v = getSystemService(android.os.Vibrator.class);
+            if (v == null || !v.hasVibrator()) return;
+            if (Build.VERSION.SDK_INT >= 26) {
+                v.vibrate(android.os.VibrationEffect.createWaveform(beat, -1));
+            } else {
+                v.vibrate(beat, -1);
+            }
+        } catch (Exception ignored) { }
+    }
+
+    private boolean night() {
+        return (getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+    }
+
     private ImageButton iconBtn(int icon, String label, int tint) {
         ImageButton b = new ImageButton(this);
         b.setImageResource(icon);
@@ -1052,8 +1255,27 @@ public class PdfViewActivity extends Activity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        /* 알림의 단추로 멈췄다 이었다 하면 이 화면도 따라가야 한다 */
+        androidx.core.content.ContextCompat.registerReceiver(this, timerWatch,
+                new IntentFilter(Timing.CHANGED),
+                androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
+        drawTimer();
+        askNotify();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        try { unregisterReceiver(timerWatch); } catch (Exception ignored) { }
+        beat.removeCallbacksAndMessages(null);
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        beat.removeCallbacksAndMessages(null);
         io.shutdownNow();
         stopSettle();
         sharp.evictAll();
