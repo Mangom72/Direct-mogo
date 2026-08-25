@@ -194,6 +194,16 @@ with sync_playwright() as pw:
     print("    아이콘이 그림인가:", ico)
     ck(ico, "백업 아이콘이 글자입니다 — 글꼴에 없으면 두부가 됩니다")
 
+    # 칸을 가르는 선은 공용 규칙 하나가 낸다. 단추 쪽에서 border:none 으로
+    # 기본 테두리를 지우면 그 선까지 같이 지워지는데, 마지막 칸에서는 어차피
+    # 선이 없어 안 보인다 — 뒤에 칸이 하나 붙는 날에야 드러난다.
+    lines = pg5.evaluate("""()=>[...document.querySelectorAll('.mast-side > *')].map((e,i,a)=>{
+      const s = getComputedStyle(e), last = i === a.length - 1;
+      const has = s.borderBottomWidth !== '0px' && s.borderBottomStyle !== 'none';
+      return has === !last;})""")
+    print("    칸 사이 선:", lines)
+    ck(all(lines), f"마지막이 아닌 칸에 아래선이 없거나 마지막에 선이 있습니다: {lines}")
+
     pg5.evaluate("""()=>{const ks=[];document.querySelectorAll('.item .chk').forEach(c=>ks.push(c.dataset.k));
       SOLVED={}; ks.slice(0,19).forEach(k=>SOLVED[k]='20260824'); saveSolved(); offerBackup();}""")
     pg5.wait_for_timeout(250)

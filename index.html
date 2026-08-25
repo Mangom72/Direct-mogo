@@ -250,9 +250,14 @@ body{
   background:var(--mark);color:var(--onmark);min-width:62px;display:inline-block;text-align:center}
 .mast-title p{margin:8px 0 0;font-size:12.5px;color:var(--ink2);line-height:1.65}
 .mast-side{width:120px;border-left:1.5px solid var(--ink);display:flex;flex-direction:column}
-.mast-side > *{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1px solid var(--rule);padding:6px}
+/* 칸을 가르는 선은 여기 한 곳에서 낸다. 단추의 기본 테두리도 여기서 함께
+   지운다 — 단추 쪽에서 border:none 으로 지우면 <b>이 선까지 같이 지워진다.</b>
+   테마 단추가 마지막 칸이던 동안에는 어차피 선이 없어 안 보이던 버그였는데,
+   백업 칸이 뒤에 붙자 테마와 백업 사이만 선이 비었다. */
+.mast-side > *{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:0;border-bottom:1px solid var(--rule);padding:6px}
 .mast-side > *:last-child{border-bottom:none}
-.mast-side .theme{font:inherit;background:none;border:none;color:inherit;cursor:pointer;width:100%}
+.mast-side .theme{font:inherit;background:none;color:inherit;cursor:pointer;width:100%}
 .mast-side .theme:focus-visible{outline:2.5px solid var(--mark);outline-offset:-3px}
 .mast-side .n{font-family:"Song Myung",serif;font-size:21px;font-weight:700;line-height:1}
 .mast-side .l{font-size:9.5px;color:var(--ink2);letter-spacing:1px;margin-top:3px}
