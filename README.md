@@ -129,4 +129,5 @@ https://mangom72.github.io/Direct-mogo/s/
 ---
 
 이 저장소를 고치실 분은 [docs/build.md](docs/build.md)를 보세요 — 파일 구성, 자료
-갱신 순서, 검색 노출 구조, 로컬 실행이 정리돼 있습니다.
+갱신 순서, 검색 노출 구조, 로컬 실행이 정리돼 있습니다. 무엇이 웹이고 무엇이
+앱인지는 [docs/split.md](docs/split.md)에 표로 있습니다.

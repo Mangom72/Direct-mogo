@@ -22,6 +22,7 @@
 | `tools/publish_apk.py` | 빌드된 릴리스 APK를 읽어 `app/latest.json`을 씁니다 |
 | `tests/` | 회귀 시험 34종 ([tests/README.md](../tests/README.md)) |
 | `android/` | WebView 앱 ([docs/android.md](android.md)) |
+| — | 무엇이 웹이고 무엇이 앱인지: [docs/split.md](split.md) |
 | `.github/workflows/refresh-data.yml` | 매일 23시(KST) 자료 갱신 |
 | `.github/workflows/tests.yml` | 화면을 고쳐 main에 밀면 34종을 돌립니다 |
 | `.github/workflows/android.yml` | APK 빌드·서명·릴리스 (main 푸시·수동 실행) |
