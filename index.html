@@ -45,6 +45,23 @@ addEventListener("securitypolicyviolation", function(e){
     var seen = null;
     try{ seen = localStorage.getItem("gijul.apk.v1"); }catch(e){}
     window.__apkShown = !!window.__androidWeb && seen === null;
+
+    /* iPhone·iPad. 여기에는 설치할 앱이 없으므로 권할 것이 다르다 — 홈 화면에
+       추가해 웹 앱으로 여는 것이 이쪽의 '앱 설치'다.
+
+       iPadOS 는 기본이 '데스크톱 화면'이라 UA 에서 iPad 가 사라지고 맥으로
+       보인다. 터치가 되는 맥은 없으므로 그것으로 가른다 — 안드로이드 쪽에서
+       '터치가 되는 리눅스'를 쓰는 것과 같은 수다. */
+    window.__iOS = /iP(hone|ad|od)/.test(ua)
+      || (/Mac/i.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+    /* 이미 홈 화면에서 열렸으면 권할 것이 없다. navigator.standalone 은 iOS 의
+       옛 깃발이고 display-mode 는 표준인데, 둘 다 봐야 판을 가리지 않는다. */
+    window.__homeApp = navigator.standalone === true
+      || !!(window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+    window.__iosWeb = !!window.__iOS && !window.__homeApp;
+    var pseen = null;
+    try{ pseen = localStorage.getItem("gijul.pwa.v1"); }catch(e){}
+    window.__pwaShown = !!window.__iosWeb && pseen === null;
     /* 주소에 조각(#…)을 실을 수 없다 — intent: 형식이 '#Intent;'를 구분자로 써서
        페이지의 해시와 자리를 다툰다. 조각은 별도 항목으로 넘긴다.
        앱이 없을 때 어디로 보낼지(fallback)는 부르는 쪽이 정한다. */
@@ -80,7 +97,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-EVZy+r/J3WENAv4X6ahTNVyBapW5Nbq4lVCdWLAOtmI=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DG6sozeuUJFWH8FGUgi1fPfQBAJH1rauhiByU1cVRF8=' 'sha256-wg7qzwO1xog1rOhTpzhfONI8mC2EiuQ70zyQC6sO8dk=';
+  script-src 'self' 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-1Ow8B5xot1peaqDJjTKrv+crD0WjB9RLS2INuHYTXWw=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -848,17 +865,39 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
        곤란하고, 그 스크립트는 같은 단추에 제 처리를 다시 걸어 이어받는다. -->
   <script>
   (function(){ try{
-    if(!window.__apkShown) return;
-    var bar = document.getElementById("notice");
-    document.getElementById("noticeText").textContent =
-      "안드로이드 앱을 설치하시면 문제지를 앱에서 바로 읽고, 연결이 없어도 보관한 자료를 열 수 있습니다.";
-    var yes = document.getElementById("noticeYes");
-    yes.textContent = "앱 받기";
-    yes.onclick = function(){
-      location.href = "https://github.com/Mangom72/Direct-mogo/releases/latest/download/gijul-direct.apk";
-    };
-    document.getElementById("noticeNo").onclick = function(){
-      try{ localStorage.setItem("gijul.apk.v1", "off"); }catch(e){}
+    if(!window.__apkShown && !window.__pwaShown) return;
+    var bar = document.getElementById("notice"),
+        txt = document.getElementById("noticeText"),
+        yes = document.getElementById("noticeYes"),
+        no  = document.getElementById("noticeNo");
+    var key = window.__apkShown ? "gijul.apk.v1" : "gijul.pwa.v1";
+
+    if(window.__apkShown){
+      txt.textContent =
+        "안드로이드 앱을 설치하시면 문제지를 앱에서 바로 읽고, 연결이 없어도 보관한 자료를 열 수 있습니다.";
+      yes.textContent = "앱 받기";
+      yes.onclick = function(){
+        location.href = "https://github.com/Mangom72/Direct-mogo/releases/latest/download/gijul-direct.apk";
+      };
+    }else{
+      /* iOS 에는 받을 앱이 없다. 홈 화면에 추가하는 것이 이쪽의 설치다.
+         방법이 두 단계뿐이라 다른 화면으로 보내지 않고 이 자리에서 편다 —
+         아래 큰 스크립트를 기다리지 않아도 단추가 제 일을 한다. */
+      txt.textContent =
+        "홈 화면에 추가하시면 앱처럼 열리고, 담아둔 자료와 푼 기록이 지워지지 않습니다.";
+      yes.textContent = "방법 보기";
+      yes.onclick = function(){
+        txt.innerHTML = "<b>1</b> 아래 <b>공유</b> 아이콘을 누릅니다. "
+          + "<b>2</b> 목록에서 <b>홈 화면에 추가</b>를 고릅니다.<br>"
+          + "<b>사파리에서 표시한 기록은 따라오지 않습니다.</b> "
+          + "표시해 두신 것이 있으면 먼저 <b>백업</b>으로 내보낸 뒤, 홈 화면에서 연 다음 가져와 주십시오.";
+        yes.hidden = true;
+        no.textContent = "알겠습니다";
+      };
+    }
+
+    no.onclick = function(){
+      try{ localStorage.setItem(key, "off"); }catch(e){}
       bar.hidden = true;
     };
     bar.hidden = false;
@@ -1819,13 +1858,10 @@ let lastFocus = null;
 const sheet=$("#sheet"), sheetBg=$("#sheetBg"), sheetX=$("#sheetX"), sheetNm=$("#sheetNm"),
       sheetSb=$("#sheetSb"), sheetList=$("#sheetList"), sheetNote=$("#sheetNote"),
       sheetAll=$("#sheetAll");
-const NOTE_DEFAULT = (typeof GijulNative !== "undefined" && GijulNative)
-  ? "보내기를 누르면 공유 시트가 열립니다. 폴더에 담아두면 오프라인에서도 볼 수 있습니다."
-  : sheetNote.textContent;
+/* 화면에 박아 둔 기본 문구. 앱이냐 웹이냐에 따라 담기는 곳이 달라 말도 달라지는데,
+   그 갈래는 아래 Vault 가 쥔다 — 여기서는 웹 쪽 원문만 챙겨 둔다. */
+const NOTE_WEB = sheetNote.textContent;
 const ALL_LABEL = sheetAll.textContent;
-/* 앱은 폴더에 담고, 브라우저는 다운로드로 떨어지므로 말이 달라야 한다 */
-const ALL_LABEL_NATIVE = (typeof GijulNative !== "undefined" && GijulNative)
-  ? "오프라인 저장 — 폴더에 담기" : ALL_LABEL;
 let sheetRow = null;              /* 지금 시트가 보여주는 회차 */
 
 /* 확장자는 Content-Type이 아니라 원본 경로에서 뽑는다 */
@@ -1927,19 +1963,164 @@ async function sendFile(f, btn){
    앱이 아니면 이 갈래는 건드리지 않으므로 다른 OS는 그대로다. */
 const NATIVE = typeof GijulNative !== "undefined" && GijulNative;
 
-window.gijulSaveResult = (ok, count, message)=>{
-  savedCache = null;                 /* 담기거나 지워졌다 — 다음에 다시 물어본다 */
+/* ── 보관함 ────────────────────────────────────────────────────────────
+   회차를 통째로 담아 두고 연결이 없어도 여는 자리다. 담기는 곳이 앱과 웹에서
+   다르므로(앱 폴더 / Cache Storage) **창구 이름만 맞춰 두고 부르는 쪽은 어느
+   쪽인지 모르게** 한다. 이 파일에서 `NATIVE.무엇`을 흩뿌리는 대신 뒤판을 하나
+   고르는 방식은 여기가 처음이다 — 갈래가 셋 이상 되는 자리부터 이렇게 간다.
+
+   **웹이 이걸 할 수 있게 된 것은 EBSi가 CORS를 열어 두었기 때문이다.**
+   `Access-Control-Allow-Origin: *` 라서 응답을 우리가 읽을 수 있고, 그래야
+   담고 · 크기를 세고 · 담겼는지 물어볼 수 있다. 저쪽이 그 헤더를 지우면 웹
+   보관함만 조용히 멈춘다(앱은 네이티브 HTTP라 CORS를 안 본다).
+
+   담긴 것은 `sw.js`도 본다. 문제지 요청은 통 이름 없이 `caches.match` 하므로
+   보관함에 있으면 그것이 먼저 나온다. */
+const VAULT_BOX = "gijul-vault:";
+/* 회차마다 통을 따로 두고, 그 안에 목록을 한 장 같이 넣는다. 통 이름만 훑으면
+   무엇이 담겼는지 알 수 있어 '담김' 표시가 값싸진다. */
+const VAULT_META = new URL("__vault__", location.href).href;
+
+function nativeVault(){
+  let known = null;
+  return {
+    can: true, web: false,
+    label: "오프라인 저장 — 폴더에 담기",
+    note: "보내기를 누르면 공유 시트가 열립니다. 폴더에 담아두면 오프라인에서도 볼 수 있습니다.",
+    busy: "앱 폴더에 보관하고 있습니다. 완료되면 '받아둔 자료'에서 열 수 있습니다.",
+    kept: "이 회차는 이미 받아 두었습니다. '받아둔 자료'에서 열 수 있습니다.",
+    listNote: "버튼을 누르면 앱 안에서 바로 열립니다. 앱을 지우면 함께 사라집니다.",
+    emptyNote: `회차의 <b>보내기</b> → <b>폴더에 담기</b>로 내려받으면 이곳에 모입니다.`,
+    /* 창구를 부를 때마다 앱이 저장 폴더를 통째로 훑고 파일 크기를 하나씩 잰다.
+       화면을 그릴 때마다 그 일을 시킬 이유가 없다 — 담거나 지웠을 때만 달라지고,
+       그 두 자리는 모두 gijulSaveResult 로 돌아온다. */
+    folders(){
+      if(known) return known;
+      try{ known = new Set(JSON.parse(NATIVE.listSaved() || "[]").map(x=>x.folder)); }
+      catch(e){ known = new Set(); }
+      return known;
+    },
+    forget(){ known = null; },
+    sync(){ known = null; return Promise.resolve(false); },
+    list(){
+      try{ return Promise.resolve(JSON.parse(NATIVE.listSaved() || "[]")); }
+      catch(e){ return Promise.resolve([]); }
+    },
+    /* 셋 다 답이 gijulSaveResult 로 돌아온다 — 여기서 기다리지 않는다 */
+    save(folder, files){
+      NATIVE.savePaper(JSON.stringify({
+        folder, files: files.map(f=>({ name:f.name, url:f.url })) }));
+    },
+    open(folder, name){ NATIVE.openSaved(folder, name); },
+    remove(folder){ NATIVE.deleteSaved(folder); },
+  };
+}
+
+function webVault(){
+  /* 브라우저 저장소는 안전한 문맥에서만 열린다. file:// 로 열어본 사람에게는
+     보관함이 통째로 없는 것으로 보이고, 나머지 기능은 그대로 돈다. */
+  const on = typeof caches !== "undefined" && window.isSecureContext;
+  let known = new Set();
+  const box = f => VAULT_BOX + f;
+  const boxes = async () => (await caches.keys()).filter(n => n.startsWith(VAULT_BOX));
+  async function meta(c){
+    const r = await c.match(VAULT_META);
+    if(!r) return [];
+    try{ return await r.json(); }catch(e){ return []; }
+  }
+  return {
+    can: on, web: true,
+    label: "오프라인 저장 — 보관함에 담기",
+    note: NOTE_WEB,
+    busy: "받는 중입니다…",
+    kept: "이 회차는 이미 담아 두었습니다. '받아둔 자료'에서 열 수 있습니다.",
+    listNote: "누르면 새 탭에서 열립니다. 브라우저의 저장 공간을 비우면 함께 사라집니다.",
+    emptyNote: `회차를 눌러 <b>보관함에 담기</b>를 누르면 이곳에 모입니다.`,
+    folders(){ return known; },
+    forget(){},
+    /* 통 이름만 훑는다. 파일을 열어보지 않으므로 화면을 그리기 전에 불러도 싸다.
+       @return 아는 것이 달라졌는가 — 달라졌으면 부른 쪽이 다시 그린다. */
+    async sync(){
+      if(!on) return false;
+      const set = new Set((await boxes()).map(n => n.slice(VAULT_BOX.length)));
+      const same = set.size === known.size && [...set].every(f => known.has(f));
+      known = set;
+      return !same;
+    },
+    async list(){
+      if(!on) return [];
+      const out = [];
+      for(const n of await boxes()){
+        const folder = n.slice(VAULT_BOX.length);
+        const c = await caches.open(n);
+        (await meta(c)).forEach(f => out.push({ folder, name:f.name, size:f.size }));
+      }
+      return out;
+    },
+    /* 반만 담긴 회차를 남기지 않는다. 중간에 끊기면 통째로 버린다 —
+       '담김' 표시가 붙었는데 열면 없는 것이 제일 나쁘다. */
+    async save(folder, files, step){
+      const c = await caches.open(box(folder));
+      const done = [];
+      try{
+        for(const f of files){
+          if(step) step(done.length + 1, files.length);
+          let blob = blobCache.get(f.url);
+          if(!blob){
+            const res = await fetch(f.url);
+            if(!res.ok) throw new Error("HTTP " + res.status);
+            blob = await res.blob();
+            blobCache.set(f.url, blob);
+          }
+          await c.put(f.url, new Response(blob, { headers: {
+            "Content-Type": blob.type || f.mime || "application/octet-stream" } }));
+          done.push({ name:f.name, url:f.url, size:blob.size });
+        }
+        await c.put(VAULT_META, new Response(JSON.stringify(done),
+          { headers:{ "Content-Type":"application/json" } }));
+      }catch(e){
+        await caches.delete(box(folder));
+        throw e;
+      }
+      return done.reduce((a,f)=>a + f.size, 0);
+    },
+    async open(folder, name){
+      const c = await caches.open(box(folder));
+      const it = (await meta(c)).find(x => x.name === name);
+      const res = it && await c.match(it.url);
+      if(!res) throw new Error("담아둔 파일을 찾지 못했습니다");
+      const blob = await res.blob();
+      const u = URL.createObjectURL(blob);
+      /* 팝업이 막히면 내려받기로 떨어진다 — 어느 쪽이든 손에는 들어온다 */
+      if(!window.open(u, "_blank")) saveBlob(blob, name);
+      setTimeout(()=>URL.revokeObjectURL(u), 60000);
+    },
+    async remove(folder){
+      if(folder) await caches.delete(box(folder));
+      else for(const n of await boxes()) await caches.delete(n);
+    },
+  };
+}
+
+const Vault = (NATIVE && NATIVE.savePaper) ? nativeVault() : webVault();
+
+/* 담거나 지운 뒤 — 앱은 gijulSaveResult 로, 웹은 제 손으로 여기에 들어온다 */
+function vaultDone(ok, message){
+  Vault.forget();
   sheetAll.disabled = false;
-  sheetAll.textContent = ALL_LABEL_NATIVE;
+  sheetAll.textContent = Vault.label;
   syncSaveBtn();                     /* 방금 담았으면 여기서 잠긴다 */
-  if(vaultMode){ openVault(); render(); return; }  /* 보관함에서 지운 뒤라면 목록을 다시 그린다 */
+  if(vaultMode){ openVault(); render(); return; }
   sheetNote.innerHTML = ok ? `<b>${esc(message)}</b>` : esc(message);
   if(ok) render();                                  /* 방금 담은 회차에 표시가 붙게 */
-};
+}
 
-/* ── 받아둔 자료 (앱 전용) ────────────────────────────────────────────
-   파일이 앱 데이터 폴더에 있어 안드로이드 11+ 에서는 파일 관리자가 열지 못한다.
-   그래서 목록과 열기를 앱이 직접 내준다. */
+window.gijulSaveResult = (ok, count, message)=> vaultDone(ok, message);
+
+/* ── 받아둔 자료 ──────────────────────────────────────────────────────
+   앱에서는 파일이 앱 데이터 폴더에 있어 안드로이드 11+ 의 파일 관리자가 열지
+   못하고, 웹에서는 Cache Storage 안에 있어 아예 파일이 아니다. 어느 쪽이든
+   밖에서는 안 보이므로 목록과 열기를 우리가 직접 내준다. */
 let vaultMode = false;
 
 function fmtSize(n){
@@ -1975,9 +2156,9 @@ function askTwice(btn, label, question, run){
   reset();
 }
 
-function openVault(opener){
+async function openVault(opener){
   let items = [];
-  try{ items = JSON.parse(NATIVE.listSaved() || "[]"); }catch(e){}
+  try{ items = await Vault.list(); }catch(e){}
   vaultMode = true;
   if(opener) lastFocus = opener;
   const bytes = items.reduce((a,x)=>a + (x.size||0), 0);
@@ -2012,35 +2193,44 @@ function openVault(opener){
       const b=document.createElement("button");
       b.type="button"; b.textContent=kind;
       b.setAttribute("aria-label", `${folder} ${kind} 열기`);
-      b.onclick=()=>{ try{ NATIVE.openSaved(f.folder, f.name); }catch(e){} };
+      b.onclick=()=>{
+        Promise.resolve().then(()=>Vault.open(f.folder, f.name))
+          .catch(err=>{ sheetNote.textContent = "열지 못했습니다: " + err.message; });
+      };
       row.appendChild(b);
     });
 
     const del=document.createElement("button");
     del.type="button"; del.className="del"; del.textContent="지우기";
     del.setAttribute("aria-label", `${folder} 지우기`);
-    askTwice(del, "지우기", `${folder} 지우기`,
-      ()=>{ try{ NATIVE.deleteSaved(folder); }catch(e){} });
+    askTwice(del, "지우기", `${folder} 지우기`, ()=>ditch(folder, `${folder}를 지웠습니다`));
     row.appendChild(del);
 
     el.append(nm, sub, row);
     sheetList.appendChild(el);
   });
 
-  sheetNote.innerHTML = items.length
-    ? `버튼을 누르면 앱 안에서 바로 열립니다. 앱을 지우면 함께 사라집니다.`
-    : `회차의 <b>보내기</b> → <b>폴더에 담기</b>로 내려받으면 이곳에 모입니다.`;
+  sheetNote.innerHTML = items.length ? Vault.listNote : Vault.emptyNote;
   if(items.length){
     const b=document.createElement("button");
     b.type="button"; b.textContent="모두 지우기";
     askTwice(b, "모두 지우기", `받아둔 ${folders.size}개 회차 모두 지우기`,
-      ()=>{ try{ NATIVE.deleteSaved(""); }catch(e){} });
+      ()=>ditch("", `${folders.size}개 회차를 모두 지웠습니다`));
     sheetNote.appendChild(document.createElement("br"));
     sheetNote.appendChild(b);
   }
   sheet.hidden=false;
   document.body.style.overflow="hidden";
   sheetX.focus();
+}
+
+/* 앱은 지운 뒤 gijulSaveResult 로 답이 오고, 웹은 여기서 끝나므로 스스로 알린다 */
+function ditch(folder, said){
+  Promise.resolve().then(()=>Vault.remove(folder))
+    /* 지운 뒤에 다시 훑어야 '담김' 표시가 같이 떨어진다 */
+    .then(()=>Vault.sync())
+    .then(()=>{ if(Vault.web) vaultDone(true, said); })
+    .catch(err=>{ sheetNote.textContent = "지우지 못했습니다: " + err.message; });
 }
 
 out.addEventListener("click", e=>{
@@ -2054,46 +2244,61 @@ function folderName(y, title, sub){
     .replace(/[\/\\:*?"<>|\x00-\x1f]/g, "").replace(/\s+/g, " ").trim();
 }
 
-/* 받아둔 회차 폴더 이름들. 앱이 아니면 늘 빈 집합이다.
+/* 받아둔 회차 폴더 이름들 — render()가 항목마다 '담김' 표시를 붙이는 데 쓴다.
+   화면을 그릴 때마다 저장소를 훑을 수는 없으므로 Vault 가 아는 것을 그대로
+   받는다. 달라지는 자리는 담을 때와 지울 때뿐이고 둘 다 vaultDone 을 지난다. */
+const NO_FOLDERS = new Set();
+function savedFolders(){ return Vault.can ? Vault.folders() : NO_FOLDERS; }
 
-   기억해 둔다. 이 값은 render()가 항목마다 '담김' 표시를 붙이려고 쓰는데,
-   창구를 부를 때마다 앱이 저장 폴더를 통째로 훑고 파일 크기를 하나씩 잰다.
-   화면을 그릴 때마다 그 일을 시킬 이유가 없다 — 담거나 지웠을 때만 달라지고,
-   그 두 자리는 모두 gijulSaveResult로 돌아온다. */
-let savedCache = null;
-function savedFolders(){
-  if(!NATIVE) return new Set();
-  if(savedCache) return savedCache;
-  try{ savedCache = new Set(JSON.parse(NATIVE.listSaved() || "[]").map(x=>x.folder)); }
-  catch(e){ savedCache = new Set(); }
-  return savedCache;
-}
-
-function saveViaNative(){
-  const folder = folderName(sheetRow.y, sheetRow.title, sheetRow.sub);
-  sheetAll.disabled = true;
-  sheetAll.textContent = "내려받는 중입니다…";
-  sheetNote.textContent = "앱 폴더에 보관하고 있습니다. 완료되면 '받아둔 자료'에서 열 수 있습니다.";
-  try{
-    NATIVE.savePaper(JSON.stringify({
-      folder,
-      files: sheetRow.files.map(f=>({ name:f.name, url:f.url })),
-    }));
-  }catch(e){
-    sheetAll.disabled = false;
-    sheetAll.textContent = ALL_LABEL_NATIVE;
-    sheetNote.textContent = "앱에 전달하지 못했습니다: " + e.message;
-  }
-}
-
+/* 이 회차를 통째로 담는다. 어디에 담기는지는 Vault 가 안다. */
 async function saveAll(){
-  if(!sheetRow || sheetAll.disabled) return;
-  if(NATIVE) return saveViaNative();
+  if(!sheetRow || sheetAll.disabled || !Vault.can) return;
+  const folder = folderName(sheetRow.y, sheetRow.title, sheetRow.sub);
   const files = sheetRow.files;
   sheetAll.disabled = true;
+  sheetAll.textContent = "내려받는 중입니다…";
+  sheetNote.textContent = Vault.busy;
+
+  /* 앱은 여기서 끝난다 — 답이 gijulSaveResult 로 돌아온다 */
+  if(!Vault.web){
+    try{ Vault.save(folder, files); }
+    catch(e){
+      sheetAll.disabled = false;
+      sheetAll.textContent = Vault.label;
+      sheetNote.textContent = "앱에 전달하지 못했습니다: " + e.message;
+    }
+    return;
+  }
+
+  try{
+    const bytes = await Vault.save(folder, files,
+      (i, n)=>{ sheetAll.textContent = `받는 중… ${i}/${n}`; });
+    await Vault.sync();
+    vaultDone(true, `${files.length}개 파일 · ${fmtSize(bytes)}을 담았습니다. 연결이 없어도 열립니다.`);
+  }catch(e){
+    await Vault.sync();
+    /* 저장 공간이 찬 것과 연결이 끊긴 것은 사람이 할 일이 다르다.
+       연결이 끊겼을 때 fetch 가 주는 말은 영어라 그대로 내보내지 않는다. */
+    const full = e && (e.name === "QuotaExceededError" || /quota/i.test(e.name || ""));
+    const net = e instanceof TypeError || /HTTP \d/.test(e && e.message || "");
+    vaultDone(false, full
+      ? "기기의 저장 공간이 부족합니다. '받아둔 자료'에서 안 보는 회차를 지운 뒤 다시 시도해 주십시오."
+      : net
+      ? "담지 못했습니다. 연결을 확인한 뒤 다시 눌러 주십시오."
+      : "담지 못했습니다: " + (e && e.message ? e.message : "다시 시도해 주십시오"));
+  }
+}
+sheetAll.onclick = saveAll;
+
+/* 웹에만 있는 갈래 — 보관함이 아니라 진짜 파일로 받는다. 보관함은 이 화면
+   안에서만 열리므로, 파일 자체를 원하는 사람에게는 이 길이 남아 있어야 한다. */
+async function downloadAll(link){
+  if(!sheetRow || link.dataset.busy) return;
+  const files = sheetRow.files;
+  link.dataset.busy = "1";
   let done = 0, failed = 0;
   for(const f of files){
-    sheetAll.textContent = `받는 중… ${done + failed + 1}/${files.length}`;
+    link.textContent = `받는 중… ${done + failed + 1}/${files.length}`;
     try{
       let blob = blobCache.get(f.url);
       if(!blob){
@@ -2108,13 +2313,13 @@ async function saveAll(){
       await new Promise(r => setTimeout(r, 400));
     }catch(e){ failed++; }
   }
-  sheetAll.disabled = false;
-  sheetAll.textContent = ALL_LABEL_NATIVE;
-  sheetNote.innerHTML = failed
-    ? `${done}개 저장, ${failed}개 실패. 연결을 확인한 뒤 다시 눌러 주십시오.`
-    : `<b>${done}개 파일을 저장했습니다.</b> 네트워크가 없어도 파일 앱(다운로드)에서 열 수 있습니다.`;
+  link.dataset.busy = "";
+  link.textContent = DL_LABEL;
+  sheetNote.insertAdjacentHTML("afterbegin", failed
+    ? `${done}개 저장, ${failed}개 실패. 연결을 확인한 뒤 다시 눌러 주십시오.<br>`
+    : `<b>${done}개 파일을 내려받았습니다.</b><br>`);
 }
-sheetAll.onclick = saveAll;
+const DL_LABEL = "파일로 내려받기";
 
 /* 이 회차를 이미 받아 두었는가에 따라 저장 단추의 모양을 정한다.
 
@@ -2122,14 +2327,14 @@ sheetAll.onclick = saveAll;
    자료는 늘지 않는데, 화면은 '받는 중…'을 거쳐 성공한 것처럼 보였다 — 사용자는
    저장이 되고 있다고 믿고 계속 누르게 된다. 이미 있으면 그렇다고 말하고 막는다.
 
-   웹에서는 판단할 수 없다. 다운로드 폴더에 무엇이 있는지 물어볼 방법이 없어
-   savedFolders()가 늘 비어 있고, 그러면 이 함수는 아무것도 바꾸지 않는다. */
+   웹에서도 이제 판단할 수 있다. 예전에는 다운로드 폴더에 무엇이 있는지 물어볼
+   방법이 없어 savedFolders()가 늘 비어 있었지만, 보관함은 우리 것이라 안다. */
 function syncSaveBtn(){
   const kept = sheetRow && savedFolders().has(
     folderName(sheetRow.y, sheetRow.title, sheetRow.sub));
   sheetAll.classList.toggle("kept", !!kept);
   sheetAll.disabled = !!kept;
-  sheetAll.textContent = kept ? "이미 받아둔 회차입니다" : ALL_LABEL_NATIVE;
+  sheetAll.textContent = kept ? "이미 받아둔 회차입니다" : Vault.label;
   return !!kept;
 }
 
@@ -2137,14 +2342,22 @@ function openSheet(row, opener){
   if(!row) return;
   sheetRow = row;
   vaultMode = false;
-  sheetAll.hidden = false;
+  sheetAll.hidden = !Vault.can;
   sheetAll.disabled = false;
-  sheetAll.textContent = ALL_LABEL_NATIVE;
+  sheetAll.textContent = Vault.label;
   lastFocus = opener || null;
   sheetNm.textContent = `${row.y}년 ${row.title}`;
   sheetSb.textContent = `${row.sub} · ${row.date.slice(0,4)}.${row.date.slice(4,6)}.${row.date.slice(6,8)}`;
-  sheetNote.textContent = NOTE_DEFAULT;
-  if(syncSaveBtn()) sheetNote.textContent = "이 회차는 이미 받아 두었습니다. '받아둔 자료'에서 열 수 있습니다.";
+  sheetNote.textContent = Vault.note;
+  if(syncSaveBtn()) sheetNote.textContent = Vault.kept;
+  /* 파일 자체를 원하는 사람을 위한 갈래. 보관함이 있는 웹에서만 뜬다 —
+     앱에는 이미 진짜 파일로 담기고, 보관함이 없으면 위 단추가 곧 이 일이다. */
+  if(Vault.web && Vault.can){
+    const dl = document.createElement("button");
+    dl.type = "button"; dl.className = "dl"; dl.textContent = DL_LABEL;
+    dl.onclick = ()=>downloadAll(dl);
+    sheetNote.append(document.createElement("br"), dl);
+  }
   sheetList.innerHTML = "";
   row.files.forEach(f=>{
     const el=document.createElement("div"); el.className="sfile";
@@ -3256,7 +3469,7 @@ function render(){
   const gradeName=GRADES.find(g=>g[0]===sel.grade)[1];
   const scope = sel.year==="all" ? "전체 연도" : `${sel.year}년(${+sel.year+1}학년도)`;
   /* 받아둔 자료는 앱 데이터 폴더에 있어 앱 안에서만 열 수 있다 */
-  const vaultBtn = NATIVE ? `<button type="button" class="vault" id="vaultBtn">받아둔 자료</button>` : "";
+  const vaultBtn = Vault.can ? `<button type="button" class="vault" id="vaultBtn">받아둔 자료</button>` : "";
   /* 이 과목을 한 장에 펼쳐 놓은 정적 페이지로. 연도를 오가지 않고 쭉 훑거나,
      찾기(Ctrl+F)로 뒤지거나, 인쇄하거나, 앱 없는 사람에게 보내기 좋다.
      앱에서도 그대로 연다 — 저쪽 페이지가 자료 링크마다 사람이 읽는 이름을 달고
@@ -3483,6 +3696,68 @@ if(androidWeb()){
   }
 }
 
+/* ── 홈 화면 웹 앱 권유 (iPhone·iPad) ────────────────────────────────
+   안드로이드에는 받을 앱이 있지만 iOS 에는 없다. 대신 홈 화면에 추가하면
+   같은 페이지가 웹 앱으로 열리고, 그러면 세 가지가 달라진다.
+
+   - 브라우저 껍데기가 사라져 앱처럼 열린다.
+   - **저장소가 이레 만에 지워지지 않는다.** 사파리 탭에서는 그 사이트를 이레
+     동안 안 건드리면 WebKit 이 스크립트가 쓴 것을 지운다. 홈 화면 웹 앱은 그
+     규칙에서 빠지므로, 보관함과 푼 기록을 맡길 수 있는 것은 이쪽뿐이다.
+   - 그런데 **그 저장소가 사파리와 남남이다.** 같은 주소인데 아이콘으로 연 것과
+     사파리로 연 것의 기록이 서로 안 보인다. 그래서 권할 때 이 말을 반드시
+     같이 한다 — 모르고 옮기면 표시해 둔 것이 통째로 사라진 것처럼 보인다.
+     이건 기능 안내가 아니라 사고 예방이다. */
+const PWA_KEY = "gijul.pwa.v1";
+const PWA_TEXT = "홈 화면에 추가하시면 앱처럼 열리고, 담아둔 자료와 푼 기록이 지워지지 않습니다.";
+
+function iosWeb(){ return !NATIVE && !!window.__iosWeb; }
+/* iOS 로 좁힌다. 데스크톱 크롬도 설치하면 display-mode 가 standalone 이 되는데,
+   거기서는 저장소가 브라우저와 갈리지 않으므로 아래 안내가 거짓말이 된다. */
+function homeApp(){ return !NATIVE && !!window.__homeApp && !!window.__iOS; }
+
+/* 두 단계뿐이라 다른 화면으로 보내지 않고 막대 안에서 편다.
+   #notice 뒤의 이른 스크립트가 같은 일을 하고, 여기서 다시 걸어 이어받는다. */
+function pwaSteps(){
+  noticeText.innerHTML = "<b>1</b> 아래 <b>공유</b> 아이콘을 누릅니다. "
+    + "<b>2</b> 목록에서 <b>홈 화면에 추가</b>를 고릅니다.<br>"
+    + "<b>사파리에서 표시한 기록은 따라오지 않습니다.</b> "
+    + "표시해 두신 것이 있으면 먼저 <b>백업</b>으로 내보낸 뒤, 홈 화면에서 연 다음 가져와 주십시오.";
+  noticeYes.hidden = true;
+  noticeNo.textContent = "알겠습니다";
+}
+
+if(homeApp()){
+  /* 이미 넣으신 분께는 권할 것이 없다. 대신 담긴 것이 어디에 있는지만 밝힌다 —
+     '앱을 지우면 함께 사라진다'는 말을 들을 자리가 여기뿐이다. */
+  const box = $("#appInfo");
+  box.innerHTML = `<span><b>홈 화면 앱으로 열렸습니다.</b> 담아둔 자료와 푼 기록은 이 앱 안에 있어 브라우저 정리에 지워지지 않습니다. 다만 <b>사파리에서 연 같은 주소와는 따로</b>이고, 이 앱을 지우면 함께 사라집니다 — 가끔 <b>백업</b>으로 내보내 두시는 편이 안전합니다.</span>`;
+  box.hidden = false;
+}else if(iosWeb()){
+  const box = $("#appInfo");
+  box.innerHTML = `<span>iPhone·iPad에서는 <b>공유 → 홈 화면에 추가</b>로 넣으시면 같은 화면이 앱처럼 열립니다. 담아둔 자료가 브라우저 정리에 지워지지 않고, <b>사파리에서 표시한 기록은 따라오지 않으니</b> 옮기시기 전에 백업을 내보내 주십시오.</span>`;
+  box.hidden = false;
+
+  let off = null;
+  try{ off = localStorage.getItem(PWA_KEY); }catch(e){}
+  if(window.__pwaShown){
+    /* 막대는 첫 그림 전에 이미 올라와 있다. 대기열에게 알려 두지 않으면 다음
+       알림이 이것을 지우고 들어앉는다 — 안드로이드 쪽과 같은 사정이다. */
+    showingNotice = {
+      text: noticeText.textContent, yesLabel: "방법 보기",
+      onYes: pwaSteps,
+      onNo:  ()=>{ try{ localStorage.setItem(PWA_KEY, "off"); }catch(e){} },
+      key: "pwa" };
+    /* 이른 스크립트의 단추는 그대로 두어도 같은 일을 한다. 다만 '방법 보기'를
+       누른 뒤 대기열이 이 막대를 거두지 않도록 여기서도 제 것으로 걸어 둔다. */
+    noticeYes.onclick = pwaSteps;
+  } else if(off === null){
+    afterPaint(()=> showNotice(PWA_TEXT, "방법 보기", pwaSteps,
+      ()=>{ try{ localStorage.setItem(PWA_KEY, "off"); }catch(e){} },
+      { key:"pwa" }));
+  }
+}
+
 /* 오프라인 지원. 캐시를 쥐고 있으므로 새 자료는 다음 실행에 보인다 —
    그 지연을 사용자가 모르면 안 되니 갱신을 감지하면 알림 막대를 띄운다. */
 
@@ -3546,6 +3821,9 @@ if("serviceWorker" in navigator){
     if(incoming) offerImport(incoming);
     /* 앱이 재어 둔 시간을 가져온다. 표시가 늘 수도 있으므로 render() 앞이다. */
     if(takeTimings()) render();
+    /* 보관함에 무엇이 담겼는지는 물어봐야 안다(웹은 비동기다). 첫 그림을
+       그것 때문에 기다리게 하지 않고, 알고 나서 달라졌으면 한 번 더 그린다. */
+    if(Vault.can) Vault.sync().then(changed => { if(changed) render(); });
     offerRestore();       /* 화면은 비었는데 앱 사본에 남아 있으면 되살릴지 묻는다 */
     offerBackup();        /* 쌓인 것이 많은데 한 번도 안 챙겼으면 한 번만 권한다 */
   }catch(e){

@@ -1,10 +1,18 @@
 /* 기출 직행 서비스 워커
    자료 3,800여 건이 index.html 안에 들어 있으므로, 이 파일 하나만 쥐고 있으면
    조회·필터는 네트워크 없이 전부 동작한다. 네트워크가 필요한 것은 PDF뿐이다. */
-const VERSION = "v2";
+const VERSION = "v3";
 const SHELL = `gijul-shell-${VERSION}`;
 const FILES = `gijul-files-${VERSION}`;
 const KEEP = [SHELL, FILES];
+
+/* 보관함 — 사용자가 손으로 담은 회차. 통 이름이 `gijul-vault:회차` 라 통 목록만
+   봐도 무엇이 담겼는지 알 수 있다.
+
+   이것만은 판이 올라도 쓸어내지 않는다. 셸과 최근 파일은 언제든 다시 받으면
+   그만이지만 이건 사용자가 '오프라인에서 볼 것'이라고 골라 둔 것이라, 판올림
+   한 번에 지하철에서 볼 문제지가 사라지면 안 된다. */
+const VAULT = "gijul-vault:";
 
 const SHELL_URLS = [
   "./", "./index.html", "./manifest.webmanifest",
@@ -42,7 +50,8 @@ self.addEventListener("install", e=>{
    activate 한 번으로 끝내지 않고 페이지가 뜰 때마다 한 번 더 쓸어낸다. */
 async function sweep(){
   const names = await caches.keys();
-  await Promise.all(names.filter(n=>n.startsWith("gijul-") && !KEEP.includes(n))
+  await Promise.all(names.filter(n=>n.startsWith("gijul-")
+                                 && !n.startsWith(VAULT) && !KEEP.includes(n))
                          .map(n=>caches.delete(n)));
 }
 
@@ -122,6 +131,15 @@ async function cacheFirst(req, name, after){
   return res;
 }
 
+/* 문제지: 보관함에 있으면 그것부터. cacheName 없이 부르면 통 전부를 뒤지므로
+   보관함이든 최근 것이든 한 번에 잡힌다. 없을 때만 받아서 '최근' 통에 넣는다 —
+   보관함은 사용자가 담을 때만 늘어난다. */
+async function paper(req){
+  const kept = await caches.match(req);
+  if(kept) return kept;
+  return cacheFirst(req, FILES, trim);
+}
+
 self.addEventListener("fetch", e=>{
   const req = e.request;
   if(req.method !== "GET") return;
@@ -136,7 +154,7 @@ self.addEventListener("fetch", e=>{
     if(at === ROOT || at === HOME) e.respondWith(shell(req));
     return;
   }
-  if(isPaper(url)){ e.respondWith(cacheFirst(req, FILES, trim)); return; }
+  if(isPaper(url)){ e.respondWith(paper(req)); return; }
   if(SHELL_SET.has(url.origin + url.pathname)) e.respondWith(shell(req));
 });
 

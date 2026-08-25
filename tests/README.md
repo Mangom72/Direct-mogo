@@ -2,7 +2,7 @@
 
 ```bash
 pip install playwright "fonttools[woff]" brotli && playwright install chromium
-python3 tests/run.py              # 전부 (3분 남짓, 34종)
+python3 tests/run.py              # 전부 (3분 남짓, 35종)
 python3 tests/run.py sw stale     # 이름에 그 말이 든 것만
 python3 tests/run.py -v           # 출력까지 그대로
 ```
@@ -33,12 +33,13 @@ python3 tests/run.py -v           # 출력까지 그대로
 | `test_share6` `test_recv6` | 공유 링크에 담은 과목이 **하나도 빠지지 않고** 오가는가 |
 | `test_route` | 해시 딥링크, 뒤로 가기, 되돌아오기 |
 | `test_send` | 보내기 시트 — 파일을 받아 넘기는 길과 그 길이 막혔을 때 |
-| `test_offline_save` | 회차를 통째로 받아 앱 폴더에 보관하는 흐름 |
+| `test_offline_save` | 회차를 통째로 담고 · 담김 표시가 붙고 · 지우면 함께 떨어지는가. **반만 담긴 회차를 남기지 않는가** |
 | `test_onepage` | 표제의 '한 장으로'가 그 과목의 정적 페이지로 가는가 |
 | `test_sw` | 서비스 워커 — 미리 담기, 오프라인, 캐시 상한, 셸 갱신 감지, **글꼴 다시 받기** |
 | `test_stale` | 새로고침을 **닫은** 뒤 다시 확인하면 사실대로 말하는가 |
 | `test_update` | 앱 자체 업데이트의 페이지 쪽 동작 |
 | `test_toapp` | 자동으로는 앱에 넘기지 않고, 누를 때만 넘어가는가 |
+| `test_tohome` | iPhone·iPad에 홈 화면 추가를 권하는가, **기록이 사파리와 갈린다는 경고가 함께 나가는가** |
 | `test_apkbar` | 첫 그림부터 떠 있는 안내 막대가 뒤에 오는 알림을 삼키지 않는가 |
 | `test_theme` | 자동·밝게·어둡게, 그리고 어두운 화면의 글자 대비 |
 | `test_a11y` | 알림이 소리로도 전해지는가, 표에 이름이 있는가, **누르는 자리가 24×24 이상인가** |
@@ -63,7 +64,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 
 ## 안드로이드 쪽은 여기 없습니다
 
-여기 34종은 전부 브라우저를 띄웁니다. 자바를 확인하는 것은
+여기 35종은 전부 브라우저를 띄웁니다. 자바를 확인하는 것은
 `android/app/src/test` 에 따로 있고(`gradle testDebugUnitTest`, 8초),
 `android.yml` 이 돌립니다. 무엇을 지키는지는
 [docs/android.md](../docs/android.md#기기-없이-확인하는-것)에 있습니다.
@@ -160,7 +161,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 빨갛게 뜹니다.
 
 **화면 쪽**(`tests.yml`)은 `index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로
-main에 올라갈 때 34종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
+main에 올라갈 때 35종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
 남아, 손에서 재현되지 않는 실패도 눈으로 볼 수 있습니다.
 
 어느 쪽이든 CI는 마지막 그물입니다. 고친 자리에서 `python3 tests/run.py`를 먼저

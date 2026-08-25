@@ -15,6 +15,20 @@
 
 ---
 
+## 앱에만 있던 것 가운데 웹으로 내려온 것
+
+| 기능 | 앱 | 웹 |
+|---|---|---|
+| 오프라인 저장(회차 전체) | `MainActivity.save()` | Cache Storage — `webVault().save()` |
+| 받아둔 자료 목록·열기·지우기 | `listSaved`·`openSaved`·`deleteSaved` | 같은 화면, 뒤판만 다름 |
+| '담김' 표시 | `listSaved` 대조 | 통 이름 대조 |
+
+셋 다 **EBSi가 CORS를 열어 두어서** 가능해진 것입니다 — 응답을 우리가 읽을 수
+있어야 담고 크기를 셉니다. 저쪽이 그 헤더를 지우면 웹 쪽만 조용히 멈춥니다.
+자세한 것은 [docs/ios.md](ios.md)에 있습니다.
+
+---
+
 ## 양쪽에 똑같이 있는 것
 
 전부 `index.html` 안에서만 돌고 앱은 아무것도 안 합니다.
@@ -43,8 +57,6 @@
 | **시험 시간 재기** | `Clock`·`Timing`·`Exam` | 문제지가 새 탭으로 열려 우리 화면이 안 보입니다 |
 | 다른 앱 위에 띄우기 | `FloatService`·`PickerView`·`Catalog` | 브라우저에 오버레이 창이 없습니다 |
 | 홈 화면 위젯 여섯 | `*Widget`·`WidgetBase`·`Widgets`·`Solved` | — |
-| 오프라인 저장(회차 전체) | `MainActivity.save()` | 웹은 저장 위치를 정할 수 없습니다 |
-| 받아둔 자료 목록·열기·지우기 | `listSaved`·`openSaved`·`deleteSaved` | 다운로드 폴더에 무엇이 있는지 물어볼 수 없습니다 |
 | 자동 백업 | SAF 지속 권한 | `File System Access API`가 안드로이드 크롬에 없습니다 |
 | 앱 사본에서 되살리기 | `savedSolved` | — |
 | 앱 자체 업데이트 | `Updater` | 스토어를 안 거칩니다 |
@@ -60,11 +72,17 @@
 |---|---|---|
 | 문제지 열기 | 앱 안 뷰어(`openPaperAt`) | 새 탭 |
 | 보내기 | 네이티브 공유 시트(`shareFile`) | Web Share API → 실패 시 다운로드 |
-| 오프라인 저장 | 앱 폴더에 **회차별 하위 폴더** | 다운로드 폴더에 낱개, 400ms 간격 |
-| '담김' 표시 | 있음 | **없음** — 물어볼 방법이 없습니다 |
+| 오프라인 저장 | 앱 폴더에 **회차별 하위 폴더** | **Cache Storage에 회차별 통** (`gijul-vault:회차`) |
+| 파일로 받기 | 위와 같음 | 시트의 '파일로 내려받기' — 낱개, 400ms 간격 |
+| '담김' 표시 | 있음 | **있음** — 보관함은 우리 것이라 물어볼 수 있습니다 |
+| 홈 화면 권유 | 없음(이미 앱) | 안드로이드는 APK, **iOS는 '홈 화면에 추가'** |
 | 백업 내보내기 | 공유 시트(`saveBackup`) | `<a download>` |
 | 백업 가져오기 | SAF(`pickBackup`) | `<input type="file">` |
-| 앱 권유 막대 | 없음(이미 앱) | 안드로이드 브라우저에서만 |
+
+저장과 보관함은 **`Vault` 어댑터 하나**를 지납니다(`index.html`). 뒤판이 둘이고
+(`nativeVault()` / `webVault()`) 부르는 쪽은 어느 쪽인지 모릅니다 — 이 파일에서
+`NATIVE.무엇`을 흩뿌리지 않는 첫 자리입니다. 갈래가 셋 이상 되는 기능부터
+이렇게 갑니다.
 
 ---
 
@@ -136,7 +154,7 @@ else                          NATIVE.openPaper(url, nm);
 
 | 고친 곳 | 워크플로 | 무엇 |
 |---|---|---|
-| `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 34종 |
+| `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 35종 |
 | `android/**` | `android.yml` | `test_twins` → JVM 단위 시험 23개 → 서명 빌드 → 지문 확인 → 릴리스 |
 | (매일 23시 KST) | `refresh-data.yml` | EBSi 수집 → 수능 날짜 대조 → 새 회차 카나리아 |
 
