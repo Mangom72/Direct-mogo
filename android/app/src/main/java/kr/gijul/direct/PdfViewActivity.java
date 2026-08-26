@@ -26,11 +26,13 @@ import android.view.ScaleGestureDetector;
 import android.view.animation.DecelerateInterpolator;
 import android.view.View;
 import android.graphics.Canvas;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.PopupWindow;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -446,15 +448,20 @@ public class PdfViewActivity extends Activity {
     // 얼굴이 셋인데(칩·띄운 창의 바·알림) 저마다 세면 조금씩 어긋나고,
     // 어긋나는 것을 아무도 못 본다.
 
-    /** 아이콘이나 칩을 누르면 — 안 재고 있으면 시작, 재고 있으면 멈추고 잇는다 */
+    /**
+     * 아이콘이나 칩을 누르면.
+     *
+     * <ul>
+     *   <li>재고 있으면 — 아이콘 밑에 조작판을 편다(멈춤·10분 더·끝내기).
+     *       예전에는 누를 때마다 멈췄다 이었는데, 실수로 눌러 시험이 멈춰 있는
+     *       것을 한참 뒤에 알아채는 것이 가장 나쁜 결말이라 한 손짓을 더 뒀다.
+     *   <li>한 번 골라 둔 과목이면 — 묻지 않고 그대로 시작한다.
+     *   <li>처음이면 — 시트를 연다.
+     * </ul>
+     * 길게 누르면 어느 때든 시트가 열린다(시간을 바꾸고 싶을 때).
+     */
     private void tapTimer() {
-        if (Timing.mine(this, paperKey)) {
-            Clock k = Timing.clock(this);
-            if (k.paused()) Timing.resume(this); else Timing.pause(this);
-            Timing.changed(this);
-            drawTimer();
-            return;
-        }
+        if (Timing.mine(this, paperKey)) { openTimerPop(); return; }
         int m = remembered();
         if (m > 0) startTimer(m); else askTime();
     }
@@ -474,30 +481,168 @@ public class PdfViewActivity extends Activity {
         return subjectName == null ? "" : subjectName.trim();
     }
 
+    // ── 시험 시간 고르개 · 조작판 ────────────────────────────────────────
+    //
+    // 기본 대화상자를 안 쓴다. 두 가지 까닭이 있다.
+    //
+    // 하나는 모양이다. 뷰어는 밤바탕에 미색 활자인데 대화상자만 시스템 회색이고,
+    // 모서리도 글꼴도 단추 자리도 기기마다 다르다.
+    //
+    // 하나는 실제로 물린 적이 있어서다. AlertDialog 는 setMessage 와 setItems 를
+    // 함께 못 편다 — 메시지가 이기고 목록이 통째로 사라져, 시험 시간을 고를
+    // 방법이 아예 없었다. 우리 뷰에는 그런 규칙이 없다.
+    //
+    // 시작은 아래에서 올라오는 시트로, 재는 중 조작은 아이콘 밑에 붙는 작은
+    // 팝업으로 나뉜다. 시작할 때는 고를 것이 있어 자리가 넓어야 하고, 재는
+    // 중에는 문제지를 가리지 않는 편이 낫기 때문이다.
+
+    private FrameLayout sheetHost;      // 열려 있으면 not null
+    private PopupWindow timerPop;
+
+    private int sheetBg()  { return night() ? 0xFF242A35 : 0xFFFFFFFF; }
+    private int sheetInk() { return night() ? 0xFFECE7DA : 0xFF221F1A; }
+    private int sheetDim() { return night() ? 0xFF9AA4B6 : 0xFF6B6353; }
+    private int sheetRule(){ return night() ? 0xFF39414F : 0xFFD8D2C4; }
+
+    private GradientDrawable round(int color, int radius, int stroke, int strokeColor) {
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(color);
+        g.setCornerRadius(dp(radius));
+        if (stroke > 0) g.setStroke(dp(stroke), strokeColor);
+        return g;
+    }
+
+    /** 큰 알약 하나. {@code hot} 이면 교정 붉은색으로 채운다. */
+    private TextView bigPill(String label, boolean hot, View.OnClickListener on) {
+        TextView t = new TextView(this);
+        t.setText(label);
+        t.setTextSize(15);
+        t.setTypeface(t.getTypeface(), android.graphics.Typeface.BOLD);
+        t.setGravity(Gravity.CENTER);
+        t.setPadding(dp(10), dp(13), dp(10), dp(13));
+        t.setTextColor(hot ? 0xFFFFFFFF : sheetInk());
+        t.setBackground(hot ? round(0xFFB4342A, 999, 0, 0)
+                            : round(0x00000000, 999, 1, sheetRule()));
+        t.setOnClickListener(v -> { closeSheet(); on.onClick(v); });
+        return t;
+    }
+
+    private LinearLayout sheetBox() {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(18), dp(18), dp(18), dp(16));
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(sheetBg());
+        g.setCornerRadii(new float[]{dp(18), dp(18), dp(18), dp(18), 0, 0, 0, 0});
+        box.setBackground(g);
+        /* 시트를 눌렀다고 닫히면 안 된다 — 덮개만 닫는다 */
+        box.setClickable(true);
+        return box;
+    }
+
+    private void showSheet(View box) {
+        closeSheet();
+        FrameLayout host = findViewById(android.R.id.content);
+        if (host == null) return;
+        FrameLayout wrap = new FrameLayout(this);
+        View scrim = new View(this);
+        scrim.setBackgroundColor(0x9E080A0E);
+        scrim.setOnClickListener(v -> closeSheet());
+        wrap.addView(scrim, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        wrap.addView(box, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM));
+        host.addView(wrap, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        sheetHost = wrap;
+
+        scrim.setAlpha(0f);
+        scrim.animate().alpha(1f).setDuration(140).start();
+        box.setTranslationY(dp(240));
+        box.animate().translationY(0).setDuration(210)
+                .setInterpolator(new DecelerateInterpolator(1.6f)).start();
+    }
+
+    private void closeSheet() {
+        if (sheetHost == null) return;
+        final FrameLayout gone = sheetHost;
+        sheetHost = null;
+        gone.animate().alpha(0f).setDuration(130).withEndAction(() -> {
+            ViewGroup parent = (ViewGroup) gone.getParent();
+            if (parent != null) parent.removeView(gone);
+        }).start();
+    }
+
+    /** 뒤로가기가 시트부터 닫는다. 덮여 있는 것이 있으면 그것이 먼저다. */
+    private boolean closeOverlay() {
+        if (timerPop != null && timerPop.isShowing()) { timerPop.dismiss(); return true; }
+        if (sheetHost != null) { closeSheet(); return true; }
+        return false;
+    }
+
+    /** 시작 — 아래에서 올라오는 시트 */
     private void askTime() {
         String label = subjectLabel();
         Exam.Choice[] cs = Exam.choices(label);
-        AlertDialog.Builder b = new AlertDialog.Builder(this);
-        b.setTitle(label.isEmpty() ? "시험 시간" : label);
-        /* setMessage 를 붙이면 안 된다. AlertDialog 는 메시지와 목록을 함께 못
-           펴고 메시지가 이긴다 — 그래서 고를 것이 하나도 안 그려지고 '그냥
-           열기'만 남았다. 할 말은 항목 이름에 담는다. */
 
-        String[] items = new String[cs.length + 1];
-        for (int i = 0; i < cs.length; i++) items[i] = cs[i].label;
-        items[cs.length] = "직접 정하기";
+        LinearLayout box = sheetBox();
+        TextView nm = new TextView(this);
+        nm.setText(label.isEmpty() ? "시험 시간" : label);
+        nm.setTextColor(sheetInk());
+        nm.setTextSize(19);
+        nm.setTypeface(nm.getTypeface(), android.graphics.Typeface.BOLD);
+        box.addView(nm);
 
-        b.setItems(items, (d, which) -> {
-            if (which < cs.length) startTimer(cs[which].minutes);
-            else customTime();
-        });
-        if (Timing.mine(this, paperKey)) b.setNeutralButton("끝내기", (d, w) -> finishTimer());
-        b.setNegativeButton("그냥 열기", null);
-        b.show();
+        if (name != null && !name.isEmpty()) {
+            TextView sb = new TextView(this);
+            sb.setText(name);
+            sb.setTextColor(sheetDim());
+            sb.setTextSize(11.5f);
+            sb.setMaxLines(1);
+            sb.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            sb.setPadding(0, dp(2), 0, 0);
+            box.addView(sb);
+        }
+
+        /* 아는 갈래가 둘이면(영어) 나란히 세운다. 어느 쪽도 곁다리로 보이면 안 된다 —
+           듣기 없이 푸는 사람에게는 50분이 본디 값이다. */
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setPadding(0, dp(16), 0, 0);
+        for (int i = 0; i < cs.length; i++) {
+            final int m = cs[i].minutes;
+            TextView p = bigPill(cs[i].label, true, v -> startTimer(m));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            if (i > 0) lp.leftMargin = dp(9);
+            row.addView(p, lp);
+        }
+        if (cs.length > 0) box.addView(row);
+
+        TextView own = bigPill("직접 정하기", false, v -> customTime());
+        LinearLayout.LayoutParams olp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        olp.topMargin = dp(9);
+        box.addView(own, olp);
+
+        /* 잘못 눌렀을 수 있다. 빠져나갈 데가 없으면 갇힌다. */
+        TextView no = new TextView(this);
+        no.setText("닫고 그냥 읽기");
+        no.setTextColor(sheetDim());
+        no.setTextSize(12.5f);
+        no.setGravity(Gravity.CENTER);
+        no.setPadding(0, dp(15), 0, dp(4));
+        no.setOnClickListener(v -> closeSheet());
+        box.addView(no);
+
+        showSheet(box);
     }
 
     /* 옛 회차는 시험 시간이 지금과 다르다(2013년 이전 언어영역은 90분이었다).
-       표로 못박으면 조용히 틀리므로, 아는 것만 담고 나머지는 여기로 연다. */
+       표로 못박으면 조용히 틀리므로, 아는 것만 담고 나머지는 여기로 연다.
+       숫자를 받는 자리는 기본 대화상자를 그대로 쓴다 — 글쇠판이 함께 올라오고
+       화면이 밀리는 일을 우리가 다시 짤 값이 없다. */
     private void customTime() {
         final EditText in = new EditText(this);
         in.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
@@ -519,6 +664,102 @@ public class PdfViewActivity extends Activity {
                 })
                 .setNegativeButton("그만", null)
                 .show();
+    }
+
+    // ── 재는 중 조작판 — 아이콘 밑에 붙는 팝업 ────────────────────────────
+    //
+    // 시트로 하지 않는 것은, 재는 중에 여는 까닭이 대개 '얼마나 남았나'를 보려는
+    // 것이어서다. 그때 문제지를 통째로 덮으면 보려던 것을 가린다.
+
+    private TextView popRow(String label, boolean hot, Runnable on) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        TextView t = new TextView(this);
+        t.setText(label);
+        t.setTextSize(13.5f);
+        t.setTypeface(t.getTypeface(), android.graphics.Typeface.BOLD);
+        t.setTextColor(hot ? 0xFFF08379 : sheetInk());
+        t.setPadding(dp(14), dp(11), dp(14), dp(11));
+        t.setOnClickListener(v -> {
+            if (timerPop != null) timerPop.dismiss();
+            on.run();
+        });
+        return t;
+    }
+
+    private void openTimerPop() {
+        Clock k = Timing.clock(this);
+        if (!k.on()) { askTime(); return; }
+        long now = System.currentTimeMillis();
+        long left = k.left(now);
+        boolean over = left < 0;
+
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setBackground(round(sheetBg(), 14, 1, sheetRule()));
+        box.setPadding(0, dp(4), 0, dp(4));
+
+        TextView big = new TextView(this);
+        big.setText(Clock.face(left));
+        big.setTextSize(26);
+        big.setTypeface(android.graphics.Typeface.MONOSPACE, android.graphics.Typeface.BOLD);
+        big.setTextColor(over ? 0xFFF08379 : sheetInk());
+        big.setPadding(dp(14), dp(9), dp(14), 0);
+        box.addView(big);
+
+        TextView meta = new TextView(this);
+        String label = subjectLabel();
+        long mins = k.limit / 60000;
+        /* 남은 시간만 있으면 볼 때마다 사람이 더해야 한다. 끝나는 시각은 한 번
+           보면 되므로, 스치듯 보는 자리일수록 그쪽이 낫다. */
+        String tail = k.paused() ? "멈춰 있습니다"
+                    : over ? "시간이 다 됐습니다"
+                    : android.text.format.DateFormat.getTimeFormat(this)
+                            .format(new java.util.Date(now + left)) + "에 끝납니다";
+        meta.setText((label.isEmpty() ? "" : label + " · ") + mins + "분 · " + tail);
+        meta.setTextColor(sheetDim());
+        meta.setTextSize(11);
+        meta.setPadding(dp(14), dp(2), dp(14), dp(9));
+        box.addView(meta);
+
+        View line = new View(this);
+        line.setBackgroundColor(sheetRule());
+        box.addView(line, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, Math.max(1, dp(1) / 2)));
+
+        /* 끝난 시험을 멈출 일은 없다 */
+        if (!over) {
+            box.addView(k.paused()
+                    ? popRow("이어서", false, () -> { Timing.resume(this); after(); })
+                    : popRow("일시정지", false, () -> { Timing.pause(this); after(); }));
+        }
+        box.addView(popRow("10분 더", false, () -> { Timing.plus(this, 10); after(); }));
+        box.addView(popRow("끝내기", true, this::finishTimer));
+
+        box.measure(View.MeasureSpec.makeMeasureSpec(dp(220), View.MeasureSpec.AT_MOST),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        PopupWindow pop = new PopupWindow(box, dp(190),
+                ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        pop.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
+        pop.setElevation(dp(12));
+        timerPop = pop;
+        View anchor = timerChip.getVisibility() == View.VISIBLE ? timerChip : timerBtn;
+        pop.showAsDropDown(anchor, -dp(120), dp(4));
+    }
+
+    private void after() {
+        Timing.changed(this);
+        drawTimer();
+    }
+
+    /* 덮인 순서대로 하나씩 닫는다 — 조작판 → 시트 → 화면. 페이지가
+       gijulBack() 으로 하는 것과 같은 차례다. 한쪽에만 있으면 시트를 연 채로
+       뒤로가기를 누른 사람이 뷰어를 통째로 잃는다. */
+    @Override
+    public void onBackPressed() {
+        if (closeOverlay()) return;
+        super.onBackPressed();
     }
 
     private void startTimer(int minutes) {

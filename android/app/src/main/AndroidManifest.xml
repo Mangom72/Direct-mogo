@@ -13,6 +13,12 @@
          그대로다 — 뷰어의 칩과 띄운 창의 바가 남는다. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- 재는 동안의 알림을 '실시간 정보'로 올려 달라고 청한다. 그래야 잠금화면의
+         나우바와 상태 표시줄에 남은 시간이 뜬다. 물어보는 권한이 아니라 밝히는
+         것이고, 안드로이드 16 미만이나 사용자가 꺼 둔 기기에서는 그냥 보통
+         알림으로 뜬다 — 갈래를 둘로 만들 필요가 없다. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+
     <!-- 문제지를 다른 앱 위에 반투명하게 띄우는 기능. 사용자가 설정에서 직접 켜야
          하는 권한이라, 켜지 않으면 그 단추만 동작하지 않고 나머지는 그대로다. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />

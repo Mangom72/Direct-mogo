@@ -85,6 +85,16 @@ PDF를 열어 확인한 결과 내용은 EBSi가 붙인 행과 일치했다 — 
 `android.yml`의 `gradle-version: '9.6.1'`은 일부러 못박은 것이다. 저장소에 래퍼가
 없어 적지 않으면 러너 이미지의 Gradle을 쓰는데, AGP 8.7.3은 이미 "Gradle 10과
 호환되지 않는다"는 경고를 낸다. 올릴 때는 AGP와 함께 본다.
+
+**AGP를 올리면 오히려 멈춘다 — 재 보고 알았다.** Gradle 9.6.0이 `InternalProblems`
+라는 내부 API를 없앴는데 **AGP 8.12·8.13이 그것에 기대고 있어** 9.6.1에서 플러그인
+적용 단계부터 실패한다(`use Gradle 9.5`라고 이른다). 지금 쓰는 8.7.3은 그 API를
+안 써서 멀쩡하다. 그러니 **AGP는 손대지 않는 것이 맞다.**
+
+**`compileSdk`는 AGP 없이도 올릴 수 있다.** `AGP 8.7.3 + compileSdk 36`이 Gradle
+9.6.1에서 경고 없이 빌드된다 — 실시간 정보(`Notification.ProgressStyle`,
+`setShortCriticalText`, `FLAG_PROMOTED_ONGOING`)가 그래서 들어갔다. `targetSdk`는
+34 그대로다. 승격은 `targetSdk`와 무관하고, 올리면 런타임 동작이 함께 바뀐다.
 `refresh-data.yml` 끝의 '예약이 꺼지지 않게'도 지운다고 당장 표가 나지 않지만
 지우면 안 된다 — 공개 저장소의 예약 워크플로는 60일간 저장소 활동이 없으면
 깃허브가 자동으로 끄고(워크플로가 돈 것은 활동이 아니다), 이 저장소는 시험이 없는

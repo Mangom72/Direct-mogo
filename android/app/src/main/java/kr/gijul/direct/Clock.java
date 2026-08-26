@@ -100,4 +100,24 @@ final class Clock {
         if (diffMin < 0) return spentMin + "분 · " + (-diffMin) + "분 넘김";
         return spentMin + "분 · 딱 맞춤";
     }
+
+    /**
+     * 상태 표시줄에 붙는 아주 짧은 글. 자리가 손톱만 해서 <b>한 눈금만</b> 담는다.
+     *
+     * <p>초까지 흐르면 눈이 자꾸 끌리는데, 한 시간 넘게 푸는 동안 초는 알 필요가
+     * 없다. 그래서 남은 것이 많을수록 성기게 적고, <b>1분이 남았을 때만 초로
+     * 바뀐다</b> — 그때는 초가 유일하게 중요한 값이다.
+     */
+    static String brief(long leftMs) {
+        if (leftMs < 0) {
+            long over = (-leftMs + 59_999) / 60_000;        // 넘긴 것은 올림
+            return "+" + over + "분";
+        }
+        long s = leftMs / 1000;
+        if (s >= 3600) return (s / 3600) + ":" + two((s % 3600) / 60);
+        if (s >= 60) return (s / 60) + "분";
+        return s + "초";
+    }
+
+    private static String two(long v) { return v < 10 ? "0" + v : String.valueOf(v); }
 }

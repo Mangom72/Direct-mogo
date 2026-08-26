@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -60,6 +61,8 @@ final class Timing {
     }
 
     static String name(Context c) { return prefs(c).getString(NAME, ""); }
+    /* 과목 이름. 알림 제목이 이것이다 — 회차 이름은 길어서 과목이 잘려 나간다. */
+    static String sub(Context c) { return prefs(c).getString(SUB, ""); }
     static String key(Context c) { return prefs(c).getString(KEY, ""); }
 
     /** 이 회차를 지금 재고 있는가. 다른 회차를 재는 중이면 거짓. */
@@ -129,6 +132,22 @@ final class Timing {
 
     // ── 알림 ────────────────────────────────────────────────────────────
 
+    /**
+     * 알림 한 벌. 안드로이드 16 이상에서는 <b>실시간 정보</b>로 올려 달라 청하고,
+     * 그러면 잠금화면의 나우바와 상태 표시줄에도 같은 시계가 흐른다.
+     *
+     * <h3>왜 끝나는 시각을 함께 적는가</h3>
+     * 남은 시간만 있으면 화면을 볼 때마다 <b>사람이 더해야</b> 한다. 시험장에서
+     * 칠판에 적어 두는 것이 종료 시각인 데에는 까닭이 있다 — 그 숫자는 한 번 보면
+     * 되고, 흘끗 볼 때마다 셈이 필요 없다. 잠금화면처럼 <b>스치듯 보는 자리</b>일수록
+     * 그쪽이 낫다.
+     *
+     * <h3>제목은 과목이다</h3>
+     * 예전에는 회차 이름을 통째로 넣었다. 알림 제목은 한 줄에서 잘리는데, 하필
+     * <b>맨 뒤에 과목이 온다</b> — '2026 6월 모평(평가원) 확률과 통계 문제…' 로
+     * 잘려 정작 무슨 과목인지가 사라졌다. 알림에서 알고 싶은 것은 '무슨 과목을
+     * 몇 시까지'이지 회차 전체가 아니다.
+     */
     static void show(Context c) {
         Clock k = clock(c);
         NotificationManager nm = c.getSystemService(NotificationManager.class);
@@ -144,33 +163,61 @@ final class Timing {
 
         long now = System.currentTimeMillis();
         long left = k.left(now);
-        String label = name(c);
+        boolean over = left < 0;
+        String subject = sub(c), paper = name(c);
+        String title = !subject.isEmpty() ? subject
+                     : !paper.isEmpty() ? paper : "시험 시간";
+        long mins = k.limit / 60000;
 
         Notification.Builder b = Build.VERSION.SDK_INT >= 26
                 ? new Notification.Builder(c, CHANNEL) : new Notification.Builder(c);
         b.setSmallIcon(R.drawable.ic_timer)
-                .setContentTitle(label.isEmpty() ? "시험 시간" : label)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setShowWhen(false)
                 .setContentIntent(Widgets.open(c, null, 0x71));
+        /* 회차 이름은 펼쳤을 때만. 접힌 줄에서는 과목과 끝나는 시각이 이긴다. */
+        if (!paper.isEmpty() && !paper.equals(title)) b.setSubText(paper);
 
         if (k.paused()) {
-            b.setContentText("멈춤 · " + Clock.face(left) + " 남음");
+            b.setContentTitle("멈춤 · " + title);
+            b.setContentText(Clock.face(left) + " 남음 · 이어서 누르면 계속됩니다");
             b.addAction(act(c, "resume", "이어서"));
         } else {
             /* 끝나는 시각을 건네고 세는 일은 시스템에 맡긴다. 우리가 잠들어도
                숫자가 흐르고, 잠금화면처럼 우리가 손댈 수 없는 자리에서도 흐른다. */
             b.setUsesChronometer(true).setWhen(now + left).setShowWhen(true);
-            if (Build.VERSION.SDK_INT >= 24) b.setChronometerCountDown(left > 0);
-            b.setContentText(left >= 0
-                    ? (k.limit / 60000) + "분 중 남은 시간"
-                    : (k.limit / 60000) + "분을 넘겼습니다");
-            b.addAction(act(c, "pause", "일시정지"));
+            if (Build.VERSION.SDK_INT >= 24) b.setChronometerCountDown(!over);
+            b.setContentTitle(over ? "시간이 다 됐습니다 · " + title : title);
+            b.setContentText(over
+                    ? mins + "분 · " + Clock.face(left).substring(1) + " 넘겼습니다"
+                    : mins + "분 · " + at(c, now + left) + "에 끝납니다");
+            /* 끝난 시험을 멈출 일은 없다 — 그때는 '이어서/일시정지'가 사라진다. */
+            if (!over) b.addAction(act(c, "pause", "일시정지"));
         }
-        b.addAction(act(c, "plus", "10분 추가"));
+        b.addAction(act(c, "plus", "10분 더"));
         b.addAction(act(c, "stop", "끝내기"));
-        b.setProgress(1000, Math.round(k.ratio(now) * 1000), false);
+
+        int done = Math.round(k.ratio(now) * 1000);
+        if (Build.VERSION.SDK_INT >= 36) {
+            /* 실시간 정보로 올라가려면 정해진 몇 갈래 가운데 하나여야 한다.
+               ProgressStyle 이 그 가운데 우리 것에 맞는다 — 흘러가는 일 하나. */
+            b.setStyle(new Notification.ProgressStyle()
+                    .setProgressIndeterminate(false)
+                    .addProgressSegment(new Notification.ProgressStyle.Segment(1000))
+                    .setProgress(done));
+            /* 상태 표시줄의 시계 옆에 붙는 손톱만 한 글 */
+            b.setShortCriticalText(Clock.brief(left));
+            /* 승격은 '청하는' 것이다. 안 받아 주면 보통 알림으로 그대로 뜨므로
+               갈래를 둘로 만들지 않는다. 값을 넣는 창구(setRequestPromotedOngoing)는
+               API 36.1 이라 여기서는 열쇠로 넣는다 — 36 에서도 그렇게 하라고
+               문서가 이른다. */
+            Bundle x = new Bundle();
+            x.putBoolean("android.requestPromotedOngoing", true);
+            b.addExtras(x);
+        } else {
+            b.setProgress(1000, done, false);
+        }
 
         try {
             nm.notify(NOTE_ID, b.build());
@@ -179,6 +226,12 @@ final class Timing {
                뿐 재는 것은 그대로다 — 뷰어의 칩과 띄운 창의 바가 남아 있다. */
             Log.w(TAG, "알림을 띄우지 못했습니다", e);
         }
+    }
+
+    /** 끝나는 시각. 12시간제냐 24시간제냐는 기기 설정을 따른다. */
+    private static String at(Context c, long when) {
+        return android.text.format.DateFormat.getTimeFormat(c)
+                .format(new java.util.Date(when));
     }
 
     private static Notification.Action act(Context c, String what, String label) {

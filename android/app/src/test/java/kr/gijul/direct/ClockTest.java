@@ -123,4 +123,33 @@ public class ClockTest {
         assertEquals(0, c.spent(T0 + 90 * M));
         assertEquals(0f, c.ratio(T0 + 90 * M), 0.001f);
     }
+
+    // ── 상태 표시줄의 손톱만 한 글 ─────────────────────────────────────
+
+    /**
+     * 자리가 좁아 한 눈금만 담는다. 남은 것이 많을수록 성기게 적고,
+     * 1분이 남았을 때만 초로 바뀐다.
+     */
+    @Test public void 짧은_글은_눈금이_바뀐다() {
+        assertEquals("1:38", Clock.brief(98 * 60_000L));          // 1시간 38분
+        assertEquals("2:00", Clock.brief(120 * 60_000L));
+        assertEquals("59분", Clock.brief(59 * 60_000L));
+        assertEquals("1분", Clock.brief(60_000L));
+        assertEquals("59초", Clock.brief(59_000L));
+        assertEquals("0초", Clock.brief(0L));
+    }
+
+    /** 넘긴 것은 올림이다 — 1초를 넘겨도 '+1분'이라야 넘긴 것이 보인다 */
+    @Test public void 넘기면_올려서_적는다() {
+        assertEquals("+1분", Clock.brief(-1_000L));
+        assertEquals("+1분", Clock.brief(-60_000L));
+        assertEquals("+2분", Clock.brief(-61_000L));
+        assertEquals("+14분", Clock.brief(-14 * 60_000L));
+    }
+
+    /** 시가 넘어갈 때 분이 두 자리로 채워져야 자릿수가 안 흔들린다 */
+    @Test public void 시_뒤의_분은_두_자리() {
+        assertEquals("1:05", Clock.brief((60 + 5) * 60_000L));
+        assertEquals("3:00", Clock.brief(180 * 60_000L));
+    }
 }
