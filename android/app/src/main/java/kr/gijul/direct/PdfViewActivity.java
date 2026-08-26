@@ -767,34 +767,47 @@ public class PdfViewActivity extends Activity {
         box.addView(popRow("10분 더", false, () -> { Timing.plus(this, 10); after(); }));
         box.addView(popRow("끝내기", true, this::finishTimer));
 
-        /* 실시간 정보로 안 올라가고 있으면 여기서만 말한다. 알림은 조용히
-           거절당하므로, 아무 데서도 말하지 않으면 그냥 안 되는 것으로 보인다. */
+        /* 잠금화면에 뜨는가. **올라가 있을 때도 한 줄 남긴다** — 안 뜨는데
+           아무 말도 없으면 사용자는 어디를 봐야 할지조차 모른다. 그리고 무슨
+           값을 보고 그렇게 판단했는지 그대로 내보인다. 짐작으로 주고받는 것보다
+           숫자 한 줄이 빠르다. */
+        View line2 = new View(this);
+        line2.setBackgroundColor(sheetRule());
+        box.addView(line2, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, Math.max(1, dp(1) / 2)));
+
         int live = Timing.live(this);
-        if (live != Timing.LIVE_ON) {
-            View line2 = new View(this);
-            line2.setBackgroundColor(sheetRule());
-            box.addView(line2, new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, Math.max(1, dp(1) / 2)));
-            final Intent go = Timing.liveSettings(this);
-            TextView why = new TextView(this);
-            why.setTextSize(10.5f);
-            why.setTextColor(sheetDim());
-            why.setPadding(dp(14), dp(9), dp(14), dp(9));
-            if (live == Timing.LIVE_OLD)
-                why.setText("잠금화면 표시는 안드로이드 16부터 됩니다");
-            else if (live == Timing.LIVE_MUTE)
-                why.setText("알림이 꺼져 있어 잠금화면에 안 뜹니다");
-            else {
-                why.setText(go != null ? "잠금화면에 띄우기 — 설정에서 켜기"
-                                       : "잠금화면 표시가 꺼져 있습니다");
-                why.setTextColor(0xFF8AC6EA);
-                if (go != null) why.setOnClickListener(v -> {
-                    if (timerPop != null) timerPop.dismiss();
-                    try { startActivity(go); } catch (Exception ignored) { }
-                });
-            }
-            box.addView(why);
+        final Intent go = Timing.liveSettings(this);
+        TextView why = new TextView(this);
+        why.setTextSize(10.5f);
+        why.setTextColor(sheetDim());
+        why.setPadding(dp(14), dp(9), dp(14), dp(3));
+        if (live == Timing.LIVE_ON) {
+            why.setText("잠금화면에 뜨고 있습니다");
+        } else if (live == Timing.LIVE_OLD) {
+            why.setText("잠금화면 표시는 안드로이드 16부터 됩니다");
+        } else if (live == Timing.LIVE_MUTE) {
+            why.setText("알림이 꺼져 있어 잠금화면에 안 뜹니다");
+        } else {
+            why.setText(go != null ? "잠금화면에 안 뜹니다 — 눌러서 설정 열기"
+                                   : "잠금화면에 안 뜹니다");
+            why.setTextColor(0xFF8AC6EA);
+            if (go != null) why.setOnClickListener(v -> {
+                if (timerPop != null) timerPop.dismiss();
+                try { startActivity(go); } catch (Exception ignored) { }
+            });
         }
+        box.addView(why);
+
+        /* 판단의 근거를 그대로. 작고 흐리게 두어 평소에는 눈에 안 띄되,
+           안 될 때 물어보면 바로 읽어 줄 수 있게 한다. */
+        TextView raw = new TextView(this);
+        raw.setText(Timing.liveWhy(this));
+        raw.setTextSize(9f);
+        raw.setTextColor(sheetDim());
+        raw.setAlpha(0.62f);
+        raw.setPadding(dp(14), 0, dp(14), dp(9));
+        box.addView(raw);
 
         box.measure(View.MeasureSpec.makeMeasureSpec(dp(220), View.MeasureSpec.AT_MOST),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));

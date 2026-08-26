@@ -37,7 +37,10 @@ final class Timing {
 
     private static final String TAG = "gijul.timing";
     private static final String PREF = "timing";
-    private static final String CHANNEL = "timer";
+    /* 등급을 올리느라 이름을 새로 냈다. 한 번 만든 채널의 등급은 코드로 못 바꾼다 —
+       옛 이름 그대로 두면 IMPORTANCE_LOW 가 영원히 남는다. 옛것은 지운다. */
+    private static final String CHANNEL = "timer.v2";
+    private static final String CHANNEL_OLD = "timer";
     private static final int NOTE_ID = 0xC10C;
 
     private static final String LIMIT = "limit", FROM = "from", PAUSED = "paused";
@@ -155,10 +158,20 @@ final class Timing {
         if (!k.on()) { nm.cancel(NOTE_ID); return; }
 
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL) == null) {
+            /* IMPORTANCE_LOW 였다. 그 등급은 <b>상태 표시줄에 아이콘이 아예 안
+               뜬다</b> — 승격은 본디 상태 표시줄과 잠금화면에 올리는 일이라,
+               올릴 자리가 없으면 조용히 안 된다.
+               DEFAULT 로 올리되 소리와 진동은 손으로 끈다. 독서실에서 풀다가
+               갑자기 울리면 곤란한 것은 그대로이므로, 등급만 올리고 소리는
+               안 낸다. */
             NotificationChannel ch = new NotificationChannel(
-                    CHANNEL, "시험 시간", NotificationManager.IMPORTANCE_LOW);
+                    CHANNEL, "시험 시간", NotificationManager.IMPORTANCE_DEFAULT);
             ch.setShowBadge(false);
+            ch.setSound(null, null);
+            ch.enableVibration(false);
+            ch.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
             nm.createNotificationChannel(ch);
+            try { nm.deleteNotificationChannel(CHANNEL_OLD); } catch (Exception ignored) { }
         }
 
         long now = System.currentTimeMillis();
@@ -253,6 +266,8 @@ final class Timing {
     static final int LIVE_MUTE = 3;
     /** 올라가 있다 */
     static final int LIVE_ON = 0;
+    /** 될 조건은 갖췄는데 실제로 안 올라갔다 — 기기 쪽 설정이 남았다 */
+    static final int LIVE_NO = 4;
 
     static int live(Context c) {
         if (Build.VERSION.SDK_INT < 36) return LIVE_OLD;
@@ -262,14 +277,42 @@ final class Timing {
         if (!nm.canPostPromotedNotifications()) return LIVE_OFF;
         /* 여기까지 왔으면 켜져 있다. 실제로 올라갔는지는 띄워 둔 알림에 붙은
            깃발이 말해 준다 — 못 찾으면 아직 안 띄운 것이므로 켜진 것으로 본다. */
+        /* 실제로 올라갔는지는 띄워 둔 알림에 붙은 깃발이 말해 준다.
+           <b>못 찾으면 '켜졌다'가 아니라 '모른다'이다.</b> 켜진 것으로 쳤더니
+           아무 말도 안 하게 되어, 안 되는데 안 된다는 말조차 없었다. */
         try {
             for (android.service.notification.StatusBarNotification sb : nm.getActiveNotifications()) {
                 if (sb.getId() != NOTE_ID) continue;
                 return (sb.getNotification().flags & Notification.FLAG_PROMOTED_ONGOING) != 0
-                        ? LIVE_ON : LIVE_OFF;
+                        ? LIVE_ON : LIVE_NO;
             }
         } catch (Exception ignored) { }
-        return LIVE_ON;
+        return LIVE_NO;
+    }
+
+    /** 무슨 값을 보고 그렇게 판단했는지 — 화면에 그대로 내보여 짐작을 없앤다 */
+    static String liveWhy(Context c) {
+        StringBuilder b = new StringBuilder("SDK ").append(Build.VERSION.SDK_INT);
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        if (nm == null) return b.append(" · 알림창구 없음").toString();
+        b.append(nm.areNotificationsEnabled() ? " · 알림 O" : " · 알림 X");
+        if (Build.VERSION.SDK_INT >= 36)
+            b.append(nm.canPostPromotedNotifications() ? " · 허용 O" : " · 허용 X");
+        if (Build.VERSION.SDK_INT >= 26) {
+            NotificationChannel ch = nm.getNotificationChannel(CHANNEL);
+            b.append(" · 등급 ").append(ch == null ? "?" : ch.getImportance());
+        }
+        boolean found = false, flag = false;
+        try {
+            for (android.service.notification.StatusBarNotification sb : nm.getActiveNotifications()) {
+                if (sb.getId() != NOTE_ID) continue;
+                found = true;
+                flag = Build.VERSION.SDK_INT >= 36
+                        && (sb.getNotification().flags & Notification.FLAG_PROMOTED_ONGOING) != 0;
+                break;
+            }
+        } catch (Exception ignored) { }
+        return b.append(found ? (flag ? " · 승격 O" : " · 승격 X") : " · 알림 못 찾음").toString();
     }
 
     /** 설정으로 보내는 길. 없으면 null. */
