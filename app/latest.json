@@ -1,8 +1,8 @@
 {
-  "versionCode": 80,
-  "versionName": "8.9",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v8.9/gijul-direct.apk",
-  "size": 2167979,
-  "sha256": "756e668e79bc95cad3239195f5ca181684883ddf3ce965c94430fd2a6ffd4439",
-  "notes": "시험 시간이 과목마다 제대로 뜹니다. 고를 것이 하나도 안 보이던 것도 고쳤습니다."
+  "versionCode": 81,
+  "versionName": "9.0",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.0/gijul-direct.apk",
+  "size": 2173323,
+  "sha256": "7c8cfd93bbf7f6e604e6fc7c481c4196493c41976d0fd59d882f0cca14a550e5",
+  "notes": "시험 시간 고르는 화면을 새로 그렸습니다. 잠금화면과 상태 표시줄에도 남은 시간이 뜹니다."
 }
