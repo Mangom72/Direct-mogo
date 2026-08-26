@@ -1,8 +1,8 @@
 {
-  "versionCode": 82,
-  "versionName": "9.1",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.1/gijul-direct.apk",
-  "size": 2174539,
-  "sha256": "30592bde7f0fe993f127c1b82c3d3b81ab658a2ebe80f966c49bafeb63bf5bfc",
-  "notes": "시작할 때 늘 묻습니다. 넓은 화면에서 시트가 알맞게 줄고, 잠금화면에 안 뜨는 까닭을 알려줍니다."
+  "versionCode": 83,
+  "versionName": "9.2",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.2/gijul-direct.apk",
+  "size": 2175759,
+  "sha256": "654461b0d6802c11488b55f860c4d7499be5dfb7cdf7f36e9c28ac3b13ffdb3f",
+  "notes": "잠금화면 표시를 고쳤습니다. 안 뜰 때는 왜 안 뜨는지 조작판이 알려줍니다."
 }
