@@ -1,8 +1,8 @@
 {
-  "versionCode": 84,
-  "versionName": "9.3",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.3/gijul-direct.apk",
-  "size": 2176275,
-  "sha256": "ec38dbc123a378b3a928b7a4989064e48db1acb641bf62a6604d83cab69f3853",
-  "notes": "잠금화면에 안 뜨는 까닭을 찾았습니다. 조작판에서 눌러 설정으로 갈 수 있습니다."
+  "versionCode": 85,
+  "versionName": "9.4",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.4/gijul-direct.apk",
+  "size": 2178591,
+  "sha256": "773b4b3d5a2e1aac3529d5f3f94c21847dbbf430cae315d8dbff64a66ab6c1af",
+  "notes": "처음 시간을 잴 때 잠금화면 표시를 한 번만 묻습니다. 알약에 초까지 흐릅니다."
 }
