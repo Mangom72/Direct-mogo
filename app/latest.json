@@ -1,8 +1,8 @@
 {
-  "versionCode": 85,
-  "versionName": "9.4",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.4/gijul-direct.apk",
-  "size": 2178591,
-  "sha256": "773b4b3d5a2e1aac3529d5f3f94c21847dbbf430cae315d8dbff64a66ab6c1af",
-  "notes": "처음 시간을 잴 때 잠금화면 표시를 한 번만 묻습니다. 알약에 초까지 흐릅니다."
+  "versionCode": 86,
+  "versionName": "9.5",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.5/gijul-direct.apk",
+  "size": 2180547,
+  "sha256": "fc6983077ebad14a2b7bd89709e592cd363676252e9bf021e19f657ea096b2c5",
+  "notes": "여러 기기가 같은 백업 파일을 쓰면 열 때마다 서로 합쳐집니다. 로그인은 없습니다."
 }
