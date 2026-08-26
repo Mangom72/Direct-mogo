@@ -159,6 +159,9 @@ public class MainActivity extends Activity {
         super.onResume();
         if (web != null) web.evaluateJavascript(
                 "(function(){try{if(window.takeTimings&&takeTimings())render()}catch(e){}})()", null);
+        /* 다른 기기에서 찍은 것이 있으면 여기서 들어온다. 파일 하나를 읽는
+           일이라 값이 싸고, 돌아올 때마다 보면 '열면 최신'이 성립한다. */
+        io.execute(this::mergeAuto);
     }
 
     @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
@@ -667,6 +670,35 @@ public class MainActivity extends Activity {
             });
         }
 
+        /**
+         * <b>이미 있는 백업 파일에 잇는다.</b> 두 번째 기기가 쓰는 길이다 —
+         * 첫 기기가 드라이브에 만들어 둔 그 파일을 그대로 가리키면, 그 뒤로는
+         * 양쪽이 같은 파일을 읽고 쓰며 저절로 합쳐진다.
+         *
+         * 새로 만들기(pickAutoBackup)와 갈래를 나눈 것은 창구 이름이 곧 뜻이기
+         * 때문이다. ACTION_CREATE_DOCUMENT 로 이미 있는 이름을 고르면 제공자에
+         * 따라 '기출직행-백업(1).json' 이 생겨 두 기기가 딴 파일을 보게 된다.
+         */
+        @JavascriptInterface
+        public void pickAutoBackupAt() {
+            runOnUiThread(() -> {
+                try {
+                    Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    i.addCategory(Intent.CATEGORY_OPENABLE);
+                    i.setType("*/*");
+                    i.putExtra(Intent.EXTRA_MIME_TYPES,
+                            new String[]{"application/json", "text/plain", "*/*"});
+                    i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                    startActivityForResult(i, REQ_AUTO_OPEN);
+                } catch (Exception e) {
+                    Log.w(TAG, "이을 파일을 고르지 못했습니다", e);
+                    autoState();
+                }
+            });
+        }
+
         /** 지금 어디에 쓰고 있는지. 없으면 빈 이름. */
         @JavascriptInterface
         public String autoBackup() { return autoJson(); }
@@ -876,6 +908,11 @@ public class MainActivity extends Activity {
     private static final String AUTO_URI = "auto.uri";
     private static final String AUTO_NAME = "auto.name";
     private static final String AUTO_FAIL = "auto.fail";
+    /** 마지막으로 읽거나 쓴 그 파일의 수정 시각. 이보다 새것이면 남이 고친 것이다. */
+    private static final String AUTO_SEEN = "auto.seen";
+    private static final int REQ_AUTO_OPEN = 4103;
+    /** 수정 시각을 안 내주는 제공자도 있다. 그때는 실행마다 한 번만 합친다. */
+    private boolean mergedThisRun = false;
 
     private android.content.SharedPreferences prefs() {
         return getSharedPreferences("app", MODE_PRIVATE);
@@ -894,14 +931,87 @@ public class MainActivity extends Activity {
      * 없는 것보다 나쁘다. 되고 있다고 믿게 만들기 때문이다. 그래서 어긋난 것을
      * 적어 두고 화면이 그것을 말한다.
      */
+    // ── 여러 기기 합치기 ────────────────────────────────────────────────
+    //
+    // 자동 백업이 쓰는 그 <b>한 파일</b>을 기기마다 같이 가리키면 그것이 곧
+    // 동기화다. 드라이브 앱이 파일 선택기에 제 폴더를 내주므로(DocumentsProvider)
+    // 고르는 자리를 드라이브 안으로 두면 파일은 드라이브에 있다.
+    //
+    // <b>로그인도 서버도 심사도 없다.</b> 구글에 매이지도 않는다 — 선택기에
+    // 나오는 곳이면 원드라이브든 삼성 클라우드든 똑같이 된다.
+    //
+    // 실시간이 아니라 '열 때 합치기'다. 시험 기록에는 그 정도면 넉넉하다.
+
+    /** 그 파일이 마지막으로 바뀐 때. 모르면 0. */
+    private long autoStamp() {
+        Uri u = autoUri();
+        if (u == null) return 0;
+        try (android.database.Cursor c = getContentResolver().query(u,
+                new String[]{android.provider.DocumentsContract.Document.COLUMN_LAST_MODIFIED},
+                null, null, null)) {
+            if (c != null && c.moveToFirst() && !c.isNull(0)) return c.getLong(0);
+        } catch (Exception ignored) { }
+        return 0;
+    }
+
+    /** 그 파일의 내용. 못 읽거나 너무 크면 null. */
+    private String autoRead() {
+        Uri u = autoUri();
+        if (u == null) return null;
+        try (java.io.InputStream in = getContentResolver().openInputStream(u)) {
+            if (in == null) return null;
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n, total = 0;
+            while ((n = in.read(buf)) > 0) {
+                total += n;
+                if (total > MAX_BACKUP) return null;
+                out.write(buf, 0, n);
+            }
+            return out.toString("UTF-8");
+        } catch (Exception e) {
+            Log.w(TAG, "자동 백업을 읽지 못했습니다", e);
+            return null;
+        }
+    }
+
+    /**
+     * 남이 고쳤으면 읽어서 페이지에 넘긴다. 합치는 일은 페이지가 한다 —
+     * 표시와 내 과목과 잰 시간을 쥐고 있는 쪽이 거기이고, 손으로 가져올 때
+     * 쓰는 길과 같은 길을 쓰는 편이 갈래를 안 늘린다.
+     */
+    private void mergeAuto() {
+        if (autoUri() == null) return;
+        long stamp = autoStamp();
+        long seen = prefs().getLong(AUTO_SEEN, 0);
+        /* 수정 시각을 안 내주는 제공자가 있다. 그때는 실행마다 한 번만 —
+           매번 합치면 페이지가 다시 쓰고 그것이 또 새것으로 보여 되돈다. */
+        if (stamp == 0 ? mergedThisRun : stamp <= seen) return;
+        String json = autoRead();
+        if (json == null || json.isEmpty()) return;
+        mergedThisRun = true;
+        if (stamp > 0) prefs().edit().putLong(AUTO_SEEN, stamp).apply();
+        final String js = "window.gijulAutoMerge && window.gijulAutoMerge("
+                + JSONObject.quote(json) + ")";
+        runOnUiThread(() -> web.evaluateJavascript(js, null));
+    }
+
     private void writeAuto() {
         Uri u = autoUri();
         if (u == null) return;
+        /* 쓰기 전에 남이 고쳤는지 본다. 그대로 덮으면 저쪽 기기에서 찍은 것이
+           사라진다 — 먼저 합치고, 합쳐진 것을 페이지가 다시 넘겨 주면 그때 쓴다. */
+        long stamp = autoStamp();
+        if (stamp > 0 && stamp > prefs().getLong(AUTO_SEEN, 0)) { mergeAuto(); return; }
+
         String json = Solved.backup(this);
         if (json == null) return;
         try (OutputStream os = getContentResolver().openOutputStream(u, "wt")) {
             if (os == null) throw new Exception("열지 못했습니다");
             os.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            /* 방금 쓴 것이 '남이 고친 것'으로 보이면 안 된다 */
+            long after = autoStamp();
+            prefs().edit().putLong(AUTO_SEEN, after > 0 ? after : System.currentTimeMillis()).apply();
             if (prefs().getString(AUTO_FAIL, null) != null) {
                 prefs().edit().remove(AUTO_FAIL).apply();
                 autoState();
@@ -947,6 +1057,25 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
+        if (req == REQ_AUTO_OPEN) {
+            if (res != RESULT_OK || data == null || data.getData() == null) return;
+            Uri picked = data.getData();
+            try {
+                getContentResolver().takePersistableUriPermission(picked,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            } catch (Exception e) {
+                Log.w(TAG, "권한을 붙들지 못했습니다", e);
+                prefs().edit().putString(AUTO_FAIL, "이 자리는 다음 실행에 다시 물어봅니다").apply();
+            }
+            prefs().edit().putString(AUTO_URI, picked.toString())
+                    .putString(AUTO_NAME, autoName(picked))
+                    .remove(AUTO_SEEN).apply();       /* 처음 잇는 것이니 통째로 읽는다 */
+            mergedThisRun = false;
+            autoState();
+            io.execute(this::mergeAuto);
+            return;
+        }
         if (req == REQ_AUTO) {
             Uri picked = (res == RESULT_OK && data != null) ? data.getData() : null;
             if (picked == null) { autoState(); return; }

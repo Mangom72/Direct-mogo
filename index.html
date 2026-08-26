@@ -97,7 +97,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-d40xLGiKRNhclMS+R1YqUyrklTX/zslV5N/CJY7nvEc=';
+  script-src 'self' 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-QVXYANO1QBlNkthqxZL5tFdGuqNdNKkiuXoiInfXWjY=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -2815,8 +2815,13 @@ function applyBackup(b, mode){
     favs.push(f); addedSub++;
   }
   for(const k in b.solved){
-    if(k in SOLVED) continue;
-    SOLVED[k] = b.solved[k]; addedMark++;
+    const mine = SOLVED[k], theirs = b.solved[k];
+    if(!mine){ SOLVED[k] = theirs; addedMark++; continue; }
+    /* 겹치면 **더 이른 날**이 이긴다. 여러 기기를 합치는 자리라, 같은 회차가
+       양쪽에 있다는 것은 한쪽에서 먼저 풀고 다른 쪽에서 다시 찍었다는 뜻이다.
+       참인 것은 처음 푼 날이다. 예전에는 여기 것이 무조건 이겨서, 합칠 때마다
+       나중에 찍은 날로 조용히 밀렸다. */
+    if(theirs && theirs < mine) SOLVED[k] = theirs;
   }
   for(const k in (b.times || {})){
     if(k in TIMES) continue;
@@ -2909,6 +2914,25 @@ addEventListener("visibilitychange", ()=>{
 window.gijulBackupPicked = text => { if(text) takeBackup(text); };
 /* 자동 백업의 상태가 바뀌면 앱이 알려준다 — 자리를 골랐거나, 그만뒀거나,
    쓰다가 막혔거나. 시트가 열려 있으면 그 자리에서 다시 그린다. */
+/* 자동 백업 파일이 남의 손에 바뀌었을 때 앱이 그것을 읽어 여기로 넘긴다.
+   합치는 일은 여기서 한다 — 표시와 내 과목과 잰 시간을 쥔 쪽이 여기이고,
+   손으로 가져올 때와 같은 길을 쓰는 편이 갈래를 안 늘린다.
+
+   합친 뒤 tellSolved()가 다시 앱으로 넘어가고, 앱은 그것을 그 파일에 쓴다.
+   그래서 두 기기가 번갈아 열어도 양쪽이 같아진다 — 합치기는 더하기라
+   저절로 수렴한다. */
+window.gijulAutoMerge = (text)=>{
+  let b;
+  try{ b = readBackup(text); }catch(e){ return; }
+  const got = applyBackup(b, "merge");
+  if(!got.addedMark && !got.addedSub) return;   /* 달라진 게 없으면 조용히 */
+  const bits = [];
+  if(got.addedMark) bits.push(`표시 ${got.addedMark}개`);
+  if(got.addedSub) bits.push(`내 과목 ${got.addedSub}개`);
+  showNotice(`다른 기기에서 ${bits.join(" · ")}를 가져왔습니다.`,
+    "", null, null, { key:"sync" });
+};
+
 window.gijulAutoBackup = () => { if(!sheet.hidden && sheetNm.textContent === "백업") openBackup(null); };
 
 function openBackup(opener){
@@ -2952,6 +2976,17 @@ function openBackup(opener){
       try{ st.on ? NATIVE.stopAutoBackup() : NATIVE.pickAutoBackup(); }catch(e){}
     });
     if(st.error) go.dataset.state = "confirm";
+
+    /* 두 번째 기기가 쓰는 길. 첫 기기가 드라이브에 만들어 둔 그 파일을 그대로
+       가리키면, 그 뒤로는 양쪽이 같은 파일을 읽고 쓰며 저절로 합쳐진다 —
+       로그인도 서버도 없이. 이미 잇고 있으면 낼 까닭이 없다. */
+    if(!st.on && NATIVE.pickAutoBackupAt){
+      row("여러 기기 합치기",
+        "첫 기기가 만들어 둔 백업 파일을 가리키면, 열 때마다 서로 합쳐집니다",
+        "있는 파일 잇기", ()=>{
+          try{ NATIVE.pickAutoBackupAt(); }catch(e){}
+        });
+    }
   }
 
   row("내보내기", `내 과목 ${favs.length}개 · 푼 회차 ${marks}개`, "파일로", exportBackup);

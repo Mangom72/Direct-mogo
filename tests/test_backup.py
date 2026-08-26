@@ -247,6 +247,8 @@ with sync_playwright() as pw:
                                 window.gijulAutoBackup(window.__auto); },
         stopAutoBackup: () => { window.__auto = {on:false, name:"", error:""};
                                 window.gijulAutoBackup(window.__auto); },
+        pickAutoBackupAt: () => { window.__auto = {on:true, name:"드라이브/기출직행-백업.json", error:""};
+                                  window.gijulAutoBackup(window.__auto); },
       };""")
     pg3 = ctx3.new_page()
     e3 = []
@@ -272,6 +274,51 @@ with sync_playwright() as pw:
     rows3 = pg3.eval_on_selector_all(".sfile .k", "e=>e.map(x=>x.textContent)")
     print("    시트 줄:", rows3)
     ck(rows3 and rows3[0] == "자동 백업", f"자동 백업 줄이 맨 위에 없습니다: {rows3}")
+
+    # ── 여러 기기 합치기 ──────────────────────────────────────────────
+    # 두 번째 기기는 첫 기기가 만들어 둔 파일을 그대로 가리킨다. 창구가 있을
+    # 때만 그 줄을 내야 한다 — 옛 앱에는 없는 창구라 부르면 통째로 실패한다.
+    ck("여러 기기 합치기" in rows3, f"합치기 줄이 없습니다: {rows3}")
+    # 이미 잇고 있으면 낼 까닭이 없다. 줄 이름으로 찾는다 — 자리로 세면
+    # 줄이 하나 늘 때마다 조용히 딴 단추를 누르게 된다.
+    pg3.evaluate("""()=>{
+      for(const el of document.querySelectorAll('#sheetList .sfile'))
+        if(el.querySelector('.k').textContent === '여러 기기 합치기')
+          return el.querySelector('.go').click();
+    }""")
+    pg3.wait_for_timeout(300)
+    rows3b = pg3.eval_on_selector_all(".sfile .k", "e=>e.map(x=>x.textContent)")
+    print("    이은 뒤 줄:", rows3b)
+    ck("여러 기기 합치기" not in rows3b, f"이은 뒤에도 합치기 줄이 남습니다: {rows3b}")
+
+    # 앱이 남의 기록을 넘겨 주면 합쳐지고, 합쳐진 것이 다시 앱으로 나가야 한다.
+    merged = pg3.evaluate("""()=>{
+      const key = Object.keys(SOLVED)[0] || "D300/158/20241114/수능";
+      SOLVED[key] = "20250601";                       // 여기서는 6월에 찍었다
+      const other = { app:"기출 직행", v:1, subs:[], times:{},
+        solved: { [key]: "20250301",                   // 저쪽은 3월 — 이쪽이 참이다
+                  "D300/158/20240613/6월 모평(평가원)": "20240613" } };
+      let sent = null;
+      const old = GijulNative.setSolved;
+      GijulNative.setSolved = j => { sent = JSON.parse(j); };
+      window.gijulAutoMerge(JSON.stringify(other));
+      GijulNative.setSolved = old;
+      return { kept: SOLVED[key], added: "D300/158/20240613/6월 모평(평가원)" in SOLVED,
+               toldApp: !!sent };
+    }""")
+    print("    겹치면 더 이른 날:", merged["kept"], "| 새것 들어옴:", merged["added"],
+          "| 앱에 다시 알림:", merged["toldApp"])
+    ck(merged["kept"] == "20250301", f"더 이른 날이 안 남았습니다: {merged['kept']}")
+    ck(merged["added"], "다른 기기의 표시가 안 들어왔습니다")
+    ck(merged["toldApp"], "합친 것을 앱에 다시 알리지 않았습니다")
+    note = pg3.text_content("#noticeText") or ""
+    print("    알림:", note[:44])
+    ck("다른 기기" in note, f"합쳤다는 말이 없습니다: {note}")
+
+    # 뒤에 오는 시험이 '아직 안 고른 상태'에서 시작하므로 되돌려 놓는다
+    pg3.evaluate("""()=>{ window.__auto = { on:false, name:"", error:"" };
+                          window.gijulAutoBackup(window.__auto); }""")
+    pg3.wait_for_timeout(250)
 
     pg3.eval_on_selector_all(".sfile .go", "e=>e[0].click()")     # 자리 고르기
     pg3.wait_for_timeout(300)
