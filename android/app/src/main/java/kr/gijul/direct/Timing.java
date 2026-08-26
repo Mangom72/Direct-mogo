@@ -315,6 +315,27 @@ final class Timing {
         return b.append(found ? (flag ? " · 승격 O" : " · 승격 X") : " · 알림 못 찾음").toString();
     }
 
+    /**
+     * 안드로이드는 올렸는데 <b>제조사 껍데기가 안 받아 주는</b> 자리.
+     *
+     * <p>One UI 8 은 남의 앱의 라이브 알림을 <b>개발자 옵션 뒤에</b> 두었다 —
+     * 'Live notifications for all apps'. 그것이 꺼져 있으면 프레임워크가
+     * {@code FLAG_PROMOTED_ONGOING} 을 붙여도 나우바에는 삼성 제 앱만 올라간다.
+     *
+     * <p><b>그 스위치의 상태는 앱에서 읽을 수 없다.</b> 그러니 판단하지 않고,
+     * 승격은 됐는데 안 보인다고 할 때 갈 길만 열어 둔다.
+     */
+    static boolean oneUi() {
+        String m = Build.MANUFACTURER;
+        return m != null && m.equalsIgnoreCase("samsung");
+    }
+
+    /** 개발자 옵션으로 보내는 길. 없으면 null. */
+    static Intent devSettings(Context c) {
+        Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
+        return i.resolveActivity(c.getPackageManager()) != null ? i : null;
+    }
+
     /** 설정으로 보내는 길. 없으면 null. */
     static Intent liveSettings(Context c) {
         if (Build.VERSION.SDK_INT < 36) return null;

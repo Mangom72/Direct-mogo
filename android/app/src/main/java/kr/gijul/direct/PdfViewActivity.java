@@ -783,7 +783,24 @@ public class PdfViewActivity extends Activity {
         why.setTextColor(sheetDim());
         why.setPadding(dp(14), dp(9), dp(14), dp(3));
         if (live == Timing.LIVE_ON) {
-            why.setText("잠금화면에 뜨고 있습니다");
+            /* 안드로이드는 올렸다. 그런데 One UI 는 남의 앱의 라이브 알림을
+               개발자 옵션 뒤에 두어서, 그것이 꺼져 있으면 나우바에 안 뜬다 —
+               그 스위치는 앱에서 읽을 수 없으므로 단정하지 않고 길만 연다. */
+            final Intent dev = Timing.oneUi() ? Timing.devSettings(this) : null;
+            if (dev == null) {
+                why.setText("잠금화면에 뜨고 있습니다");
+            } else {
+                why.setText("올렸습니다 — 나우바에 안 보이면 눌러 주십시오");
+                why.setTextColor(0xFF8AC6EA);
+                why.setOnClickListener(v -> {
+                    if (timerPop != null) timerPop.dismiss();
+                    android.widget.Toast.makeText(this,
+                            "개발자 옵션에서 '모든 앱의 라이브 알림'"
+                          + "(Live notifications for all apps)을 켜 주십시오",
+                            android.widget.Toast.LENGTH_LONG).show();
+                    try { startActivity(dev); } catch (Exception ignored) { }
+                });
+            }
         } else if (live == Timing.LIVE_OLD) {
             why.setText("잠금화면 표시는 안드로이드 16부터 됩니다");
         } else if (live == Timing.LIVE_MUTE) {
