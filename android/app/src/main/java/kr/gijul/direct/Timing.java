@@ -220,7 +220,13 @@ final class Timing {
         }
 
         try {
-            nm.notify(NOTE_ID, b.build());
+            Notification n = b.build();
+            /* 승격될 만한 꼴인지 시스템에게 직접 물어본다. 우리가 조건을 어겼으면
+               (커스텀 뷰·colorized·IMPORTANCE_MIN 따위) 여기서 거짓이 나온다 —
+               조용히 보통 알림으로 떨어지는 것과 구별이 안 되므로 남겨 둔다. */
+            if (Build.VERSION.SDK_INT >= 36 && !n.hasPromotableCharacteristics())
+                Log.w(TAG, "실시간 정보로 올릴 수 없는 꼴입니다");
+            nm.notify(NOTE_ID, n);
         } catch (Exception e) {
             /* 안드로이드 13+ 에서 알림 권한이 없으면 여기서 걸린다. 알림만 없을
                뿐 재는 것은 그대로다 — 뷰어의 칩과 띄운 창의 바가 남아 있다. */
@@ -232,6 +238,46 @@ final class Timing {
     private static String at(Context c, long when) {
         return android.text.format.DateFormat.getTimeFormat(c)
                 .format(new java.util.Date(when));
+    }
+
+    // ── 실시간 정보가 왜 안 뜨는가 ───────────────────────────────────────
+    //
+    // 승격은 '청하는' 것이라 조용히 거절당한다. 그러면 사용자에게는 그냥 안 되는
+    // 것으로 보이고, 우리는 무엇 때문인지 알 길이 없다. 그래서 물어보는 창구를 둔다.
+
+    /** 기기가 안드로이드 16 미만이라 창구 자체가 없다 */
+    static final int LIVE_OLD = 1;
+    /** 될 수 있는데 꺼져 있다 — 설정에서 켤 수 있다 */
+    static final int LIVE_OFF = 2;
+    /** 알림 자체가 안 뜬다(알림 권한 없음) */
+    static final int LIVE_MUTE = 3;
+    /** 올라가 있다 */
+    static final int LIVE_ON = 0;
+
+    static int live(Context c) {
+        if (Build.VERSION.SDK_INT < 36) return LIVE_OLD;
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        if (nm == null) return LIVE_MUTE;
+        if (!nm.areNotificationsEnabled()) return LIVE_MUTE;
+        if (!nm.canPostPromotedNotifications()) return LIVE_OFF;
+        /* 여기까지 왔으면 켜져 있다. 실제로 올라갔는지는 띄워 둔 알림에 붙은
+           깃발이 말해 준다 — 못 찾으면 아직 안 띄운 것이므로 켜진 것으로 본다. */
+        try {
+            for (android.service.notification.StatusBarNotification sb : nm.getActiveNotifications()) {
+                if (sb.getId() != NOTE_ID) continue;
+                return (sb.getNotification().flags & Notification.FLAG_PROMOTED_ONGOING) != 0
+                        ? LIVE_ON : LIVE_OFF;
+            }
+        } catch (Exception ignored) { }
+        return LIVE_ON;
+    }
+
+    /** 설정으로 보내는 길. 없으면 null. */
+    static Intent liveSettings(Context c) {
+        if (Build.VERSION.SDK_INT < 36) return null;
+        Intent i = new Intent("android.settings.MANAGE_APP_PROMOTED_NOTIFICATIONS")
+                .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, c.getPackageName());
+        return i.resolveActivity(c.getPackageManager()) != null ? i : null;
     }
 
     private static Notification.Action act(Context c, String what, String label) {

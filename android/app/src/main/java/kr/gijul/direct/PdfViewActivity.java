@@ -455,15 +455,19 @@ public class PdfViewActivity extends Activity {
      *   <li>재고 있으면 — 아이콘 밑에 조작판을 편다(멈춤·10분 더·끝내기).
      *       예전에는 누를 때마다 멈췄다 이었는데, 실수로 눌러 시험이 멈춰 있는
      *       것을 한참 뒤에 알아채는 것이 가장 나쁜 결말이라 한 손짓을 더 뒀다.
-     *   <li>한 번 골라 둔 과목이면 — 묻지 않고 그대로 시작한다.
-     *   <li>처음이면 — 시트를 연다.
+     *   <li>아니면 — 시트를 연다. <b>시작은 늘 묻는다.</b>
      * </ul>
-     * 길게 누르면 어느 때든 시트가 열린다(시간을 바꾸고 싶을 때).
+     *
+     * 한때 한 번 고른 과목은 묻지 않고 바로 시작했다. 같은 과목을 여러 회차 푸는
+     * 동안 편하기는 한데, <b>시간을 재려던 게 아닌데 눌렀을 때 빠져나갈 데가
+     * 없었다.</b> 시험 시간을 재는 일은 하루에 몇 번 있는 일이지 초를 다투는 일이
+     * 아니라, 한 번 묻는 값이 잘못 시작해 지우는 값보다 싸다.
+     *
+     * 지난번에 고른 값은 시트에 알약으로 함께 뜬다 — 묻되 한 번에 끝난다.
      */
     private void tapTimer() {
         if (Timing.mine(this, paperKey)) { openTimerPop(); return; }
-        int m = remembered();
-        if (m > 0) startTimer(m); else askTime();
+        askTime();
     }
 
     /* 한 번 고른 것은 그 과목에 기억된다. 다음부터는 누르는 즉시 시작한다 —
@@ -531,9 +535,10 @@ public class PdfViewActivity extends Activity {
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(18), dp(18), dp(18), dp(16));
+
         GradientDrawable g = new GradientDrawable();
         g.setColor(sheetBg());
-        g.setCornerRadii(new float[]{dp(18), dp(18), dp(18), dp(18), 0, 0, 0, 0});
+        g.setCornerRadius(dp(18));
         box.setBackground(g);
         /* 시트를 눌렀다고 닫히면 안 된다 — 덮개만 닫는다 */
         box.setClickable(true);
@@ -550,9 +555,20 @@ public class PdfViewActivity extends Activity {
         scrim.setOnClickListener(v -> closeSheet());
         wrap.addView(scrim, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-        wrap.addView(box, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,
-                Gravity.BOTTOM));
+        /* 폭을 못박는다. 태블릿 가로에서는 화면이 1,200dp를 넘는데 시트를 통째로
+           늘리면 '100분으로 시작' 한 줄이 팔 길이만큼 긴 막대가 된다 — 누를 수는
+           있어도 무엇을 누르는 것인지 한눈에 안 잡히고, 엄지에서도 멀어진다.
+           좁은 화면에서는 그대로 꽉 차고, 넓어지면 가운데로 모인다. */
+        int w = getResources().getDisplayMetrics().widthPixels;
+        int cap = dp(440);
+        FrameLayout.LayoutParams blp = new FrameLayout.LayoutParams(
+                w > cap ? cap : ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL);
+        /* 넓은 화면에서는 바닥에서 조금 띄운다 — 가운데로 모이면 아래 모서리가
+           보이는데, 붙어 있으면 잘린 것처럼 보인다. */
+        if (w > cap) { blp.bottomMargin = dp(14); blp.leftMargin = blp.rightMargin = dp(14); }
+        wrap.addView(box, blp);
         host.addView(wrap, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         sheetHost = wrap;
@@ -619,6 +635,20 @@ public class PdfViewActivity extends Activity {
             row.addView(p, lp);
         }
         if (cs.length > 0) box.addView(row);
+
+        /* 늘 묻되 한 번에 끝나게. 지난번 값이 아는 시간과 다르면 그것도 알약으로
+           낸다 — 옛 회차처럼 시험 시간이 지금과 다른 경우가 여기 걸린다. */
+        int last = remembered();
+        boolean known = false;
+        for (Exam.Choice c2 : cs) if (c2.minutes == last) known = true;
+        if (last > 0 && !known) {
+            TextView again = bigPill("지난번 " + last + "분", cs.length == 0,
+                    v -> startTimer(last));
+            LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            alp.topMargin = cs.length > 0 ? dp(9) : dp(16);
+            box.addView(again, alp);
+        }
 
         TextView own = bigPill("직접 정하기", false, v -> customTime());
         LinearLayout.LayoutParams olp = new LinearLayout.LayoutParams(
@@ -736,6 +766,35 @@ public class PdfViewActivity extends Activity {
         }
         box.addView(popRow("10분 더", false, () -> { Timing.plus(this, 10); after(); }));
         box.addView(popRow("끝내기", true, this::finishTimer));
+
+        /* 실시간 정보로 안 올라가고 있으면 여기서만 말한다. 알림은 조용히
+           거절당하므로, 아무 데서도 말하지 않으면 그냥 안 되는 것으로 보인다. */
+        int live = Timing.live(this);
+        if (live != Timing.LIVE_ON) {
+            View line2 = new View(this);
+            line2.setBackgroundColor(sheetRule());
+            box.addView(line2, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, Math.max(1, dp(1) / 2)));
+            final Intent go = Timing.liveSettings(this);
+            TextView why = new TextView(this);
+            why.setTextSize(10.5f);
+            why.setTextColor(sheetDim());
+            why.setPadding(dp(14), dp(9), dp(14), dp(9));
+            if (live == Timing.LIVE_OLD)
+                why.setText("잠금화면 표시는 안드로이드 16부터 됩니다");
+            else if (live == Timing.LIVE_MUTE)
+                why.setText("알림이 꺼져 있어 잠금화면에 안 뜹니다");
+            else {
+                why.setText(go != null ? "잠금화면에 띄우기 — 설정에서 켜기"
+                                       : "잠금화면 표시가 꺼져 있습니다");
+                why.setTextColor(0xFF8AC6EA);
+                if (go != null) why.setOnClickListener(v -> {
+                    if (timerPop != null) timerPop.dismiss();
+                    try { startActivity(go); } catch (Exception ignored) { }
+                });
+            }
+            box.addView(why);
+        }
 
         box.measure(View.MeasureSpec.makeMeasureSpec(dp(220), View.MeasureSpec.AT_MOST),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
