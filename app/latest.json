@@ -1,8 +1,8 @@
 {
-  "versionCode": 83,
-  "versionName": "9.2",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.2/gijul-direct.apk",
-  "size": 2175759,
-  "sha256": "654461b0d6802c11488b55f860c4d7499be5dfb7cdf7f36e9c28ac3b13ffdb3f",
-  "notes": "잠금화면 표시를 고쳤습니다. 안 뜰 때는 왜 안 뜨는지 조작판이 알려줍니다."
+  "versionCode": 84,
+  "versionName": "9.3",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.3/gijul-direct.apk",
+  "size": 2176275,
+  "sha256": "ec38dbc123a378b3a928b7a4989064e48db1acb641bf62a6604d83cab69f3853",
+  "notes": "잠금화면에 안 뜨는 까닭을 찾았습니다. 조작판에서 눌러 설정으로 갈 수 있습니다."
 }
