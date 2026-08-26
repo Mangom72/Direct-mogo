@@ -70,6 +70,11 @@ public class PdfViewActivity extends Activity {
     static final String EXTRA_URL = "url";      // 받아서 열 주소
     static final String EXTRA_GRADE = "grade";  // 어느 학년 · 과목에서 왔는가
     static final String EXTRA_SUBJECT = "subject";
+    /* 과목 코드(EXTRA_SUBJECT)와 과목 이름은 쓰임이 다르다. 코드는 띄운 창의
+       목록이 어느 과목 파일을 열지 정하는 데 쓰고, 이름은 사람에게 보이고
+       시험 시간을 고르는 데 쓴다. 한 칸에 담았더니 화면에 '140119'가 뜨고
+       시험 시간이 전부 30분으로 떨어졌다. */
+    static final String EXTRA_SUBJECT_NAME = "subjectName";
     static final String EXTRA_FILE = "file";    // 이미 받아둔 파일의 절대 경로
     static final String EXTRA_NAME = "name";    // 표시할 이름
     static final String EXTRA_KEY = "key";      // 푼 회차 표시의 열쇠 — 잰 시간을 여기에 남긴다
@@ -137,7 +142,7 @@ public class PdfViewActivity extends Activity {
     /* 받아서 연 것이면 그 주소. 띄워 둘 때 목록에 '지금 보는 중'을 표시하는 데 쓴다. */
     private String src;
     /* 어느 과목 목록에서 왔는가. 띄워 둔 창의 목록이 첫 화면을 정하는 데 쓴다. */
-    private String grade, subject;
+    private String grade, subject, subjectName;
 
     private float zoom = 1f, panX = 0f, panY = 0f;
 
@@ -179,6 +184,7 @@ public class PdfViewActivity extends Activity {
         src = url;
         grade = getIntent().getStringExtra(EXTRA_GRADE);
         subject = getIntent().getStringExtra(EXTRA_SUBJECT);
+        subjectName = getIntent().getStringExtra(EXTRA_SUBJECT_NAME);
         paperKey = getIntent().getStringExtra(EXTRA_KEY);
         if (path != null) {
             io.execute(() -> load(new File(path)));
@@ -463,11 +469,19 @@ public class PdfViewActivity extends Activity {
         return timePrefs().getInt(subject == null ? "" : subject, 0);
     }
 
+    /** 사람에게 보일 과목. 이름을 못 받았으면(옛 페이지) 아무것도 지어내지 않는다. */
+    private String subjectLabel() {
+        return subjectName == null ? "" : subjectName.trim();
+    }
+
     private void askTime() {
-        Exam.Choice[] cs = Exam.choices(subject);
+        String label = subjectLabel();
+        Exam.Choice[] cs = Exam.choices(label);
         AlertDialog.Builder b = new AlertDialog.Builder(this);
-        b.setTitle(subject == null || subject.isEmpty() ? "시험 시간" : subject);
-        if (cs.length > 0) b.setMessage(Exam.says(subject));
+        b.setTitle(label.isEmpty() ? "시험 시간" : label);
+        /* setMessage 를 붙이면 안 된다. AlertDialog 는 메시지와 목록을 함께 못
+           펴고 메시지가 이긴다 — 그래서 고를 것이 하나도 안 그려지고 '그냥
+           열기'만 남았다. 할 말은 항목 이름에 담는다. */
 
         String[] items = new String[cs.length + 1];
         for (int i = 0; i < cs.length; i++) items[i] = cs[i].label;
@@ -512,7 +526,7 @@ public class PdfViewActivity extends Activity {
         /* 앞서 재던 것이 있으면 남기지 않고 물린다 — 다른 회차를 열어서 밀려난
            것을 '풀었다'고 적으면 안 푼 회차에 시간이 붙는다. */
         if (Timing.clock(this).on() && !Timing.mine(this, paperKey)) Timing.stop(this, false);
-        Timing.start(this, paperKey, name, subject, minutes);
+        Timing.start(this, paperKey, name, subjectLabel(), minutes);
         alerted = false;
         Timing.changed(this);
         drawTimer();

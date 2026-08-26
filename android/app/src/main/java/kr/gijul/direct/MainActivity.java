@@ -483,6 +483,24 @@ public class MainActivity extends Activity {
             open(paperIntent(url, name, grade, sub, key));
         }
 
+        /**
+         * 같은 뷰어로 열되 <b>과목 이름</b>까지 받는다.
+         *
+         * openPaperAt 이 건네주던 sub 는 과목 <b>코드</b>다(140119 같은 것).
+         * 그것을 시험 시간 고르는 데 쓰고 있었는데, 코드는 어느 갈래에도 안
+         * 걸려 맨 아래 '탐구 30분'으로 떨어졌다 — <b>모든 과목이 30분이라고
+         * 우겼고</b> 화면 제목에는 코드가 그대로 떴다. 이름은 페이지만 안다.
+         *
+         * <b>인자를 더하는 대신 이름을 새로 낸 것은 옛 앱 때문이다.</b>
+         * openPaperAt 에 인자를 하나 붙이면 옛 앱에는 맞는 메서드가 없어 호출이
+         * 통째로 실패하고, 페이지는 앱보다 먼저 갱신되므로 그 사이 자료가 안 열린다.
+         */
+        @JavascriptInterface
+        public void openPaperFrom(String url, String name, String grade, String sub,
+                                  String subName, String key) {
+            open(paperIntent(url, name, grade, sub, subName, key));
+        }
+
         /** 앱이 재어 둔 시간을 페이지가 가져간다. 한 번 넘긴 것은 지운다. */
         @JavascriptInterface
         public String takeTimings() { return Timing.takeRecords(MainActivity.this); }
@@ -816,6 +834,11 @@ public class MainActivity extends Activity {
 
     /** 뷰어로 보낼 인텐트. openPaper·openPaperIn·openPaperAt 이 함께 쓴다. */
     private Intent paperIntent(String url, String name, String grade, String sub, String key) {
+        return paperIntent(url, name, grade, sub, null, key);
+    }
+
+    private Intent paperIntent(String url, String name, String grade, String sub,
+                               String subName, String key) {
         String title;
         try {
             fromEbsi(url);
@@ -834,6 +857,12 @@ public class MainActivity extends Activity {
             i.putExtra(PdfViewActivity.EXTRA_GRADE, grade);
             i.putExtra(PdfViewActivity.EXTRA_SUBJECT, sub);
         }
+        /* 열쇠는 '학년/과목/시행일/회차이름'이다. 잰 시간을 페이지에 돌려줄 때
+           그대로 되돌려 보낼 뿐 파일을 만드는 데는 쓰지 않지만, 길이는 본다. */
+        /* 과목 이름. 코드와 달리 사람에게 보이고 시험 시간을 고르는 데 쓴다.
+           띄어쓰기와 가운뎃점이 들어가므로 tag() 로 재지 않고 길이만 본다. */
+        if (subName != null && !subName.isEmpty() && subName.length() < 60)
+            i.putExtra(PdfViewActivity.EXTRA_SUBJECT_NAME, subName);
         /* 열쇠는 '학년/과목/시행일/회차이름'이다. 잰 시간을 페이지에 돌려줄 때
            그대로 되돌려 보낼 뿐 파일을 만드는 데는 쓰지 않지만, 길이는 본다. */
         if (key != null && !key.isEmpty() && key.length() < 300) {

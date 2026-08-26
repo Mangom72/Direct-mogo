@@ -28,8 +28,13 @@ final class Exam {
     }
 
     /**
-     * 과목 이름으로 시간을 고른다. 과목군이 아니라 <b>과목 이름</b>을 받는 것은
-     * 앱이 들고 있는 것이 그것이어서다(GijulNative.openPaperAt 이 건네준다).
+     * 과목 <b>이름</b>으로 시간을 고른다. 코드가 아니라 이름이다 —
+     * {@code openPaperFrom} 이 그것을 따로 건네준다.
+     *
+     * <p>한때 여기에 과목 <b>코드</b>가 들어왔다. 코드는 어느 갈래에도 안 걸려
+     * 맨 아래 '탐구는 30분'으로 떨어졌고, 그래서 <b>모든 과목이 30분이라고
+     * 우겼다.</b> 화면에는 멀쩡한 숫자가 흐르니 아무 데서도 안 보였다.
+     * 그래서 이름이 비면 이제 0을 준다 — 모르면 모른다고 해야 한다.
      *
      * @return 고를 수 있는 것들. 비면 아는 시간이 없다는 뜻이라 '직접 정하기'만 낸다.
      */
@@ -48,7 +53,10 @@ final class Exam {
 
     /** 아는 시간(분). 모르면 0. */
     static int minutes(String subject) {
-        String s = subject == null ? "" : subject;
+        String s = subject == null ? "" : subject.trim();
+        /* 이름을 못 받았으면 지어내지 않는다. 여기서 30을 주면 '탐구'와 구별이
+           안 되어, 값이 안 온 것과 탐구인 것이 화면에서 똑같아 보인다. */
+        if (s.isEmpty()) return 0;
         if (s.equals("화법과 작문") || s.equals("언어와 매체") || s.equals("국어")) return 80;
         if (s.equals("확률과 통계") || s.equals("미적분") || s.equals("기하") || s.equals("수학")) return 100;
         if (s.equals("영어")) return 70;
@@ -62,11 +70,4 @@ final class Exam {
     /* 제2외국어·한문은 40분이다. 이름이 저마다라 한 줄에 모아 둔다. */
     private static final String SECOND =
             "|독일어Ⅰ|프랑스어Ⅰ|스페인어Ⅰ|중국어Ⅰ|일본어Ⅰ|러시아어Ⅰ|아랍어Ⅰ|베트남어Ⅰ|한문Ⅰ|";
-
-    /** '수학은 100분입니다' 처럼 한 줄로 */
-    static String says(String subject) {
-        int m = minutes(subject);
-        if ("영어".equals(subject)) return "영어는 70분입니다. 듣기 없이 푸시려면 50분을 고르십시오.";
-        return (subject == null ? "이 과목" : subject) + "은(는) " + m + "분입니다.";
-    }
 }
