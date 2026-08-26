@@ -213,14 +213,21 @@ final class Timing {
 
         int done = Math.round(k.ratio(now) * 1000);
         if (Build.VERSION.SDK_INT >= 36) {
+            boolean still = k.paused() || over;
             /* 실시간 정보로 올라가려면 정해진 몇 갈래 가운데 하나여야 한다.
                ProgressStyle 이 그 가운데 우리 것에 맞는다 — 흘러가는 일 하나. */
             b.setStyle(new Notification.ProgressStyle()
                     .setProgressIndeterminate(false)
                     .addProgressSegment(new Notification.ProgressStyle.Segment(1000))
                     .setProgress(done));
-            /* 상태 표시줄의 시계 옆에 붙는 손톱만 한 글 */
-            b.setShortCriticalText(Clock.brief(left));
+            /* 상태 표시줄과 나우바 알약에 붙는 손톱만 한 글.
+               **흐르는 동안에는 넣지 않는다.** setShortCriticalText 는 정적이라
+               다시 띄우기 전까지 그 숫자에 굳는데, 우리는 상태가 바뀔 때만
+               다시 띄우므로 시계가 멈춰 보인다. 비워 두면 시스템이 크로노미터를
+               써서 스스로 세고, 그래야 초까지 흐른다.
+               다만 크로노미터는 <b>양수인 동안만</b> 쓰인다. 멈췄거나 시간을
+               넘긴 뒤에는 값이 실제로 정적이므로 그때만 글로 적는다. */
+            if (still) b.setShortCriticalText(Clock.brief(left));
             /* 승격은 '청하는' 것이다. 안 받아 주면 보통 알림으로 그대로 뜨므로
                갈래를 둘로 만들지 않는다. 값을 넣는 창구(setRequestPromotedOngoing)는
                API 36.1 이라 여기서는 열쇠로 넣는다 — 36 에서도 그렇게 하라고

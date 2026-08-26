@@ -696,6 +696,88 @@ public class PdfViewActivity extends Activity {
                 .show();
     }
 
+    // ── 잠금화면에 띄우기 — 한 번만 묻는다 ────────────────────────────────
+    //
+    // One UI 는 남의 앱의 라이브 알림을 기본으로 꺼 두고, 그 스위치를 개발자
+    // 옵션 맨 아래 '추가 설정' 안에 두었다. 스스로 찾아갈 만한 자리가 아니다.
+    //
+    // 그렇다고 뜰 때마다 물으면 광고가 된다. 처음 시간을 재는 그 한 번에만
+    // 묻는다 — 그때가 이 기능이 무엇에 쓰이는지 가장 잘 보이는 순간이다.
+
+    private static final String ASKED_LIVE = "asked.live";
+
+    private boolean shouldOfferLive() {
+        if (!Timing.oneUi()) return false;               // 다른 기기는 승격이 곧 표시다
+        if (Timing.live(this) != Timing.LIVE_ON) return false;  // 아직 그 단계가 아니다
+        if (Timing.devSettings(this) == null) return false;     // 갈 데가 없다
+        return !timePrefs().getBoolean(ASKED_LIVE, false);
+    }
+
+    private void offerLive() {
+        timePrefs().edit().putBoolean(ASKED_LIVE, true).apply();
+        final Intent go = Timing.devSettings(this);
+        if (go == null) return;
+
+        LinearLayout box = sheetBox();
+        TextView nm = new TextView(this);
+        nm.setText("잠금화면에 남은 시간 띄우기");
+        nm.setTextColor(sheetInk());
+        nm.setTextSize(18);
+        nm.setTypeface(nm.getTypeface(), android.graphics.Typeface.BOLD);
+        box.addView(nm);
+
+        TextView why = new TextView(this);
+        why.setText("폰을 켜지 않고도 남은 시간이 보입니다. "
+                  + "갤럭시는 이 기능을 기본으로 꺼 두어서, 한 번만 켜 주시면 됩니다.");
+        why.setTextColor(sheetDim());
+        why.setTextSize(12.5f);
+        why.setLineSpacing(dp(3), 1f);
+        why.setPadding(0, dp(8), 0, 0);
+        box.addView(why);
+
+        /* 자리를 글로만 이르면 못 찾는다. 세 단계를 그대로 적는다. */
+        TextView how = new TextView(this);
+        how.setText("개발자 옵션  →  맨 아래 추가 설정  →  모든 앱의 라이브 알림");
+        how.setTextColor(sheetInk());
+        how.setTextSize(12);
+        how.setTypeface(how.getTypeface(), android.graphics.Typeface.BOLD);
+        how.setPadding(dp(13), dp(11), dp(13), dp(11));
+        how.setBackground(round(night() ? 0x22FFFFFF : 0x11000000, 10, 0, 0));
+        LinearLayout.LayoutParams hlp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        hlp.topMargin = dp(13);
+        box.addView(how, hlp);
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setPadding(0, dp(14), 0, 0);
+        TextView later = bigPill("나중에", false, v -> { });
+        TextView open = bigPill("설정 열기", true, v -> {
+            try { startActivity(go); } catch (Exception ignored) { }
+        });
+        LinearLayout.LayoutParams a = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        LinearLayout.LayoutParams b2 = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.3f);
+        b2.leftMargin = dp(9);
+        row.addView(later, a);
+        row.addView(open, b2);
+        box.addView(row);
+
+        /* 개발자 옵션이 아예 없는 사람도 있다. 그 길도 한 줄로. */
+        TextView last = new TextView(this);
+        last.setText("개발자 옵션이 안 보이면 — 설정 → 휴대전화 정보 → "
+                   + "소프트웨어 정보에서 빌드 번호를 일곱 번 누릅니다.");
+        last.setTextColor(sheetDim());
+        last.setTextSize(10.5f);
+        last.setAlpha(0.85f);
+        last.setLineSpacing(dp(2), 1f);
+        last.setPadding(0, dp(13), 0, dp(2));
+        box.addView(last);
+
+        showSheet(box);
+    }
+
     // ── 재는 중 조작판 — 아이콘 밑에 붙는 팝업 ────────────────────────────
     //
     // 시트로 하지 않는 것은, 재는 중에 여는 까닭이 대개 '얼마나 남았나'를 보려는
@@ -795,8 +877,7 @@ public class PdfViewActivity extends Activity {
                 why.setOnClickListener(v -> {
                     if (timerPop != null) timerPop.dismiss();
                     android.widget.Toast.makeText(this,
-                            "개발자 옵션에서 '모든 앱의 라이브 알림'"
-                          + "(Live notifications for all apps)을 켜 주십시오",
+                            "개발자 옵션 → 맨 아래 추가 설정 → 모든 앱의 라이브 알림",
                             android.widget.Toast.LENGTH_LONG).show();
                     try { startActivity(dev); } catch (Exception ignored) { }
                 });
@@ -861,6 +942,12 @@ public class PdfViewActivity extends Activity {
         Timing.changed(this);
         drawTimer();
         askNotify();
+        /* 알림 권한을 먼저 묻고, 그 답이 끝난 뒤에 이쪽을 편다 — 창 둘이 겹치면
+           뒤엣것이 앞엣것을 지우고 앉는다. 알림이 없으면 잠금화면도 없으므로
+           순서가 그 자체로 맞다. */
+        if (shouldOfferLive()) timerBtn.postDelayed(() -> {
+            if (!isFinishing() && shouldOfferLive()) offerLive();
+        }, 900);
     }
 
     private void finishTimer() {
