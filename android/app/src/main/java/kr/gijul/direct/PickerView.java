@@ -1,5 +1,6 @@
 package kr.gijul.direct;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -32,6 +33,7 @@ import java.util.concurrent.Executors;
  * 종이 자리에 얹혔다가 고르고 나면 물러난다. 창을 새로 띄우지 않는 것은 이
  * 기능의 요점이 '앱으로 돌아가지 않는 것'이기 때문이다.
  */
+@SuppressLint("ViewConstructor") // Catalog와 Host가 필수인 코드 생성 전용 뷰다.
 class PickerView extends LinearLayout {
 
     private static final String TAG = "gijul.picker";

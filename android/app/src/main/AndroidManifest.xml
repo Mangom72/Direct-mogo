@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Android 11+의 패키지 공개 범위에서 아래 설정 화면을 resolve할 수 있게 한다. -->
+    <queries>
+        <intent>
+            <action android:name="android.settings.APPLICATION_DEVELOPMENT_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.settings.MANAGE_APP_PROMOTED_NOTIFICATIONS" />
+        </intent>
+    </queries>
+
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 스토어를 거치지 않으므로 새 버전을 앱이 직접 받아 설치 화면으로 넘긴다.
          안드로이드 8+에서는 사용자가 이 앱에 한 번 '이 출처 허용'을 줘야 동작한다. -->

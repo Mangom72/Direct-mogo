@@ -38,6 +38,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -1535,7 +1536,7 @@ public class FloatService extends Service {
             close();
             try {
               synchronized (FloatService.this) {
-                String n = f.getName().toLowerCase();
+                String n = f.getName().toLowerCase(Locale.ROOT);
                 if (n.endsWith(".png") || n.endsWith(".jpg")) {
                     still = BitmapFactory.decodeFile(f.getAbsolutePath());
                     ratio = new float[]{ still == null ? 1.4f

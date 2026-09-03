@@ -11,6 +11,7 @@ import android.widget.RemoteViews;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 /**
  * 한 달 달력.
@@ -42,7 +43,7 @@ public class CalWidget extends WidgetBase {
         int y = now.get(Calendar.YEAR), mo = now.get(Calendar.MONTH);
 
         int n = 0;
-        String pre = String.format("%04d%02d", y, mo + 1);
+        String pre = String.format(Locale.ROOT, "%04d%02d", y, mo + 1);
         for (String d : log.keySet()) if (d.startsWith(pre)) n += log.get(d).size();
 
         v.setTextViewText(R.id.title, (mo + 1) + "월");
@@ -117,7 +118,7 @@ public class CalWidget extends WidgetBase {
             g.drawRect(r, p);
             p.setStyle(Paint.Style.FILL);
 
-            String key = String.format("%04d%02d%02d", year, mon + 1, d);
+            String key = String.format(Locale.ROOT, "%04d%02d%02d", year, mon + 1, d);
             List<Solved.Item> it = log.get(key);
             boolean isToday = key.equals(today);
 

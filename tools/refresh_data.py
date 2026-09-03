@@ -299,6 +299,48 @@ def count(db):
     return sum(len(v) for g in db.values() for s in g.values() for v in s.values())
 
 
+def coverage(current, scraped, known):
+    """전체 합계에 가려지는 학년·활성 과목 단위 수집 중단을 막는다."""
+    problems = []
+    for grade in GRADES:
+        before = count({grade: current.get(grade, {})})
+        visible = {s: years for s, years in scraped.get(grade, {}).items()
+                   if s in known.get(grade, ())}
+        after = count({grade: visible})
+        if before and after < before * 0.8:
+            problems.append(f"{grade} 수집량 {after}건 < 기존 {before}건의 80%")
+
+        # 가장 최근 연도에 실제 자료가 있던 과목은 현재 EBS 목록에도 보여야 한다.
+        # 전체 합계만 보면 고1 한 학년이나 작은 선택과목 하나가 통째로 사라져도
+        # 나머지 수천 건에 묻혀 성공으로 끝날 수 있다.
+        years = [int(y) for sub in current.get(grade, {}).values() for y in sub
+                 if str(y).isdigit()]
+        if not years:
+            continue
+        latest = str(max(years))
+        active = {s for s, ys in current.get(grade, {}).items() if ys.get(latest)}
+        missing = sorted(s for s in active if not scraped.get(grade, {}).get(s, {}).get(latest))
+        if missing:
+            problems.append(f"{grade} {latest} 활성 과목 누락: {', '.join(missing)}")
+    return problems
+
+
+def unknown_report(scraped, known):
+    """화면에 이름이 없어 버리는 과목을 결정적인 JSON으로 남긴다."""
+    grades = {}
+    for grade in GRADES:
+        rows = []
+        for subject, years in sorted(scraped.get(grade, {}).items()):
+            if subject in known.get(grade, ()):
+                continue
+            papers = [row for bucket in years.values() for row in bucket]
+            dates = [str(row[1]) for row in papers if len(row) > 1]
+            rows.append({"subjectId": subject, "count": len(papers),
+                         "latestDate": max(dates, default="")})
+        grades[grade] = rows
+    return {"schemaVersion": 1, "grades": grades}
+
+
 def known_subjects(text):
     """index.html의 GROUPS가 아는 과목 코드 — 화면 드롭다운이 이 목록으로 만들어진다.
 
@@ -340,6 +382,8 @@ def main():
     # 무엇이 늘었는지 한 줄로 적어 둔다. 워크플로가 이것을 커밋 메시지에 넣고,
     # 화면의 '자료 갱신 내역'이 그 메시지를 읽어 그날 무슨 일이 있었는지 보여준다.
     ap.add_argument("--note", metavar="파일", help="바뀐 내용을 한 줄로 적을 곳")
+    ap.add_argument("--unknown-report", metavar="파일",
+                    help="화면에 아직 이름이 없는 과목 현황을 JSON으로 적을 곳")
     args = ap.parse_args()
 
     path = Path(args.index)
@@ -364,6 +408,14 @@ def main():
             f"수집량이 기존의 80%에 못 미칩니다({reachable} < {have}). "
             "EBSi 페이지 구조가 바뀌었을 수 있어 파일을 건드리지 않습니다.")
 
+    problems = coverage(current, scraped, known)
+    if problems:
+        raise SystemExit("학년·과목 단위 수집량이 비정상입니다 — 파일을 건드리지 않습니다.\n"
+                         + "\n".join("- " + p for p in problems))
+
+    report_text = json.dumps(unknown_report(scraped, known), ensure_ascii=False,
+                             separators=(",", ":"), sort_keys=True) + "\n"
+
     added, filled, skipped = merge(current, scraped, known)
     got = count(current)
     print(f"새 회차 {added}건 추가 → {got}건"
@@ -376,13 +428,23 @@ def main():
         json.dumps(current, ensure_ascii=False, separators=(",", ":")).encode())).decode()
     new = PAYLOAD_RE.sub(lambda m: m.group(1) + blob + m.group(3), text, count=1)
 
-    if new == text:
+    report = Path(args.unknown_report) if args.unknown_report else None
+    old_report = report.read_text(encoding="utf-8") if report and report.is_file() else None
+    report_changed = report is not None and old_report != report_text
+
+    if new == text and not report_changed:
         print("변경 없음", file=sys.stderr)
         return 0
     if args.dry_run:
-        print(f"[dry-run] {added}건 증가 · {filled}칸 채움, 쓰지 않음", file=sys.stderr)
+        print(f"[dry-run] {added}건 증가 · {filled}칸 채움"
+              + (" · 미등록 과목 보고 변경" if report_changed else "")
+              + ", 쓰지 않음", file=sys.stderr)
         return 0
-    path.write_text(new, encoding="utf-8")
+    if new != text:
+        path.write_text(new, encoding="utf-8")
+    if report_changed:
+        report.parent.mkdir(parents=True, exist_ok=True)
+        report.write_text(report_text, encoding="utf-8")
     print(f"갱신 완료: {have} → {got}건", file=sys.stderr)
     if args.note:
         Path(args.note).write_text(

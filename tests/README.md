@@ -1,8 +1,8 @@
 # 시험
 
 ```bash
-pip install -r requirements/tests.txt && playwright install chromium
-python3 tests/run.py              # 전부 (3분 남짓, 36종)
+pip install -r requirements/tests.txt && playwright install chromium webkit
+python3 tests/run.py              # 전부 (3분 남짓, 37종)
 python3 tests/run.py sw stale     # 이름에 그 말이 든 것만
 python3 tests/run.py -v           # 출력까지 그대로
 ```
@@ -65,10 +65,11 @@ python3 tests/run.py -v           # 출력까지 그대로
 
 ## 안드로이드 쪽은 여기 없습니다
 
-여기 36종은 대부분 브라우저를 띄웁니다. `test_fields`·`test_refresh`·`test_stable`은
+여기 37종은 대부분 브라우저를 띄웁니다. `test_fields`·`test_refresh`·`test_stable`은
 브라우저 없이 자료와 생성기를 확인합니다. 자바를 확인하는 것은
-`android/app/src/test` 에 따로 있고(`gradle testDebugUnitTest`, 8초),
-`android.yml` 이 돌립니다. 무엇을 지키는지는
+`android/app/src/test` 에 따로 있고(`./gradlew testDebugUnitTest`),
+PR에서는 `android-checks.yml`이 단위 시험·Lint·디버그 빌드를, main에서는
+`android.yml`이 서명 빌드와 발행을 맡습니다. 무엇을 지키는지는
 [docs/android.md](../docs/android.md#기기-없이-확인하는-것)에 있습니다.
 
 `test_twins` 만 예외입니다 — 두 쪽을 견주는 시험이라 여기에도 있고 `android.yml`
@@ -163,7 +164,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 빨갛게 뜹니다.
 
 **화면 쪽**(`tests.yml`)은 `index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로
-main에 올라갈 때 36종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
+main에 올라갈 때 37종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
 남아, 손에서 재현되지 않는 실패도 눈으로 볼 수 있습니다.
 
 어느 쪽이든 CI는 마지막 그물입니다. 고친 자리에서 `python3 tests/run.py`를 먼저

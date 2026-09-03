@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -197,7 +198,7 @@ final class Solved {
     }
 
     static String ymd(Calendar c) {
-        return String.format("%04d%02d%02d", c.get(Calendar.YEAR),
+        return String.format(Locale.ROOT, "%04d%02d%02d", c.get(Calendar.YEAR),
                 c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH));
     }
 

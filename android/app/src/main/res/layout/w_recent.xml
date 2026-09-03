@@ -14,7 +14,7 @@
             android:fontFamily="@font/gijul_700" />
         <TextView android:id="@+id/count"
             android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:textSize="10.5sp" android:textStyle="bold" android:textColor="@color/w_mark"
+            android:textSize="11sp" android:textStyle="bold" android:textColor="@color/w_mark"
             android:fontFamily="@font/gijul_700" />
     </LinearLayout>
 
@@ -24,7 +24,7 @@
         android:baselineAligned="false">
         <TextView android:id="@+id/d0"
             android:layout_width="38dp" android:layout_height="wrap_content"
-            android:textSize="10.5sp" android:textColor="@color/w_ink2"
+            android:textSize="11sp" android:textColor="@color/w_ink2"
             android:fontFamily="@font/gijul_500" />
         <TextView android:id="@+id/b0"
             android:layout_width="3dp" android:layout_height="15dp"
@@ -42,7 +42,7 @@
         android:baselineAligned="false">
         <TextView android:id="@+id/d1"
             android:layout_width="38dp" android:layout_height="wrap_content"
-            android:textSize="10.5sp" android:textColor="@color/w_ink2"
+            android:textSize="11sp" android:textColor="@color/w_ink2"
             android:fontFamily="@font/gijul_500" />
         <TextView android:id="@+id/b1"
             android:layout_width="3dp" android:layout_height="15dp"
@@ -60,7 +60,7 @@
         android:baselineAligned="false">
         <TextView android:id="@+id/d2"
             android:layout_width="38dp" android:layout_height="wrap_content"
-            android:textSize="10.5sp" android:textColor="@color/w_ink2"
+            android:textSize="11sp" android:textColor="@color/w_ink2"
             android:fontFamily="@font/gijul_500" />
         <TextView android:id="@+id/b2"
             android:layout_width="3dp" android:layout_height="15dp"
@@ -78,7 +78,7 @@
         android:baselineAligned="false">
         <TextView android:id="@+id/d3"
             android:layout_width="38dp" android:layout_height="wrap_content"
-            android:textSize="10.5sp" android:textColor="@color/w_ink2"
+            android:textSize="11sp" android:textColor="@color/w_ink2"
             android:fontFamily="@font/gijul_500" />
         <TextView android:id="@+id/b3"
             android:layout_width="3dp" android:layout_height="15dp"
@@ -96,7 +96,7 @@
         android:baselineAligned="false">
         <TextView android:id="@+id/d4"
             android:layout_width="38dp" android:layout_height="wrap_content"
-            android:textSize="10.5sp" android:textColor="@color/w_ink2"
+            android:textSize="11sp" android:textColor="@color/w_ink2"
             android:fontFamily="@font/gijul_500" />
         <TextView android:id="@+id/b4"
             android:layout_width="3dp" android:layout_height="15dp"
@@ -121,7 +121,7 @@
     <TextView android:id="@+id/foot"
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_marginTop="6dp" android:paddingTop="6dp"
-        android:textSize="10.5sp" android:textColor="@color/w_ink2"
+        android:textSize="11sp" android:textColor="@color/w_ink2"
         android:maxLines="1" android:ellipsize="end"
         android:fontFamily="@font/gijul_500" />
 </LinearLayout>

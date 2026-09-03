@@ -1,7 +1,6 @@
 package kr.gijul.direct;
 
 import android.animation.ValueAnimator;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -39,11 +38,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.activity.ComponentActivity;
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -67,7 +69,7 @@ import java.util.concurrent.Executors;
  *
  * 정답은 PDF가 아니라 PNG라서, 같은 화면에서 한 장짜리로 보여준다.
  */
-public class PdfViewActivity extends Activity {
+public class PdfViewActivity extends ComponentActivity {
 
     static final String EXTRA_URL = "url";      // 받아서 열 주소
     static final String EXTRA_GRADE = "grade";  // 어느 학년 · 과목에서 왔는가
@@ -180,6 +182,11 @@ public class PdfViewActivity extends Activity {
         syncMinZoom();
         zoom = minZoom;            // 가로로 들어오면 반으로 줄여서 시작한다
         setContentView(build());
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() {
+                if (!closeOverlay()) finish();
+            }
+        });
 
         String path = getIntent().getStringExtra(EXTRA_FILE);
         String url = getIntent().getStringExtra(EXTRA_URL);
@@ -926,12 +933,6 @@ public class PdfViewActivity extends Activity {
     /* 덮인 순서대로 하나씩 닫는다 — 조작판 → 시트 → 화면. 페이지가
        gijulBack() 으로 하는 것과 같은 차례다. 한쪽에만 있으면 시트를 연 채로
        뒤로가기를 누른 사람이 뷰어를 통째로 잃는다. */
-    @Override
-    public void onBackPressed() {
-        if (closeOverlay()) return;
-        super.onBackPressed();
-    }
-
     private void startTimer(int minutes) {
         timePrefs().edit().putInt(subject == null ? "" : subject, minutes).apply();
         /* 앞서 재던 것이 있으면 남기지 않고 물린다 — 다른 회차를 열어서 밀려난
@@ -1467,8 +1468,8 @@ public class PdfViewActivity extends Activity {
     private void load(File f) {
         file = f;
         try {
-            if (f.getName().toLowerCase().endsWith(".png")
-                    || f.getName().toLowerCase().endsWith(".jpg")) {
+            String lower = f.getName().toLowerCase(Locale.ROOT);
+            if (lower.endsWith(".png") || lower.endsWith(".jpg")) {
                 image = BitmapFactory.decodeFile(f.getAbsolutePath());
                 if (image == null) throw new Exception("이미지를 읽지 못했습니다");
             } else {
@@ -1568,7 +1569,7 @@ public class PdfViewActivity extends Activity {
             File out = named();
             Uri u = FileProvider.getUriForFile(this, MainActivity.AUTHORITY, out);
             Intent i = new Intent(Intent.ACTION_VIEW);
-            i.setDataAndType(u, out.getName().toLowerCase().endsWith(".png")
+            i.setDataAndType(u, out.getName().toLowerCase(Locale.ROOT).endsWith(".png")
                     ? "image/png" : "application/pdf");
             /* 고른 앱이 **제 앱으로** 서게 한다.
                이 깃발이 없으면 안드로이드는 시작한 활동을 부른 쪽 작업(task) 안에

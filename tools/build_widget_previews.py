@@ -122,10 +122,10 @@ class Card:
     def head(self, left, right):
         self.text(10, 10, left, 700, 13.5, self.c["ink"])
         if right:
-            self.text(self.w - 10, 11.5, right, 700, 10.5, self.c["mark"], anchor="ra")
+            self.text(self.w - 10, 11.5, right, 700, 11, self.c["mark"], anchor="ra")
 
     def foot(self, s):
-        self.text(10, self.h - 21, s, 500, 10.5, self.c["ink2"])
+        self.text(10, self.h - 21, s, 500, 11, self.c["ink2"])
 
     def blend(self, box, color, alpha, radius=0):
         """카드 바탕 위에 옅게 얹는다"""
@@ -259,7 +259,7 @@ def recent(c):
     k.foot(f"수능 D-{DDAY} · 오늘 {len(CAL[TODAY])}회차")
     y = 34
     for d, t, gov in RECENT:
-        k.text(10, y, d, 500, 10.5, c["ink2"])
+        k.text(10, y, d, 500, 11, c["ink2"])
         k.g.rounded_rectangle([px(48), px(y - 1), px(51), px(y + 13)], px(1.5),
                               fill=c["gov"] if gov else c["edu"])
         k.text(57, y - 1, t, 500, 11.5, c["ink"])
@@ -270,12 +270,12 @@ def recent(c):
 def dday(c):
     k = Card(110, 110, c)
     k.text(55, 20, f"D-{DDAY}", 700, 30, c["mark"], anchor="ma")
-    k.text(55, 57, "수능까지", 500, 10.5, c["ink2"], anchor="ma")
+    k.text(55, 57, "수능까지", 500, 11, c["ink2"], anchor="ma")
     hit, days = len(CAL), 31
     k.g.rounded_rectangle([px(10), px(76), px(100), px(81)], px(2.5), fill=c["rule"])
     k.g.rounded_rectangle([px(10), px(76), px(10 + 90 * hit / days), px(81)], px(2.5), fill=c["mark"])
     k.text(55, 88, f"{MONTH}월 {hit}일 · {sum(len(v) for v in CAL.values())}회차",
-           500, 10.5, c["ink2"], anchor="ma")
+           500, 11, c["ink2"], anchor="ma")
     return k.img
 
 

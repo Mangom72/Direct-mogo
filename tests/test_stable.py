@@ -27,6 +27,7 @@ def run(*args):
 
 def outputs():
     files = (sorted((R / "fonts").glob("*.woff2"))
+             + [R / "fonts/fonts.css", R / "fonts/version.json"]
              + sorted((R / "android/app/src/main/res/font").glob("gijul_*.ttf"))
              + sorted(R.glob("data/**/*.json"))
              + sorted(f for f in R.glob("s/**/*") if f.is_file())

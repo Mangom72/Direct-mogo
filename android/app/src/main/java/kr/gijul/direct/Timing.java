@@ -200,7 +200,7 @@ final class Timing {
             /* 끝나는 시각을 건네고 세는 일은 시스템에 맡긴다. 우리가 잠들어도
                숫자가 흐르고, 잠금화면처럼 우리가 손댈 수 없는 자리에서도 흐른다. */
             b.setUsesChronometer(true).setWhen(now + left).setShowWhen(true);
-            if (Build.VERSION.SDK_INT >= 24) b.setChronometerCountDown(!over);
+            b.setChronometerCountDown(!over);
             b.setContentTitle(over ? "시간이 다 됐습니다 · " + title : title);
             b.setContentText(over
                     ? mins + "분 · " + Clock.face(left).substring(1) + " 넘겼습니다"

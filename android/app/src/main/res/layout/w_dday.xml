@@ -18,7 +18,7 @@
             android:fontFamily="@font/gijul_700" />
         <TextView android:id="@+id/title"
             android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:gravity="center" android:textSize="10.5sp" android:textColor="@color/w_ink2"
+            android:gravity="center" android:textSize="11sp" android:textColor="@color/w_ink2"
             android:fontFamily="@font/gijul_500" />
 
         <!-- ProgressBar 는 RemoteViews 가 다룰 수 있는 몇 안 되는 뷰다. 비율을
@@ -33,7 +33,7 @@
     <TextView android:id="@+id/foot"
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:gravity="center" android:paddingTop="6dp"
-        android:textSize="10.5sp" android:textColor="@color/w_ink2"
+        android:textSize="11sp" android:textColor="@color/w_ink2"
         android:maxLines="1" android:ellipsize="end"
         android:fontFamily="@font/gijul_500" />
 </LinearLayout>
