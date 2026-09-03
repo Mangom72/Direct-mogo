@@ -1,7 +1,7 @@
 /* 기출 직행 서비스 워커
    자료 5천여 건이 index.html 안에 들어 있으므로, 이 파일 하나만 쥐고 있으면
    조회·필터는 네트워크 없이 전부 동작한다. 네트워크가 필요한 것은 PDF뿐이다. */
-const VERSION = "v4";
+const VERSION = "v5";
 const SHELL = `gijul-shell-${VERSION}`;
 const FILES = `gijul-files-${VERSION}`;
 const KEEP = [SHELL, FILES];
@@ -22,6 +22,7 @@ const REQUIRED_SHELL_URLS = [
   /* 글꼴도 우리 것이 됐으므로 셸과 함께 미리 받아 둔다 — 첫 방문부터 오프라인에서
      제 글꼴로 뜨고, 예전처럼 남의 서버가 대답할 때까지 기다릴 일이 없다. */
   "./fonts/fonts.css",
+  "./fonts/version.json",
   "./fonts/SongMyung-400.woff2",
   "./fonts/GijulSans-400.woff2", "./fonts/GijulSans-500.woff2",
   "./fonts/GijulSans-600.woff2", "./fonts/GijulSans-700.woff2",
@@ -89,16 +90,32 @@ async function shell(req){
 
    그래서 갱신을 물어보는 김에 글꼴도 함께 조건부로 확인한다. 바뀐 것이 없으면
    서버가 304만 돌려주므로 값이 거의 들지 않는다. */
-const FONT_URLS = SHELL_URLS.filter(u => u.indexOf("/fonts/") >= 0);
+const FONT_VERSION = "./fonts/version.json";
+const FONT_URLS = SHELL_URLS.filter(u => u.indexOf("/fonts/") >= 0 && u !== FONT_VERSION);
 
 async function freshenFonts(){
   const cache = await caches.open(SHELL);
-  await Promise.all(FONT_URLS.map(async u => {
-    try{
-      const res = await fetch(new URL(u, self.location).href, { cache:"no-cache" });
-      if(res && res.ok) await cache.put(new URL(u, self.location).href, res);
-    }catch(e){}
-  }));
+  const marker = new URL(FONT_VERSION, self.location).href;
+  try{
+    const res = await fetch(marker, { cache:"no-cache" });
+    if(!res || !res.ok) return false;
+    const old = await cache.match(marker, { ignoreSearch:true });
+    const before = old ? await old.clone().text() : null;
+    const after = await res.clone().text();
+    if(before === after) return false;
+
+    /* 글꼴을 전부 받은 뒤에만 표식을 바꾼다. 하나라도 실패하면 다음 확인에서
+       같은 새 표식을 다시 보고 묶음 전체를 재시도한다. */
+    const got = await Promise.all(FONT_URLS.map(async u => {
+      const at = new URL(u, self.location).href;
+      const r = await fetch(at, { cache:"no-cache" });
+      if(!r || !r.ok) throw new Error("font " + at);
+      return [at, r];
+    }));
+    await Promise.all(got.map(([at, r]) => cache.put(at, r)));
+    await cache.put(marker, res);
+    return true;
+  }catch(e){ return false; }
 }
 
 /* 페이지가 뜬 뒤 명시적으로 물어볼 때만 돈다. 내용이 달라졌으면 캐시를 갈아끼우고 참을 준다.
@@ -177,7 +194,7 @@ self.addEventListener("message", e=>{
          받는다 — 페이지는 기다릴 것이 없고, waitUntil 안이라 다 받기 전에
          워커가 잠들지도 않는다. 이번 화면은 이미 그려졌으므로 새 글꼴은
          다음에 열 때 쓰인다. */
-      if(changed) return freshenFonts();
+      return freshenFonts();
     })
   ]));
 });

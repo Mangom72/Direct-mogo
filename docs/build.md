@@ -20,12 +20,13 @@
 | `tools/check_fresh.py` | EBSi가 새 회차를 아직 올리고 있는지 — 수능 하나로 봅니다 |
 | `tools/check_csp.py` | 인라인 스크립트 해시가 CSP와 맞는지 봅니다 |
 | `tools/publish_apk.py` | 빌드된 릴리스 APK를 읽어 `app/latest.json`을 씁니다 |
-| `tests/` | 회귀 시험 36종 ([tests/README.md](../tests/README.md)) |
+| `tests/` | 회귀 시험 37종 ([tests/README.md](../tests/README.md)) |
 | `android/` | WebView 앱 ([docs/android.md](android.md)) |
 | — | 무엇이 웹이고 무엇이 앱인지: [docs/split.md](split.md) |
 | — | 그것을 iOS로 옮길 수 있는지: [docs/ios.md](ios.md) |
 | `.github/workflows/refresh-data.yml` | 매일 15시 23분·23시 23분(KST) 자료 갱신 |
-| `.github/workflows/tests.yml` | 화면을 고쳐 main에 밀면 36종을 돌립니다 |
+| `.github/workflows/tests.yml` | 화면을 고쳐 main에 밀면 37종을 돌립니다 |
+| `.github/workflows/android-checks.yml` | Android PR에서 단위 시험·lint·디버그 빌드를 확인합니다 |
 | `.github/workflows/android.yml` | APK 빌드·서명·릴리스 (main 푸시·수동 실행) |
 
 자료를 `index.html` 안에 넣어둔 덕분에 **이 파일 하나만 캐시하면 조회·필터가
@@ -41,7 +42,8 @@ PDF는 EBSi가 `Access-Control-Allow-Origin: *`를 주기 때문에 페이지가
 
 | 바꾼 것 | 도는 것 | 하는 일 |
 |---|---|---|
-| `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 36종. 실패하면 그때의 화면 그림을 artifact로 남깁니다 |
+| `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 37종. 실패하면 그때의 화면 그림을 artifact로 남깁니다 |
+| Android 관련 PR | `android-checks.yml` | 글꼴 규칙·단위 시험·lint·디버그 APK를 합치기 전에 확인합니다 |
 | `android/**` | `android.yml` | 서명 빌드 → **지문 확인** → 릴리스 생성 → APK 첨부 → 글꼴 다시 만들기 → `app/latest.json`·`fonts/` 커밋 |
 | (매일 15:23·23:23 KST) | `refresh-data.yml` | EBSi에서 새 회차 수집 → JSON·과목 페이지·글꼴 → `test_fields`·`test_refresh`·`test_stable` → 커밋 → 수능 날짜 대조 → 예약 유지 |
 
@@ -57,11 +59,16 @@ PDF는 EBSi가 `Access-Control-Allow-Origin: *`를 주기 때문에 페이지가
 이 저장소는 오래 방치되는 것을 전제로 합니다. 그래서 **우리가 아무것도 바꾸지
 않았는데 밖이 바뀌어 멈추는 길**을 두 군데 막아 두었습니다.
 
-**Gradle 판본을 못박았습니다**(`android.yml`의 `gradle-version: '9.6.1'`).
-저장소에 래퍼(`gradlew`)가 없어서, 적지 않으면 러너 이미지에 깔린 것을 그대로
-씁니다. 지금 AGP는 8.7.3인데 빌드 로그가 이미 "Gradle 10과는 호환되지 않는다"고
-경고합니다 — 깃허브가 이미지에 10을 싣는 날 릴리스가 통째로 멈춘다는 뜻입니다.
-올릴 때는 AGP와 **함께** 봅니다.
+**빌드 도구와 받은 바이트를 못박았습니다.** 저장소의 Wrapper가 Gradle 9.6.1과
+배포 ZIP의 SHA-256을 고정하고, `gradle/verification-metadata.xml`이 AGP 9.4.0과
+AndroidX를 포함한 의존성 파일의 지문을 확인합니다. 러너 이미지나 저장소 응답이
+우리 모르게 바뀌어도 그대로 빌드에 섞이지 않습니다. 로컬과 CI 모두 `./gradlew`를
+써야 같은 관문을 지납니다.
+
+Android 앱은 2026년 8월 31일부터 앱 업데이트 제출에 필요한 API 36을 대상으로
+합니다. 강제 edge-to-edge는 시스템 바 inset으로 처리하고, 뒤로가기는
+`OnBackPressedDispatcher`로 받아 Android 16의 예측형 뒤로가기 변경에도 기능이
+끊기지 않게 했습니다.
 
 **예약이 꺼지지 않게 지킵니다.** 공개 저장소의 예약 워크플로는 저장소에 60일
 동안 아무 일도 없으면 깃허브가 자동으로 끕니다. 워크플로가 돈 것은 활동으로 치지
@@ -70,6 +77,11 @@ PDF는 EBSi가 `Access-Control-Allow-Origin: *`를 주기 때문에 페이지가
 그대로 두면 봄에 조용히 멈춘 채로 새 학년도를 맞습니다. 그래서 갱신 작업 끝에서
 마지막 커밋이 50일보다 오래됐으면 빈 커밋 하나로 시계를 되감습니다. 자료가 도는
 철에는 한 번도 걸리지 않고, 겨울에도 두어 번입니다.
+
+예약 자체가 시작되지 않은 날은 그 안의 코드로 감지할 수 없습니다. 저장소 시크릿
+`HEARTBEAT_URL`을 넣으면 성공한 실행 끝에 외부 감시 서비스로 신호를 보냅니다.
+서비스에서는 하루 동안 신호가 없을 때 알리도록 설정합니다. 시크릿이 비어 있으면
+워크플로는 종전처럼 동작하고 외부 감시만 꺼져 있습니다.
 
 ### 이 저장소를 다루는 세션에서 막히는 것
 
@@ -108,11 +120,11 @@ python3 tools/build_fonts.py              # → fonts/
 ## 고치고 나면
 
 ```bash
-python3 tests/run.py        # 회귀 시험 36종, 3분 남짓
+python3 tests/run.py        # 회귀 시험 37종, 3분 남짓
 ```
 
 무엇을 지키는 시험인지는 [tests/README.md](../tests/README.md)에 있습니다.
-`index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로 main에 올라가면 같은 36종이
+`index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로 main에 올라가면 같은 37종이
 CI에서도 한 번 더 돕니다. 실패하면 그때의 화면 그림이 artifact로 남습니다.
 
 기존 기록의 **있는 값은 고치지 않습니다.** 새 시행일을 덧붙이고, 이미 있는 회차는

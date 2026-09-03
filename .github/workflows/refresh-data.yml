@@ -45,7 +45,8 @@ jobs:
       # 스크립트는 수집량이 기존의 80%에 못 미치면 스스로 실패한다.
       # EBSi 구조가 바뀌면 조용히 빈손이 되는 대신 여기서 빨갛게 떠야 한다.
       - name: 새 회차 수집
-        run: python3 tools/refresh_data.py --note "$RUNNER_TEMP/note.txt"
+        run: python3 tools/refresh_data.py --note "$RUNNER_TEMP/note.txt" \
+          --unknown-report data/unmapped-subjects.json
 
       # 하루에 두 번 도는데 새 자료가 있는 날은 한 달에 며칠뿐이다. 나머지 실행에서
       # 정적 JSON·과목 페이지·글꼴을 다시 만드는 것은 통째로 헛일이다 — 특히
@@ -54,32 +55,37 @@ jobs:
         id: changed
         run: |
           if git diff --quiet -- index.html; then
-            echo "새 회차 없음 — 여기서 끝냅니다"
-            echo "yes=0" >> "$GITHUB_OUTPUT"
+            echo "data=0" >> "$GITHUB_OUTPUT"
           else
-            echo "yes=1" >> "$GITHUB_OUTPUT"
+            echo "data=1" >> "$GITHUB_OUTPUT"
+          fi
+          if git diff --quiet -- index.html data/unmapped-subjects.json; then
+            echo "새 회차도 미등록 과목 변화도 없음 — 여기서 끝냅니다"
+            echo "any=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "any=1" >> "$GITHUB_OUTPUT"
           fi
 
       - name: 글꼴 도구 설치
-        if: steps.changed.outputs.yes == '1'
+        if: steps.changed.outputs.data == '1'
         run: pip install -r requirements/fonts.txt
 
       # 앱 페이로드와 AI·프로그램용 JSON이 어긋나면 안 되므로 같은 실행에서 다시 만든다
       - name: 정적 JSON 다시 만들기
-        if: steps.changed.outputs.yes == '1'
+        if: steps.changed.outputs.data == '1'
         run: python3 tools/build_api.py
 
       # 검색엔진이 읽는 과목 페이지도 같은 자료에서 나온다. 여기서 같이 만들지 않으면
       # 새 회차가 앱에는 있는데 검색에는 없는 상태로 하루를 간다.
       - name: 과목 페이지·사이트맵 다시 만들기
-        if: steps.changed.outputs.yes == '1'
+        if: steps.changed.outputs.data == '1'
         run: python3 tools/build_pages.py
 
       # 글꼴에는 화면에 나오는 글자만 담겨 있다. 새 회차 제목에 없던 글자가 있으면
       # 그 자리가 네모(□)로 보이므로, 자료가 늘어난 그 자리에서 글꼴도 다시 만든다.
       # 과목 페이지를 먼저 만든 뒤라야 그쪽 글자까지 함께 본다.
       - name: 글꼴 다시 만들기
-        if: steps.changed.outputs.yes == '1'
+        if: steps.changed.outputs.data == '1'
         run: python3 tools/build_fonts.py
 
       # 사람이 보지 않는 채로 나가는 커밋이므로, 내보내기 전에 자료를 한 번 본다.
@@ -94,14 +100,14 @@ jobs:
       # 여기서 실패하면 커밋 단계로 가지 않는다. 자료는 어제 것 그대로 남고,
       # 워크플로가 빨갛게 떠서 사람이 본다.
       - name: 나간 자료 확인
-        if: steps.changed.outputs.yes == '1'
+        if: steps.changed.outputs.data == '1'
         run: |
           python3 tests/test_fields.py
           python3 tests/test_refresh.py
           python3 tests/test_stable.py
 
       - name: 변경분 커밋
-        if: steps.changed.outputs.yes == '1'
+        if: steps.changed.outputs.any == '1'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -173,4 +179,18 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit --allow-empty -m "Keep the scheduled refresh from being disabled"
             git push || { git pull --rebase origin main && git push; }
+          fi
+
+      # 같은 워크플로 안의 감시는 '워크플로가 아예 시작되지 않은 날'을 볼 수 없다.
+      # HEARTBEAT_URL을 저장소 시크릿으로 넣으면 독립 감시 서비스가 마지막 성공
+      # 시각을 재고, 신호가 끊긴 날 알려 줄 수 있다. 주소가 없을 때는 아무 일도 안 한다.
+      - name: 외부 생존 신호
+        if: success()
+        env:
+          HEARTBEAT_URL: ${{ secrets.HEARTBEAT_URL }}
+        run: |
+          if [ -n "$HEARTBEAT_URL" ]; then
+            curl -fsS --retry 3 --max-time 20 "$HEARTBEAT_URL"
+          else
+            echo "HEARTBEAT_URL이 없어 외부 생존 신호는 아직 꺼져 있습니다"
           fi

@@ -19,6 +19,7 @@
 import argparse
 import base64
 import gzip
+import hashlib
 import json
 import pathlib
 import re
@@ -201,6 +202,7 @@ def build(chars):
         subprocess.run(["curl", "-fsS", "-m", "60", url,
                         "-o", str(OUT / f"OFL-{slug}.txt")], check=True)
     (OUT / "fonts.css").write_text(css_text(), encoding="utf-8")
+    write_version()
     android_fonts()
     print(f"  {'합계':<22}{total:7.1f}KB · 글자 {len(chars)}자")
 
@@ -280,6 +282,22 @@ def css_text():
             f"@font-face{{font-family:'{family}';font-style:normal;font-weight:{weight};"
             f"font-display:optional;src:url('{name}') format('woff2')}}")
     return "\n".join(out) + "\n"
+
+
+def write_version():
+    """같은 이름으로 교체되는 웹 글꼴 묶음의 내용 지문.
+
+    서비스 워커는 index.html과 무관하게 이 작은 파일만 조건부 확인한다. 글꼴
+    파일을 모두 쓴 뒤 지문을 만들고, 서비스 워커도 실제 글꼴을 모두 받은 뒤에만
+    이 파일을 캐시에 넣으므로 반쪽짜리 묶음을 새 판으로 오인하지 않는다.
+    """
+    digest = hashlib.sha256()
+    for path in [OUT / "fonts.css", *(OUT / face[3] for face in FACES)]:
+        digest.update(path.name.encode("utf-8") + b"\0")
+        digest.update(path.read_bytes())
+    (OUT / "version.json").write_text(
+        json.dumps({"sha256": digest.hexdigest()}, separators=(",", ":")) + "\n",
+        encoding="utf-8")
 
 
 def check(chars):

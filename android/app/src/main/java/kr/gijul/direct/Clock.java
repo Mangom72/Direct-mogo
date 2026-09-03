@@ -1,5 +1,7 @@
 package kr.gijul.direct;
 
+import java.util.Locale;
+
 /**
  * 시험 시간을 재는 셈. <b>안드로이드가 없어도 돈다.</b>
  *
@@ -80,8 +82,8 @@ final class Clock {
            보인다 — 넘겼다는 사실이 첫 1초부터 보여야 한다. */
         if (over && Math.abs(leftMs) % 1000 != 0) s++;
         long h = s / 3600, m = (s % 3600) / 60, ss = s % 60;
-        String t = h > 0 ? String.format("%d:%02d:%02d", h, m, ss)
-                         : String.format("%d:%02d", m, ss);
+        String t = h > 0 ? String.format(Locale.ROOT, "%d:%02d:%02d", h, m, ss)
+                         : String.format(Locale.ROOT, "%d:%02d", m, ss);
         return over ? "+" + t : t;
     }
 

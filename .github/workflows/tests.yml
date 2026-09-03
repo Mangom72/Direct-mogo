@@ -3,7 +3,7 @@ name: 회귀 시험
 # 화면을 고쳐 미는 길에는 그동안 아무 관문이 없었다. 자료 갱신 워크플로는 자료만
 # 건드리므로 `test_fields`·`test_refresh`·`test_stable` 셋으로 충분하지만,
 # `index.html`이나 `sw.js`를 손보면 그 셋이 덮지 못하는 곳이 깨진다. 그래서
-# 이쪽은 36종을 전부 돌린다.
+# 이쪽은 37종을 전부 돌린다.
 on:
   workflow_dispatch:
   pull_request:
@@ -58,13 +58,14 @@ jobs:
       # 글꼴을 다시 떠 보는 대목이 쓴다.
       - run: pip install -r requirements/tests.txt
 
-      # 크로미움 한 벌만 받는다. harness 가 ~/.cache/ms-playwright 를 훑어 찾는다.
-      - run: playwright install --with-deps chromium
+      # 주 기능은 Chromium에서 넓게, iPhone 경계는 WebKit으로 최소 기능을 본다.
+      - run: playwright install --with-deps chromium webkit
 
       # 실패한 시험이 남긴 화면 그림을 건져낼 수 있도록 작업 폴더에 모은다.
       - name: 시험
         env:
           GIJUL_SHOT: ${{ github.workspace }}/shots
+          GIJUL_REQUIRE_WEBKIT: '1'
         run: |
           mkdir -p "$GIJUL_SHOT"
           python3 tests/run.py

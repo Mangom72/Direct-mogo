@@ -1,21 +1,29 @@
 package kr.gijul.direct;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.system.Os;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
+import androidx.activity.ComponentActivity;
+import androidx.activity.OnBackPressedCallback;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
 
@@ -30,6 +38,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -45,7 +54,7 @@ import java.util.concurrent.Executors;
  *
  * 페이지는 window.GijulNative 가 있을 때만 이 경로를 쓴다. 다른 OS·브라우저는 그대로다.
  */
-public class MainActivity extends Activity {
+public class MainActivity extends ComponentActivity {
 
     private static final String TAG = "기출직행";
     private static final String SITE = "https://mangom72.github.io/Direct-mogo/";
@@ -64,6 +73,13 @@ public class MainActivity extends Activity {
         io.execute(this::sweep);
 
         web = new WebView(this);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        ViewCompat.setOnApplyWindowInsetsListener(web, (view, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars()
+                    | WindowInsetsCompat.Type.displayCutout());
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            return insets;
+        });
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);          // localStorage — 내 과목·테마 저장에 필요
@@ -91,7 +107,7 @@ public class MainActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
                 Uri u = r.getUrl();
                 String s = u.toString();
-                if (s.startsWith(SITE)) return false;          // 사이트 안은 그대로
+                if (isSite(u)) return false;                   // 사이트 안은 그대로
                 /* 여기서 하는 일은 '이 창을 다른 앱에 넘긴다'이다. 그건 사용자가 링크를
                    눌렀을 때 할 일이지, 페이지 안에 박힌 틀(iframe)이 스스로 할 일이
                    아니다. 지금 이 페이지에 틀이 없더라도, 넘길지 말지를 누가 요청했는지
@@ -110,10 +126,29 @@ public class MainActivity extends Activity {
                 }
                 return true;
             }
+
+            @Override
+            public boolean onRenderProcessGone(WebView v, RenderProcessGoneDetail detail) {
+                boolean crashed = android.os.Build.VERSION.SDK_INT >= 26 && detail.didCrash();
+                Log.e(TAG, "웹 화면 프로세스가 종료됐습니다 (crash=" + crashed + ")");
+                if (web == v) {
+                    if (v.getParent() instanceof ViewGroup)
+                        ((ViewGroup) v.getParent()).removeView(v);
+                    v.destroy();
+                    web = null;
+                    Toast.makeText(MainActivity.this,
+                            "화면을 다시 불러옵니다", Toast.LENGTH_SHORT).show();
+                    if (!destroyed && !isFinishing()) recreate();
+                }
+                return true;
+            }
         });
         web.addJavascriptInterface(new Bridge(), "GijulNative");
         updater = new Updater(this);
         setContentView(web);
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() { handleBack(); }
+        });
 
         if (state == null) web.loadUrl(startUrl(getIntent()));
         else web.restoreState(state);
@@ -145,11 +180,20 @@ public class MainActivity extends Activity {
     private String startUrl(Intent i) {
         String go = SITE;
         Uri d = i == null ? null : i.getData();
-        if (d != null && d.toString().startsWith(SITE)) go = d.toString();
+        if (d != null && isSite(d)) go = d.toString();
 
         String frag = i == null ? null : i.getStringExtra("gijul_frag");
         if (frag != null && frag.startsWith("#") && go.indexOf('#') < 0) go += frag;
         return go;
+    }
+
+    /** 문자열 접두사가 아니라 출처와 프로젝트 경로를 각각 확인한다. */
+    private static boolean isSite(Uri u) {
+        String path = u == null ? null : u.getPath();
+        return u != null && "https".equals(u.getScheme())
+                && "mangom72.github.io".equals(u.getHost())
+                && path != null && ("/Direct-mogo".equals(path)
+                || path.startsWith("/Direct-mogo/"));
     }
 
     /* 뷰어에서 시간을 재고 돌아오면 그것을 페이지가 가져가야 한다. 웹뷰의
@@ -173,6 +217,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         destroyed = true;
+        if (updater != null) updater.cancel();
         ui.removeCallbacksAndMessages(null);
         io.shutdownNow();
         if (web != null) {
@@ -201,8 +246,9 @@ public class MainActivity extends Activity {
     private final Handler ui = new Handler(Looper.getMainLooper());
     private final Runnable disarm = () -> exitArmed = false;
 
-    @Override
-    public void onBackPressed() {
+    /** 페이지 시트 → 방문 기록 → 두 번 눌러 종료 순서를 예측형 뒤로가기에도 지킨다. */
+    private void handleBack() {
+        if (web == null) { finish(); return; }
         /* 페이지가 자기 것을 먼저 닫는다. 답은 비동기로 오지만, 그 사이 다른 일이
            끼어들 여지가 없어(같은 UI 스레드로 돌아온다) 순서가 어긋나지 않는다. */
         web.evaluateJavascript(
@@ -279,7 +325,7 @@ public class MainActivity extends Activity {
         HttpURLConnection c = Net.open(url, Net.EBSI);
         try {
             long total = 0;
-            try (InputStream in = c.getInputStream(); OutputStream os = new FileOutputStream(tmp)) {
+            try (InputStream in = c.getInputStream(); FileOutputStream os = new FileOutputStream(tmp)) {
                 byte[] buf = new byte[16384];
                 int n;
                 while ((n = in.read(buf)) > 0) {
@@ -287,9 +333,9 @@ public class MainActivity extends Activity {
                     if (total > MAX_FILE) throw new Exception("파일이 너무 큽니다");
                     os.write(buf, 0, n);
                 }
+                os.getFD().sync();
             }
-            if (out.exists() && !out.delete()) throw new Exception("옛 파일을 지우지 못했습니다");
-            if (!tmp.renameTo(out)) throw new Exception("파일을 옮기지 못했습니다");
+            replace(tmp, out);
         } catch (Exception e) {
             tmp.delete();          // 반쪽은 남기지 않는다 — 남으면 그 자리가 막힌다
             throw e;
@@ -303,17 +349,22 @@ public class MainActivity extends Activity {
         File tmp = new File(to.getParentFile(), to.getName() + ".part");
         try {
             try (InputStream in = new java.io.FileInputStream(from);
-                 OutputStream os = new FileOutputStream(tmp)) {
+                 FileOutputStream os = new FileOutputStream(tmp)) {
                 byte[] buf = new byte[16384];
                 int n;
                 while ((n = in.read(buf)) > 0) os.write(buf, 0, n);
+                os.getFD().sync();
             }
-            if (to.exists() && !to.delete()) throw new Exception("옛 파일을 지우지 못했습니다");
-            if (!tmp.renameTo(to)) throw new Exception("파일을 옮기지 못했습니다");
+            replace(tmp, to);
         } catch (Exception e) {
             tmp.delete();
             throw e;
         }
+    }
+
+    /** 같은 폴더 안의 rename(2)은 기존 파일을 한 순간에 교체한다. */
+    static void replace(File tmp, File out) throws Exception {
+        Os.rename(tmp.getAbsolutePath(), out.getAbsolutePath());
     }
 
     /** 총량이 상한을 넘으면 오래 안 본 것부터 버린다 */
@@ -375,7 +426,7 @@ public class MainActivity extends Activity {
 
     /** 우리가 직접 그릴 수 있는 형식인지 — 문제·해설은 PDF, 정답은 PNG다 */
     private static boolean canDraw(String name) {
-        String p = name.toLowerCase();
+        String p = name.toLowerCase(Locale.ROOT);
         return p.endsWith(".pdf") || p.endsWith(".png") || p.endsWith(".jpg");
     }
 

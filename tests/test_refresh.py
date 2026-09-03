@@ -71,7 +71,30 @@ ck(retry.total == 4 and {"GET", "POST"} <= set(retry.allowed_methods),
 ck({429, 500, 502, 503, 504} <= set(retry.status_forcelist),
    f"재시도 상태: {retry.status_forcelist}")
 
-print("4. 화면·공개 JSON의 자료 수와 갱신 안내")
+print("4. 학년·활성 과목 단위 안전장치")
+baseline = {
+    "D300": {"100": {"2026": [["3월", "20260301", "p", "", ""]]}},
+    "D200": {"200": {"2026": [["3월", "20260301", "p", "", ""]]}},
+    "D100": {"300": {"2026": [["3월", "20260301", "p", "", ""]] * 10}},
+}
+known = {"D300": {"100"}, "D200": {"200"}, "D100": {"300"}}
+missing_grade = {"D300": baseline["D300"], "D200": baseline["D200"], "D100": {}}
+problems = R.coverage(baseline, missing_grade, known)
+ck(any("D100" in p for p in problems), f"고1 전체 누락을 잡지 못함: {problems}")
+missing_subject = {"D300": {}, "D200": baseline["D200"], "D100": baseline["D100"]}
+problems = R.coverage(baseline, missing_subject, known)
+ck(any("활성 과목" in p and "100" in p for p in problems),
+   f"활성 과목 누락을 잡지 못함: {problems}")
+
+report = R.unknown_report(
+    {"D300": {"100": {"2026": [["3월", "20260301", "p", "", ""]]},
+               "999": {"2026": [["미등록", "20260401", "p", "", ""]]}},
+     "D200": {}, "D100": {}}, known)
+ck(report["grades"]["D300"] ==
+   [{"subjectId": "999", "count": 1, "latestDate": "20260401"}],
+   f"미등록 과목 보고: {report}")
+
+print("5. 화면·공개 JSON의 자료 수와 갱신 안내")
 html = (ROOT / "index.html").read_text(encoding="utf-8")
 payload_count = R.count(R.load_current(html))
 api_count = json.loads((ROOT / "data/index.json").read_text(encoding="utf-8"))["count"]

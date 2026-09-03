@@ -106,7 +106,7 @@ try:
         except Exception as ex:
             print("5. 알림 실패:", str(ex)[:90])
 
-        # ---- 5b. 문서가 바뀌면 글꼴도 다시 받는가
+        # ---- 5b. 문서가 그대로여도 글꼴만 바뀌면 다시 받는가
         #
         # 글꼴은 자라는 파일이다 — 페이지에 새 글자가 늘면 부분집합이 다시
         # 만들어져 같은 이름으로 나간다. 셸은 캐시 우선이라 다시 묻지 않으므로,
@@ -114,8 +114,9 @@ try:
         # 글자만 시스템 글꼴로 떨어진다. 한 제목 안에서 글꼴이 갈린다.
         f = TMP / "fonts" / "SongMyung-400.woff2"
         f.write_bytes(f.read_bytes() + b"NEWGLYPHS")
+        marker = TMP / "fonts" / "version.json"
+        marker.write_text('{"sha256":"font-only-change"}\n', encoding="utf-8")
         want = len(f.read_bytes())
-        p.write_text(p.read_text(encoding="utf-8").replace("'07~", "'08~"), encoding="utf-8")
         pg.goto(URL, wait_until="load")
         got = 0
         try:
@@ -130,9 +131,9 @@ try:
                 const r = await c.match(new URL('./fonts/SongMyung-400.woff2', location).href);
                 return r ? (await r.arrayBuffer()).byteLength : -1;
             }""" % NOW)
-        print("5b. 글꼴 다시 받음:", got == want, f"(캐시 {got} / 서버 {want})")
+        print("5b. 글꼴만 바뀌어도 다시 받음:", got == want, f"(캐시 {got} / 서버 {want})")
         if got != want:
-            BAD.append("문서가 바뀌었는데 글꼴이 캐시에 옛것으로 남았습니다")
+            BAD.append("문서는 그대로이고 글꼴만 바뀌었을 때 캐시에 옛것이 남았습니다")
 
         # ---- 6. 버전 올리면 옛 캐시 정리
         sw = TMP / "sw.js"

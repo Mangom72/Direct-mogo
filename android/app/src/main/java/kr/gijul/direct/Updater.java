@@ -53,8 +53,16 @@ class Updater {
 
     private final Activity act;
     private JSONObject pending;      // 확인된 새 버전. 설치는 사용자가 누른 뒤에만.
+    private volatile boolean cancelled;
 
     Updater(Activity act) { this.act = act; }
+
+    void cancel() { cancelled = true; }
+
+    private boolean usable() {
+        return !cancelled && !Thread.currentThread().isInterrupted()
+                && !act.isFinishing() && !act.isDestroyed();
+    }
 
     // ── 확인 ────────────────────────────────────────────────────────────
 
@@ -66,6 +74,8 @@ class Updater {
      */
     String check() {
         try {
+            if (!usable()) return state("error");
+            pending = null;
             JSONObject m = new JSONObject(get(MANIFEST));
 
             long here = installedCode();
@@ -108,6 +118,7 @@ class Updater {
 
     /** 받아서 검사하고 시스템 설치 화면으로 넘긴다. 실행 스레드에서 부르지 말 것. */
     void install() {
+        if (!usable()) return;
         JSONObject m = pending;
         if (m == null) { report("error", "먼저 새 버전을 확인해야 합니다"); return; }
 
@@ -116,6 +127,7 @@ class Updater {
         if (Build.VERSION.SDK_INT >= 26 && !act.getPackageManager().canRequestPackageInstalls()) {
             report("permission", "이 앱에서 설치를 허용해 주십시오");
             act.runOnUiThread(() -> {
+                if (!usable()) return;
                 try {
                     act.startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
                             Uri.parse("package:" + act.getPackageName())));
@@ -133,6 +145,10 @@ class Updater {
             if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("임시 폴더를 만들지 못했습니다");
             download(m.getString("url"), apk);
 
+            long declaredSize = m.optLong("size", 0);
+            if (declaredSize > 0 && apk.length() != declaredSize)
+                throw new Exception("내려받은 파일 크기가 명세와 다릅니다");
+
             /* 예전에는 명세에 지문이 없으면 이 검사를 건너뛰었다. 그런데 지문을
                적는 것도 명세이므로, 명세를 갈아치울 수 있는 쪽은 그 한 줄만 빼면
                검사를 통째로 끌 수 있었다. 없으면 없는 대로 넘기는 검사는 검사가
@@ -143,13 +159,14 @@ class Updater {
             if (!want.equalsIgnoreCase(sha256(apk)))
                 throw new Exception("내려받은 파일이 손상되었습니다");
 
-            verifyIsOurs(apk);
+            verifyIsOurs(apk, m.getLong("versionCode"));
 
             Uri u = FileProvider.getUriForFile(act, MainActivity.AUTHORITY, apk);
             Intent i = new Intent(Intent.ACTION_VIEW);
             i.setDataAndType(u, "application/vnd.android.package-archive");
             i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
             act.runOnUiThread(() -> {
+                if (!usable()) return;
                 try { act.startActivity(i); report("installing", ""); }
                 catch (Exception e) { report("error", "설치 화면을 열지 못했습니다"); }
             });
@@ -161,7 +178,7 @@ class Updater {
     }
 
     /** 받은 APK가 정말 이 앱의 새 버전인지 — 패키지 이름과 서명 인증서로 확인한다 */
-    private void verifyIsOurs(File apk) throws Exception {
+    private void verifyIsOurs(File apk, long declaredCode) throws Exception {
         PackageManager pm = act.getPackageManager();
         int flag = Build.VERSION.SDK_INT >= 28
                 ? PackageManager.GET_SIGNING_CERTIFICATES : PackageManager.GET_SIGNATURES;
@@ -169,6 +186,11 @@ class Updater {
         if (got == null) throw new Exception("APK를 읽지 못했습니다");
         if (!act.getPackageName().equals(got.packageName))
             throw new Exception("다른 앱의 설치 파일입니다");
+        long archiveCode = Build.VERSION.SDK_INT >= 28 ? got.getLongVersionCode() : got.versionCode;
+        if (archiveCode != declaredCode)
+            throw new Exception("APK 버전이 명세와 다릅니다");
+        if (archiveCode <= installedCode())
+            throw new Exception("현재 버전보다 새 APK가 아닙니다");
 
         PackageInfo mine = pm.getPackageInfo(act.getPackageName(), flag);
         if (!sameSigner(certs(mine), certs(got)))
@@ -201,7 +223,11 @@ class Updater {
             ByteArrayBuilder b = new ByteArrayBuilder();
             byte[] buf = new byte[8192];
             int n;
-            while ((n = in.read(buf)) > 0) { b.add(buf, n); if (b.size() > 64 * 1024) break; }
+            while ((n = in.read(buf)) > 0) {
+                if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
+                b.add(buf, n);
+                if (b.size() > 64 * 1024) throw new Exception("업데이트 명세가 너무 큽니다");
+            }
             return b.text();
         } finally { c.disconnect(); }
     }
@@ -213,6 +239,7 @@ class Updater {
             int n;
             long total = 0;
             while ((n = in.read(buf)) > 0) {
+                if (Thread.currentThread().isInterrupted()) throw new InterruptedException();
                 total += n;
                 if (total > MAX_APK) throw new Exception("파일이 너무 큽니다");
                 os.write(buf, 0, n);

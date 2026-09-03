@@ -27,23 +27,16 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
         with:
           distribution: temurin
           java-version: '17'
 
       # 러너 이미지에 Android SDK가 이미 깔려 있어 ANDROID_HOME을 따로 잡을 필요가 없다.
       #
-      # **Gradle 판본은 못박는다.** 저장소에 래퍼(gradlew)가 없어서, 적지 않으면
-      # 러너 이미지에 깔려 있는 것을 그대로 쓴다 — 우리가 아무것도 바꾸지 않아도
-      # 깃허브가 이미지를 갈아끼우는 날 발밑이 바뀐다. 지금 build.gradle 의 AGP는
-      # 8.7.3 인데, 실제 빌드 로그가 "Gradle 10 과는 호환되지 않는다"고 이미
-      # 경고하고 있다. 이미지가 10을 싣는 날 릴리스가 통째로 멈춘다는 뜻이다.
-      #
-      # 그래서 지금 초록불로 확인된 9.6.1 에 고정한다. 올릴 때는 AGP와 함께 본다.
+      # Gradle 판본과 배포 ZIP 지문은 저장소의 Wrapper가 함께 못박는다. 로컬과
+      # CI가 같은 실행 파일을 쓰고, 내려받은 배포본이 바뀌어도 시작 전에 막힌다.
       - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
-        with:
-          gradle-version: '9.6.1'
 
       # publish_apk.py 가 알림 문구의 글자가 글꼴에 있는지 확인하는데, 그
       # 확인이 fontTools 를 쓴다. 없으면 확인이 깨지고 발행이 통째로 멈춘다.
@@ -68,7 +61,7 @@ jobs:
       # 틀렸다는 것을 알아 봐야 늦다.
       - name: 단위 시험
         working-directory: android
-        run: gradle testDebugUnitTest
+        run: ./gradlew --no-daemon testDebugUnitTest
 
       # 저장소 시크릿에 키를 넣어두면 릴리스 서명으로, 없으면 디버그로 빌드한다.
       # secrets 컨텍스트는 스텝의 if에서 쓸 수 없다 — 넣으면 워크플로 자체가
@@ -93,12 +86,12 @@ jobs:
           GIJUL_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           GIJUL_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           GIJUL_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: gradle assembleRelease --no-daemon
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: assembleDebug
         if: ${{ env.release != '1' }}
         working-directory: android
-        run: gradle assembleDebug --no-daemon
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: 키 지우기
         if: always()
@@ -203,23 +196,36 @@ jobs:
               except urllib.error.HTTPError as e:
                   return e.code, json.loads(e.read() or b"{}")
 
-          if call(f"{API}/releases/tags/{tag}")[0] == 200:
-              sys.exit(f"{tag} 릴리스가 이미 있습니다 — versionName 을 올리세요")
+          st, rel = call(f"{API}/releases/tags/{tag}")
+          if st != 200:
+              body = json.dumps({"tag_name": tag,
+                                 "name": f"{tag} (versionCode {m['versionCode']})",
+                                 "body": m.get("notes") or "",
+                                 "draft": False, "prerelease": False},
+                                ensure_ascii=False).encode()
+              st, rel = call(f"{API}/releases", body)
+              if "id" not in rel:
+                  sys.exit(f"릴리스를 만들지 못했습니다 ({st}) {rel}")
 
-          body = json.dumps({"tag_name": tag,
-                             "name": f"{tag} (versionCode {m['versionCode']})",
-                             "body": m.get("notes") or "",
-                             "draft": False, "prerelease": False}, ensure_ascii=False).encode()
-          st, rel = call(f"{API}/releases", body)
-          if "id" not in rel:
-              sys.exit(f"릴리스를 만들지 못했습니다 ({st}) {rel}")
-
-          st, a = call(f"https://uploads.github.com/repos/{REPO}/releases/{rel['id']}"
-                       "/assets?name=gijul-direct.apk",
-                       blob, "application/vnd.android.package-archive")
-          if a.get("state") != "uploaded" or a.get("size") != m["size"]:
-              sys.exit(f"자산을 올리지 못했습니다 ({st}) {a}")
-          print("릴리스", tag, "·", a["browser_download_url"])
+          assets = [a for a in rel.get("assets", []) if a.get("name") == "gijul-direct.apk"]
+          if assets:
+              a = assets[0]
+              if a.get("size") != m["size"]:
+                  sys.exit(f"기존 {tag} 자산 크기가 이번 APK와 다릅니다")
+              req = urllib.request.Request(a["browser_download_url"],
+                                           headers={"User-Agent": "gijul-release-check"})
+              with urllib.request.urlopen(req) as response:
+                  old = response.read(m["size"] + 1)
+              if hashlib.sha256(old).hexdigest() != m["sha256"]:
+                  sys.exit(f"기존 {tag} 자산 지문이 이번 APK와 다릅니다")
+              print("기존 릴리스 자산을 검증해 이어 씁니다", tag, "·", a["browser_download_url"])
+          else:
+              st, a = call(f"https://uploads.github.com/repos/{REPO}/releases/{rel['id']}"
+                           "/assets?name=gijul-direct.apk",
+                           blob, "application/vnd.android.package-archive")
+              if a.get("state") != "uploaded" or a.get("size") != m["size"]:
+                  sys.exit(f"자산을 올리지 못했습니다 ({st}) {a}")
+              print("릴리스", tag, "·", a["browser_download_url"])
           PY
 
           git config user.name "github-actions[bot]"

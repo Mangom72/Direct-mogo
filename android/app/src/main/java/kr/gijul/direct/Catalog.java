@@ -268,6 +268,7 @@ class Catalog {
     /** 우리 사이트만. 색인이 엉뚱한 곳을 가리켜도 여기서 걸린다. */
     private static void get(String url, File out) throws Exception {
         HttpURLConnection c = Net.open(url, Net.SITE);
+        File tmp = new File(out.getParentFile(), out.getName() + ".part");
         try {
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             try (InputStream in = c.getInputStream()) {
@@ -280,9 +281,14 @@ class Catalog {
             }
             /* 다 받은 뒤에 한 번에 쓴다. 도중에 끊긴 반쪽이 캐시에 남으면
                다음 실행이 그것을 '있는 것'으로 보고 파싱에 실패한다. */
-            try (OutputStream os = new FileOutputStream(out)) {
+            try (FileOutputStream os = new FileOutputStream(tmp)) {
                 os.write(buf.toByteArray());
+                os.getFD().sync();
             }
+            MainActivity.replace(tmp, out);
+        } catch (Exception e) {
+            tmp.delete();
+            throw e;
         } finally {
             c.disconnect();
         }
