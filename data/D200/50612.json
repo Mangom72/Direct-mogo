@@ -4,9 +4,20 @@
  "group": "국어·수학·영어·한국사",
  "subject": "한국사",
  "subjectId": "50612",
- "count": 58,
+ "count": 59,
  "note": "year는 시험을 본 해(시행 연도)입니다. schoolYear는 학년도이며 시행 연도 + 1로, 평가원 시험(수능·6월·9월 모의평가)에만 있습니다. 흔히 '2021학년도 6월 모평'이라 부르는 것은 year 2020 · schoolYear 2021인 회차입니다 — year로 찾으면 한 해 어긋납니다. 교육청 전국연합학력평가는 학년도를 쓰지 않습니다.",
  "papers": [
+  {
+   "id": "D200-50612-20260902",
+   "title": "9월 학평(인천)",
+   "type": "학평",
+   "date": "2026-09-02",
+   "year": 2026,
+   "source": "교육청",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20260902/go2/s_his_1_mun_ZT19OL69.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20260902/mobile/h2_m_s_his_1_ans_FM32F42D.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260902/go2/s_his_1_hsj_LO8B868U.pdf"
+  },
   {
    "id": "D200-50612-20260604",
    "title": "6월 학평(부산)",

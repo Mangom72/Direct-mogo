@@ -4,9 +4,21 @@
  "group": "과학탐구",
  "subject": "생명과학Ⅱ",
  "subjectId": "159",
- "count": 122,
+ "count": 123,
  "note": "year는 시험을 본 해(시행 연도)입니다. schoolYear는 학년도이며 시행 연도 + 1로, 평가원 시험(수능·6월·9월 모의평가)에만 있습니다. 흔히 '2021학년도 6월 모평'이라 부르는 것은 year 2020 · schoolYear 2021인 회차입니다 — year로 찾으면 한 해 어긋납니다. 교육청 전국연합학력평가는 학년도를 쓰지 않습니다.",
  "papers": [
+  {
+   "id": "D300-159-20260902",
+   "title": "9월 모평(평가원)",
+   "type": "모평",
+   "date": "2026-09-02",
+   "year": 2026,
+   "source": "평가원",
+   "problem": "https://wdown.ebsi.co.kr/W61001/01exam/20260902/go3/g_bio2_mun_799439IP.pdf",
+   "answer": "https://wdown.ebsi.co.kr/W61001/01exam/20260902/mobile/h3_m_g_bio2_ans_Z97Q5K14.png",
+   "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20260902/go3/g_bio2_hsj_Z45548B2.pdf",
+   "schoolYear": 2027
+  },
   {
    "id": "D300-159-20260708",
    "title": "7월 학평(인천)",

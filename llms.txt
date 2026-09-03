@@ -2,14 +2,14 @@
 
 > 한국 수능·모의평가·전국연합학력평가 **기출 문제지 원본 PDF 목록**입니다.
 > An index of Korean college-entrance exam papers — problem sheets, answer keys
-> and solutions, each as a public URL. 2006년 시행분부터 5,059회차 ·
-> 77과목 · 자료 기준 2026-07-08. 인증도 API 키도 서버도 없는 정적 JSON입니다.
+> and solutions, each as a public URL. 2006년 시행분부터 5,110회차 ·
+> 77과목 · 자료 기준 2026-09-02. 인증도 API 키도 서버도 없는 정적 JSON입니다.
 
 `data/index.json` 하나에서 시작합니다. 거기 각 과목의 `data` 경로가 있고, 그 파일을
 받으면 그 과목의 전 회차가 `papers` 배열로 나옵니다. 회차마다 세 개의 절대 주소가
 들어 있습니다 — `problem`(문제지 PDF) · `answer`(정답표 **이미지**) ·
 `solution`(해설 PDF). 로그인 없이 바로 열리므로 그대로 사용자에게 건네면 됩니다.
-셋 중 하나가 없는 회차가 흔하니(`answer` 1,926건, `solution` 37건이 비어 있습니다)
+셋 중 하나가 없는 회차가 흔하니(`answer` 1,926건, `solution` 49건이 비어 있습니다)
 쓰기 전에 `null`을 확인하세요.
 
 **연도가 두 가지입니다. 여기서 가장 많이 틀립니다.** `year`는 시험을 본 해(시행
@@ -39,9 +39,9 @@ D200(고2) · D100(고1) 셋뿐입니다. 과목ID는 지어내지 말고 `index
 
 ## 과목 자료 (예시)
 
-- [고3·N수 생명과학Ⅰ](https://mangom72.github.io/Direct-mogo/data/D300/158.json): 143회차, 시행일 내림차순
-- [고3·N수 화법과 작문](https://mangom72.github.io/Direct-mogo/data/D300/140117.json): 44회차, 시행일 내림차순
-- [고3·N수 영어](https://mangom72.github.io/Direct-mogo/data/D300/80003.json): 170회차, 시행일 내림차순
+- [고3·N수 생명과학Ⅰ](https://mangom72.github.io/Direct-mogo/data/D300/158.json): 144회차, 시행일 내림차순
+- [고3·N수 화법과 작문](https://mangom72.github.io/Direct-mogo/data/D300/140117.json): 45회차, 시행일 내림차순
+- [고3·N수 영어](https://mangom72.github.io/Direct-mogo/data/D300/80003.json): 171회차, 시행일 내림차순
 
 ## 사람이 읽는 화면
 
