@@ -1,8 +1,8 @@
 # 시험
 
 ```bash
-pip install playwright "fonttools[woff]" brotli && playwright install chromium
-python3 tests/run.py              # 전부 (3분 남짓, 35종)
+pip install -r requirements/tests.txt && playwright install chromium
+python3 tests/run.py              # 전부 (3분 남짓, 36종)
 python3 tests/run.py sw stale     # 이름에 그 말이 든 것만
 python3 tests/run.py -v           # 출력까지 그대로
 ```
@@ -47,6 +47,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 | `test_pages` `test_seo` | 과목 페이지가 스크립트 없이 읽히는가, 제목·사이트맵·빵부스러기 |
 | `test_llms` | `llms.txt`가 규격에 맞고, 적힌 대로 따라가면 실제 파일이 나오는가 |
 | `test_fields` | 회차 `id`가 유일한가, `type`·`form`·`schoolYear`·`aliases`가 서로 맞는가 |
+| `test_refresh` | EBSi 폼·회차 파싱, 덧붙이기·빈칸 채우기, 순간 장애 재시도가 그대로인가 |
 | `test_glyphs` | **화면에 그려지는 글자가 글꼴에 다 있는가** |
 | `test_stable` | 같은 자료면 같은 파일이 나오는가 (매일 도는 갱신이 헛커밋을 내지 않도록) |
 | `test_kept` | 이미 받아둔 회차의 저장 단추가 잠기는가 |
@@ -64,7 +65,8 @@ python3 tests/run.py -v           # 출력까지 그대로
 
 ## 안드로이드 쪽은 여기 없습니다
 
-여기 35종은 전부 브라우저를 띄웁니다. 자바를 확인하는 것은
+여기 36종은 대부분 브라우저를 띄웁니다. `test_fields`·`test_refresh`·`test_stable`은
+브라우저 없이 자료와 생성기를 확인합니다. 자바를 확인하는 것은
 `android/app/src/test` 에 따로 있고(`gradle testDebugUnitTest`, 8초),
 `android.yml` 이 돌립니다. 무엇을 지키는지는
 [docs/android.md](../docs/android.md#기기-없이-확인하는-것)에 있습니다.
@@ -139,9 +141,9 @@ python3 tests/run.py -v           # 출력까지 그대로
 
 ## CI에서는 두 갈래로 돕니다
 
-**자료 갱신**(`refresh-data.yml`)은 `test_fields`와 `test_stable` 둘, 그리고
+**자료 갱신**(`refresh-data.yml`)은 `test_fields`·`test_refresh`·`test_stable` 셋, 그리고
 `test_dday --date`를 돌립니다.
-이 둘은 **브라우저도 서버도 쓰지 않아** 몇 초면 끝나고, 그 작업이 실제로 낼 수 있는
+이 셋은 **브라우저도 서버도 쓰지 않아** 몇 초면 끝나고, 그 작업이 실제로 낼 수 있는
 잘못(회차 이름표 겹침, 시험 종류와 출제 기관 어긋남, 학년도 오류, 과목 별칭 충돌,
 재현되지 않는 빌드)을 덮습니다. 사람이 보지 않는 채로 커밋이 나가므로 여기서
 실패하면 커밋 단계로 가지 않습니다. 크로미움을 받는 데만 1~2분이고 실행에 3분이
@@ -161,7 +163,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 빨갛게 뜹니다.
 
 **화면 쪽**(`tests.yml`)은 `index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로
-main에 올라갈 때 35종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
+main에 올라갈 때 36종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
 남아, 손에서 재현되지 않는 실패도 눈으로 볼 수 있습니다.
 
 어느 쪽이든 CI는 마지막 그물입니다. 고친 자리에서 `python3 tests/run.py`를 먼저

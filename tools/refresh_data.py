@@ -26,6 +26,8 @@ from html import unescape
 from pathlib import Path
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 BASE = "https://www.ebsi.co.kr"
 LIST = BASE + "/ebs/xip/xipc/previousPaperList.ebs"
@@ -37,6 +39,24 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 
 PAYLOAD_RE = re.compile(
     r'(<script id="payload" type="application/octet-stream">)([^<]+)(</script>)')
+
+
+def new_session():
+    """목록 조회용 세션. 읽기 전용 POST도 순간 장애에는 같은 요청을 다시 보낸다."""
+    retry = Retry(
+        total=4,
+        connect=4,
+        read=4,
+        status=4,
+        backoff_factor=1,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset({"GET", "POST"}),
+        respect_retry_after_header=True,
+    )
+    session = requests.Session()
+    session.headers["User-Agent"] = UA
+    session.mount("https://", HTTPAdapter(max_retries=retry))
+    return session
 
 
 def form_defaults(html):
@@ -329,8 +349,7 @@ def main():
 
     known = known_subjects(text)
 
-    session = requests.Session()
-    session.headers["User-Agent"] = UA
+    session = new_session()
     scraped = build(session, args.pause)
 
     reachable = sum(len(v) for g, subs in scraped.items() for s, v0 in subs.items()

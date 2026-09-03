@@ -25,9 +25,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
           java-version: '17'
@@ -41,13 +41,18 @@ jobs:
       # 경고하고 있다. 이미지가 10을 싣는 날 릴리스가 통째로 멈춘다는 뜻이다.
       #
       # 그래서 지금 초록불로 확인된 9.6.1 에 고정한다. 올릴 때는 AGP와 함께 본다.
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
         with:
           gradle-version: '9.6.1'
 
       # publish_apk.py 가 알림 문구의 글자가 글꼴에 있는지 확인하는데, 그
       # 확인이 fontTools 를 쓴다. 없으면 확인이 깨지고 발행이 통째로 멈춘다.
-      - run: pip install "fonttools[woff]" brotli
+      - run: pip install -r requirements/fonts.txt
+
+      # 자료 갱신이 함께 들어온 커밋에서도 APK가 방금 만든 글꼴을 품게 한다.
+      # 웹 글꼴만 새것이고 앱 글꼴은 전날 것이 되는 갈래를 빌드 전에 닫는다.
+      - name: 웹과 앱 글꼴 맞추기
+        run: python3 tools/build_fonts.py
 
       # 회차 이름을 줄이는 규칙과 수능 날 셈이 페이지와 앱 양쪽에 두 벌로 있다.
       # 어긋나도 아무 데서도 안 걸리므로(둘 다 오류가 아니다) 여기서 견준다.
@@ -56,7 +61,7 @@ jobs:
       - name: 화면과 앱이 같은 말을 하는가
         run: python3 tests/test_twins.py
 
-      # 기기 없이 돌아가는 단위 시험 열둘. 틀려도 조용히 틀리는 자리만 골랐다 —
+      # 기기 없이 돌아가는 단위 시험 32개. 틀려도 조용히 틀리는 자리만 골랐다 —
       # 허용 목록, 이름 거르기, 열쇠 가르기, 연속 일수. 위젯이 실제로 그려지는
       # 모습이나 SAF·웹뷰는 여기서 못 보고, 이 시험이 그것을 대신하지도 않는다.
       # 8초면 끝나므로 빌드 앞에 둔다 — 서명해서 릴리스까지 낸 다음에 셈이
@@ -124,7 +129,7 @@ jobs:
           fi
           echo "이전 판본과 같은 키입니다"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: gijul-direct-apk
           path: |
@@ -221,7 +226,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # 글꼴이 바뀌었으면 명세와 같은 커밋으로 나간다 — 따로 내보내면 그
           # 사이에 화면이 네모를 띄우는 순간이 생긴다.
-          git add app/latest.json fonts
+          git add app/latest.json fonts android/app/src/main/res/font
           git diff --cached --quiet || git commit -m "Publish the app update manifest"
           # 매일 도는 자료 갱신도 fonts 를 건드린다. 겹치는 일은 드물지만,
           # 겹쳤을 때 릴리스만 올라가고 명세가 빠지는 것이 제일 나쁘다.

@@ -1,10 +1,22 @@
 name: 회귀 시험
 
 # 화면을 고쳐 미는 길에는 그동안 아무 관문이 없었다. 자료 갱신 워크플로는 자료만
-# 건드리므로 `test_fields`·`test_stable` 둘로 충분하지만, `index.html`이나 `sw.js`를
-# 손보면 그 둘이 덮지 못하는 곳이 깨진다. 그래서 이쪽은 29종을 전부 돌린다.
+# 건드리므로 `test_fields`·`test_refresh`·`test_stable` 셋으로 충분하지만,
+# `index.html`이나 `sw.js`를 손보면 그 셋이 덮지 못하는 곳이 깨진다. 그래서
+# 이쪽은 36종을 전부 돌린다.
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 's/**'
+      - 'fonts/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'requirements/**'
+      - '.github/workflows/tests.yml'
   push:
     # main 에서만 돈다. 같은 커밋을 작업 브랜치에도 올리므로 브랜치를 가리지
     # 않으면 한 번의 푸시에 두 벌이 돈다.
@@ -17,6 +29,7 @@ on:
       - 'fonts/**'
       - 'tools/**'
       - 'tests/**'
+      - 'requirements/**'
       - '.github/workflows/tests.yml'
 
 # 아무것도 내보내지 않는 워크플로다. 저장소 기본값이 쓰기면 그 권한을 그대로
@@ -35,15 +48,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.12"
 
       # requests 는 test_stable 이 부르는 refresh_data 가, fonttools·brotli 는
       # 글꼴을 다시 떠 보는 대목이 쓴다.
-      - run: pip install playwright requests "fonttools[woff]" brotli
+      - run: pip install -r requirements/tests.txt
 
       # 크로미움 한 벌만 받는다. harness 가 ~/.cache/ms-playwright 를 훑어 찾는다.
       - run: playwright install --with-deps chromium
@@ -57,7 +70,7 @@ jobs:
           python3 tests/run.py
 
       # 손에서 재현되지 않는 실패를 눈으로 볼 수 있는 유일한 길이다.
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: failure()
         with:
           name: 실패한-화면

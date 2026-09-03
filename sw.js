@@ -1,7 +1,7 @@
 /* 기출 직행 서비스 워커
-   자료 3,800여 건이 index.html 안에 들어 있으므로, 이 파일 하나만 쥐고 있으면
+   자료 5천여 건이 index.html 안에 들어 있으므로, 이 파일 하나만 쥐고 있으면
    조회·필터는 네트워크 없이 전부 동작한다. 네트워크가 필요한 것은 PDF뿐이다. */
-const VERSION = "v3";
+const VERSION = "v4";
 const SHELL = `gijul-shell-${VERSION}`;
 const FILES = `gijul-files-${VERSION}`;
 const KEEP = [SHELL, FILES];
@@ -14,12 +14,11 @@ const KEEP = [SHELL, FILES];
    한 번에 지하철에서 볼 문제지가 사라지면 안 된다. */
 const VAULT = "gijul-vault:";
 
-const SHELL_URLS = [
+/* 아래 파일은 하나라도 빠지면 앱의 첫 화면이나 글꼴이 반쪽짜리가 된다. 설치를
+   성공으로 표시하지 말고 다음 접속에서 다시 시도한다. 아이콘은 없어도 앱 자체는
+   쓸 수 있으므로 따로 받아, 한 변형의 실패가 전체 설치를 막지는 않게 한다. */
+const REQUIRED_SHELL_URLS = [
   "./", "./index.html", "./manifest.webmanifest",
-  "./icons/icon-192.png", "./icons/icon-512.png",
-  "./icons/icon-maskable-192.png", "./icons/icon-maskable-512.png",
-  "./icons/apple-touch-icon.png", "./icons/favicon.ico", "./icons/favicon-32.png",
-  "./icons/favicon-192.png",
   /* 글꼴도 우리 것이 됐으므로 셸과 함께 미리 받아 둔다 — 첫 방문부터 오프라인에서
      제 글꼴로 뜨고, 예전처럼 남의 서버가 대답할 때까지 기다릴 일이 없다. */
   "./fonts/fonts.css",
@@ -27,6 +26,13 @@ const SHELL_URLS = [
   "./fonts/GijulSans-400.woff2", "./fonts/GijulSans-500.woff2",
   "./fonts/GijulSans-600.woff2", "./fonts/GijulSans-700.woff2",
 ];
+const OPTIONAL_SHELL_URLS = [
+  "./icons/icon-192.png", "./icons/icon-512.png",
+  "./icons/icon-maskable-192.png", "./icons/icon-maskable-512.png",
+  "./icons/apple-touch-icon.png", "./icons/favicon.ico", "./icons/favicon-32.png",
+  "./icons/favicon-192.png",
+];
+const SHELL_URLS = [...REQUIRED_SHELL_URLS, ...OPTIONAL_SHELL_URLS];
 
 /* 주소를 통째로 풀어 두고 정확히 맞는 것만 셸에서 낸다.
    전에는 경로 끝만 비교했는데, 과목 페이지 s/index.html 이 './index.html' 로 끝나는
@@ -40,10 +46,10 @@ const MAX_FILES = 40;   /* 받아둔 PDF·이미지 보관 개수 */
 const isPaper = u => u.hostname === "wdown.ebsi.co.kr";
 
 self.addEventListener("install", e=>{
-  /* 아이콘 하나가 없다고 설치 전체가 실패하면 안 된다 */
-  e.waitUntil(caches.open(SHELL)
-    .then(c => Promise.all(SHELL_URLS.map(u => c.add(u).catch(()=>{}))))
-    .then(()=>self.skipWaiting()));
+  e.waitUntil(caches.open(SHELL).then(async c => {
+    await c.addAll(REQUIRED_SHELL_URLS);
+    await Promise.all(OPTIONAL_SHELL_URLS.map(u => c.add(u).catch(()=>{})));
+  }).then(()=>self.skipWaiting()));
 });
 
 /* 교체된 옛 워커가 남은 요청을 처리하며 방금 지운 통을 되살릴 수 있으므로,

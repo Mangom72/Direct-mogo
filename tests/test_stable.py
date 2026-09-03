@@ -1,47 +1,69 @@
-"""같은 자료면 같은 파일이 나오는가 — 매일 도는 갱신이 헛커밋을 내지 않으려면 필요하다."""
-import sys, pathlib
+"""같은 자료면 같은 파일이 나오는가 — 자동 생성물이 소스와 어긋나지 않는가."""
+import hashlib
+import json
+import pathlib
+import subprocess
+import sys
+import time
+
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from harness import ROOT      # 이 시험은 브라우저도 서버도 쓰지 않는다
-import sys, hashlib, subprocess, pathlib, json
+
 sys.path.insert(0, str(ROOT / "tools"))
+import refresh_data as RD
+
 R = ROOT
-def sha(p): return hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()[:16]
 bad = []
 
+
+def sha(path):
+    return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+
+
+def run(*args):
+    """생성기가 실패했는데 옛 파일끼리 비교해 통과하는 일을 막는다."""
+    subprocess.run([sys.executable, *args], cwd=R, check=True)
+
+
+def outputs():
+    files = (sorted((R / "fonts").glob("*.woff2"))
+             + sorted((R / "android/app/src/main/res/font").glob("gijul_*.ttf"))
+             + sorted(R.glob("data/**/*.json"))
+             + sorted(f for f in R.glob("s/**/*") if f.is_file())
+             + [R / "llms.txt", R / "llms-full.txt", R / "sitemap.xml"])
+    return {str(f.relative_to(R)): sha(f) for f in files}
+
+
 print("1. 페이로드 눌러 담기")
-import refresh_data as RD
 raw = json.dumps({"D300": {"158": {"2026": [["수능", "20251113", "a", "b", "c"]]}}},
                  ensure_ascii=False, separators=(",", ":")).encode()
-import time
-a = RD.squeeze(raw); time.sleep(1.1); b = RD.squeeze(raw)
+a = RD.squeeze(raw)
+time.sleep(1.1)
+b = RD.squeeze(raw)
 print(f"   1초 간격 두 번 → 같음: {a == b}")
-if a != b: bad.append("페이로드 바이트가 매번 달라집니다")
+if a != b:
+    bad.append("페이로드 바이트가 매번 달라집니다")
 
-print("\n2. 글꼴 다시 만들기 (원본은 fonts/.src 재사용, 망 불필요)")
-before = {f.name: sha(f) for f in sorted((R/"fonts").glob("*.woff2"))}
-subprocess.run(["python3", "tools/build_fonts.py"], cwd=R, capture_output=True)
-mid = {f.name: sha(f) for f in sorted((R/"fonts").glob("*.woff2"))}
-subprocess.run(["python3", "tools/build_fonts.py"], cwd=R, capture_output=True)
-after = {f.name: sha(f) for f in sorted((R/"fonts").glob("*.woff2"))}
-for n in mid:
-    same = mid[n] == after[n]
-    print(f"   {n:22} 두 번 만들어 같음: {same}")
-    if not same: bad.append(f"{n} 이 만들 때마다 달라집니다")
+print("\n2. 생성 결과가 커밋과 같은가")
+before = outputs()
+run("tools/build_api.py")
+run("tools/build_pages.py")
+run("tools/build_fonts.py")
+mid = outputs()
+drift = sorted(k for k in set(before) | set(mid) if before.get(k) != mid.get(k))
+print(f"   생성물 {len(mid)}개 · 어긋난 것 {len(drift)}개")
+if drift:
+    bad.append(f"생성물이 소스와 어긋납니다: {drift[:3]}")
 
-print("\n3. 정적 산출물")
-for cmd in (["python3","tools/build_api.py"], ["python3","tools/build_pages.py"]):
-    subprocess.run(cmd, cwd=R, capture_output=True)
-h1 = {str(f): sha(f) for f in sorted(R.glob("data/**/*.json"))} | \
-     {str(f): sha(f) for f in sorted(R.glob("s/**/*"))if f.is_file()} | \
-     {"llms": sha(R/"llms.txt"), "full": sha(R/"llms-full.txt"), "sm": sha(R/"sitemap.xml")}
-for cmd in (["python3","tools/build_api.py"], ["python3","tools/build_pages.py"]):
-    subprocess.run(cmd, cwd=R, capture_output=True)
-h2 = {str(f): sha(f) for f in sorted(R.glob("data/**/*.json"))} | \
-     {str(f): sha(f) for f in sorted(R.glob("s/**/*")) if f.is_file()} | \
-     {"llms": sha(R/"llms.txt"), "full": sha(R/"llms-full.txt"), "sm": sha(R/"sitemap.xml")}
-diff = [k for k in h1 if h1[k] != h2[k]]
-print(f"   파일 {len(h1)}개 두 번 만들어 달라진 것: {len(diff)}")
-if diff: bad.append(f"정적 산출물이 달라집니다: {diff[:3]}")
+print("\n3. 같은 자료를 두 번 만들면 같은가")
+run("tools/build_api.py")
+run("tools/build_pages.py")
+run("tools/build_fonts.py")
+after = outputs()
+diff = sorted(k for k in set(mid) | set(after) if mid.get(k) != after.get(k))
+print(f"   파일 {len(mid)}개 두 번 만들어 달라진 것: {len(diff)}")
+if diff:
+    bad.append(f"정적 산출물이 달라집니다: {diff[:3]}")
 
 print("\n=== 문제:", bad or "없음")
-sys.exit(1 if bad else 0)
+raise SystemExit(1 if bad else 0)

@@ -7,7 +7,7 @@
 
 | 파일 | 역할 |
 |---|---|
-| `index.html` | 앱 전체. 자료 5,059회차가 gzip+base64로 안에 들어 있습니다 (272KB) |
+| `index.html` | 앱 전체. 자료 5천여 회차가 gzip+base64로 안에 들어 있습니다 (272KB) |
 | `sw.js` | 서비스 워커. 앱 셸·글꼴·받아둔 PDF를 캐시합니다 |
 | `data/`, `llms.txt`, `llms-full.txt` | AI·프로그램용 정적 JSON과 사용 안내 |
 | `s/`, `sitemap.xml` | 검색엔진과 사람이 읽는 과목별 정적 페이지 |
@@ -20,12 +20,12 @@
 | `tools/check_fresh.py` | EBSi가 새 회차를 아직 올리고 있는지 — 수능 하나로 봅니다 |
 | `tools/check_csp.py` | 인라인 스크립트 해시가 CSP와 맞는지 봅니다 |
 | `tools/publish_apk.py` | 빌드된 릴리스 APK를 읽어 `app/latest.json`을 씁니다 |
-| `tests/` | 회귀 시험 35종 ([tests/README.md](../tests/README.md)) |
+| `tests/` | 회귀 시험 36종 ([tests/README.md](../tests/README.md)) |
 | `android/` | WebView 앱 ([docs/android.md](android.md)) |
 | — | 무엇이 웹이고 무엇이 앱인지: [docs/split.md](split.md) |
 | — | 그것을 iOS로 옮길 수 있는지: [docs/ios.md](ios.md) |
 | `.github/workflows/refresh-data.yml` | 매일 15시 23분·23시 23분(KST) 자료 갱신 |
-| `.github/workflows/tests.yml` | 화면을 고쳐 main에 밀면 35종을 돌립니다 |
+| `.github/workflows/tests.yml` | 화면을 고쳐 main에 밀면 36종을 돌립니다 |
 | `.github/workflows/android.yml` | APK 빌드·서명·릴리스 (main 푸시·수동 실행) |
 
 자료를 `index.html` 안에 넣어둔 덕분에 **이 파일 하나만 캐시하면 조회·필터가
@@ -41,9 +41,9 @@ PDF는 EBSi가 `Access-Control-Allow-Origin: *`를 주기 때문에 페이지가
 
 | 바꾼 것 | 도는 것 | 하는 일 |
 |---|---|---|
-| `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 35종. 실패하면 그때의 화면 그림을 artifact로 남깁니다 |
+| `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 36종. 실패하면 그때의 화면 그림을 artifact로 남깁니다 |
 | `android/**` | `android.yml` | 서명 빌드 → **지문 확인** → 릴리스 생성 → APK 첨부 → 글꼴 다시 만들기 → `app/latest.json`·`fonts/` 커밋 |
-| (매일 15:23·23:23 KST) | `refresh-data.yml` | EBSi에서 새 회차 수집 → JSON·과목 페이지·글꼴 → `test_fields`·`test_stable` → 커밋 → 수능 날짜 대조 → 예약 유지 |
+| (매일 15:23·23:23 KST) | `refresh-data.yml` | EBSi에서 새 회차 수집 → JSON·과목 페이지·글꼴 → `test_fields`·`test_refresh`·`test_stable` → 커밋 → 수능 날짜 대조 → 예약 유지 |
 
 `refresh-data.yml`이 `index.html`을 커밋하므로, 새 자료가 있는 날에는 그 커밋이
 이어서 `tests.yml`을 깨웁니다. 자료가 없는 날은 아무것도 커밋하지 않아 조용합니다.
@@ -87,7 +87,7 @@ git도 절반만 됩니다. 브랜치 push와 force push는 되지만 **태그 �
 새 회차는 워크플로가 알아서 채웁니다. 직접 돌리려면:
 
 ```bash
-pip install requests "fonttools[woff]" brotli
+pip install -r requirements/refresh.txt -r requirements/fonts.txt
 python3 tools/refresh_data.py --dry-run   # 무엇이 늘어나는지만 확인
 python3 tools/refresh_data.py             # index.html 갱신
 python3 tools/build_api.py                # → data/, llms.txt
@@ -108,11 +108,11 @@ python3 tools/build_fonts.py              # → fonts/
 ## 고치고 나면
 
 ```bash
-python3 tests/run.py        # 회귀 시험 35종, 3분 남짓
+python3 tests/run.py        # 회귀 시험 36종, 3분 남짓
 ```
 
 무엇을 지키는 시험인지는 [tests/README.md](../tests/README.md)에 있습니다.
-`index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로 main에 올라가면 같은 35종이
+`index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로 main에 올라가면 같은 36종이
 CI에서도 한 번 더 돕니다. 실패하면 그때의 화면 그림이 artifact로 남습니다.
 
 기존 기록의 **있는 값은 고치지 않습니다.** 새 시행일을 덧붙이고, 이미 있는 회차는
@@ -143,8 +143,8 @@ EBSi가 한 회차를 한 번에 올리지 않습니다. 파일 헤더(`Last-Mod
 새 자료가 없는 날은 페이로드가 그대로이므로 워크플로가 거기서 끝납니다 — 정적
 JSON·과목 페이지·글꼴을 다시 만들지 않고, 커밋도 하지 않습니다.
 
-사람이 보지 않는 채로 나가는 커밋이므로, 내보내기 전에 `test_fields`와 `test_stable`
-두 가지를 돌립니다. 브라우저도 서버도 쓰지 않아 몇 초면 끝나고, 이 작업이 실제로
+사람이 보지 않는 채로 나가는 커밋이므로, 내보내기 전에 `test_fields`·`test_refresh`·`test_stable`
+세 가지를 돌립니다. 브라우저도 서버도 쓰지 않아 몇 초면 끝나고, 이 작업이 실제로
 낼 수 있는 잘못(회차 이름표 겹침, 시험 종류와 출제 기관 어긋남, 학년도 오류, 과목
 별칭 충돌, 재현되지 않는 빌드)을 덮습니다. 여기서 실패하면 커밋 단계로 가지 않으므로
 자료는 어제 것 그대로 남고, 워크플로가 빨갛게 떠서 사람이 봅니다.
@@ -159,7 +159,7 @@ CSP 해시를 다시 맞춰야 합니다. 어긋난 채로 나가면 그 스크�
 ## 검색에서 찾아지게
 
 `index.html`은 자료를 압축해 품고 JS로 풉니다. 사람에게는 빠르지만 검색엔진에는
-**빈 페이지 한 장**입니다 — 5,059회차가 통째로 안 보입니다. 그래서 같은 자료를
+**빈 페이지 한 장**입니다 — 5천여 회차가 통째로 안 보입니다. 그래서 같은 자료를
 스크립트 없이 그대로 읽히는 HTML로도 함께 배포합니다.
 
 ```
@@ -168,7 +168,7 @@ CSP 해시를 다시 맞춰야 합니다. 어긋난 채로 나가면 그 스크�
 /sitemap.xml            위 79장
 ```
 
-회차별 페이지는 만들지 않습니다. 5,059장이 되는데 한 장에 링크 세 개뿐이라
+회차별 페이지는 만들지 않습니다. 5천여 장이 되는데 한 장에 링크 세 개뿐이라
 검색엔진이 알맹이 없는 페이지로 보고 오히려 깎습니다. 과목 페이지 한 장이 그 과목의
 링크를 전부 담으므로 잃는 것도 없습니다.
 
@@ -294,7 +294,7 @@ python3 -m http.server 8000
 ```
 
 - 이름은 `기출직행-백업-20260824.json`(자동 백업은 `기출직행-백업.json` 하나를
-  계속 덮어씁니다). 표시가 5,059개라도 300KB 남짓입니다.
+  계속 덮어씁니다). 표시가 5천여 개라도 300KB 남짓입니다.
 - 앱에서는 `<a download>`가 아무 일도 하지 않으므로(웹뷰에 내려받기 처리가 없습니다)
   창구로 넘겨 **공유 시트**를 띄웁니다. 가져올 때는 SAF 파일 고르기를 씁니다.
 - **합치기가 기본입니다.** 덮어쓰기를 기본으로 두면 다른 기기의 것을 가져오는

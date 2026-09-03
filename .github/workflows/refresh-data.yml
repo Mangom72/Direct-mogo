@@ -32,13 +32,15 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.12"
 
-      - run: pip install requests
+      - run: pip install -r requirements/refresh.txt
 
       # 스크립트는 수집량이 기존의 80%에 못 미치면 스스로 실패한다.
       # EBSi 구조가 바뀌면 조용히 빈손이 되는 대신 여기서 빨갛게 떠야 한다.
@@ -60,7 +62,7 @@ jobs:
 
       - name: 글꼴 도구 설치
         if: steps.changed.outputs.yes == '1'
-        run: pip install "fonttools[woff]" brotli
+        run: pip install -r requirements/fonts.txt
 
       # 앱 페이로드와 AI·프로그램용 JSON이 어긋나면 안 되므로 같은 실행에서 다시 만든다
       - name: 정적 JSON 다시 만들기
@@ -95,6 +97,7 @@ jobs:
         if: steps.changed.outputs.yes == '1'
         run: |
           python3 tests/test_fields.py
+          python3 tests/test_refresh.py
           python3 tests/test_stable.py
 
       - name: 변경분 커밋
@@ -102,12 +105,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html data llms.txt llms-full.txt fonts s sitemap.xml
+          git add index.html data llms.txt llms-full.txt fonts \
+            android/app/src/main/res/font s sitemap.xml
           # 무엇이 늘었는지 메시지에 남긴다. 화면의 '자료 갱신 내역'이 이 괄호
           # 안을 읽어 그날 무슨 일이 있었는지 보여준다.
           NOTE=$(cat "$RUNNER_TEMP/note.txt" 2>/dev/null || true)
           git commit -m "Refresh exam data from EBSi${NOTE:+ ($NOTE)}"
-          git push
+          git push || { git pull --rebase origin main && git push; }
 
       # 화면은 수능 시행일을 관례(11월 13~19일 목요일)로 셈하므로 평소에는 손댈
       # 것이 없다. 문제는 그 관례가 깨질 때다 — 시험이 연기되거나(2017 포항 지진,
@@ -168,5 +172,5 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git commit --allow-empty -m "Keep the scheduled refresh from being disabled"
-            git push
+            git push || { git pull --rebase origin main && git push; }
           fi

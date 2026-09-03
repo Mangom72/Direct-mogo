@@ -2,14 +2,14 @@
 """검색엔진과 사람이 읽을 수 있는 과목별 정적 페이지를 만든다.
 
 `index.html`은 자료를 gzip+base64로 품고 JS로 푼다. 사람에게는 그게 빠르지만
-검색엔진에게는 빈 페이지 한 장이다 — 5,059회차가 통째로 안 보인다. 그래서
+검색엔진에게는 빈 페이지 한 장이다 — 5천여 회차가 통째로 안 보인다. 그래서
 같은 자료를 **스크립트 없이 그대로 읽히는 HTML**로도 함께 배포한다.
 
     /s/                     과목 색인 (77과목)
     /s/D300/158.html        고3·N수 생명과학Ⅰ 전 회차
     /sitemap.xml            위 전부
 
-회차별 페이지는 만들지 않는다. 5,059장이 되는데 한 장에 링크 세 개뿐이라
+회차별 페이지는 만들지 않는다. 5천여 장이 되는데 한 장에 링크 세 개뿐이라
 검색엔진이 '알맹이 없는 페이지'로 보고 오히려 깎는다. 과목 페이지 한 장이
 그 과목의 링크를 전부 담으므로 잃는 것도 없다.
 
@@ -67,7 +67,7 @@ def head(title, desc, canon, depth, alt=""):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' '{sha(js)}'; img-src 'self' data:; style-src 'self' '{sha(css)}'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' '{sha(js)}'; img-src 'self' data:; style-src 'self' '{sha(css)}'; font-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>{E(title)}</title>
 <meta name="description" content="{E(desc)}">
 <link rel="canonical" href="{E(canon)}">
@@ -436,7 +436,7 @@ footer .ln{font-weight:600}
 """
 
 
-JS = """/* tools/build_pages.py 가 쓴다. 손으로 고치지 말 것.
+JS = r"""/* tools/build_pages.py 가 쓴다. 손으로 고치지 말 것.
    과목 페이지에 붙는 유일한 스크립트다. 두 가지만 한다.
 
    1) 앱 화면에서 골라 둔 테마를 여기서도 따른다. 같은 출처라 저장소를 그대로

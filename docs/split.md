@@ -35,7 +35,7 @@
 
 | 기능 | 비고 |
 |---|---|
-| 회차 조회·거르기 | 5,059회차가 `<script id="payload">`에 gzip+base64로 들어 있습니다 |
+| 회차 조회·거르기 | 5천여 회차가 `<script id="payload">`에 gzip+base64로 들어 있습니다 |
 | 내 과목 | `★` 저장 · 길게 눌러 순서 변경 · `#subs=` 링크로 다른 기기에 |
 | 푼 회차 표시 | `✓` · 푼 날 도장(길게 눌러 수정) · 연도별 진도 · **안 푼 것만** |
 | 푼 날 달력 | 태블릿 2단 / 폰 1단 · 화살표·Home/End·PageUp/Down |
@@ -157,7 +157,7 @@ else                          NATIVE.openPaper(url, nm);
 
 | 고친 곳 | 워크플로 | 무엇 |
 |---|---|---|
-| `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 35종 |
+| `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 36종 |
 | `android/**` | `android.yml` | `test_twins` → JVM 단위 시험 32개 → 서명 빌드 → 지문 확인 → 릴리스 |
 | (매일 15:23·23:23 KST) | `refresh-data.yml` | EBSi 수집 → 수능 날짜 대조 → 새 회차 카나리아 |
 

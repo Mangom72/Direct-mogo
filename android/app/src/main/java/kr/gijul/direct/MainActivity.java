@@ -54,6 +54,7 @@ public class MainActivity extends Activity {
     private WebView web;
     private Updater updater;
     private final ExecutorService io = Executors.newSingleThreadExecutor();
+    private volatile boolean destroyed;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -164,7 +165,24 @@ public class MainActivity extends Activity {
         io.execute(this::mergeAuto);
     }
 
-    @Override protected void onSaveInstanceState(Bundle b) { super.onSaveInstanceState(b); web.saveState(b); }
+    @Override protected void onSaveInstanceState(Bundle b) {
+        super.onSaveInstanceState(b);
+        if (web != null) web.saveState(b);
+    }
+
+    @Override
+    protected void onDestroy() {
+        destroyed = true;
+        ui.removeCallbacksAndMessages(null);
+        io.shutdownNow();
+        if (web != null) {
+            web.removeJavascriptInterface("GijulNative");
+            web.stopLoading();
+            web.destroy();
+            web = null;
+        }
+        super.onDestroy();
+    }
 
     /* 뒤로가기.
 
@@ -746,13 +764,13 @@ public class MainActivity extends Activity {
                                     + JSONObject.quote(bad ? "error" : "latest") + ","
                                     + JSONObject.quote(bad ? "새 버전을 확인하지 못했습니다"
                                                            : "이미 최신 버전입니다") + ")";
-                            runOnUiThread(() -> web.evaluateJavascript(js, null));
+                            eval(js);
                         }
                         return;
                     }
                     String js = "window.gijulUpdateFound && window.gijulUpdateFound("
                             + JSONObject.quote(r) + ")";
-                    runOnUiThread(() -> web.evaluateJavascript(js, null));
+                    eval(js);
                 } catch (Exception ignored) { }
             });
         }
@@ -763,7 +781,12 @@ public class MainActivity extends Activity {
     }
 
     /** Updater가 페이지로 상태를 돌려줄 때 쓴다 */
-    void eval(String js) { web.evaluateJavascript(js, null); }
+    void eval(String js) {
+        if (destroyed) return;
+        runOnUiThread(() -> {
+            if (!destroyed && web != null) web.evaluateJavascript(js, null);
+        });
+    }
 
     private boolean rmrf(File d) {
         if (!d.exists()) return false;
@@ -774,6 +797,7 @@ public class MainActivity extends Activity {
 
     private void open(Intent i) {
         runOnUiThread(() -> {
+            if (destroyed) return;
             try { startActivity(i); }
             catch (Exception e) { report(false, 0, "열 수 있는 앱이 없습니다"); }
         });
@@ -993,7 +1017,7 @@ public class MainActivity extends Activity {
         if (stamp > 0) prefs().edit().putLong(AUTO_SEEN, stamp).apply();
         final String js = "window.gijulAutoMerge && window.gijulAutoMerge("
                 + JSONObject.quote(json) + ")";
-        runOnUiThread(() -> web.evaluateJavascript(js, null));
+        eval(js);
     }
 
     private void writeAuto() {
@@ -1048,10 +1072,10 @@ public class MainActivity extends Activity {
 
     private void autoState() {
         String js = "window.gijulAutoBackup && window.gijulAutoBackup(" + autoJson() + ")";
-        runOnUiThread(() -> web.evaluateJavascript(js, null));
+        eval(js);
     }
 
-    /** 백업 파일 한도. 표시가 5,059개라도 300KB 남짓이라 이 위는 우리 것이 아니다. */
+    /** 백업 파일 한도. 표시가 5천여 개라도 300KB 남짓이라 이 위는 우리 것이 아니다. */
     private static final int MAX_BACKUP = 4 * 1024 * 1024;
 
     @Override
@@ -1120,19 +1144,19 @@ public class MainActivity extends Activity {
     private void backupPicked(String text) {
         String js = "window.gijulBackupPicked && window.gijulBackupPicked("
                 + (text == null ? "null" : JSONObject.quote(text)) + ")";
-        runOnUiThread(() -> web.evaluateJavascript(js, null));
+        eval(js);
     }
 
     private void shareDone(boolean ok, String message) {
         String js = "window.gijulShareDone && window.gijulShareDone("
                 + ok + "," + JSONObject.quote(message) + ")";
-        runOnUiThread(() -> web.evaluateJavascript(js, null));
+        eval(js);
     }
 
     /** 결과를 페이지로 돌려준다 */
     private void report(boolean ok, int count, String message) {
         String js = "window.gijulSaveResult && window.gijulSaveResult("
                 + ok + "," + count + "," + JSONObject.quote(message) + ")";
-        runOnUiThread(() -> web.evaluateJavascript(js, null));
+        eval(js);
     }
 }

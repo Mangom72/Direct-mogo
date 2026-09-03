@@ -3,6 +3,7 @@
   "short_name": "기출 직행",
   "description": "평가원(수능·6/9월 모의평가)과 교육청(전국연합학력평가) 문제지 원본 PDF 바로가기",
   "lang": "ko",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
