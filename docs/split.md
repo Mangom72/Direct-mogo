@@ -159,7 +159,7 @@ else                          NATIVE.openPaper(url, nm);
 |---|---|---|
 | `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/` | `tests.yml` | 회귀 시험 35종 |
 | `android/**` | `android.yml` | `test_twins` → JVM 단위 시험 32개 → 서명 빌드 → 지문 확인 → 릴리스 |
-| (매일 23시 KST) | `refresh-data.yml` | EBSi 수집 → 수능 날짜 대조 → 새 회차 카나리아 |
+| (매일 15:23·23:23 KST) | `refresh-data.yml` | EBSi 수집 → 수능 날짜 대조 → 새 회차 카나리아 |
 
 **앱을 고쳤으면 판올림까지가 한 벌입니다.** 올리지 않은 변경은 CI가 빌드만 하고
 버리므로 아무에게도 가지 않습니다.
