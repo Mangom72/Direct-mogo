@@ -70,5 +70,5 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     /* android.jar 의 org.json 은 부르면 던지는 껍데기다. 진짜를 시험 쪽에만
        얹어 둔다 — 앱에 들어가지 않으므로 APK 는 그대로다. */
-    testImplementation 'org.json:json:20231013'
+    testImplementation 'org.json:json:20260814'
 }
