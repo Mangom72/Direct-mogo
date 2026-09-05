@@ -190,7 +190,8 @@ def build(chars):
         if not ttf.is_file():
             source_ttf(source, weight, ttf)
         subprocess.run(
-            ["pyftsubset", str(ttf), f"--text-file={chars_file}", "--flavor=woff2",
+            [sys.executable, "-m", "fontTools.subset", str(ttf),
+             f"--text-file={chars_file}", "--flavor=woff2",
              "--layout-features=*", f"--output-file={OUT / name}"], check=True)
         finalize(OUT / name, family, weight, family != source)
         kb = (OUT / name).stat().st_size / 1024
