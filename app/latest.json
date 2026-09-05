@@ -1,8 +1,8 @@
 {
-  "versionCode": 88,
-  "versionName": "9.7",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.7/gijul-direct.apk",
-  "size": 2561433,
-  "sha256": "106f25f8b6b4eaf418c7149740e0a0c777c97662fb1afcebf7ca4bfc275f20ac",
-  "notes": "자동 갱신 안전장치와 Android 16 호환성을 보강했습니다."
+  "versionCode": 89,
+  "versionName": "9.8",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.8/gijul-direct.apk",
+  "size": 2561565,
+  "sha256": "da0f591f5a190b5d87842e1466e6da5706cb06308c7954ef14624cc2e1e87b49",
+  "notes": "자동 갱신과 앱 동작의 안전장치를 보강했습니다"
 }
