@@ -20,6 +20,13 @@ on:
     # 하루 두 번 보면서 비어 있는 칸을 뒤늦게 채운다(refresh_data.py의 top_up).
     - cron: "23 6,14 * * *"
   workflow_dispatch:
+  # 이 파일을 고친 직후에도 실제 수집까지 한 번 통과시킨다. 예약 시각을 기다리면
+  # YAML은 유효하지만 셸에서만 깨지는 변경이 반나절 뒤에야 드러난다. 이 파일만
+  # 대상으로 삼아 평소 코드·자료 커밋이 실행 횟수를 늘리거나 반복 실행하지 않는다.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refresh-data.yml'
 
 permissions:
   contents: write
