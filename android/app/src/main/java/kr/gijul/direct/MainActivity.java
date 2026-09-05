@@ -847,6 +847,9 @@ public class MainActivity extends ComponentActivity {
     }
 
     private void open(Intent i) {
+        // paperIntent가 잘못된 주소를 이미 설명하고 null을 돌려준 경우에는
+        // startActivity(null)로 두 번째, 엉뚱한 오류를 덧붙이지 않는다.
+        if (i == null) return;
         runOnUiThread(() -> {
             if (destroyed) return;
             try { startActivity(i); }
@@ -964,8 +967,6 @@ public class MainActivity extends ComponentActivity {
             i.putExtra(PdfViewActivity.EXTRA_GRADE, grade);
             i.putExtra(PdfViewActivity.EXTRA_SUBJECT, sub);
         }
-        /* 열쇠는 '학년/과목/시행일/회차이름'이다. 잰 시간을 페이지에 돌려줄 때
-           그대로 되돌려 보낼 뿐 파일을 만드는 데는 쓰지 않지만, 길이는 본다. */
         /* 과목 이름. 코드와 달리 사람에게 보이고 시험 시간을 고르는 데 쓴다.
            띄어쓰기와 가운뎃점이 들어가므로 tag() 로 재지 않고 길이만 본다. */
         if (subName != null && !subName.isEmpty() && subName.length() < 60)

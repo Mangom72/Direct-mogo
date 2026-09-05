@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
-"""빌드된 릴리스 APK를 사이트에 올린다.
+"""빌드된 릴리스 APK의 업데이트 명세를 만든다.
 
 앱은 스토어를 거치지 않으므로 새 버전을 알려줄 주체가 없다. 그래서 APK와 그
-명세(app/latest.json)를 Pages에 같이 올려두고, 앱이 그 명세를 직접 읽는다.
+명세(app/latest.json)를 함께 내보낸다. 명세는 Pages에, APK는 판본별 GitHub
+릴리스 자산에 둔다. 이 스크립트는 APK의 버전·크기·SHA-256을 직접 읽어 명세를
+쓰고, 실제 자산 생성과 업로드는 android.yml이 이어서 맡는다.
 
-APK 자체를 저장소에 두는 것은 취향이 갈리는 선택이다. GitHub 릴리스에 붙이면
-저장소가 커지지 않지만 토큰과 태그 규율이 필요하다. 여기서는 "정적 파일만
-Pages에 올린다"는 이 저장소의 방식을 그대로 따랐다 — 받는 쪽에 인증이 필요
-없고, 사이트가 살아 있으면 업데이트도 살아 있다. 파일 이름은 늘 같으므로
-작업 트리에는 APK가 한 개만 남는다(기록에는 판본마다 쌓인다).
-
-    python3 tools/publish_apk.py                 # 빌드된 APK를 app/ 으로
+    python3 tools/publish_apk.py                 # app/latest.json 만들기
     python3 tools/publish_apk.py --notes "..."   # 알림 막대에 함께 띄울 한 줄
 """
 

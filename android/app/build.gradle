@@ -21,8 +21,8 @@ android {
         minSdk = 24               // SAF(문서 트리) 지속 권한이 안정적으로 되는 하한
         // 2026-08-31부터 Play의 앱 업데이트 제출 하한이다.
         targetSdk = 36
-        versionCode = 88
-        versionName = '9.7'
+        versionCode = 89
+        versionName = '9.8'
     }
     signingConfigs {
         release {

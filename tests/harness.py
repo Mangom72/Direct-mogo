@@ -16,13 +16,29 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def _chrome():
-    """플레이라이트가 받아 둔 크로미움을 찾는다. 판마다 폴더 이름이 달라 훑는다."""
+    """플레이라이트가 받아 둔 크로미움을 찾는다.
+
+    Playwright 1.62부터 리눅스 묶음 이름이 ``chrome-linux``에서
+    ``chrome-linux64``로 바뀌었다. 표준 캐시와 XDG 캐시에서 신·구 모양을 모두
+    찾는다. Flatpak처럼 캐시 뿌리가 달라지는 환경도 XDG 경로로 따라간다.
+    """
     env = os.environ.get("GIJUL_CHROME")
     if env:
         return env
+
+    cache = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
     for base in (os.environ.get("PLAYWRIGHT_BROWSERS_PATH") or "/opt/pw-browsers",
+                 str(cache / "ms-playwright"),
                  str(Path.home() / ".cache/ms-playwright")):
-        found = sorted(Path(base).glob("chromium*/chrome-linux/chrome")) if Path(base).is_dir() else []
+        found = []
+        if Path(base).is_dir():
+            for pattern in (
+                    "chromium*/chrome-linux64/chrome",
+                    "chromium*/chrome-linux/chrome",
+                    "chromium_headless_shell*/chrome-headless-shell-linux64/chrome-headless-shell",
+                    "chromium_headless_shell*/chrome-headless-shell-linux/chrome-headless-shell"):
+                found.extend(Path(base).glob(pattern))
+        found.sort()
         if found:
             return str(found[-1])
     return shutil.which("chromium") or shutil.which("google-chrome") or "chromium"
