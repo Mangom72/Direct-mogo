@@ -41,6 +41,8 @@ with sync_playwright() as pw:
     pg.on("pageerror", lambda e: errs.append(str(e)[:180]))
     pg.goto(SITE, wait_until="load")
     pg.wait_for_selector(".item .chk", timeout=25000)
+    pg.select_option("#grp", label="과학탐구")
+    pg.select_option("#sub", label="생명과학Ⅰ")
     key = pg.eval_on_selector(".item .chk", "e=>e.dataset.k")
 
     def feed(spent, limit):
@@ -126,6 +128,15 @@ with sync_playwright() as pw:
 
     # 실제 편집 화면: 초까지 보존하고, 오답 범위·중복을 정리한다.
     pg.locator(".record.took").first.click()
+    ck(pg.locator("#recordScore").get_attribute("placeholder") == "0~50", "50점 과목의 점수 안내가 틀립니다")
+    pg.locator("#recordScore").fill("51")
+    pg.locator(".record-save").click()
+    ck(pg.locator("#recordForm").is_visible() and not pg.locator("#recordScore").evaluate("e=>e.validity.valid"), "50점을 넘는 점수를 저장했습니다")
+    ck(pg.evaluate("k=>!(RECORDS[k] && 'score' in RECORDS[k])", key), "범위 밖 입력이 기존 기록을 바꿨습니다")
+    pg.locator("#recordScore").fill("50")
+    pg.locator(".record-save").click()
+    ck(pg.evaluate("k=>RECORDS[k].score", key) == 50, "50점 만점 기록이 저장되지 않았습니다")
+    pg.locator(".record.took").first.click()
     pg.locator("#recordMinutes").fill("105")
     pg.locator("#recordSeconds").fill("30")
     pg.locator("#recordScore").fill("42.5")
@@ -149,6 +160,26 @@ with sync_playwright() as pw:
     pg.wait_for_selector(".record.took")
     ck(pg.evaluate("k=>RECORDS[k].score", key) == 42.5, "새로 열면 점수가 사라집니다")
     ck(pg.evaluate("k=>TIMES[k].spent", key) == 6330, "새로 열면 수정한 시간이 사라집니다")
+
+    # 공통/선택 과목과 학년별 100점/50점 분류, 실제 100점 폼의 경계값.
+    limits = pg.evaluate("()=>Object.fromEntries(Object.keys(SUBINDEX).map(k=>[SUBINDEX[k].name,scoreLimit(k+'/20260101/시험')]))")
+    for name in ("국어", "화법과 작문", "언어와 매체", "수학", "확률과 통계", "미적분", "기하", "영어"):
+        ck(limits[name] == 100, name + " 만점이 100이 아닙니다")
+    for name in ("한국사", "통합사회", "통합과학", "생명과학Ⅰ", "성공적인 직업 생활", "독일어Ⅰ"):
+        ck(limits[name] == 50, name + " 만점이 50이 아닙니다")
+    pg.select_option("#grp", label="국어")
+    pg.select_option("#sub", label="화법과 작문")
+    pg.locator(".record").first.click()
+    ck(pg.locator("#recordScore").get_attribute("placeholder") == "0~100", "100점 과목의 점수 안내가 틀립니다")
+    hundred_key = pg.locator(".record").first.get_attribute("data-k")
+    pg.locator("#recordScore").fill("101")
+    pg.locator(".record-save").click()
+    ck(pg.locator("#recordForm").is_visible(), "100점을 넘는 점수를 저장했습니다")
+    pg.locator("#recordScore").fill("100")
+    pg.locator(".record-save").click()
+    ck(pg.evaluate("k=>RECORDS[k].score", hundred_key) == 100, "100점 만점 기록이 저장되지 않았습니다")
+    pg.select_option("#grp", label="과학탐구")
+    pg.select_option("#sub", label="생명과학Ⅰ")
 
     # 파일 백업과 네이티브 사본에 모두 들어가야 한다.
     archived = pg.evaluate("()=>JSON.stringify(makeBackup())")

@@ -97,7 +97,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-APYZiNpn3fEQ8rSItDWZCd5lne1FfeJmCLzxCBXU1WE=';
+  script-src 'self' 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-5nONZK1X7aqANfeX7ovVfaT8iVNPec7uhHGEgd7vapU=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -2807,8 +2807,13 @@ function recordText(k){
   if(r.wrong) bits.push(r.wrong.length ? "오답 " + r.wrong.length + "개" : "오답 없음");
   return bits.join(" · ") || "기록";
 }
+function scoreLimit(k){
+  const p = k.split("/"), meta = SUBINDEX[p[0] + "/" + p[1]];
+  if(!meta) return 100;
+  return ["국어", "화법과 작문", "언어와 매체", "수학", "확률과 통계", "미적분", "기하", "영어"].includes(meta.name) ? 100 : 50;
+}
 function openRecord(opener){
-  const k = opener.dataset.k, t = TIMES[k], r = RECORDS[k] || {};
+  const k = opener.dataset.k, t = TIMES[k], r = RECORDS[k] || {}, limit = scoreLimit(k);
   const item = opener.closest(".item");
   vaultMode = false; sheetRow = null; lastFocus = opener;
   sheetAll.hidden = true;
@@ -2820,7 +2825,7 @@ function openRecord(opener){
       <input id="recordMinutes" type="number" min="0" max="99999" step="1" inputmode="numeric" aria-label="풀이시간 분"><span>분</span>
       <input id="recordSeconds" type="number" min="0" max="59" step="1" inputmode="numeric" aria-label="풀이시간 초"><span>초</span>
     </div></fieldset>
-    <label for="recordScore">점수<input id="recordScore" type="number" min="0" step="any" inputmode="decimal" placeholder="예: 85 또는 42.5"></label>
+    <label for="recordScore">점수<input id="recordScore" type="number" min="0" max="${limit}" step="any" inputmode="decimal" placeholder="0~${limit}" aria-label="점수 (${limit}점 만점)"></label>
     <label for="recordWrong">틀린 문제 번호<input id="recordWrong" type="text" placeholder="예: 3, 7, 12-14" autocomplete="off">
       <small>쉼표나 공백으로 구분합니다. 모두 맞았으면 없음으로 적습니다.</small></label>
     <p class="record-error" role="alert"></p>
@@ -2840,7 +2845,13 @@ function openRecord(opener){
     const spent = Number(minutes.value) * 60 + Number(seconds.value);
     if(hasTime && !(spent > 0)){ error.textContent = "풀이시간은 0초보다 길게 적어 주세요."; minutes.focus(); return; }
     const next = {};
-    if(score.value !== "") next.score = Number(score.value);
+    if(score.value !== ""){
+      const points = score.valueAsNumber;
+      if(!Number.isFinite(points) || points < 0 || points > limit){
+        error.textContent = `점수는 0~${limit} 사이로 적어 주세요.`; score.focus(); return;
+      }
+      next.score = points;
+    }
     if(nums !== null) next.wrong = nums;
     if(hasTime) TIMES[k] = { spent, limit:t ? t.limit : 0 }; else delete TIMES[k];
     if(Object.keys(next).length) RECORDS[k] = next; else delete RECORDS[k];
