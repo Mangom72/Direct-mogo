@@ -140,12 +140,16 @@ with sync_playwright() as pw:
     pg.locator("#recordMinutes").fill("105")
     pg.locator("#recordSeconds").fill("30")
     pg.locator("#recordScore").fill("42.5")
+    pg.locator(".record-save").click()
+    ck(pg.locator("#recordForm").is_visible() and not pg.locator("#recordScore").evaluate("e=>e.validity.valid"), "소수점 점수를 저장했습니다")
+    ck(pg.evaluate("k=>RECORDS[k].score", key) == 50, "소수점 입력이 기존 점수를 바꿨습니다")
+    pg.locator("#recordScore").fill("42")
     pg.locator("#recordWrong").fill("7, 3, 7, 12-14")
     pg.locator(".record-save").click()
     edited = pg.evaluate("k=>({time:TIMES[k],record:RECORDS[k],solved:SOLVED[k]})", key)
     print("6. 수동 수정·점수·오답:", edited)
     ck(edited["time"] == {"spent": 6330, "limit": 6000}, "수동 수정이 초 또는 고사 시간을 바꿨습니다")
-    ck(edited["record"] == {"score": 42.5, "wrong": [3, 7, 12, 13, 14]}, "점수·오답 범위·중복 처리가 틀립니다")
+    ck(edited["record"] == {"score": 42, "wrong": [3, 7, 12, 13, 14]}, "점수·오답 범위·중복 처리가 틀립니다")
     ck("105분 30초" in pg.locator(".record.took").first.inner_text(), "수정한 초가 표시되지 않습니다")
 
     pg.locator(".record.took").first.click()
@@ -158,7 +162,7 @@ with sync_playwright() as pw:
     ck(pg.evaluate("k=>RECORDS[k].wrong", key) == [3, 7, 12, 13, 14], "취소한 값이 저장됐습니다")
     pg.reload(wait_until="load")
     pg.wait_for_selector(".record.took")
-    ck(pg.evaluate("k=>RECORDS[k].score", key) == 42.5, "새로 열면 점수가 사라집니다")
+    ck(pg.evaluate("k=>RECORDS[k].score", key) == 42, "새로 열면 점수가 사라집니다")
     ck(pg.evaluate("k=>TIMES[k].spent", key) == 6330, "새로 열면 수정한 시간이 사라집니다")
 
     # 공통/선택 과목과 학년별 100점/50점 분류, 실제 100점 폼의 경계값.
@@ -184,14 +188,14 @@ with sync_playwright() as pw:
     # 파일 백업과 네이티브 사본에 모두 들어가야 한다.
     archived = pg.evaluate("()=>JSON.stringify(makeBackup())")
     payload = pg.evaluate("""()=>{let sent; GijulNative.setSolved=x=>sent=JSON.parse(x); tellSolved(); return sent;}""")
-    ck(payload["records"][key]["score"] == 42.5 and payload["times"][key]["spent"] == 6330,
+    ck(payload["records"][key]["score"] == 42 and payload["times"][key]["spent"] == 6330,
        "앱의 사본·자동 백업에 시간이나 점수가 빠집니다")
     pg.evaluate("()=>{RECORDS={}; TIMES={}; SOLVED={};}")
     pg.evaluate("x=>applyBackup(readBackup(x),'merge')", archived)
     ck(pg.evaluate("k=>RECORDS[k].wrong", key) == [3, 7, 12, 13, 14], "백업에서 오답이 돌아오지 않습니다")
     pg.evaluate("""k=>applyBackup(readBackup(JSON.stringify({v:1,subs:[],solved:{},
       records:{[k]:{score:99,wrong:[1]},'모르는/과목/20250101/시험':{score:0,wrong:[]}}})), 'merge')""", key)
-    ck(pg.evaluate("k=>RECORDS[k].score", key) == 42.5, "합치기가 이 기기의 점수를 덮어썼습니다")
+    ck(pg.evaluate("k=>RECORDS[k].score", key) == 42, "합치기가 이 기기의 점수를 덮어썼습니다")
     ck(pg.evaluate("()=>RECORDS['모르는/과목/20250101/시험'].score") == 0, "모르는 과목·0점 기록이 버려졌습니다")
     dirty = pg.evaluate("""()=>readBackup(JSON.stringify({v:1, records:{
       'a/b/c/d':{score:-1,wrong:[0]},'a/b/c/e':{score:'85',wrong:[2.5]},
