@@ -81,12 +81,14 @@ with sync_playwright() as pw:
       });'''))
     pg=ctx.new_page();pg.goto(SITE,wait_until='load');pg.wait_for_selector('.item .chk')
     pg.wait_for_function('()=>GijulSync.state().enabled')
+    pg.click('#bakBtn');assert not pg.locator('#cloudSyncDisconnect').is_visible(), 'Signed-out account controls are visible'
     pg.wait_for_function('()=>typeof __initialAuth==="function"')
     pg.evaluate('()=>GijulSync.login()')
     pg.wait_for_function('()=>window.__finish && GijulSync.state().on')
     pg.evaluate('()=>__initialAuth(null)')
     pg.wait_for_timeout(50)
     assert pg.evaluate('()=>GijulSync.state().on'), 'Late initial auth query disconnected the new login'
+    assert pg.locator('#cloudSyncDisconnect').is_visible(), 'Signed-in account controls are hidden'
     pg.evaluate('()=>__reject()')
     pg.wait_for_timeout(100)
     assert pg.evaluate('()=>GijulSync.state().pending')>0
@@ -104,6 +106,7 @@ with sync_playwright() as pw:
     assert pg.evaluate('k=>RECORDS[k].wrong',key)==[1,3]
     # Logging out preserves outbox and never reconnects the old Drive file.
     pg.evaluate('()=>GijulSync.logout()');assert not pg.evaluate('()=>GijulSync.state().on')
+    assert not pg.locator('#cloudSyncDisconnect').is_visible(), 'Logged-out account controls remain visible'
     pg.evaluate('k=>{RECORDS[k].score=95;saveRecords();tellSolved();}',key)
     pg.wait_for_function('()=>GijulSync.state().pending>0')
     pg.reload(wait_until='load');pg.wait_for_selector('.item .chk')
