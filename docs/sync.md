@@ -79,7 +79,12 @@ Auth/Firestore 에뮬레이터에서 확인한다. `tests/firestore_rules.cjs`�
 불변 이력, 타입·크기·서버 시각을 검증하고 `tests/firestore_transport.py`는 네트워크
 단절, 재전송, 두 브라우저 연결, 서버 체크포인트 수신을 검증한다.
 
+에뮬레이터는 Java 21 이상을 선택하고, 저장소의 고정 Python 시험 환경을 활성화한다.
+Node 의존성은 시험용 경로에만 설치하며 웹 빌드에는 npm을 쓰지 않는다.
+
 ```sh
+npm install --prefix .git/codex-firebase-tests --no-save firebase@12.19.0 @firebase/rules-unit-testing@5.0.2
+export NODE_PATH="$PWD/.git/codex-firebase-tests/node_modules"
 npx -y firebase-tools@latest emulators:exec --only auth,firestore --project demo-gijul-sync --config sync/firebase.json 'node tests/firestore_rules.cjs && python3 tests/firestore_transport.py'
 ```
 
