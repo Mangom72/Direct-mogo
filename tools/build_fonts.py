@@ -137,6 +137,9 @@ def wanted():
         chars |= hangul("".join(row[0] for g in db.values() for s in g.values()
                                 for y in s.values() for row in y))
 
+    for f in (ROOT / "sync").glob("*.js"):
+        chars |= hangul(java_visible(f.read_text(encoding="utf-8")))
+
     # 앱이 띄우는 문구도 이 글꼴로 그려진다 — 웹뷰 안이라 같은 페이지다
     src = ROOT / "android/app/src/main"
     for f in src.rglob("*.java"):

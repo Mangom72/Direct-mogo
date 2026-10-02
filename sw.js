@@ -1,7 +1,7 @@
 /* 기출 직행 서비스 워커
    자료 5천여 건이 index.html 안에 들어 있으므로, 이 파일 하나만 쥐고 있으면
    조회·필터는 네트워크 없이 전부 동작한다. 네트워크가 필요한 것은 PDF뿐이다. */
-const VERSION = "v5";
+const VERSION = "v6";
 const SHELL = `gijul-shell-${VERSION}`;
 const FILES = `gijul-files-${VERSION}`;
 const KEEP = [SHELL, FILES];
@@ -19,6 +19,7 @@ const VAULT = "gijul-vault:";
    쓸 수 있으므로 따로 받아, 한 변형의 실패가 전체 설치를 막지는 않게 한다. */
 const REQUIRED_SHELL_URLS = [
   "./", "./index.html", "./manifest.webmanifest",
+  "./sync/journal.js", "./sync/firebase.js", "./sync/controller.js",
   /* 글꼴도 우리 것이 됐으므로 셸과 함께 미리 받아 둔다 — 첫 방문부터 오프라인에서
      제 글꼴로 뜨고, 예전처럼 남의 서버가 대답할 때까지 기다릴 일이 없다. */
   "./fonts/fonts.css",
@@ -134,6 +135,16 @@ async function check(){
            || await cache.match(new URL("./", self.location).href, { ignoreSearch:true });
   const before = old ? await old.text() : null;
   const after = await res.clone().text();
+  if(before !== after){
+    // Refresh companion scripts before publishing the changed document in this cache.
+    const got=await Promise.all(REQUIRED_SHELL_URLS.filter(u=>u.startsWith("./sync/")).map(async u=>{
+      const at=new URL(u,self.location).href,r=await fetch(at,{cache:"no-cache"});
+      if(!r.ok) throw new Error("sync script "+at);
+      return [at,r];
+    })).catch(()=>null);
+    if(!got) return false;
+    await Promise.all(got.map(([at,r])=>cache.put(at,r)));
+  }
   await cache.put(url, res.clone());
   await cache.put(new URL("./", self.location).href, res.clone());
   return before !== null && before !== after;
@@ -176,6 +187,10 @@ self.addEventListener("fetch", e=>{
     const at = url.origin + url.pathname;
     if(at === ROOT || at === HOME) e.respondWith(shell(req));
     return;
+  }
+  const sdkBase = new URL("./sync/vendor/", ROOT).href;
+  if(["firebase-app-compat.js","firebase-auth-compat.js","firebase-firestore-compat.js"].some(n=>url.href===sdkBase+n)){
+    e.respondWith(cacheFirst(req, SHELL)); return;
   }
   if(isPaper(url)){ e.respondWith(paper(req)); return; }
   if(SHELL_SET.has(url.origin + url.pathname)) e.respondWith(shell(req));

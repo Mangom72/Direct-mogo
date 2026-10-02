@@ -1,0 +1,27 @@
+// Prototype rules for private immutable change events.
+// Model: users/{authenticated uid}/events/{UUID}; no parent profile is required.
+// Required immutable fields: v (1), id (UUID), clock (positive safe integer),
+// receivedAt (server timestamp), payload (JSON string, <=64KiB). Payload entries are validated by journal.js.
+// Query: the owner's events ordered by receivedAt, optionally >= the saved checkpoint. Other paths deny access.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/events/{eventId} {
+      function owner() { return request.auth != null && request.auth.uid == uid; }
+      function event() {
+        let d = request.resource.data;
+        return d.keys().hasAll(['v', 'id', 'clock', 'payload', 'receivedAt']) && d.keys().hasOnly(['v', 'id', 'clock', 'payload', 'receivedAt'])
+          && d.v == 1 && d.id == eventId
+          && eventId.matches('^[a-f0-9-]{36}$')
+          && d.clock is int && d.clock > 0 && d.clock < 9007199254740991
+          && d.receivedAt is timestamp
+          && d.payload is string && d.payload.size() <= 65536;
+      }
+      allow read: if owner();
+      allow create: if owner() && event() && request.resource.data.receivedAt == request.time;
+      // Retrying a confirmed upload is safe, but old events cannot be overwritten.
+      allow update: if owner() && event() && request.resource.data == resource.data;
+      allow delete: if false;
+    }
+  }
+}

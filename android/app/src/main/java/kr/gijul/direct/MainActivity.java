@@ -236,6 +236,7 @@ public class MainActivity extends ComponentActivity {
     @Override
     protected void onDestroy() {
         destroyed = true;
+        if (googleLogin != null) googleLogin.cancel();
         if (updater != null) updater.cancel();
         if (deletePrompt != null) deletePrompt.dismiss();
         ui.removeCallbacksAndMessages(null);
@@ -463,7 +464,30 @@ public class MainActivity extends ComponentActivity {
 
     // ── 페이지에서 부르는 창구 ────────────────────────────────────────────
 
+    private GoogleLogin googleLogin;
     private class Bridge {
+        @JavascriptInterface
+        public void googleSignIn(String clientId, String requestId) {
+            runOnUiThread(() -> {
+                if (destroyed) return;
+                if (googleLogin == null) googleLogin = new GoogleLogin(MainActivity.this);
+                googleLogin.start(clientId, requestId);
+            });
+        }
+        @JavascriptInterface
+        public void cancelGoogleSignIn(String requestId) {
+            runOnUiThread(() -> { if (googleLogin != null) googleLogin.cancel(requestId); });
+        }
+        @JavascriptInterface
+        public void clearGoogleSignIn() {
+            runOnUiThread(() -> { if (!destroyed && googleLogin != null) googleLogin.clear(); });
+        }
+        @JavascriptInterface
+        public void setCloudSyncActive(boolean active) {
+            prefs().edit().putBoolean("cloud-sync-active", active).apply();
+            autoState();
+        }
+
 
         /** 저장할 회차. {"folder":"...","files":[{"name":"...","url":"..."}]} */
         @JavascriptInterface
@@ -1135,6 +1159,7 @@ public class MainActivity extends ComponentActivity {
 
     /** 영구권한과 실제 내용을 확인한 뒤 페이지가 저장에 성공할 때만 읽음으로 친다. */
     private void mergeAuto() {
+        if (prefs().getBoolean("cloud-sync-active", false)) return;
         if (autoMergePending) return;
         Uri u = autoUri();
         if (u == null) return;
@@ -1146,6 +1171,7 @@ public class MainActivity extends ComponentActivity {
     }
 
     private void mergeAuto(Uri uri, String json, String hash) throws Exception {
+        if (prefs().getBoolean("cloud-sync-active", false)) return;
         if (!BackupIO.valid(json))
             throw new Exception("정상 백업이 아닙니다. 기존 파일은 보존했습니다. 앱에서 내보낸 파일을 다시 골라 주세요");
         if (destroyed || web == null) return;
@@ -1198,6 +1224,7 @@ public class MainActivity extends ComponentActivity {
     }
 
     private void writeAuto() {
+        if (prefs().getBoolean("cloud-sync-active", false)) return;
         if (autoMergePending) return;
         Uri u = autoUri();
         if (u == null) return;
@@ -1254,6 +1281,7 @@ public class MainActivity extends ComponentActivity {
             Uri u = autoUri();
             return new JSONObject()
                     .put("on", u != null)
+                    .put("paused", prefs().getBoolean("cloud-sync-active", false))
                     .put("name", prefs().getString(AUTO_NAME, ""))
                     .put("error", prefs().getString(AUTO_FAIL, ""))
                     .toString();

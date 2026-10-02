@@ -1,0 +1,26 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    },
+    "auth": {
+      "port": 9099
+    }
+  },
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "기출 직행",
+        "supportEmail": "direct.mogo.dev@gmail.com",
+        "authorizedRedirectUris": [
+          "https://direct-mogo.firebaseapp.com/__/auth/handler",
+          "https://mangom72.github.io",
+          "http://localhost"
+        ]
+      }
+    }
+  }
+}

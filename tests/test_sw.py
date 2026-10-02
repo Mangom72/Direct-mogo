@@ -92,6 +92,8 @@ try:
         ctx.set_offline(False)
 
         # ---- 5. 셸 변경 -> 새 자료 알림
+        script = TMP / "sync/controller.js"
+        script.write_text(script.read_text(encoding="utf-8") + "\n/* updated-sync-fixture */\n", encoding="utf-8")
         p = TMP / "index.html"
         p.write_text(p.read_text(encoding="utf-8").replace("'06~", "'07~"), encoding="utf-8")
         pg.goto(URL, wait_until="load")
@@ -105,6 +107,9 @@ try:
                                                        "e=>e.textContent"))
         except Exception as ex:
             print("5. 알림 실패:", str(ex)[:90])
+
+        refreshed = pg.evaluate("async()=>{const c=await caches.open('gijul-shell-%s');return (await (await c.match(new URL('./sync/controller.js',location.href))).text()).includes('updated-sync-fixture');}" % NOW)
+        if not refreshed: BAD.append("셸 변경 후 동기화 스크립트 캐시가 이전 판입니다")
 
         # ---- 5b. 문서가 그대로여도 글꼴만 바뀌면 다시 받는가
         #

@@ -80,7 +80,7 @@ class Serve:
             self.dir = ROOT
         port = free_port()
         self.proc = subprocess.Popen(
-            ["python3", "-m", "http.server", str(port)], cwd=self.dir,
+            ["python3", str(Path(__file__).resolve()), str(port)], cwd=self.dir,
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         self.url = f"http://127.0.0.1:{port}/"
         for _ in range(80):                      # 뜰 때까지 기다린다
@@ -105,3 +105,25 @@ def site():
         return None, URL
     s = Serve().__enter__()
     return s, s.url
+
+
+if __name__ == "__main__":
+    import sys
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+    from urllib.parse import urlparse
+
+    class TestHandler(SimpleHTTPRequestHandler):
+        def do_GET(self):
+            # Regression tests never authenticate against the production Firebase project.
+            # Sync tests explicitly replace this fixture with their mock/emulator config.
+            if urlparse(self.path).path.endswith("/sync/config.json"):
+                body = b'{"enabled":false}'
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            else:
+                super().do_GET()
+
+    ThreadingHTTPServer(("127.0.0.1", int(sys.argv[1])), TestHandler).serve_forever()

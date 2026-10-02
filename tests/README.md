@@ -166,8 +166,16 @@ PR에서는 `android-checks.yml`이 단위 시험·Lint·디버그 빌드를, ma
 빨갛게 뜹니다.
 
 **화면 쪽**(`tests.yml`)은 `index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로
-main에 올라갈 때 38종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
+main에 올라갈 때 40종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
 남아, 손에서 재현되지 않는 실패도 눈으로 볼 수 있습니다.
 
 어느 쪽이든 CI는 마지막 그물입니다. 고친 자리에서 `python3 tests/run.py`를 먼저
 돌리는 편이 훨씬 빠릅니다.
+
+
+## Google 계정 동기화
+
+`test_sync.py`는 IndexedDB의 대기/확인, 충돌 병합, 삭제 이력, 재시작 복구를 확인한다.
+일반 브라우저 시험 서버는 Firebase를 비활성화하여 운영 계정에 연결하지 않는다.
+동기화 통합 시험은 mock 설정을 별도로 주입한다. 실제 Firebase SDK와 보안 규칙
+에뮬레이터 검증은 [동기화 안내](../docs/sync.md)의 별도 명령을 따른다.

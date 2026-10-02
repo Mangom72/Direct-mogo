@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "firebase": {
+    "apiKey": "AIzaSyBscSxKKpk-X-UO7AcbGPDS80N63QVTTkQ",
+    "authDomain": "direct-mogo.firebaseapp.com",
+    "projectId": "direct-mogo",
+    "storageBucket": "direct-mogo.firebasestorage.app",
+    "messagingSenderId": "602567924300",
+    "appId": "1:602567924300:web:899e5aa04fbb35a0b9f2e9",
+    "measurementId": "G-3QPJXK8BC7"
+  },
+  "googleWebClientId": "602567924300-ehc4528qnpkmoo5588hqglaqbef7rdhe.apps.googleusercontent.com"
+}

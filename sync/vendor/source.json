@@ -1,0 +1,14 @@
+{
+  "firebase-app-compat.js": {
+    "url": "https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js",
+    "sha256": "11354507ecdd4a0f56f989800ccc8925baf120864d0b8fdd9c372e4c7ec059a6"
+  },
+  "firebase-auth-compat.js": {
+    "url": "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js",
+    "sha256": "13ff243c467f542d591d7caf11b4dcce32414e1119d458d71293eb606197f0ec"
+  },
+  "firebase-firestore-compat.js": {
+    "url": "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js",
+    "sha256": "38c5e3d7c53fefff59f68a49dab9589cea66fabc7aada2f68354bfeb52cca4cb"
+  }
+}

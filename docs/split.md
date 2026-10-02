@@ -181,3 +181,16 @@ else                          NATIVE.openPaper(url, nm);
 `deleteSavedWithConfirmation(folder)`가 있으면 앱의 확인 창을 사용하고, 없으면
 웹의 두 번 누르기와 기존 `deleteSaved(folder)`를 유지한다. 기존 메서드 인자 수는
 바꾸지 않는다.
+
+
+## Google 계정 동기화 (10.1)
+
+정적 `sync/` 스크립트가 Firebase Auth/Firestore를 지연 초기화한다. 설정은
+`sync/config.json`, 백업 화면의 계정 연결이 진입점이다. 새 브리지는
+`googleSignIn(clientId, requestId)` → `gijulGoogleSignIn(requestId, ok, value)`,
+`cancelGoogleSignIn(requestId)`, `clearGoogleSignIn()`, `setCloudSyncActive(active)`다.
+로그인 요청 ID로 이전 시도의 늦은 응답을 무시한다. 구형 앱에서 메서드가 없으면
+업데이트를 안내한다. 기존 `setSolved` 인자와 v1 파일 백업 형식은 그대로다.
+Firebase가 연결되면 네이티브 SAF 자동 읽기/쓰기를 멈추고 수동 파일 백업은 유지한다.
+자세한 전달·충돌·계정 분리 규칙은 [동기화 안내](sync.md)를 따른다.
+동기화 SDK를 바꾸면 서비스 워커 셸 판본도 올려 캐시된 SDK가 섞이지 않도록 한다.
