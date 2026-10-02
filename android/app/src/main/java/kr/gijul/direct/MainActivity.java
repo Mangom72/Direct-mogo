@@ -62,8 +62,12 @@ public class MainActivity extends ComponentActivity {
 
     private WebView web;
     private Updater updater;
+    private android.app.AlertDialog deletePrompt;
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private volatile boolean destroyed;
+    private final java.util.concurrent.atomic.AtomicBoolean transferQueued = new java.util.concurrent.atomic.AtomicBoolean();
+    private final java.util.concurrent.atomic.AtomicBoolean autoWriteQueued = new java.util.concurrent.atomic.AtomicBoolean();
+    private volatile boolean autoWriteDirty;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -112,7 +116,7 @@ public class MainActivity extends ComponentActivity {
                    눌렀을 때 할 일이지, 페이지 안에 박힌 틀(iframe)이 스스로 할 일이
                    아니다. 지금 이 페이지에 틀이 없더라도, 넘길지 말지를 누가 요청했는지
                    보지 않으면 그건 판단이 아니다. 틀에서 온 것은 그냥 막는다. */
-                if (!r.isForMainFrame()) return true;
+                if (!r.isForMainFrame() || !"https".equals(u.getScheme())) return true;
                 /* 문제·정답·해설은 앱 안에서 읽는다. WebView에 PDF 뷰어가 없어 예전에는
                    브라우저로 넘겼는데, 자료를 열 때마다 앱이 바뀌는 건 이 앱의 요점을
                    잃는 일이었다. 그 밖의 주소(EBSi 사이트 등)는 여전히 브라우저 몫이다. */
@@ -207,6 +211,21 @@ public class MainActivity extends ComponentActivity {
         /* 다른 기기에서 찍은 것이 있으면 여기서 들어온다. 파일 하나를 읽는
            일이라 값이 싸고, 돌아올 때마다 보면 '열면 최신'이 성립한다. */
         io.execute(this::mergeAuto);
+        ui.removeCallbacks(autoPoll);
+        ui.postDelayed(autoPoll, 60000);
+    }
+
+    private final Runnable autoPoll = new Runnable() {
+        @Override public void run() {
+            if (destroyed || io.isShutdown()) return;
+            io.execute(MainActivity.this::mergeAuto);
+            ui.postDelayed(this, 60000);
+        }
+    };
+
+    @Override protected void onPause() {
+        ui.removeCallbacks(autoPoll);
+        super.onPause();
     }
 
     @Override protected void onSaveInstanceState(Bundle b) {
@@ -218,6 +237,7 @@ public class MainActivity extends ComponentActivity {
     protected void onDestroy() {
         destroyed = true;
         if (updater != null) updater.cancel();
+        if (deletePrompt != null) deletePrompt.dismiss();
         ui.removeCallbacksAndMessages(null);
         io.shutdownNow();
         if (web != null) {
@@ -427,7 +447,7 @@ public class MainActivity extends ComponentActivity {
     /** 우리가 직접 그릴 수 있는 형식인지 — 문제·해설은 PDF, 정답은 PNG다 */
     private static boolean canDraw(String name) {
         String p = name.toLowerCase(Locale.ROOT);
-        return p.endsWith(".pdf") || p.endsWith(".png") || p.endsWith(".jpg");
+        return p.endsWith(".pdf") || p.endsWith(".png") || p.endsWith(".jpg") || p.endsWith(".jpeg");
     }
 
     private static boolean isPaper(String url) {
@@ -447,7 +467,10 @@ public class MainActivity extends ComponentActivity {
 
         /** 저장할 회차. {"folder":"...","files":[{"name":"...","url":"..."}]} */
         @JavascriptInterface
-        public void savePaper(String json) { io.execute(() -> save(json)); }
+        public void savePaper(String json) {
+            if (json == null || json.length() > 65536) { report(false, 0, "저장 요청이 너무 큽니다"); return; }
+            queueTransfer(() -> save(json), false);
+        }
 
         /** 받아둔 자료 목록. [{folder, name, size}] — 최근 저장 순 */
         @JavascriptInterface
@@ -515,10 +538,32 @@ public class MainActivity extends ComponentActivity {
         /** 회차 하나를 지운다. folder가 비면 전부 */
         @JavascriptInterface
         public void deleteSaved(String folder) {
+            runOnUiThread(() -> {
+                if (destroyed) return;
+                if (deletePrompt != null && deletePrompt.isShowing()) return;
+                deletePrompt = new android.app.AlertDialog.Builder(MainActivity.this)
+                        .setTitle("받아둔 자료 삭제")
+                        .setMessage(folder == null || folder.isEmpty()
+                                ? "받아둔 자료를 모두 지울까요? 풀이 기록은 그대로 둡니다."
+                                : "이 회차의 받아둔 자료를 지울까요?")
+                        .setOnCancelListener(dialog -> report(false, 0, "삭제를 취소했습니다"))
+                        .setOnDismissListener(dialog -> deletePrompt = null)
+                        .setNegativeButton("취소", (dialog, which) -> report(false, 0, "삭제를 취소했습니다"))
+                        .setPositiveButton("지우기", (dialog, which) -> {
+                            if (!destroyed) io.execute(() -> deleteSavedApproved(folder));
+                        }).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void deleteSavedWithConfirmation(String folder) { deleteSaved(folder); }
+
+        private void deleteSavedApproved(String folder) {
+            if ("auto-backup".equals(folder)) { report(false, 0, "복구 사본은 지울 수 없습니다"); return; }
             int n = 0;
             File[] dirs;
             if (folder == null || folder.isEmpty()) {
-                dirs = root().listFiles(File::isDirectory);
+                dirs = root().listFiles(f -> f.isDirectory() && !"auto-backup".equals(f.getName()));
             } else {
                 /* 여기가 재귀 삭제라 특히 조심한다 */
                 try { dirs = new File[]{ new File(root(), safe(folder)) }; }
@@ -577,6 +622,12 @@ public class MainActivity extends ComponentActivity {
         @JavascriptInterface
         public String takeTimings() { return Timing.takeRecords(MainActivity.this); }
 
+        @JavascriptInterface
+        public String peekTimings() { return Timing.peekRecords(MainActivity.this); }
+
+        @JavascriptInterface
+        public void ackTimings(String ids) { Timing.acknowledgeRecords(MainActivity.this, ids); }
+
         /**
          * 같은 뷰어로 열되, <b>어느 과목에서 왔는지</b>도 함께 받는다.
          *
@@ -599,7 +650,12 @@ public class MainActivity extends ComponentActivity {
 
         /** 파일 하나를 시스템 공유 시트로 넘긴다 */
         @JavascriptInterface
-        public void shareFile(String name, String url) { io.execute(() -> share(name, url)); }
+        public void shareFile(String name, String url) {
+            if (name == null || name.length() > 300 || url == null || url.length() > 4096) {
+                shareDone(false, "잘못된 공유 요청입니다"); return;
+            }
+            queueTransfer(() -> share(name, url), true);
+        }
 
         /** 시스템 다크모드 여부. WebView의 prefers-color-scheme를 믿을 수 없어 직접 알려준다. */
         @JavascriptInterface
@@ -619,11 +675,12 @@ public class MainActivity extends ComponentActivity {
         @JavascriptInterface
         public void setSolved(String json) {
             try {
+                if (json == null || json.length() > MAX_BACKUP) return;
                 if (!Solved.put(MainActivity.this, json)) return;
                 Widgets.refresh(MainActivity.this);
                 /* 바뀐 때만 쓴다. 페이지는 열 때마다 한 번씩 건네므로, 안 바뀐
                    것까지 쓰면 아무 일도 안 한 날에도 파일 시각이 움직인다. */
-                io.execute(MainActivity.this::writeAuto);
+                requestAutoWrite();
             } catch (Exception e) {
                 Log.w(TAG, "표시를 옮겨 적지 못했습니다", e);
             }
@@ -639,7 +696,11 @@ public class MainActivity extends ComponentActivity {
          */
         @JavascriptInterface
         public void saveBackup(String json, String name) {
-            io.execute(() -> {
+            if (json == null || json.length() > MAX_BACKUP || name == null || name.length() > 300
+                    || json.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > MAX_BACKUP) {
+                shareDone(false, "백업 요청이 너무 큽니다"); return;
+            }
+            queueTransfer(() -> {
                 try {
                     File dir = new File(getCacheDir(), "share");
                     if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("임시 폴더를 만들지 못했습니다");
@@ -661,7 +722,7 @@ public class MainActivity extends ComponentActivity {
                     Log.w(TAG, "백업을 내보내지 못했습니다", e);
                     shareDone(false, "내보내지 못했습니다: " + e.getMessage());
                 }
-            });
+            }, true);
         }
 
         /** 백업 파일을 고르게 한다. 고른 것은 onActivityResult 가 페이지로 넘긴다. */
@@ -690,24 +751,19 @@ public class MainActivity extends ComponentActivity {
          * 페이지가 읽을 수 있게 <b>백업 파일과 같은 모양</b>으로 돌려준다.
          */
         @JavascriptInterface
-        public String savedSolved() {
+        public String savedAutoBackup() {
             try {
-                android.content.SharedPreferences pr = Solved.prefs(MainActivity.this);
-                String raw = pr.getString("json", null);
-                if (raw == null) return "{}";
-                JSONObject marks = new JSONObject(raw).optJSONObject("marks");
-                if (marks == null) return "{}";
-                return new JSONObject()
-                        .put("v", 1)
-                        .put("at", new java.text.SimpleDateFormat(
-                                "yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US)
-                                .format(new java.util.Date(pr.getLong("at", 0))))
-                        .put("subs", new JSONArray())
-                        .put("solved", marks)
-                        .toString();
-            } catch (Exception e) {
-                return "{}";
-            }
+                android.util.AtomicFile f = new android.util.AtomicFile(
+                        new File(getFilesDir(), "auto-backup/last-good.json"));
+                String text = new String(f.readFully(), java.nio.charset.StandardCharsets.UTF_8);
+                return BackupIO.valid(text) ? text : "";
+            } catch (Exception e) { return ""; }
+        }
+
+        @JavascriptInterface
+        public String savedSolved() {
+            String backup = Solved.backup(MainActivity.this);
+            return backup == null ? "{}" : backup;
         }
 
         /**
@@ -778,12 +834,11 @@ public class MainActivity extends ComponentActivity {
             Uri u = autoUri();
             if (u != null) {
                 try {
-                    getContentResolver().releasePersistableUriPermission(u,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                    | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    DocumentAccess.release(getContentResolver(), u);
                 } catch (Exception ignored) { }
             }
-            prefs().edit().remove(AUTO_URI).remove(AUTO_NAME).remove(AUTO_FAIL).apply();
+            prefs().edit().remove(AUTO_URI).remove(AUTO_NAME).remove(AUTO_FAIL)
+                    .remove(AUTO_SEEN).remove(AUTO_HASH).apply();
             autoState();
         }
 
@@ -865,6 +920,7 @@ public class MainActivity extends ComponentActivity {
         try {
             JSONObject o = new JSONObject(json);
             JSONArray files = o.getJSONArray("files");
+            if (files.length() > 16) throw new Exception("한 번에 저장할 파일이 너무 많습니다");
             where = safe(o.getString("folder"));
             File dir = new File(root(), where);
             if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("폴더를 만들지 못했습니다");
@@ -890,8 +946,7 @@ public class MainActivity extends ComponentActivity {
     }
 
     private static String mimeOf(String name) {
-        return name.endsWith(".png") ? "image/png"
-                : name.endsWith(".pdf") ? "application/pdf" : "application/octet-stream";
+        return PaperFiles.mime(name);
     }
 
     /** 이미 받아둔 파일이 있으면 다시 받지 않는다 */
@@ -987,8 +1042,8 @@ public class MainActivity extends ComponentActivity {
     /** 마지막으로 읽거나 쓴 그 파일의 수정 시각. 이보다 새것이면 남이 고친 것이다. */
     private static final String AUTO_SEEN = "auto.seen";
     private static final int REQ_AUTO_OPEN = 4103;
-    /** 수정 시각을 안 내주는 제공자도 있다. 그때는 실행마다 한 번만 합친다. */
-    private boolean mergedThisRun = false;
+    private static final String AUTO_HASH = "auto.hash";
+    private volatile boolean autoMergePending;
 
     private android.content.SharedPreferences prefs() {
         return getSharedPreferences("app", MODE_PRIVATE);
@@ -996,7 +1051,29 @@ public class MainActivity extends ComponentActivity {
 
     private Uri autoUri() {
         String s = prefs().getString(AUTO_URI, null);
-        try { return s == null ? null : Uri.parse(s); } catch (Exception e) { return null; }
+        if (s == null) return null;
+        try {
+            Uri uri = Uri.parse(s);
+            if (DocumentAccess.persisted(getContentResolver(), uri)) return uri;
+        } catch (Exception e) { Log.w(TAG, "백업 권한을 확인하지 못했습니다", e); }
+        forgetAuto("파일 접근 권한이 없습니다. 자리 고르기에서 다시 선택해 주세요");
+        return null;
+    }
+
+    private void releasePreviousAuto(Uri next) {
+        String old = prefs().getString(AUTO_URI, null);
+        if (old != null && !old.equals(next.toString())) {
+            try { DocumentAccess.release(getContentResolver(), Uri.parse(old)); }
+            catch (Exception ignored) { }
+        }
+    }
+
+    private void forgetAuto(String error) {
+        String previous = prefs().getString(AUTO_URI, null);
+        if (previous != null) try { DocumentAccess.release(getContentResolver(), Uri.parse(previous)); }
+        catch (Exception ignored) { }
+        prefs().edit().remove(AUTO_URI).remove(AUTO_NAME).remove(AUTO_SEEN).remove(AUTO_HASH)
+                .putString(AUTO_FAIL, error).apply();
     }
 
     /**
@@ -1030,74 +1107,135 @@ public class MainActivity extends ComponentActivity {
         return 0;
     }
 
-    /** 그 파일의 내용. 못 읽거나 너무 크면 null. */
-    private String autoRead() {
-        Uri u = autoUri();
-        if (u == null) return null;
-        try (java.io.InputStream in = getContentResolver().openInputStream(u)) {
-            if (in == null) return null;
+    /** 수정시각 대신 내용을 비교한다. 읽기 실패와 빈 파일을 구별한다. */
+    private String autoRead(Uri u) throws Exception {
+        try (InputStream in = getContentResolver().openInputStream(u)) {
+            if (in == null) throw new Exception("파일을 열지 못했습니다");
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
             byte[] buf = new byte[8192];
-            int n, total = 0;
-            while ((n = in.read(buf)) > 0) {
-                total += n;
-                if (total > MAX_BACKUP) return null;
+            int n;
+            while ((n = in.read(buf)) != -1) {
+                if (out.size() + n > MAX_BACKUP) throw new Exception("백업 파일이 너무 큽니다");
                 out.write(buf, 0, n);
             }
             return out.toString("UTF-8");
-        } catch (Exception e) {
-            Log.w(TAG, "자동 백업을 읽지 못했습니다", e);
-            return null;
         }
     }
 
-    /**
-     * 남이 고쳤으면 읽어서 페이지에 넘긴다. 합치는 일은 페이지가 한다 —
-     * 표시와 내 과목과 잰 시간을 쥐고 있는 쪽이 거기이고, 손으로 가져올 때
-     * 쓰는 길과 같은 길을 쓰는 편이 갈래를 안 늘린다.
-     */
+    private void autoFailed(Exception e) {
+        if (e instanceof SecurityException) {
+            forgetAuto("파일 접근 권한이 없습니다. 자리 고르기에서 다시 선택해 주세요");
+        } else {
+            prefs().edit().putString(AUTO_FAIL, e.getMessage() == null
+                    ? "백업을 읽거나 쓰지 못했습니다" : e.getMessage()).apply();
+        }
+        Log.w(TAG, "자동 백업이 멈췄습니다", e);
+        autoState();
+    }
+
+    /** 영구권한과 실제 내용을 확인한 뒤 페이지가 저장에 성공할 때만 읽음으로 친다. */
     private void mergeAuto() {
-        if (autoUri() == null) return;
-        long stamp = autoStamp();
-        long seen = prefs().getLong(AUTO_SEEN, 0);
-        /* 수정 시각을 안 내주는 제공자가 있다. 그때는 실행마다 한 번만 —
-           매번 합치면 페이지가 다시 쓰고 그것이 또 새것으로 보여 되돈다. */
-        if (stamp == 0 ? mergedThisRun : stamp <= seen) return;
-        String json = autoRead();
-        if (json == null || json.isEmpty()) return;
-        mergedThisRun = true;
-        if (stamp > 0) prefs().edit().putLong(AUTO_SEEN, stamp).apply();
-        final String js = "window.gijulAutoMerge && window.gijulAutoMerge("
-                + JSONObject.quote(json) + ")";
-        eval(js);
+        if (autoMergePending) return;
+        Uri u = autoUri();
+        if (u == null) return;
+        try {
+            String json = autoRead(u), hash = BackupIO.fingerprint(json);
+            if (hash.equals(prefs().getString(AUTO_HASH, null))) return;
+            mergeAuto(u, json, hash);
+        } catch (Exception e) { autoFailed(e); }
+    }
+
+    private void mergeAuto(Uri uri, String json, String hash) throws Exception {
+        if (!BackupIO.valid(json))
+            throw new Exception("정상 백업이 아닙니다. 기존 파일은 보존했습니다. 앱에서 내보낸 파일을 다시 골라 주세요");
+        if (destroyed || web == null) return;
+        autoMergePending = true;
+        String js = "window.gijulAutoMerge ? window.gijulAutoMerge("
+                + JSONObject.quote(json) + ") : false";
+        runOnUiThread(() -> {
+            if (destroyed || web == null) { autoMergePending = false; return; }
+            web.evaluateJavascript(js, result -> {
+                if (destroyed || io.isShutdown()) { autoMergePending = false; return; }
+                io.execute(() -> {
+                autoMergePending = false;
+                if (!uri.equals(autoUri())) return;
+                if (!"true".equals(result)) {
+                    autoFailed(new Exception("화면에 백업을 합치지 못했습니다. 다시 열어 주세요"));
+                    return;
+                }
+                prefs().edit().putString(AUTO_HASH, hash).putLong(AUTO_SEEN, autoStamp()).apply();
+                writeAuto();
+                });
+            });
+        });
+    }
+
+    /** 웹에서 반복 호출해도 네트워크 작업이 무한히 줄 서지 않게 한다. */
+    private void queueTransfer(Runnable task, boolean share) {
+        if (destroyed || !transferQueued.compareAndSet(false, true)) {
+            if (share) shareDone(false, "앞선 작업이 끝난 뒤 다시 눌러 주세요");
+            else report(false, 0, "앞선 작업이 끝난 뒤 다시 눌러 주세요");
+            return;
+        }
+        try {
+            io.execute(() -> { try { task.run(); } finally { transferQueued.set(false); } });
+        } catch (java.util.concurrent.RejectedExecutionException e) { transferQueued.set(false); }
+    }
+
+    private void requestAutoWrite() {
+        autoWriteDirty = true;
+        if (destroyed || !autoWriteQueued.compareAndSet(false, true)) return;
+        try {
+            io.execute(() -> {
+                try {
+                    do { autoWriteDirty = false; writeAuto(); } while (autoWriteDirty && !destroyed);
+                } finally {
+                    autoWriteQueued.set(false);
+                    if (autoWriteDirty && !destroyed) requestAutoWrite();
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException e) { autoWriteQueued.set(false); }
     }
 
     private void writeAuto() {
+        if (autoMergePending) return;
         Uri u = autoUri();
         if (u == null) return;
-        /* 쓰기 전에 남이 고쳤는지 본다. 그대로 덮으면 저쪽 기기에서 찍은 것이
-           사라진다 — 먼저 합치고, 합쳐진 것을 페이지가 다시 넘겨 주면 그때 쓴다. */
-        long stamp = autoStamp();
-        if (stamp > 0 && stamp > prefs().getLong(AUTO_SEEN, 0)) { mergeAuto(); return; }
-
         String json = Solved.backup(this);
-        if (json == null) return;
-        try (OutputStream os = getContentResolver().openOutputStream(u, "wt")) {
-            if (os == null) throw new Exception("열지 못했습니다");
-            os.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            /* 방금 쓴 것이 '남이 고친 것'으로 보이면 안 된다 */
-            long after = autoStamp();
-            prefs().edit().putLong(AUTO_SEEN, after > 0 ? after : System.currentTimeMillis()).apply();
-            if (prefs().getString(AUTO_FAIL, null) != null) {
-                prefs().edit().remove(AUTO_FAIL).apply();
-                autoState();
-            }
-        } catch (Exception e) {
-            Log.w(TAG, "자동 백업을 쓰지 못했습니다", e);
-            prefs().edit().putString(AUTO_FAIL,
-                    e.getMessage() == null ? "쓰지 못했습니다" : e.getMessage()).apply();
-            autoState();
+        if (json == null) { autoFailed(new Exception("화면의 기록을 먼저 불러온 뒤 다시 시도해 주세요")); return; }
+        if (json.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > MAX_BACKUP) {
+            autoFailed(new Exception("백업 파일이 너무 큽니다")); return;
         }
+        try {
+            String before = autoRead(u), hash = BackupIO.fingerprint(before);
+            if (!hash.equals(prefs().getString(AUTO_HASH, null))) {
+                mergeAuto(u, before, hash);
+                return;
+            }
+            File recovery = new File(getFilesDir(), "auto-backup");
+            if (BackupIO.valid(before)) BackupIO.keep(recovery, "last-good.json", before);
+            BackupIO.keep(recovery, "pending.json", json);
+            // SAF에는 기기 간 조건부 쓰기가 없다. 직전에 다시 읽고 달라졌으면 합친다.
+            String latest = autoRead(u);
+            if (!hash.equals(BackupIO.fingerprint(latest))) {
+                mergeAuto(u, latest, BackupIO.fingerprint(latest));
+                return;
+            }
+            if (destroyed || !u.equals(autoUri())) return;
+            try (OutputStream out = getContentResolver().openOutputStream(u, "wt")) {
+                if (out == null) throw new Exception("파일을 열지 못했습니다");
+                out.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                out.flush();
+            }
+            // 닫힌 뒤 읽어 검증한다. provider 업로드 완료나 다른 기기 잠금까지 보장하지는 않는다.
+            String after = autoRead(u);
+            String writtenHash = BackupIO.fingerprint(json);
+            if (!writtenHash.equals(BackupIO.fingerprint(after)))
+                throw new Exception("백업 파일 확인이 일치하지 않습니다. 이 기기의 복구 사본은 보존했습니다");
+            prefs().edit().putString(AUTO_HASH, writtenHash).putLong(AUTO_SEEN, autoStamp())
+                    .remove(AUTO_FAIL).apply();
+            autoState();
+        } catch (Exception e) { autoFailed(e); }
     }
 
     /** 고른 자리의 사람이 읽는 이름. 못 읽으면 주소 끝자락이라도. */
@@ -1137,17 +1275,17 @@ public class MainActivity extends ComponentActivity {
             if (res != RESULT_OK || data == null || data.getData() == null) return;
             Uri picked = data.getData();
             try {
-                getContentResolver().takePersistableUriPermission(picked,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                DocumentAccess.take(getContentResolver(), picked, data.getFlags());
             } catch (Exception e) {
                 Log.w(TAG, "권한을 붙들지 못했습니다", e);
-                prefs().edit().putString(AUTO_FAIL, "이 자리는 다음 실행에 다시 물어봅니다").apply();
+                prefs().edit().putString(AUTO_FAIL, "파일 권한을 받지 못했습니다. 다시 골라 주세요").apply();
+                autoState();
+                return;
             }
+            releasePreviousAuto(picked);
             prefs().edit().putString(AUTO_URI, picked.toString())
                     .putString(AUTO_NAME, autoName(picked))
-                    .remove(AUTO_SEEN).apply();       /* 처음 잇는 것이니 통째로 읽는다 */
-            mergedThisRun = false;
+                    .remove(AUTO_SEEN).remove(AUTO_HASH).remove(AUTO_FAIL).apply();
             autoState();
             io.execute(this::mergeAuto);
             return;
@@ -1156,18 +1294,27 @@ public class MainActivity extends ComponentActivity {
             Uri picked = (res == RESULT_OK && data != null) ? data.getData() : null;
             if (picked == null) { autoState(); return; }
             try {
-                getContentResolver().takePersistableUriPermission(picked,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                DocumentAccess.take(getContentResolver(), picked, data.getFlags());
             } catch (Exception e) {
                 /* 권한을 못 잡으면 지금은 써져도 다음 실행에는 못 쓴다. 그때 가서
                    조용히 실패하느니 여기서 안 된다고 말하는 편이 낫다. */
                 Log.w(TAG, "자리 권한을 이어받지 못했습니다", e);
-                prefs().edit().putString(AUTO_FAIL, "이 자리는 다음 실행에 다시 물어봅니다").apply();
+                prefs().edit().putString(AUTO_FAIL, "파일 권한을 받지 못했습니다. 다시 골라 주세요").apply();
+                autoState();
+                return;
             }
+            releasePreviousAuto(picked);
             prefs().edit().putString(AUTO_URI, picked.toString())
-                    .putString(AUTO_NAME, autoName(picked)).apply();
-            io.execute(() -> { writeAuto(); autoState(); });
+                    .putString(AUTO_NAME, autoName(picked)).remove(AUTO_SEEN)
+                    .remove(AUTO_HASH).remove(AUTO_FAIL).apply();
+            io.execute(() -> {
+                try {
+                    // CREATE_DOCUMENT의 새 빈 문서에만 처음 쓰기를 허용한다.
+                    String content = autoRead(picked);
+                    if (content.isEmpty()) prefs().edit().putString(AUTO_HASH, BackupIO.fingerprint(content)).apply();
+                    writeAuto(); autoState();
+                } catch (Exception e) { autoFailed(e); }
+            });
             return;
         }
         if (req != REQ_BACKUP) return;

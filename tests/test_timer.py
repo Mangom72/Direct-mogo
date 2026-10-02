@@ -124,6 +124,65 @@ with sync_playwright() as pw:
         print(f"   {drop} 없는 앱 →", got)
         ck(got and got["via"] == want, f"{drop} 가 없으면 {want} 로 가야 합니다: {got}")
 
+    # 실제 편집 화면: 초까지 보존하고, 오답 범위·중복을 정리한다.
+    pg.locator(".record.took").first.click()
+    pg.locator("#recordMinutes").fill("105")
+    pg.locator("#recordSeconds").fill("30")
+    pg.locator("#recordScore").fill("42.5")
+    pg.locator("#recordWrong").fill("7, 3, 7, 12-14")
+    pg.locator(".record-save").click()
+    edited = pg.evaluate("k=>({time:TIMES[k],record:RECORDS[k],solved:SOLVED[k]})", key)
+    print("6. 수동 수정·점수·오답:", edited)
+    ck(edited["time"] == {"spent": 6330, "limit": 6000}, "수동 수정이 초 또는 고사 시간을 바꿨습니다")
+    ck(edited["record"] == {"score": 42.5, "wrong": [3, 7, 12, 13, 14]}, "점수·오답 범위·중복 처리가 틀립니다")
+    ck("105분 30초" in pg.locator(".record.took").first.inner_text(), "수정한 초가 표시되지 않습니다")
+
+    pg.locator(".record.took").first.click()
+    pg.locator("#recordWrong").fill("14-12")
+    pg.locator(".record-save").click()
+    ck(pg.locator(".record-error").inner_text() and pg.locator("#recordForm").is_visible(), "잘못된 오답 범위를 저장했습니다")
+    ck(pg.evaluate("k=>RECORDS[k].wrong", key) == [3, 7, 12, 13, 14], "잘못 입력한 값이 기존 기록을 바꿨습니다")
+    pg.locator("#recordWrong").fill("99")
+    pg.locator("#sheetX").click()
+    ck(pg.evaluate("k=>RECORDS[k].wrong", key) == [3, 7, 12, 13, 14], "취소한 값이 저장됐습니다")
+    pg.reload(wait_until="load")
+    pg.wait_for_selector(".record.took")
+    ck(pg.evaluate("k=>RECORDS[k].score", key) == 42.5, "새로 열면 점수가 사라집니다")
+    ck(pg.evaluate("k=>TIMES[k].spent", key) == 6330, "새로 열면 수정한 시간이 사라집니다")
+
+    # 파일 백업과 네이티브 사본에 모두 들어가야 한다.
+    archived = pg.evaluate("()=>JSON.stringify(makeBackup())")
+    payload = pg.evaluate("""()=>{let sent; GijulNative.setSolved=x=>sent=JSON.parse(x); tellSolved(); return sent;}""")
+    ck(payload["records"][key]["score"] == 42.5 and payload["times"][key]["spent"] == 6330,
+       "앱의 사본·자동 백업에 시간이나 점수가 빠집니다")
+    pg.evaluate("()=>{RECORDS={}; TIMES={}; SOLVED={};}")
+    pg.evaluate("x=>applyBackup(readBackup(x),'merge')", archived)
+    ck(pg.evaluate("k=>RECORDS[k].wrong", key) == [3, 7, 12, 13, 14], "백업에서 오답이 돌아오지 않습니다")
+    pg.evaluate("""k=>applyBackup(readBackup(JSON.stringify({v:1,subs:[],solved:{},
+      records:{[k]:{score:99,wrong:[1]},'모르는/과목/20250101/시험':{score:0,wrong:[]}}})), 'merge')""", key)
+    ck(pg.evaluate("k=>RECORDS[k].score", key) == 42.5, "합치기가 이 기기의 점수를 덮어썼습니다")
+    ck(pg.evaluate("()=>RECORDS['모르는/과목/20250101/시험'].score") == 0, "모르는 과목·0점 기록이 버려졌습니다")
+    dirty = pg.evaluate("""()=>readBackup(JSON.stringify({v:1, records:{
+      'a/b/c/d':{score:-1,wrong:[0]},'a/b/c/e':{score:'85',wrong:[2.5]},
+      'a/b/c/f':{score:0,wrong:[3,3,1]},'bad':{score:80}}})).records""")
+    ck(dirty == {"a/b/c/f": {"score": 0, "wrong": [1, 3]}}, "잘못된 백업 기록을 받아들였습니다")
+
+    pg.locator(".record.took").first.click()
+    pg.locator("#recordMinutes").fill("")
+    pg.locator("#recordSeconds").fill("")
+    pg.locator("#recordScore").fill("0")
+    pg.locator("#recordWrong").fill("없음")
+    pg.locator(".record-save").click()
+    ck(pg.evaluate("k=>!TIMES[k] && RECORDS[k].score===0 && RECORDS[k].wrong.length===0", key),
+       "시간 지우기·0점·오답 없음이 저장되지 않습니다")
+    pg.evaluate("()=>applyBackup(readBackup(JSON.stringify({v:1,subs:[],solved:{}})), 'replace')")
+    ck(pg.evaluate("()=>Object.keys(RECORDS).length===0"), "옛 백업으로 덮어쓸 때 기록이 남습니다")
+    pg.locator(".record").first.click()
+    pg.locator("#recordMinutes").fill("30")
+    pg.locator(".record-save").click()
+    ck(pg.evaluate("k=>!!SOLVED[k] && TIMES[k].limit===0", key), "타이머 없이 수동으로 기록할 수 없습니다")
+    print("   입력 검증·취소·재실행·백업·0점·오답 없음·옛 백업 확인")
+
     pg.screenshot(path=str(pathlib.Path(SHOT) / "timer.png"))
     print("   오류:", errs or "없음")
     ck(not errs, f"스크립트 오류: {errs}")

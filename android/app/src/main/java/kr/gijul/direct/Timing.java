@@ -48,7 +48,7 @@ final class Timing {
     private static final String DONE = "done";      // 페이지가 아직 안 가져간 기록
 
     static final String ACTION = "kr.gijul.direct.TIMER";
-    static final String WHAT = "what";              // pause | resume | plus | stop
+    static final String WHAT = "what";              // pause | resume | stop
 
     private Timing() { }
 
@@ -92,7 +92,6 @@ final class Timing {
 
     static void pause(Context c) { put(c, clock(c).pause(System.currentTimeMillis())); show(c); }
     static void resume(Context c) { put(c, clock(c).resume(System.currentTimeMillis())); show(c); }
-    static void plus(Context c, int minutes) { put(c, clock(c).plus(minutes * 60_000L)); show(c); }
 
     /**
      * 끝낸다. 잰 시간을 남길지는 부르는 쪽이 정한다 — '끝내기'로 끝낸 것은
@@ -112,11 +111,11 @@ final class Timing {
     /* 타이머가 끝나는 때에 페이지가 떠 있으리라는 보장이 없다. 회차 표시의
        주인은 페이지이므로(과목 번호와 열쇠를 아는 쪽이 거기다) 여기서는 적어
        두었다가, 페이지가 뜰 때 통째로 넘긴다. */
-    private static void keep(Context c, String paperKey, long limit, long spent) {
+    private static synchronized void keep(Context c, String paperKey, long limit, long spent) {
         if (paperKey == null || paperKey.isEmpty()) return;
         try {
             JSONArray a = new JSONArray(prefs(c).getString(DONE, "[]"));
-            a.put(new JSONObject().put("k", paperKey)
+            a.put(new JSONObject().put("id", java.util.UUID.randomUUID().toString()).put("k", paperKey)
                     .put("limit", limit / 1000).put("spent", spent / 1000));
             /* 넘겨받기 전에 쌓이기만 하는 일이 없도록 마지막 것들만 남긴다 */
             while (a.length() > 40) a.remove(0);
@@ -126,11 +125,37 @@ final class Timing {
         }
     }
 
-    /** 페이지가 가져간다. 한 번 넘긴 것은 지운다. */
-    static String takeRecords(Context c) {
-        String s = prefs(c).getString(DONE, "[]");
-        prefs(c).edit().remove(DONE).apply();
-        return s;
+    /** 옛 페이지에도 전달 전에 지우지 않는다. 새 페이지에서 ACK하면 삭제된다. */
+    static synchronized String takeRecords(Context c) {
+        return peekRecords(c);
+    }
+
+    /** 새 페이지는 저장에 성공한 뒤 ID를 확인한다. 옛 페이지 창구는 그대로 둔다. */
+    static synchronized String peekRecords(Context c) {
+        try {
+            JSONArray records = new JSONArray(prefs(c).getString(DONE, "[]"));
+            for (int i = 0; i < records.length(); i++) {
+                JSONObject record = records.getJSONObject(i);
+                if (!record.has("id")) record.put("id", java.util.UUID.randomUUID().toString());
+            }
+            if (!prefs(c).edit().putString(DONE, records.toString()).commit()) return "[]";
+            return records.toString();
+        } catch (Exception e) { return "[]"; }
+    }
+
+    static synchronized void acknowledgeRecords(Context c, String json) {
+        try {
+            if (json == null || json.length() > 8192) return;
+            JSONArray ids = new JSONArray(json);
+            java.util.Set<String> done = new java.util.HashSet<>();
+            for (int i = 0; i < ids.length(); i++) done.add(ids.getString(i));
+            JSONArray old = new JSONArray(prefs(c).getString(DONE, "[]")), left = new JSONArray();
+            for (int i = 0; i < old.length(); i++) {
+                JSONObject record = old.getJSONObject(i);
+                if (!done.contains(record.optString("id", ""))) left.put(record);
+            }
+            prefs(c).edit().putString(DONE, left.toString()).commit();
+        } catch (Exception e) { Log.w(TAG, "시간 전달 확인을 읽지 못했습니다", e); }
     }
 
     // ── 알림 ────────────────────────────────────────────────────────────
@@ -208,7 +233,6 @@ final class Timing {
             /* 끝난 시험을 멈출 일은 없다 — 그때는 '이어서/일시정지'가 사라진다. */
             if (!over) b.addAction(act(c, "pause", "일시정지"));
         }
-        b.addAction(act(c, "plus", "10분 더"));
         b.addAction(act(c, "stop", "끝내기"));
 
         int done = Math.round(k.ratio(now) * 1000);
@@ -367,8 +391,8 @@ final class Timing {
             String what = i.getStringExtra(WHAT);
             if ("pause".equals(what)) pause(c);
             else if ("resume".equals(what)) resume(c);
-            else if ("plus".equals(what)) plus(c, 10);
             else if ("stop".equals(what)) stop(c, true);
+            else return;
             /* 화면에 떠 있는 얼굴들에게도 알린다 */
             c.sendBroadcast(new Intent(CHANGED).setPackage(c.getPackageName()));
         }

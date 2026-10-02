@@ -66,9 +66,6 @@ final class Clock {
         return new Clock(limit, from + (now - pausedAt), 0);
     }
 
-    /** 시간을 더 준다. 넘긴 뒤에도 더할 수 있다. */
-    Clock plus(long ms) { return new Clock(limit + ms, from, pausedAt); }
-
     // ── 사람이 읽는 꼴 ──────────────────────────────────────────────────
 
     /**

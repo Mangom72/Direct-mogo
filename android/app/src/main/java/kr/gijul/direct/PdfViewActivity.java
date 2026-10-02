@@ -252,6 +252,11 @@ public class PdfViewActivity extends ComponentActivity {
         timerChip.setTextSize(13.5f);
         timerChip.setTypeface(timerChip.getTypeface(), android.graphics.Typeface.BOLD);
         timerChip.setPadding(dp(9), dp(3), dp(9), dp(3));
+        timerChip.setMinWidth(dp(48));
+        timerChip.setMinHeight(dp(48));
+        timerChip.setGravity(Gravity.CENTER);
+        timerChip.setSingleLine(true);
+        timerChip.setContentDescription("타이머 조작");
         timerChip.setVisibility(View.GONE);
         timerChip.setOnClickListener(v -> tapTimer());
         bar.addView(timerChip);
@@ -459,7 +464,7 @@ public class PdfViewActivity extends ComponentActivity {
      * 아이콘이나 칩을 누르면.
      *
      * <ul>
-     *   <li>재고 있으면 — 아이콘 밑에 조작판을 편다(멈춤·10분 더·끝내기).
+     *   <li>재고 있으면 — 아이콘 밑에 조작판을 편다(멈춤·끝내기).
      *       예전에는 누를 때마다 멈췄다 이었는데, 실수로 눌러 시험이 멈춰 있는
      *       것을 한참 뒤에 알아채는 것이 가장 나쁜 결말이라 한 손짓을 더 뒀다.
      *   <li>아니면 — 시트를 연다. <b>시작은 늘 묻는다.</b>
@@ -575,7 +580,16 @@ public class PdfViewActivity extends ComponentActivity {
         /* 넓은 화면에서는 바닥에서 조금 띄운다 — 가운데로 모이면 아래 모서리가
            보이는데, 붙어 있으면 잘린 것처럼 보인다. */
         if (w > cap) { blp.bottomMargin = dp(14); blp.leftMargin = blp.rightMargin = dp(14); }
-        wrap.addView(box, blp);
+        android.widget.ScrollView scroll = new android.widget.ScrollView(this) {
+            @Override protected void onMeasure(int widthSpec, int heightSpec) {
+                int available = host.getHeight() > 0 ? host.getHeight()
+                        : getResources().getDisplayMetrics().heightPixels;
+                super.onMeasure(widthSpec, View.MeasureSpec.makeMeasureSpec(
+                        Math.max(dp(48), available - dp(32)), View.MeasureSpec.AT_MOST));
+            }
+        };
+        scroll.addView(box);
+        wrap.addView(scroll, blp);
         host.addView(wrap, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         sheetHost = wrap;
@@ -853,7 +867,6 @@ public class PdfViewActivity extends ComponentActivity {
                     ? popRow("이어서", false, () -> { Timing.resume(this); after(); })
                     : popRow("일시정지", false, () -> { Timing.pause(this); after(); }));
         }
-        box.addView(popRow("10분 더", false, () -> { Timing.plus(this, 10); after(); }));
         box.addView(popRow("끝내기", true, this::finishTimer));
 
         /* 잠금화면에 뜨는가. **올라가 있을 때도 한 줄 남긴다** — 안 뜨는데
@@ -1427,7 +1440,8 @@ public class PdfViewActivity extends ComponentActivity {
     private void fetch(String url) {
         try {
             /* 이미 '받아둔 자료'에 있으면 그걸 쓴다 — 같은 파일을 두 번 받을 이유가 없다 */
-            File saved = findSaved(nameOf(url));
+            File saved = findSaved(name);
+            if (saved == null) saved = findSaved(nameOf(url));
             if (saved != null) { load(saved); return; }
 
             File dir = new File(getCacheDir(), "view");
@@ -1452,12 +1466,7 @@ public class PdfViewActivity extends ComponentActivity {
 
     private File findSaved(String fileName) {
         File root = getExternalFilesDir(null);
-        File[] dirs = root == null ? null : root.listFiles(File::isDirectory);
-        if (dirs != null) for (File d : dirs) {
-            File[] fs = d.listFiles(File::isFile);
-            if (fs != null) for (File f : fs) if (f.getName().endsWith(fileName)) return f;
-        }
-        return null;
+        return PaperFiles.saved(root == null ? getFilesDir() : root, fileName);
     }
 
     private static String nameOf(String url) {
@@ -1469,8 +1478,8 @@ public class PdfViewActivity extends ComponentActivity {
         file = f;
         try {
             String lower = f.getName().toLowerCase(Locale.ROOT);
-            if (lower.endsWith(".png") || lower.endsWith(".jpg")) {
-                image = BitmapFactory.decodeFile(f.getAbsolutePath());
+            if (lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+                image = PaperFiles.image(f);
                 if (image == null) throw new Exception("이미지를 읽지 못했습니다");
             } else {
                 fd = ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_READ_ONLY);
@@ -1569,8 +1578,7 @@ public class PdfViewActivity extends ComponentActivity {
             File out = named();
             Uri u = FileProvider.getUriForFile(this, MainActivity.AUTHORITY, out);
             Intent i = new Intent(Intent.ACTION_VIEW);
-            i.setDataAndType(u, out.getName().toLowerCase(Locale.ROOT).endsWith(".png")
-                    ? "image/png" : "application/pdf");
+            i.setDataAndType(u, PaperFiles.mime(out.getName()));
             /* 고른 앱이 **제 앱으로** 서게 한다.
                이 깃발이 없으면 안드로이드는 시작한 활동을 부른 쪽 작업(task) 안에
                쌓는다. 그래서 노트앱이 기출 직행의 한 화면처럼 열리고, 최근 앱

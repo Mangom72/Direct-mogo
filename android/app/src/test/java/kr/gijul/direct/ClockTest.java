@@ -82,15 +82,6 @@ public class ClockTest {
     }
 
     @Test
-    public void 시간을_더_줄_수_있다() {
-        Clock c = Clock.start(100 * M, T0).plus(10 * M);
-        assertEquals(20 * M, c.left(T0 + 90 * M));
-        // 넘긴 뒤에 더해도 된다
-        Clock d = Clock.start(100 * M, T0).plus(10 * M);
-        assertFalse(d.over(T0 + 105 * M));
-    }
-
-    @Test
     public void 얼굴은_한_시간을_넘으면_시_분_초다() {
         assertEquals("1:12:30", Clock.face(72 * M + 30_000));
         assertEquals("12:30", Clock.face(12 * M + 30_000));

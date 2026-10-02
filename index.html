@@ -97,7 +97,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-ZNdtQ7bY0SClA1Z7MK6pRQPh672YpN5qryW412gXbbg=';
+  script-src 'self' 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-APYZiNpn3fEQ8rSItDWZCd5lne1FfeJmCLzxCBXU1WE=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -500,8 +500,29 @@ select:focus-visible{outline:2.5px solid var(--mark);outline-offset:1px}
   cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
 }
 .stamp:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
-/* 잰 시간. 도장과 나란히 서지만 누르는 것이 아니라 읽는 것이라 테두리가 없다. */
+/* 기록은 도장 옆의 작은 글자로 둔다. 편집도 기존 시트에서 한다. */
 .took{font-size:10.5px;color:var(--ink2);font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.record{font:inherit;font-size:10.5px;color:var(--ink2);background:none;border:0;
+  padding:5px 2px;margin:-5px -2px;min-height:24px;cursor:pointer;text-align:left;
+  font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.record:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.record:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+.record-form{display:grid;gap:16px;padding:3px 0 12px}
+.record-form label,.record-form legend{font-size:12px;font-weight:600;color:var(--ink)}
+.record-form label{display:grid;gap:7px}
+.record-form fieldset{border:0;padding:0;margin:0;min-width:0}
+.record-form legend{padding:0;margin-bottom:7px}
+.record-time{display:flex;align-items:center;gap:8px;color:var(--ink2);font-size:12px}
+.record-form input{box-sizing:border-box;width:100%;min-width:0;font:inherit;font-size:14px;
+  padding:9px 10px;border:1px solid var(--rule);background:var(--btn);color:var(--ink);border-radius:0}
+.record-time input{width:85px}
+.record-form input:focus-visible{outline:2px solid var(--mark);outline-offset:1px}
+.record-form small{font-size:11px;font-weight:400;color:var(--ink2)}
+.record-form .record-error{margin:0;color:var(--mark);font-size:12px}
+.record-form .record-error:empty{display:none}
+.record-save{justify-self:end;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+  border:1.2px solid var(--ink);background:var(--ink);color:var(--card);padding:9px 22px}
+.record-save:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
 .stamp.hint{color:var(--ink2);border-color:var(--rule)}
 .stampin{
   font:inherit;font-size:11px;padding:0 4px;border:1.2px solid var(--mark);
@@ -782,6 +803,10 @@ footer a.doc:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px;bo
   .acts a,.acts span.off{flex:1;text-align:center}
   .acts .send{flex:none;min-width:74px}
 }
+@media(max-width:360px){
+  .acts{flex-wrap:wrap}
+  .acts a,.acts span.off,.acts .send{flex:1 1 calc(50% - 3px);min-width:0;box-sizing:border-box}
+}
 /* ── 두드렸을 때 ──────────────────────────────────────────────────────
    모바일 브라우저는 두드린 자리에 반투명 파란 네모를 얹는다. 요소의 사각형을 그대로
    따라 그리는 것이라, 모서리가 각지고 테두리가 굵은 이 화면에서는 단추 위에 정체
@@ -1013,7 +1038,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
     </div>
     <div class="sheet-list" id="sheetList"></div>
     <button type="button" class="sheet-all" id="sheetAll">오프라인 저장 — 이 회차 전부 내려받기</button>
-    <p class="sheet-note" id="sheetNote">파일을 내려받아 공유 시트로 전달합니다. 목록에서 노트 앱을 선택해 주십시오.</p>
+    <p class="sheet-note" id="sheetNote" role="status" aria-live="polite" aria-atomic="true">파일을 내려받아 공유 시트로 전달합니다. 목록에서 노트 앱을 선택해 주십시오.</p>
   </div>
 </div>
 
@@ -1090,9 +1115,11 @@ if(!THEMES.some(x=>x[0]===themePref)) themePref="auto";
 function setTheme(t){
   if(!THEMES.some(x=>x[0]===t)) return;
   themePref = t;
-  try{ localStorage.setItem(THEME_KEY, themePref); }catch(e){}
+  let stored = true;
+  try{ localStorage.setItem(THEME_KEY, themePref); }catch(e){ stored = false; saveFailed(); }
   applyTheme();
   tellSolved();          /* 백업 파일에 담기는 값이라 앱도 알아야 한다 */
+  return stored;
 }
 document.getElementById("thBtn").onclick = ()=>{
   setTheme(THEMES[(THEMES.findIndex(x=>x[0]===themePref)+1) % THEMES.length][0]);
@@ -1297,8 +1324,8 @@ function saveFailed(){
     "알겠습니다", null, null, { key:"storage" });
 }
 function saveSolved(){
-  try{ localStorage.setItem(SOLVED_KEY, JSON.stringify(SOLVED)); }
-  catch(e){ saveFailed(); }
+  try{ localStorage.setItem(SOLVED_KEY, JSON.stringify(SOLVED)); return true; }
+  catch(e){ saveFailed(); return false; }
 }
 /* 홀수형·짝수형은 <b>문항 순서만 다른 같은 시험지</b>다. 하나를 풀었으면 그
    회차를 푼 것이라, 열쇠에서 떼어 내 둘이 한 열쇠를 쓰게 한다 — 찍으면 둘 다
@@ -1358,8 +1385,9 @@ function loadFavs(){
    ★로 저장해 놓고 아무것도 안 찍으면 위젯은 옛 과목을 계속 짚고 있었다. */
 function saveFavs(){
   try{ localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }
-  catch(e){ saveFailed(); }
+  catch(e){ saveFailed(); return false; }
   tellSolved();
+  return true;
 }
 function favIndex(){ return favs.findIndex(f=>f.g===sel.grade && f.s===sel.sub); }
 
@@ -1763,7 +1791,9 @@ function parseHash(){
 }
 /* 다른 기기로 내 과목을 옮기는 링크: #subs=D300.140117,D200.17022 */
 function parseSubs(){
-  const m = /^#subs=(.+)$/.exec(decodeURIComponent(location.hash));
+  let decoded;
+  try{ decoded = decodeURIComponent(location.hash); }catch(e){ return null; }
+  const m = /^#subs=(.+)$/.exec(decoded);
   if(!m) return null;
   const seen = new Set(), list = [];
   /* 쉼표도 계속 받는다 — 예전에 나간 링크가 살아 있다 (아래 favShare 주석 참고) */
@@ -1888,17 +1918,22 @@ function saveBlob(blob, name){
 
 /* WebView에는 Web Share API가 없다 — navigator.share 가 아예 없어서 페이지 혼자서는
    공유 시트를 못 띄우고 다운로드로 흘러버린다. 앱에서는 공유도 네이티브에 맡긴다. */
-let shareBtn = null;
+let shareBtn = null, shareSheetContent = null, sharingBackup = false;
 
 window.gijulShareDone = (ok, message)=>{
+  if(ok && sharingBackup) markBackedUp();
+  sharingBackup = false;
   if(shareBtn){
     setBtn(shareBtn, ok ? "done" : "", ok ? "보냈습니다" : "보내기");
     shareBtn = null;
   }
-  if(!ok && message) sheetNote.textContent = message;
+  if(!ok && message && shareSheetContent === sheetList.firstChild) sheetNote.textContent = message;
 };
 
 function shareViaNative(f, btn){
+  if(shareBtn) return;
+  sharingBackup = false;
+  shareSheetContent = sheetList.firstChild;
   shareBtn = btn;
   setBtn(btn, "busy", "여는 중…");
   try{
@@ -2010,11 +2045,18 @@ function nativeVault(){
     },
     /* 셋 다 답이 gijulSaveResult 로 돌아온다 — 여기서 기다리지 않는다 */
     save(folder, files){
+      if(nativeVaultSource) throw new Error("앞선 저장이 끝난 뒤 다시 눌러 주세요");
+      nativeVaultSource = sheetList.firstChild;
       NATIVE.savePaper(JSON.stringify({
         folder, files: files.map(f=>({ name:f.name, url:f.url })) }));
     },
     open(folder, name){ NATIVE.openSaved(folder, name); },
-    remove(folder){ NATIVE.deleteSaved(folder); },
+    remove(folder){
+      if(nativeVaultSource) throw new Error("앞선 작업이 끝난 뒤 다시 눌러 주세요");
+      nativeVaultSource = sheetList.firstChild;
+      if(NATIVE.deleteSavedWithConfirmation) NATIVE.deleteSavedWithConfirmation(folder);
+      else NATIVE.deleteSaved(folder);
+    },
   };
 }
 
@@ -2161,6 +2203,7 @@ function webVault(){
   };
 }
 
+let nativeVaultSource = null;
 const Vault = (NATIVE && NATIVE.savePaper) ? nativeVault() : webVault();
 
 /* 담거나 지운 뒤 — 앱은 gijulSaveResult 로, 웹은 제 손으로 여기에 들어온다 */
@@ -2170,11 +2213,17 @@ function vaultDone(ok, message){
   sheetAll.textContent = Vault.label;
   syncSaveBtn();                     /* 방금 담았으면 여기서 잠긴다 */
   if(vaultMode){ openVault(); render(); return; }
+  if(sheet.hidden || !sheetRow){ if(ok) render(); return; }
   sheetNote.innerHTML = ok ? `<b>${esc(message)}</b>` : esc(message);
   if(ok) render();                                  /* 방금 담은 회차에 표시가 붙게 */
 }
 
-window.gijulSaveResult = (ok, count, message)=> vaultDone(ok, message);
+window.gijulSaveResult = (ok, count, message)=> {
+  const source = nativeVaultSource;
+  nativeVaultSource = null;
+  if(source && source !== sheetList.firstChild){ Vault.forget(); if(ok) render(); return; }
+  vaultDone(ok, message);
+};
 
 /* ── 받아둔 자료 ──────────────────────────────────────────────────────
    앱에서는 파일이 앱 데이터 폴더에 있어 안드로이드 11+ 의 파일 관리자가 열지
@@ -2198,6 +2247,7 @@ function fmtSize(n){
  * 다음에 눌렀을 때 무엇을 누른 것인지 모르게 된다.
  */
 function askTwice(btn, label, question, run){
+  if(NATIVE && NATIVE.deleteSavedWithConfirmation){ btn.onclick = run; return; }
   let timer = null;
   const reset = ()=>{
     clearTimeout(timer); timer = null;
@@ -2307,7 +2357,7 @@ async function openVault(opener){
     sheetNote.appendChild(b);
   }
   sheet.hidden=false;
-  document.body.style.overflow="hidden";
+  syncModals();
   sheetX.focus();
 }
 
@@ -2463,7 +2513,7 @@ function openSheet(row, opener){
     sheetList.appendChild(el);
   });
   sheet.hidden=false;
-  document.body.style.overflow="hidden";
+  syncModals();
   sheetX.focus();
 }
 
@@ -2538,7 +2588,7 @@ function openAI(opener){
 
   sheetList.appendChild(box);
   sheet.hidden = false;
-  document.body.style.overflow = "hidden";
+  syncModals();
   sheetX.focus();
 }
 /* 겹판은 시트 위에 뜨므로 Esc가 이쪽을 먼저 닫아야 한다. 안 그러면 시트가
@@ -2564,16 +2614,19 @@ function openLens(src, alt, opener){
     pad.onclick = ()=>{ if(!moved) closeLens(); };
     lens.append(pad, x);
     document.body.appendChild(lens);
+    trapTab(lens);
   }
   lens.querySelector("img").src = src;
   lens.querySelector("img").alt = alt || "";
   lensBack = opener || null;
   lens.hidden = false;
+  syncModals();
   lens.querySelector(".x").focus();
 }
 function closeLens(){
   if(!lens || lens.hidden) return false;
   lens.hidden = true;
+  syncModals();
   if(lensBack && document.contains(lensBack)) lensBack.focus();
   lensBack = null;
   return true;
@@ -2595,6 +2648,7 @@ const KST = t => new Date(t).toLocaleDateString("ko-KR",
 const KSTKEY = t => new Date(t).toLocaleDateString("sv-SE", { timeZone:"Asia/Seoul" });
 
 async function openLog(opener){
+  const live = ()=> !sheet.hidden && sheetNm.textContent === "자료 갱신 내역" && sheetList.firstChild === loading;
   vaultMode = false;
   sheetRow = null;
   lastFocus = opener || null;
@@ -2610,8 +2664,9 @@ async function openLog(opener){
   more.textContent = "깃허브에서 전체 보기";
   sheetNote.appendChild(more);
   sheetList.innerHTML = `<div class="slog"><div class="d">불러오는 중입니다…</div></div>`;
+  const loading = sheetList.firstChild;
   sheet.hidden = false;
-  document.body.style.overflow = "hidden";
+  syncModals();
   sheetX.focus();
 
   let runs, commits;
@@ -2626,6 +2681,7 @@ async function openLog(opener){
     runs = (await a.json()).workflow_runs || [];
     commits = (await b.json()) || [];
   }catch(e){
+    if(!live()) return;
     sheetList.innerHTML = "";
     const box = document.createElement("div"); box.className = "slog";
     const d = document.createElement("div"); d.className = "d";
@@ -2641,6 +2697,7 @@ async function openLog(opener){
 
   /* 그날 자료가 실제로 늘었는지는 커밋이 말해 준다. 워크플로가 갯수를 커밋
      메시지에 적어 두므로 그대로 옮긴다. 커밋이 없는 날은 '변경 없음'이다. */
+  if(!live()) return;
   const byDay = new Map();
   commits.forEach(c=>{
     const msg = (c.commit && c.commit.message || "").split("\n")[0];
@@ -2699,40 +2756,149 @@ const TIME_KEY = "gijul.times.v1";
 let TIMES = {};
 try{ TIMES = JSON.parse(localStorage.getItem(TIME_KEY) || "{}") || {}; }catch(e){ TIMES = {}; }
 function saveTimes(){
-  try{ localStorage.setItem(TIME_KEY, JSON.stringify(TIMES)); }
-  catch(e){ saveFailed(); }
+  try{ localStorage.setItem(TIME_KEY, JSON.stringify(TIMES)); return true; }
+  catch(e){ saveFailed(); return false; }
+}
+
+/* 점수와 오답은 별도 통에 둔다. 기존 푼 날·시간과 백업 판본은 그대로 읽는다. */
+const RECORD_KEY = "gijul.records.v1";
+function cleanRecord(r){
+  if(!r || typeof r !== "object" || Array.isArray(r)) return null;
+  const got = {};
+  if(typeof r.score === "number" && Number.isFinite(r.score) && r.score >= 0) got.score = r.score;
+  if(Array.isArray(r.wrong) && r.wrong.length <= 999
+     && r.wrong.every(n=>Number.isInteger(n) && n >= 1 && n <= 999)){
+    got.wrong = [...new Set(r.wrong)].sort((a,b)=>a-b);
+  }
+  return Object.keys(got).length ? got : null;
+}
+function cleanRecords(raw){
+  const got = {};
+  if(!raw || typeof raw !== "object" || Array.isArray(raw)) return got;
+  for(const [k,r] of Object.entries(raw)){
+    const valid = cleanRecord(r);
+    if(k.split("/").length >= 4 && valid) got[k] = valid;
+  }
+  return got;
+}
+let RECORDS = {};
+try{ RECORDS = cleanRecords(JSON.parse(localStorage.getItem(RECORD_KEY) || "{}")); }catch(e){}
+function saveRecords(){
+  try{ localStorage.setItem(RECORD_KEY, JSON.stringify(RECORDS)); return true; }catch(e){ saveFailed(); return false; }
+}
+function wrongNumbers(text){
+  if(!text.trim()) return null;
+  if(text.trim() === "없음") return [];
+  const nums = new Set();
+  for(const part of text.trim().split(/[,，\s]+/)){
+    const m = part.match(/^(\d{1,3})(?:[-~–](\d{1,3}))?$/);
+    if(!m) throw new Error("틀린 번호는 3, 7, 12-14처럼 적어 주세요. 모두 맞았으면 '없음'으로 적습니다.");
+    const first = +m[1], last = m[2] ? +m[2] : first;
+    if(first < 1 || last < first || last > 999) throw new Error("문제 번호는 1부터 999 사이로 적어 주세요.");
+    for(let n=first; n<=last; n++) nums.add(n);
+  }
+  return [...nums].sort((a,b)=>a-b);
+}
+function recordText(k){
+  const r = RECORDS[k] || {}, bits = [];
+  const t = timeText(TIMES[k]);
+  if(t) bits.push(t);
+  if(r.score !== undefined) bits.push(r.score + "점");
+  if(r.wrong) bits.push(r.wrong.length ? "오답 " + r.wrong.length + "개" : "오답 없음");
+  return bits.join(" · ") || "기록";
+}
+function openRecord(opener){
+  const k = opener.dataset.k, t = TIMES[k], r = RECORDS[k] || {};
+  const item = opener.closest(".item");
+  vaultMode = false; sheetRow = null; lastFocus = opener;
+  sheetAll.hidden = true;
+  sheetNm.textContent = "풀이 기록";
+  sheetSb.textContent = item.querySelector(".nm").childNodes[0].textContent.trim();
+  sheetNote.textContent = "빈칸으로 저장하면 그 항목의 기록을 지웁니다. 기록을 남기면 푼 회차로 표시됩니다.";
+  sheetList.innerHTML = `<form class="record-form" id="recordForm">
+    <fieldset><legend>풀이시간</legend><div class="record-time">
+      <input id="recordMinutes" type="number" min="0" max="99999" step="1" inputmode="numeric" aria-label="풀이시간 분"><span>분</span>
+      <input id="recordSeconds" type="number" min="0" max="59" step="1" inputmode="numeric" aria-label="풀이시간 초"><span>초</span>
+    </div></fieldset>
+    <label for="recordScore">점수<input id="recordScore" type="number" min="0" step="any" inputmode="decimal" placeholder="예: 85 또는 42.5"></label>
+    <label for="recordWrong">틀린 문제 번호<input id="recordWrong" type="text" placeholder="예: 3, 7, 12-14" autocomplete="off">
+      <small>쉼표나 공백으로 구분합니다. 모두 맞았으면 없음으로 적습니다.</small></label>
+    <p class="record-error" role="alert"></p>
+    <button type="submit" class="record-save">저장</button>
+  </form>`;
+  const form = $("#recordForm"), minutes = $("#recordMinutes"), seconds = $("#recordSeconds");
+  const score = $("#recordScore"), wrong = $("#recordWrong");
+  if(t && t.spent > 0){ minutes.value = Math.floor(t.spent / 60); seconds.value = t.spent % 60; }
+  if(r.score !== undefined) score.value = r.score;
+  if(r.wrong) wrong.value = r.wrong.length ? r.wrong.join(", ") : "없음";
+  form.onsubmit = e=>{
+    e.preventDefault();
+    const error = form.querySelector(".record-error"); error.textContent = "";
+    let nums;
+    try{ nums = wrongNumbers(wrong.value); }catch(err){ error.textContent = err.message; wrong.focus(); return; }
+    const hasTime = minutes.value !== "" || seconds.value !== "";
+    const spent = Number(minutes.value) * 60 + Number(seconds.value);
+    if(hasTime && !(spent > 0)){ error.textContent = "풀이시간은 0초보다 길게 적어 주세요."; minutes.focus(); return; }
+    const next = {};
+    if(score.value !== "") next.score = Number(score.value);
+    if(nums !== null) next.wrong = nums;
+    if(hasTime) TIMES[k] = { spent, limit:t ? t.limit : 0 }; else delete TIMES[k];
+    if(Object.keys(next).length) RECORDS[k] = next; else delete RECORDS[k];
+    if((hasTime || Object.keys(next).length) && !okDate(SOLVED[k])) SOLVED[k] = today();
+    saveTimes(); saveRecords(); saveSolved(); render(); tellSolved();
+    lastFocus = [...out.querySelectorAll(".record")].find(b=>b.dataset.k === k) || out;
+    closeSheet();
+  };
+  sheet.hidden = false; syncModals();
+  sheetX.focus();
 }
 
 /* '92분 · 8분 남김'. 부호로 적지 않는다 — 재는 동안에는 +가 '넘겼다'는 뜻인데
    (고사 − 소요)의 양수는 '남겼다'는 뜻이라, 같은 기호가 반대를 가리키게 된다. */
 function timeText(t){
   if(!t || !t.spent) return "";
-  const spent = Math.round(t.spent / 60);
-  if(!t.limit) return spent + "분";
+  const spent = Math.floor(t.spent / 60), seconds = t.spent % 60;
+  const label = seconds ? (spent ? spent + "분 " : "") + seconds + "초" : spent + "분";
+  if(!t.limit) return label;
   const diff = Math.round((t.limit - t.spent) / 60);
-  return spent + "분 · " + (diff > 0 ? diff + "분 남김"
+  return label + " · " + (diff > 0 ? diff + "분 남김"
                           : diff < 0 ? (-diff) + "분 넘김" : "딱 맞춤");
 }
 
 /* 앱이 재어 둔 것을 가져온다. 타이머가 끝나는 때에 페이지가 떠 있으리라는
    보장이 없어 앱이 적어 두었다가 여기서 넘긴다. */
 function takeTimings(){
-  if(!(NATIVE && NATIVE.takeTimings)) return false;
+  if(!DB || restorePending || !(NATIVE && (NATIVE.peekTimings || NATIVE.takeTimings))) return false;
+  const confirmed = NATIVE.peekTimings && NATIVE.ackTimings;
   let list;
-  try{ list = JSON.parse(NATIVE.takeTimings() || "[]"); }catch(e){ return false; }
+  try{ list = JSON.parse((confirmed ? NATIVE.peekTimings() : NATIVE.takeTimings()) || "[]"); }catch(e){ return false; }
   if(!Array.isArray(list) || !list.length) return false;
-  let n = 0;
+  let seen = [];
+  try{ seen = JSON.parse(localStorage.getItem("gijul.timing-acks.v1") || "[]"); }catch(e){}
+  if(!Array.isArray(seen)) seen = [];
+  let n = 0; const ids = [];
   for(const x of list){
     if(!x || typeof x.k !== "string" || x.k.split("/").length < 4) continue;
-    if(!(x.spent > 0)) continue;
+    if(!Number.isFinite(x.spent) || Math.round(x.spent) <= 0 || !Number.isFinite(x.limit || 0)) continue;
+    if(confirmed && typeof x.id === "string"){
+      ids.push(x.id);
+      if(seen.includes(x.id)) continue;
+    }
     TIMES[x.k] = { spent: Math.round(x.spent), limit: Math.round(x.limit || 0) };
     /* 시간을 쟀다는 것은 풀었다는 뜻이다. 안 찍혀 있으면 그날로 찍어 준다 —
        재고 나서 ✓를 또 누르게 하는 것은 같은 말을 두 번 시키는 일이다. */
     if(!okDate(SOLVED[x.k])) SOLVED[x.k] = ymdOf(new Date());
     n++;
   }
-  if(!n) return false;
-  saveTimes(); saveSolved(); tellSolved();
+  if(!n && !ids.length) return false;
+  const savedTime = saveTimes(), savedSolved = saveSolved();
+  if(confirmed && savedTime && savedSolved){
+    try{
+      localStorage.setItem("gijul.timing-acks.v1", JSON.stringify([...new Set([...seen, ...ids])].slice(-200)));
+      NATIVE.ackTimings(JSON.stringify(ids));
+    }catch(e){}
+  }
+  tellSolved();
   return true;
 }
 
@@ -2756,6 +2922,7 @@ function makeBackup(){
     subs: favs.map(f => ({ g:f.g, s:f.s })),
     solved: SOLVED,
     times: TIMES,
+    records: RECORDS,
     theme: themePref,
   };
 }
@@ -2798,7 +2965,7 @@ function readBackup(text){
     const t = raw2[k];
     if(t && t.spent > 0 && k in solved) times[k] = { spent:+t.spent, limit:+(t.limit || 0) };
   }
-  return { at:o.at, subs, solved, times, theme:o.theme };
+  return { at:o.at, subs, solved, times, records:cleanRecords(o.records), theme:o.theme };
 }
 
 /* 합치기가 기본이다. 덮어쓰기를 기본으로 두면, 다른 기기의 것을 가져오는 순간
@@ -2810,6 +2977,7 @@ function applyBackup(b, mode){
     favs.length = 0;
     for(const k in SOLVED) delete SOLVED[k];
     for(const k in TIMES) delete TIMES[k];
+    for(const k in RECORDS) delete RECORDS[k];
   }
   for(const f of b.subs){
     if(favs.some(x => x.g === f.g && x.s === f.s)) continue;
@@ -2828,9 +2996,13 @@ function applyBackup(b, mode){
     if(k in TIMES) continue;
     TIMES[k] = b.times[k];
   }
-  if(mode === "replace" && b.theme) setTheme(b.theme);
-  saveFavs(); saveSolved(); saveTimes(); syncFav(); render(); tellSolved();
-  return { addedSub, addedMark };
+  for(const [k,r] of Object.entries(b.records || {})){
+    RECORDS[k] = { ...r, ...(RECORDS[k] || {}) };
+  }
+  const savedTheme = (mode === "replace" || mode === "restore") && b.theme ? setTheme(b.theme) : true;
+  const stored = [savedTheme, saveFavs(), saveSolved(), saveTimes(), saveRecords()].every(Boolean);
+  syncFav(); render(); tellSolved();
+  return { addedSub, addedMark, stored };
 }
 
 /* 앱에서는 <a download> 가 아무 일도 하지 않는다 — 웹뷰에 내려받기 처리가
@@ -2839,7 +3011,11 @@ function exportBackup(btn){
   const text = JSON.stringify(makeBackup());
   const name = backupName();
   if(NATIVE && NATIVE.saveBackup){
-    try{ NATIVE.saveBackup(text, name); markBackedUp(); return; }catch(e){}
+    if(shareBtn) return;
+    sharingBackup = true; shareSheetContent = sheetList.firstChild; shareBtn = btn || null;
+    try{ NATIVE.saveBackup(text, name); }
+    catch(e){ sharingBackup = false; shareBtn = null; if(btn) btn.textContent = "내보내지 못했습니다"; }
+    return;
   }
   try{
     const url = URL.createObjectURL(new Blob([text], { type:"application/json" }));
@@ -2923,15 +3099,18 @@ window.gijulBackupPicked = text => { if(text) takeBackup(text); };
    그래서 두 기기가 번갈아 열어도 양쪽이 같아진다 — 합치기는 더하기라
    저절로 수렴한다. */
 window.gijulAutoMerge = (text)=>{
+  if(restorePending) return false;
   let b;
-  try{ b = readBackup(text); }catch(e){ return; }
+  try{ b = readBackup(text); }catch(e){ return false; }
   const got = applyBackup(b, "merge");
-  if(!got.addedMark && !got.addedSub) return;   /* 달라진 게 없으면 조용히 */
+  if(!got.stored) return false;
+  if(!got.addedMark && !got.addedSub) return true;   /* 달라진 게 없으면 조용히 */
   const bits = [];
   if(got.addedMark) bits.push(`표시 ${got.addedMark}개`);
   if(got.addedSub) bits.push(`내 과목 ${got.addedSub}개`);
   showNotice(`다른 기기에서 ${bits.join(" · ")}를 가져왔습니다.`,
     "", null, null, { key:"sync" });
+  return true;
 };
 
 window.gijulAutoBackup = () => { if(!sheet.hidden && sheetNm.textContent === "백업") openBackup(null); };
@@ -2990,6 +3169,13 @@ function openBackup(opener){
     }
   }
 
+  if(NATIVE && NATIVE.savedAutoBackup){
+    let recovery = "";
+    try{ recovery = NATIVE.savedAutoBackup(); }catch(e){}
+    if(recovery) row("자동 백업 복구 사본", "덮어쓰기 전에 이 기기에 보관한 정상 파일입니다",
+      "살펴보기", ()=>takeBackup(recovery));
+  }
+
   row("내보내기", `내 과목 ${favs.length}개 · 푼 회차 ${marks}개`, "파일로", exportBackup);
   row("가져오기", "다른 기기에서 내보낸 파일을 읽습니다", "파일 고르기", ()=>{
     if(NATIVE && NATIVE.pickBackup){
@@ -3014,7 +3200,7 @@ function openBackup(opener){
     : "계정도 서버도 없으므로 이 기기 밖에는 아무것도 없습니다. "
       + "기기를 바꾸거나 브라우저 자료를 지우기 전에 한 번 내보내 두십시오.";
   sheet.hidden = false;
-  document.body.style.overflow = "hidden";
+  syncModals();
   sheetX.focus();
 }
 $("#bakBtn").onclick = e => openBackup(e.currentTarget);
@@ -3046,15 +3232,21 @@ function offerBackup(){
     { key:"backup" });
 }
 
+let restorePending = false;
 function offerRestore(){
-  if(!(NATIVE && NATIVE.savedSolved)) return;
-  if(Object.keys(SOLVED).length) return;
+  if(!(NATIVE && NATIVE.savedSolved)) return false;
+  if(Object.keys(SOLVED).length || favs.length || Object.keys(TIMES).length || Object.keys(RECORDS).length) return false;
   let b;
-  try{ b = readBackup(NATIVE.savedSolved()); }catch(e){ return; }
+  try{ b = readBackup(NATIVE.savedSolved()); }catch(e){ return false; }
   const n = Object.keys(b.solved).length;
-  if(!n) return;
-  showNotice(`앱에 푼 회차 ${n}개가 남아 있습니다. 이 화면에는 없는데, 되살릴까요?`,
-    "되살리기", ()=>{ applyBackup(b, "merge"); }, null, { key:"restore" });
+  if(!n && !b.subs.length && !Object.keys(b.times).length && !Object.keys(b.records).length && b.theme === "auto") return false;
+  restorePending = true;
+  const resume = ()=>{ restorePending = false; if(takeTimings()) render(); tellSolved(); };
+  const ask = ()=>showNotice(n ? `앱에 푼 회차 ${n}개가 남아 있습니다. 이 화면에는 없는데, 되살릴까요?`
+               : "앱에 기록이 남아 있습니다. 되살릴까요?",
+    "되살리기", ()=>{ if(applyBackup(b, "restore").stored) resume(); else ask(); }, resume, { key:"restore" });
+  ask();
+  return true;
 }
 
 /* 앱의 뒤로가기가 부른다. 화면에 열려 있는 것 하나를 닫고 true를 돌려준다.
@@ -3067,9 +3259,12 @@ function offerRestore(){
 window.gijulBack = function(){
   try{
     if(closeLens()) return true;
-    if(closeCal()) return true;
     if(!sheet.hidden){ closeSheet(); return true; }
-    if(!notice.hidden){ closeNotice(null); return true; }
+    if(closeCal()) return true;
+    if(!notice.hidden){
+      if(showingNotice && showingNotice.key === "restore") return false;
+      closeNotice(null); return true;
+    }
     if(editing){ favEdit.click(); return true; }
   }catch(e){}
   return false;
@@ -3079,13 +3274,15 @@ function closeSheet(){
   if(sheet.hidden) return;
   vaultMode = false;
   sheet.hidden=true;
-  document.body.style.overflow="";
+  syncModals();
   blobCache.clear();
-  if(lastFocus && document.contains(lastFocus)) lastFocus.focus();
+  restoreModalFocus(lastFocus);
   lastFocus=null;
 }
 
 out.addEventListener("click", e=>{
+  const record = e.target.closest(".record");
+  if(record){ openRecord(record); return; }
   const b=e.target.closest(".send");
   if(b){ openSheet(ROWS[+b.dataset.i], b); return; }
 
@@ -3139,7 +3336,7 @@ out.addEventListener("click", e=>{
    앱이 알아내려면 자료를 받아 와야 하는데 홈 화면에 뜨는 것이 망을 타는 것은
    옳지 않다. 표시에 실제로 나오는 과목만 담으므로 몇 줄 되지 않는다. */
 function tellSolved(){
-  if(!(NATIVE && NATIVE.setSolved)) return;
+  if(restorePending || !(NATIVE && NATIVE.setSolved)) return;
   /* 자료가 오기 전에 부르면 nextUp() 이 빈손이라, 위젯의 '다음에 풀 것'을 지웠다가
      자료가 온 뒤 다시 채우게 된다. 앱이 들고 있던 것을 그대로 두는 편이 낫다. */
   if(!DB) return;
@@ -3156,7 +3353,8 @@ function tellSolved(){
        쪽(marks→solved 같은)은 안 된다 — 페이지가 앱보다 먼저 갱신되므로,
        그날 옛 앱의 위젯이 통째로 빈다. */
     NATIVE.setSolved(JSON.stringify({ v:1, marks:SOLVED, subs, next:nextUp(),
-                                      favs:favs.map(f=>({g:f.g, s:f.s})), theme:themePref }));
+                                      favs:favs.map(f=>({g:f.g, s:f.s})), theme:themePref,
+                                      times:TIMES, records:RECORDS }));
   }catch(e){}
 }
 
@@ -3317,16 +3515,16 @@ function openCal(){
   calCur.setDate(1);
   calSel = ymdOf(new Date());
   $("#cal").hidden = false;
-  document.body.style.overflow = "hidden";
+  syncModals();
   drawCal();
   $("#calX").focus();
 }
 function closeCal(){
   if($("#cal").hidden) return false;
   $("#cal").hidden = true;
-  document.body.style.overflow = "";
+  syncModals();
   const back = $("#calBtn");
-  if(back) back.focus();
+  restoreModalFocus(back);
   return true;
 }
 $("#calX").onclick = closeCal;
@@ -3356,8 +3554,12 @@ $("#calGrid").addEventListener("keydown", e=>{
   if(step !== undefined) d.setDate(d.getDate() + step);
   else if(e.key === "Home") d.setDate(d.getDate() - d.getDay());
   else if(e.key === "End") d.setDate(d.getDate() + (6 - d.getDay()));
-  else if(e.key === "PageUp") d.setMonth(d.getMonth() - 1);
-  else if(e.key === "PageDown") d.setMonth(d.getMonth() + 1);
+  else if(e.key === "PageUp" || e.key === "PageDown"){
+    const day = d.getDate(); d.setDate(1);
+    d.setMonth(d.getMonth() + (e.key === "PageUp" ? -1 : 1));
+    const last = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    d.setDate(Math.min(day, last));
+  }
   else return;
   e.preventDefault();
   goCal(d);
@@ -3498,14 +3700,32 @@ sheetX.onclick=closeSheet;
 document.addEventListener("keydown", e=>{
   if(e.key === "Escape") gijulBack();
 });
+function topModal(){
+  const boxes = [document.querySelector(".lens"), sheet, $("#cal")];
+  return boxes.find(box=>box && !box.hidden) || null;
+}
+function syncModals(){
+  const top = topModal();
+  for(const child of document.body.children){
+    if(["SCRIPT","STYLE"].includes(child.tagName)) continue;
+    child.inert = !!top && child !== top;
+  }
+  document.body.style.overflow = top ? "hidden" : "";
+}
+function restoreModalFocus(preferred){
+  const top = topModal();
+  if(preferred && document.contains(preferred) && (!top || top.contains(preferred))) preferred.focus();
+  else if(top) top.querySelector("button,a[href],input,[tabindex]")?.focus();
+}
+new MutationObserver(syncModals).observe(document.body, {subtree:true,attributes:true,attributeFilter:["hidden"]});
 function trapTab(box){
   box.addEventListener("keydown", e=>{
     if(e.key!=="Tab") return;
-    const f=[...box.querySelectorAll("button")].filter(b=>b.offsetParent !== null);
+    const f=[...box.querySelectorAll("button,a[href],input,select,textarea,[tabindex]")].filter(b=>!b.disabled && b.tabIndex >= 0 && b.getClientRects().length && !b.closest("[inert]"));
     if(!f.length) return;
     const first=f[0], last=f[f.length-1];
-    if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
-    else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+    if(e.shiftKey && (document.activeElement===first || !box.contains(document.activeElement))){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && (document.activeElement===last || !box.contains(document.activeElement))){ e.preventDefault(); first.focus(); }
   });
 }
 trapTab(sheet);
@@ -3578,9 +3798,8 @@ function render(){
              aria-label="${+sv.slice(4,6)}월 ${+sv.slice(6,8)}일에 풂 — 길게 눌러 날짜 고치기"
              title="길게 눌러 날짜 고치기">${+sv.slice(4,6)}.${+sv.slice(6,8)} 풂</button>`
         : "";
-      /* 잰 시간이 있으면 도장 옆에 붙는다. 누르는 것이 아니라 읽는 것이다. */
-      const spent = timeText(TIMES[sk]);
-      const took = spent ? `<span class="took">${esc(spent)}</span>` : "";
+      const took = `<button type="button" class="record${TIMES[sk] ? " took" : ""}" data-k="${esc(sk)}"
+        aria-label="${esc(title)} 풀이 기록 편집" title="눌러 풀이시간·점수·틀린 번호 기록">${esc(recordText(sk))}</button>`;
 
       html += `<div class="item k-${k}">
         <div>
@@ -3963,7 +4182,7 @@ if("serviceWorker" in navigator){
     syncURL();            /* #subs= 였다면 이 시점에 보통 주소로 정리된다 */
     /* 위젯은 이 한 번으로 최신이 된다. 자료가 있어야 '다음에 풀 것'을 고를 수
        있어서 여기까지 미룬다. */
-    tellSolved();
+    if(!offerRestore()) tellSolved();
     /* 달력 위젯을 눌러서 들어왔으면 그 자리로 */
     if(wantCal) gijulOpenCal();
     if(incoming) offerImport(incoming);
@@ -3972,7 +4191,6 @@ if("serviceWorker" in navigator){
     /* 보관함에 무엇이 담겼는지는 물어봐야 안다(웹은 비동기다). 첫 그림을
        그것 때문에 기다리게 하지 않고, 알고 나서 달라졌으면 한 번 더 그린다. */
     if(Vault.can) Vault.sync().then(changed => { if(changed) render(); });
-    offerRestore();       /* 화면은 비었는데 앱 사본에 남아 있으면 되살릴지 묻는다 */
     offerBackup();        /* 쌓인 것이 많은데 한 번도 안 챙겼으면 한 번만 권한다 */
   }catch(e){
     out.innerHTML=`<div class="empty">자료를 불러오지 못했습니다. (${esc(e.message)})<br>

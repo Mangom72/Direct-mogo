@@ -118,6 +118,8 @@ public class FloatService extends Service {
     private LinearLayout seg;                     // 통과|조작
     private LinearLayout row;                     // 바 안의 한 줄
     private View sep;                             // 창틀 단추 앞의 실선
+    private volatile boolean terminated;
+    private int loadGeneration;
     private int minW;                             // 접었을 때의 바 너비
     private int seam;                             // 종이가 바 밑으로 파고든 깊이
     private View gripMark;                        // 접었을 때의 ≡ 자국
@@ -128,6 +130,7 @@ public class FloatService extends Service {
     private boolean swapped;                      // 바 속을 이번 접힘에서 갈아 끼웠는가
     private final ExecutorService fetch = Executors.newSingleThreadExecutor();
     private TextView passBtn, holdBtn;
+    private android.widget.HorizontalScrollView toolScroll;
     private TextView timeChip;                    // 재고 있는 시험의 남은 시간
     private final android.os.Handler beat = new android.os.Handler(android.os.Looper.getMainLooper());
 
@@ -218,10 +221,10 @@ public class FloatService extends Service {
 
     private void build() {
         wm = getSystemService(WindowManager.class);
-        barH = dp(44);
+        barH = Math.max(dp(56), Math.round(20 * getResources().getDisplayMetrics().scaledDensity) + dp(20));
         gripPx = dp(34);
-        /* 접으면 ≡·＋·✕ 셋이 남는다. 바 좌우 여백에 칸 셋, 그 사이 간격 둘. */
-        minW = dp(8) * 2 + dp(30) * 3 + dp(6) * 2;
+        /* 타이머가 없을 때의 접힌 폭. 시간이 보이면 실제 글자 폭을 더한다. */
+        minW = dp(8) * 2 + dp(48) * 3 + dp(6) * 2;
 
         if (restore()) full = false; else defaultGeometry();
 
@@ -514,9 +517,10 @@ public class FloatService extends Service {
             }
         };
         gripMark.setVisibility(View.GONE);
-        row.addView(gripMark, new LinearLayout.LayoutParams(dp(30), dp(30)));
+        row.addView(gripMark, new LinearLayout.LayoutParams(dp(48), dp(48)));
 
         menuBtn = chip("☰", night, v -> togglePicker());
+        menuBtn.setContentDescription("자료 목록");
         /* 목록을 열어 둔 채로 1초 누르면 앱이 열린다. 과목을 고르는 화면이든
            회차를 고르는 화면이든 마찬가지다 — 목록을 뒤지고 있다는 것 자체가
            '더 넓은 데서 고르고 싶다'는 뜻이라, 어느 쪽인지 가릴 이유가 없다.
@@ -545,7 +549,7 @@ public class FloatService extends Service {
             }
             return false;
         });
-        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(dp(30), dp(30));
+        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(dp(48), dp(48));
         mlp.rightMargin = dp(7);
         row.addView(menuBtn, mlp);
 
@@ -557,7 +561,7 @@ public class FloatService extends Service {
         row.addView(seg);
 
         slider = new Slider(this, night);
-        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(0, dp(30), 1f);
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(dp(60), dp(48));
         slp.leftMargin = dp(8); slp.rightMargin = dp(10);
         row.addView(slider, slp);
 
@@ -566,17 +570,16 @@ public class FloatService extends Service {
            이것이 시계다. */
         timeChip = new TextView(this);
         timeChip.setTextSize(12.5f);
+        timeChip.setSingleLine(true);
         timeChip.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
         timeChip.setTextColor(night ? 0xFFECE7DA : 0xFF191713);
         timeChip.setPadding(dp(6), 0, dp(6), 0);
+        timeChip.setMinHeight(dp(48));
+        timeChip.setMinWidth(dp(48));
+        timeChip.setGravity(Gravity.CENTER);
+        timeChip.setContentDescription("타이머 조작");
         timeChip.setVisibility(View.GONE);
-        timeChip.setOnClickListener(v -> {
-            Clock k = Timing.clock(this);
-            if (!k.on()) return;
-            if (k.paused()) Timing.resume(this); else Timing.pause(this);
-            Timing.changed(this);
-            drawTime();
-        });
+        timeChip.setOnClickListener(v -> showTimerMenu());
         row.addView(timeChip);
 
         sep = new View(this);
@@ -588,14 +591,31 @@ public class FloatService extends Service {
         /* 창틀 단추 둘 — 접기와 닫기. 바탕을 지워 다른 조작과 구별한다.
            이것들은 창 자체를 어찌하는 것이지 문제지를 어찌하는 것이 아니다. */
         minBtn = chip("－", night, v -> setMin(!minimized));
+        minBtn.setContentDescription("팝업 최소화 또는 펼치기");
         minBtn.setBackground(null);
         minBtn.setTextColor(night ? 0x99ECE7DA : 0x99221F1A);
         row.addView(minBtn, chipLp());
 
         TextView close = chip("✕", night, v -> stopSelf());
+        close.setContentDescription("팝업 닫기");
         close.setBackground(null);
         close.setTextColor(night ? 0x99ECE7DA : 0x99221F1A);
         row.addView(close, chipLp());
+
+        // 시간과 창 조작은 항상 보인다. 좁으면 자료/통과/조작/투명도만 스크롤한다.
+        LinearLayout tools = new LinearLayout(this);
+        tools.setGravity(Gravity.CENTER_VERTICAL);
+        for (View control : new View[]{menuBtn, seg, slider}) {
+            ViewGroup.LayoutParams params = control.getLayoutParams();
+            row.removeView(control);
+            tools.addView(control, params);
+        }
+        toolScroll = new android.widget.HorizontalScrollView(this);
+        toolScroll.setFillViewport(true);
+        toolScroll.setHorizontalScrollBarEnabled(false);
+        toolScroll.addView(tools);
+        row.addView(toolScroll, 1, new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.MATCH_PARENT, 1f));
 
         /* 상시로 두면 ☰ 자리가 없다. 손잡이 위치로도 대강 읽히므로 끄는
            동안에만 눈금을 띄운다. 바가 44dp뿐이라 위로 못 올리고 슬라이더
@@ -620,7 +640,7 @@ public class FloatService extends Service {
     }
 
     private LinearLayout.LayoutParams chipLp() {
-        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(dp(30), dp(30));
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(dp(48), dp(48));
         p.leftMargin = dp(6);
         return p;
     }
@@ -629,6 +649,8 @@ public class FloatService extends Service {
         TextView t = new TextView(this);
         t.setText(label);
         t.setTextSize(12);
+        t.setMinHeight(dp(48));
+        t.setGravity(Gravity.CENTER);
         t.setTypeface(null, android.graphics.Typeface.BOLD);
         t.setPadding(dp(11), dp(5), dp(11), dp(5));
         return t;
@@ -913,6 +935,7 @@ public class FloatService extends Service {
     /** 접힌 차림(≡ ＋ ✕)과 펼친 차림(☰ 통과·조작 슬라이더 － ✕)을 오간다 */
     private void showFolded(boolean f) {
         int vis = f ? View.GONE : View.VISIBLE;
+        toolScroll.setVisibility(vis);
         menuBtn.setVisibility(vis);
         seg.setVisibility(vis);
         slider.setVisibility(vis);
@@ -992,6 +1015,7 @@ public class FloatService extends Service {
                 } else {
                     row.setGravity(Gravity.CENTER_VERTICAL);
                 }
+                place();                // 애니메이션용 넓은 창도 최종 알약 폭으로 맞춘다
             }
         });
         foldAnim.start();
@@ -1201,11 +1225,14 @@ public class FloatService extends Service {
         if (url == null || url.isEmpty()) return;
         final String label = p.title + " " + Catalog.KIND[kind];
         closePicker();
+        if (terminated || paper == null) return;
+        final int generation = ++loadGeneration;
         paper.busy(label + " 받는 중…");
         fetch.execute(() -> {
             try {
                 final java.io.File f = catalog.paper(url);
                 ui.post(() -> {
+                    if (terminated || paper == null || generation != loadGeneration) return;
                     showingUrl = url;
                     name = label;
                     paper.open(f);
@@ -1213,7 +1240,10 @@ public class FloatService extends Service {
                 });
             } catch (Exception e) {
                 Log.w(TAG, "받지 못했습니다: " + url, e);
-                ui.post(() -> paper.busy("받지 못했습니다 — 연결을 확인해 주십시오"));
+                ui.post(() -> {
+                    if (!terminated && paper != null && generation == loadGeneration)
+                        paper.busy("받지 못했습니다 — 연결을 확인해 주십시오");
+                });
             }
         });
     }
@@ -1537,8 +1567,8 @@ public class FloatService extends Service {
             try {
               synchronized (FloatService.this) {
                 String n = f.getName().toLowerCase(Locale.ROOT);
-                if (n.endsWith(".png") || n.endsWith(".jpg")) {
-                    still = BitmapFactory.decodeFile(f.getAbsolutePath());
+                if (n.endsWith(".png") || n.endsWith(".jpg") || n.endsWith(".jpeg")) {
+                    still = PaperFiles.image(f);
                     ratio = new float[]{ still == null ? 1.4f
                             : still.getHeight() / (float) still.getWidth() };
                 } else {
@@ -1969,16 +1999,73 @@ public class FloatService extends Service {
         if (timeChip == null) return;
         beat.removeCallbacksAndMessages(null);
         Clock k = Timing.clock(this);
-        if (!k.on()) { timeChip.setVisibility(View.GONE); return; }
+        if (!k.on()) {
+            timeChip.setVisibility(View.GONE);
+            fitFoldedBar();
+            return;
+        }
         long now = System.currentTimeMillis();
         long left = k.left(now);
         timeChip.setVisibility(View.VISIBLE);
         timeChip.setText(k.paused() ? "❙❙ " + Clock.face(left) : Clock.face(left));
+        fitFoldedBar();
         boolean night = (getResources().getConfiguration().uiMode
                 & android.content.res.Configuration.UI_MODE_NIGHT_MASK)
                 == android.content.res.Configuration.UI_MODE_NIGHT_YES;
         timeChip.setTextColor(left < 0 ? 0xFFB4342A : (night ? 0xFFECE7DA : 0xFF191713));
         if (k.running()) beat.postDelayed(this::drawTime, 1000 - (k.spent(now) % 1000));
+    }
+
+    private android.widget.PopupWindow timerMenu;
+
+    private void showTimerMenu() {
+        Clock k = Timing.clock(this);
+        if (!k.on() || terminated) return;
+        if (timerMenu != null) timerMenu.dismiss();
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(dp(8), dp(8), dp(8), dp(8));
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(night() ? 0xFF24221F : 0xFFFFFDF8);
+        bg.setCornerRadius(dp(12));
+        box.setBackground(bg);
+        String[] labels = { k.paused() ? "이어서" : "일시정지", "끝내기" };
+        for (int i = 0; i < labels.length; i++) {
+            final int action = i;
+            TextView t = new TextView(this);
+            t.setText(labels[i]); t.setTextSize(15);
+            t.setTextColor(night() ? 0xFFECE7DA : 0xFF191713);
+            t.setPadding(dp(16), dp(12), dp(16), dp(12));
+            t.setMinHeight(dp(48));
+            t.setOnClickListener(v -> {
+                timerMenu.dismiss();
+                if (action == 1) Timing.stop(this, true);
+                else if (Timing.clock(this).paused()) Timing.resume(this);
+                else Timing.pause(this);
+                Timing.changed(this);
+                drawTime();
+            });
+            box.addView(t);
+        }
+        timerMenu = new android.widget.PopupWindow(box, dp(200),
+                ViewGroup.LayoutParams.WRAP_CONTENT, true);
+        timerMenu.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
+        timerMenu.setWindowLayoutType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
+        timerMenu.setElevation(dp(12));
+        timerMenu.showAsDropDown(timeChip);
+    }
+
+    /** 글자·패딩까지 재서 접힌 창, 바탕 테두리, 화면 가장자리 제한에 함께 쓴다. */
+    private void fitFoldedBar() {
+        int width = dp(8) * 2 + dp(48) * 3 + dp(6) * 2;
+        if (timeChip.getVisibility() == View.VISIBLE) {
+            int free = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+            timeChip.measure(free, free);
+            width += timeChip.getMeasuredWidth();
+        }
+        if (minW == width) return;
+        minW = width;
+        if (barLp != null) place();
     }
 
     private final android.content.BroadcastReceiver timerWatch = new android.content.BroadcastReceiver() {
@@ -1987,6 +2074,10 @@ public class FloatService extends Service {
 
     @Override
     public void onDestroy() {
+        terminated = true;
+        if (timerMenu != null) timerMenu.dismiss();
+        loadGeneration++;
+        ui.removeCallbacksAndMessages(null);
         beat.removeCallbacksAndMessages(null);
         try { unregisterReceiver(timerWatch); } catch (Exception ignore) {}
         ui.removeCallbacks(hidePct);

@@ -56,7 +56,7 @@ final class Solved {
     static boolean put(Context c, String json) {
         if (json == null) return false;
         try {
-            if (!new JSONObject(json).has("marks")) throw new Exception("marks 없음");
+            if (new JSONObject(json).optJSONObject("marks") == null) throw new Exception("marks 없음");
         } catch (Exception e) {
             Log.w(TAG, "표시를 읽지 못했습니다", e);
             return false;
@@ -94,18 +94,27 @@ final class Solved {
             return new JSONObject()
                     .put("app", "기출 직행")
                     .put("v", 1)
-                    .put("at", new java.text.SimpleDateFormat(
-                            "yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US)
-                            .format(new java.util.Date(at)))
+                    .put("at", utc(at))
                     .put("subs", o.optJSONArray("favs") == null
                             ? new org.json.JSONArray() : o.optJSONArray("favs"))
                     .put("solved", marks)
+                    .put("times", o.optJSONObject("times") == null
+                            ? new JSONObject() : o.optJSONObject("times"))
+                    .put("records", o.optJSONObject("records") == null
+                            ? new JSONObject() : o.optJSONObject("records"))
                     .put("theme", o.optString("theme", "auto"))
                     .toString();
         } catch (Exception e) {
             Log.w(TAG, "백업 모양으로 바꾸지 못했습니다", e);
             return null;
         }
+    }
+
+    private static String utc(long at) {
+        java.text.SimpleDateFormat format = new java.text.SimpleDateFormat(
+                "yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US);
+        format.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+        return format.format(new java.util.Date(at));
     }
 
     /** 한 회차 — 위젯이 그리는 데 필요한 만큼만 */

@@ -185,6 +185,25 @@ public class GuardTest {
                 .get("20260824").get(0);
     }
 
+    @Test
+    public void 앱_사본의_백업에_시간과_채점_기록도_담는다() throws Exception {
+        String key = "없는/과목/20250101/시험";
+        org.json.JSONObject times = new org.json.JSONObject().put(key,
+                new org.json.JSONObject().put("spent", 6330).put("limit", 6000));
+        org.json.JSONObject records = new org.json.JSONObject().put(key,
+                new org.json.JSONObject().put("score", 0)
+                        .put("wrong", new org.json.JSONArray().put(3).put(7)));
+        org.json.JSONObject raw = new org.json.JSONObject(log(key, "20260824"))
+                .put("times", times).put("records", records);
+        org.json.JSONObject backup = new org.json.JSONObject(Solved.backup(raw.toString(), 0));
+        assertEquals(6330, backup.getJSONObject("times").getJSONObject(key).getInt("spent"));
+        assertEquals(0, backup.getJSONObject("records").getJSONObject(key).getInt("score"));
+        assertEquals(7, backup.getJSONObject("records").getJSONObject(key).getJSONArray("wrong").getInt(1));
+        org.json.JSONObject old = new org.json.JSONObject(Solved.backup(log(key, "20260824"), 0));
+        assertEquals(0, old.getJSONObject("times").length());
+        assertEquals(0, old.getJSONObject("records").length());
+    }
+
     // ── 며칠째 이어지는가 ───────────────────────────────────────────────
 
     @Test
@@ -207,4 +226,34 @@ public class GuardTest {
         }
         return Solved.streak(Solved.byDay(log(pairs)));
     }
+    @Test public void SAF_반환_권한만_남긴다() {
+        assertEquals(1, DocumentAccess.grantedFlags(1 | 64));
+        assertEquals(2, DocumentAccess.grantedFlags(2 | 64));
+        assertEquals(3, DocumentAccess.grantedFlags(3 | 64 | 128));
+        assertEquals(0, DocumentAccess.grantedFlags(64));
+    }
+
+    @Test public void JPG와_대문자_확장자를_판정한다() {
+        assertEquals("image/jpeg", PaperFiles.mime("정답.JPG"));
+        assertEquals("image/jpeg", PaperFiles.mime("정답.jpeg"));
+        assertEquals("image/png", PaperFiles.mime("정답.PNG"));
+        assertEquals("application/pdf", PaperFiles.mime("문제.PDF"));
+    }
+
+    @Test public void 이미지_압축_해제_크기를_제한한다() {
+        int n = PaperFiles.sample(40000, 30000);
+        assertTrue((long)(40000 / n) * (30000 / n) <= 4_000_000);
+        assertTrue(40000 / n <= 4096);
+        assertEquals(1, PaperFiles.sample(1200, 1600));
+    }
+
+    @Test public void 한국_시간대에서도_백업_날짜는_UTC다() throws Exception {
+        java.util.TimeZone old = java.util.TimeZone.getDefault();
+        try {
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Seoul"));
+            assertEquals("1970-01-01T00:00:00Z", new org.json.JSONObject(
+                    Solved.backup(log("D300/158/20250101/시험", "20250101"), 0)).getString("at"));
+        } finally { java.util.TimeZone.setDefault(old); }
+    }
+
 }
