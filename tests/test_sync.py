@@ -72,7 +72,7 @@ with sync_playwright() as pw:
     ctx.route('**/sync/firebase.js',lambda r:r.fulfill(content_type='application/javascript',body='''
       window.__uploads=[];window.__remote=[];window.__accept=false;
       window.GijulFirebase=async()=>({
-        current:async()=>null,login:async()=>({uid:'test-owner'}),logout:async()=>{},
+        current:()=>new Promise(resolve=>window.__initialAuth=resolve),login:async()=>({uid:'test-owner'}),logout:async()=>{},
         listen:(uid,cursor,data,error)=>{window.__deliver=data;setTimeout(()=>data(__remote),0);return()=>{};},
         send:(uid,op)=>{window.__uploads.push(op);return new Promise((resolve,reject)=>{
           window.__finish=()=>{__remote.push(op);resolve();};window.__reject=()=>reject(Error('offline'));
@@ -81,8 +81,12 @@ with sync_playwright() as pw:
       });'''))
     pg=ctx.new_page();pg.goto(SITE,wait_until='load');pg.wait_for_selector('.item .chk')
     pg.wait_for_function('()=>GijulSync.state().enabled')
+    pg.wait_for_function('()=>typeof __initialAuth==="function"')
     pg.evaluate('()=>GijulSync.login()')
     pg.wait_for_function('()=>window.__finish && GijulSync.state().on')
+    pg.evaluate('()=>__initialAuth(null)')
+    pg.wait_for_timeout(50)
+    assert pg.evaluate('()=>GijulSync.state().on'), 'Late initial auth query disconnected the new login'
     pg.evaluate('()=>__reject()')
     pg.wait_for_timeout(100)
     assert pg.evaluate('()=>GijulSync.state().pending')>0
@@ -129,6 +133,6 @@ with sync_playwright() as pw:
     pg.wait_for_function('()=>!Object.keys(localStorage).some(k=>k.startsWith("gijul.sync.intent.v1:"))')
     after_clock=pg.evaluate('async()=>{const j=await new GijulJournal.Journal().open();return j.change(s=>s.clock);}')
     assert before_clock==after_clock, 'Committed intent was replayed as a new change after restart'
-    print('Controller: retry same UUID, failure retains outbox, remote field merge, signed-out restart, crash intent receipt')
+    print('Controller: late initial auth ignored, retry same UUID, failure retains outbox, remote field merge, signed-out restart, crash intent receipt')
     browser.close()
 print('전체: 통과')

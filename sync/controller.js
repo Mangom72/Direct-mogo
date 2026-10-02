@@ -1,6 +1,6 @@
 (function(root){
   "use strict";
-  let initialized=false,config=null,journal=null,backend=null,uid=null,stop=null,applying=false,ready=false,baseline=null,work=Promise.resolve(),sending=false,timer=null;
+  let authEpoch=0,initialized=false,config=null,journal=null,backend=null,uid=null,stop=null,applying=false,ready=false,baseline=null,work=Promise.resolve(),sending=false,timer=null;
   const intentPrefix="gijul.sync.intent.v1:",tab=crypto.randomUUID();let serial=0;
   try{uid=localStorage.getItem("gijul.sync.uid.v1");}catch(e){}
   let state={enabled:false,on:false,busy:false,pending:0,invalid:0,message:""};
@@ -93,7 +93,7 @@
   root.GijulSync={
     state:()=>({...state}),
     async init(){
-      if(initialized) return;initialized=true;
+      if(initialized) return;initialized=true;const epoch=authEpoch;
       try{
         try{
           const response=await fetch("./sync/config.json",{cache:"no-cache"});
@@ -112,25 +112,26 @@
             await apply({...root.gijulSyncSnapshot(),...current.view});
           }
         });
-        notify();backend=await GijulFirebase(config);await connect(await backend.current());
+        notify();backend=await GijulFirebase(config);const user=await backend.current();
+        if(epoch===authEpoch) await connect(user);
         timer=setInterval(()=>{root.gijulCloudChanged();void flush();},30000);
       }catch(e){fail(e);}
     },
     async login(){
-      if(state.busy) return;state.busy=true;state.message="로그인을 기다리고 있습니다";notify();
+      if(state.busy) return;authEpoch++;state.busy=true;state.message="로그인을 기다리고 있습니다";notify();
       try{
         if(!backend) backend=await GijulFirebase(config);
         await connect(await backend.login());
       }catch(e){fail(e);}
     },
     async logout(){
-      if(state.busy) return;
+      if(state.busy) return;authEpoch++;
       if(stop){stop();stop=null;}ready=false;
       try{await backend.logout();state.on=false;state.message="연결을 끊었습니다. 이 기기의 기록은 보존합니다";notify();}catch(e){fail(e);}
       // Keep the journal bound to its original account, including edits made while signed out.
     },
     async retry(){
-      if(state.on && !ready) await connect(await backend.current());
+      if(state.on && !ready){const epoch=authEpoch,user=await backend.current();if(epoch===authEpoch) await connect(user);}
       else {root.gijulCloudChanged();void flush();}
     },
   };
