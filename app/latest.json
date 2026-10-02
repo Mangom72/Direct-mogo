@@ -1,8 +1,8 @@
 {
-  "versionCode": 91,
-  "versionName": "10.0",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.0/gijul-direct.apk",
-  "size": 2571633,
-  "sha256": "ff7f2589e3a76571a1c01a4a13d9a7cccf03b9121bc9468a32e267c66d1ab037",
-  "notes": "점수를 과목별 만점에 맞게 정수로 입력합니다"
+  "versionCode": 92,
+  "versionName": "10.1",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.1/gijul-direct.apk",
+  "size": 4357968,
+  "sha256": "c24e04cae427d5ef4b6cc2fe831e21f6396f5dc93614fb632970b3b4fbfbe5f2",
+  "notes": "Google 계정으로 기록을 동기화합니다. 오프라인 기록은 전송 대기에 보관하고 다시 연결하면 합칩니다. Drive 파일 백업은 별도로 유지합니다."
 }
