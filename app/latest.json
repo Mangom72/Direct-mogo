@@ -1,8 +1,8 @@
 {
-  "versionCode": 90,
-  "versionName": "9.9",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v9.9/gijul-direct.apk",
-  "size": 2571629,
-  "sha256": "00e158c8e1be3b028f808cb99a490bb767589db7afaa434eee6b7e0d04c9d4d8",
-  "notes": "팝업과 풀이 기록을 고치고 자동 백업 권한과 복구를 보강했습니다"
+  "versionCode": 91,
+  "versionName": "10.0",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.0/gijul-direct.apk",
+  "size": 2571633,
+  "sha256": "ff7f2589e3a76571a1c01a4a13d9a7cccf03b9121bc9468a32e267c66d1ab037",
+  "notes": "점수를 과목별 만점에 맞게 정수로 입력합니다"
 }
