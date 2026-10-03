@@ -118,5 +118,15 @@ with sync_playwright() as pw:
     pg.evaluate('window.gijulOmrScanResult("old_request",true,"garbage")')
     assert pg.locator('.omr-dialog').count()==0
     assert not errors,errors
+    fallback=browser.new_context(service_workers="block")
+    fallback.route('**/omr/forms.js',lambda route:route.abort())
+    older=fallback.new_page();fallback_errors=[]
+    older.on('pageerror',lambda e:fallback_errors.append(str(e)))
+    older.goto(SITE);older.wait_for_selector('.item .record')
+    older.locator('.item .record').first.click()
+    assert older.locator('#recordForm').is_visible() and older.locator('#recordOmr').count()==0
+    older.fill('#recordScore','40');older.locator('.record-save').click()
+    assert not older.locator('#recordForm').is_visible() and not fallback_errors,fallback_errors
+    fallback.close()
     browser.close()
 print('답안 입력·채점·사진 확인·기록 보존: 통과')

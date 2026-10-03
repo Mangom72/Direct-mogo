@@ -97,7 +97,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' https://apis.google.com/js/api.js https://apis.google.com/_/scs/ 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-0qTvopN/HtVrMRFUx3v4WH7JD1VJ/Dn4u1q390MzS84=';
+  script-src 'self' https://apis.google.com/js/api.js https://apis.google.com/_/scs/ 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-zrZ/ZKsD48diBRgvdC4EcK+BqkUp27fbzVBfnS5Mfxg=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -2840,7 +2840,7 @@ function openRecord(opener){
     <label for="recordWrong">틀린 문제 번호<input id="recordWrong" type="text" placeholder="예: 3, 7, 12-14" autocomplete="off">
       <small>쉼표나 공백으로 구분합니다. 모두 맞았으면 없음으로 적습니다.</small></label>
     <p class="record-error" role="alert"></p>
-    ${omrMeta && GijulOmrForms.resolve(omrMeta) ? '<button type="button" id="recordOmr" class="record-omr">답안 입력·채점</button>' : ""}
+    ${omrMeta && window.GijulOMR && window.GijulOmrForms?.resolve(omrMeta) ? '<button type="button" id="recordOmr" class="record-omr">답안 입력·채점</button>' : ""}
     <button type="submit" class="record-save">저장</button>
   </form>`;
   const form = $("#recordForm"), minutes = $("#recordMinutes"), seconds = $("#recordSeconds");

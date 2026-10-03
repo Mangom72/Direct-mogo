@@ -1,6 +1,8 @@
 (function(){
 'use strict';
-const F=GijulOmrForms,S=GijulOmrScan,DRAFT='gijul.omr.drafts.v1';
+const F=window.GijulOmrForms,S=window.GijulOmrScan;
+if(!F||!S)return;
+const DRAFT='gijul.omr.drafts.v1';
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let current=null;
 function loadDraft(key,count){
