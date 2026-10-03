@@ -37,11 +37,30 @@ function exactKey(meta){return JSON.stringify([meta.grade,meta.subjectId,meta.da
 function heading(meta){const gov=/수능|평가원/.test(meta.title),year=+meta.date.slice(0,4);return (gov?(year+1)+'학년도':year+'년')+' '+meta.title;}
 function displayArea(meta,form){return form.id==='inquiry'&&/^(사회|과학|직업)탐구$/.test(meta.group)?meta.group+' 영역':form.area;}
 function questions(form,slot){return form.id==='inquiry'&&slot===2?form.secondQuestions:form.questions;}
+/* Watermark-free fronts in ICE's 2023 September exam guide, PDF pages 23–28.
+   Embedded JPEGs are rotated clockwise; coordinates below use the native 786×619 grid.
+   These lower-resolution forms are for manual entry; photo recognition retains its
+   separately calibrated 2026 CSAT specimen and reference-colour mask. */
+const manualSource='https://www.ice.go.kr/upload/board/553/2023/08/94fb44f69915ae62e22e90c609421995.pdf';
+const manualForms={},scale=1800/786;
+function manual(id){const old=forms[id];return manualForms[id]={...old,manual:true,source:manualSource,height:619*scale,image:base+'templates/manual/'+id+'.webp',questions:[]};}
+function choices(f,first,last,x,y,dx=13.85,dy=23.08){
+ for(let n=first;n<=last;n++)f.questions[n-1]={n,kind:'choice',spots:Array.from({length:5},(_,v)=>({x:(x+v*dx)*scale,y:(y+(n-first)*dy)*scale,value:v+1}))};
+}
+let m=manual('korean');choices(m,1,20,458,114.6);choices(m,21,34,555,114.6);choices(m,35,45,671,114.6);
+m=manual('english');choices(m,1,20,458,114.6);choices(m,21,40,564.5,114.6);choices(m,41,45,671,114.6);
+m=manual('history');choices(m,1,20,513,114.6);
+m=manual('inquiry');choices(m,1,20,495.5,103.3);
+const second={questions:[]};choices(second,1,20,674.5,103.3);m.secondQuestions=second.questions;
+m=manual('language');choices(m,1,20,543.3,131,13.55,22.32);choices(m,21,30,661,131,13.55,22.32);
+m=manual('math');choices(m,1,8,275.3,103.3);choices(m,9,15,371.6,103.3);choices(m,23,28,575.4,368.4);
+for(const [n,x,y] of [[16,499,103.3],[17,548,103.3],[18,603.5,103.3],[19,655.7,103.3],[20,704,103.3],[21,446.5,368.4],[22,499,368.4],[29,655.7,368.4],[30,704,368.4]])
+ m.questions[n-1]={n,kind:'number',spots:Array.from({length:30},(_,i)=>({x:(x+Math.floor(i/10)*13.85)*scale,y:(y+(i%10)*23.08)*scale,digit:Math.floor(i/10),value:i%10,unprinted:i===0}))};
 const keys={};
 keys[JSON.stringify(['D300','158','20260902','9월 모평(평가원)','https://wdown.ebsi.co.kr/W61001/01exam/20260902/mobile/h3_m_g_bio1_ans_45HY71KP.png'])]={
  answers:[5,3,5,4,3,3,5,1,1,2,4,1,3,2,2,5,4,2,3,1],
  points:[2,3,2,2,3,2,3,2,2,2,3,2,3,3,3,2,2,3,3,3],
  source:'문제·정답·해설을 대조한 정답표'
 };
-window.GijulOmrForms=Object.freeze({base,forms,resolve,exactKey,heading,displayArea,questions,keys,source:'https://www.goe.go.kr/goe/na/ntt/selectNttInfo.do?mi=10961&nttSn=2330309'});
+window.GijulOmrForms=Object.freeze({base,forms,resolve,exactKey,heading,displayArea,questions,keys,manualForms,manualSource,source:'https://www.goe.go.kr/goe/na/ntt/selectNttInfo.do?mi=10961&nttSn=2330309'});
 })();

@@ -21,7 +21,7 @@ with sync_playwright() as pw:
     row.locator('.record').click();pg.click('#recordOmr');pg.click('#omrManual')
     assert '0/20' in pg.locator('.omr-progress').inner_text()
     assert pg.locator('.omr-exam').inner_text().startswith('2027학년도')
-    assert pg.locator('.omr-sheet img').get_attribute('src').endswith('/inquiry.webp')
+    assert pg.locator('.omr-sheet img').get_attribute('src').endswith('/manual/inquiry.webp')
     assert pg.locator('header.head').count()==0 or pg.locator('header.head').evaluate('e=>e.inert')
     for n,v in enumerate(ANS,1):
         if n in [3,15,19]: v = v%5+1
@@ -50,6 +50,7 @@ with sync_playwright() as pw:
     assert pg.locator('#omrNumberDone').is_disabled()
     pg.locator('.omr-number-pad [data-digit="2"][data-value="0"]').click();pg.click('#omrNumberDone')
     assert pg.locator('.omr-number[data-question="16"]').get_attribute('aria-label')=='16번 숫자 답 0 수정'
+    assert pg.locator('.omr-number-dot.marked[data-question="16"]').count()==2
     pg.locator('.omr-number[data-question="16"]').click();pg.keyboard.press('Escape')
     # Native dialog close dispatch/removal is asynchronous; wait for the observable outcome.
     pg.locator('.omr-number-pad').wait_for(state='detached')
@@ -60,6 +61,27 @@ with sync_playwright() as pw:
     assert pg.locator('.omr-exam strong').inner_text().startswith('2026년 ')
     assert '확인해' in pg.locator('.omr-note').inner_text()
     pg.locator('.omr-close').click()
+
+    # Wide entry fits the whole sheet and keeps actual answer clicks distinct.
+    pg.set_viewport_size({'width':1024,'height':768})
+    pg.select_option('#subject','korean');pg.click('#start');pg.click('#omrManual')
+    pg.wait_for_function("()=>document.querySelector('.omr-sheet').classList.contains('omr-full-input')")
+    sheet=pg.locator('.omr-sheet');pg.wait_for_function("()=>document.querySelector('.omr-sheet').offsetHeight<=document.querySelector('.omr-sheet-scroll').clientHeight")
+    sb=sheet.bounding_box();vb=pg.locator('.omr-sheet-scroll').bounding_box()
+    assert sb['width']<=vb['width'] and sb['height']<=vb['height'] and sb['width']>650,(sb,vb)
+    assert pg.locator('.omr-dialog').bounding_box()['width']==1024
+    pg.locator('.omr-bubble[data-question="1"][data-value="5"]').click()
+    assert pg.locator('.omr-bubble[data-question="1"][data-value="5"]').get_attribute('aria-pressed')=='true'
+    pg.locator('.omr-answer-controls [data-answer="2"]').click()
+    assert pg.locator('.omr-bubble[data-question="1"][data-value="2"]').get_attribute('aria-pressed')=='true'
+    pg.select_option('#omrQuestion','45')
+    assert sheet.evaluate("e=>e.classList.contains('omr-full-input')")
+    pg.locator('.omr-bubble[data-question="45"][data-value="4"]').click()
+    pg.click('#omrWhole');assert sheet.evaluate("e=>!e.classList.contains('omr-full-input')")
+    pg.click('#omrWhole');assert sheet.evaluate("e=>e.classList.contains('omr-full-input')")
+    pg.set_viewport_size({'width':390,'height':844})
+    pg.wait_for_function("()=>!document.querySelector('.omr-sheet').classList.contains('omr-full-input')")
+    pg.locator('.omr-close').click();pg.select_option('#subject','inquiry')
 
     # Reference-colour masking preserves printed digits and the original watermark.
     probe=pg.evaluate('''async ans=>{

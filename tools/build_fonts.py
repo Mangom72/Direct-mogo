@@ -143,6 +143,11 @@ def wanted():
     for f in (ROOT / "omr").glob("*.js"):
         chars |= hangul(visible(f.read_text(encoding="utf-8")))
 
+    # 공개 시안도 본 화면과 같은 자체 글꼴을 사용한다.
+    for f in (ROOT / "docs/design").rglob("*"):
+        if f.suffix in {".html", ".js"}:
+            chars |= hangul(visible(f.read_text(encoding="utf-8")))
+
     # 앱이 띄우는 문구도 이 글꼴로 그려진다 — 웹뷰 안이라 같은 페이지다
     src = ROOT / "android/app/src/main"
     for f in src.rglob("*.java"):

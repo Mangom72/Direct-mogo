@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<title>기출 직행 · 다른 버전 시안</title>
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../fonts/SongMyung-400.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../fonts/GijulSans-400.woff2">
+<link rel="stylesheet" href="../../../fonts/fonts.css"><link rel="stylesheet" href="versions.css">
+<link rel="stylesheet" href="../../../omr/omr.css">
+<script src="../../../omr/forms.js" defer></script><script src="../../../omr/scan.js" defer></script><script src="../../../omr/omr.js" defer></script><script src="versions.js" defer></script>
+</head>
+<body>
+<div class="page">
+<div class="preview-bar"><span>회차 목록 시안</span><a href="../../../index.html">기출 직행으로 ↗</a></div>
+<header><div class="wordmark">기출 <span>직행</span></div><button id="theme" class="theme" aria-label="어두운 화면으로 보기">◐</button></header>
+<p class="intro">홀수형 옆에서 <b>다른 버전</b>으로.<br>같은 회차는 한 줄로 모았습니다.</p>
+<section class="filters" aria-label="시안 보기 설정">
+<label>과목<select id="subject"><option value="140118">언어와 매체</option><option value="140120">미적분</option><option value="80003">영어</option><option value="158">생명과학Ⅰ</option><option value="63004">한국사</option></select></label>
+<div><span>다른 버전 표시</span><div class="display-modes" role="group" aria-label="다른 버전 표시 방식"><button id="words" aria-pressed="true">글자 + 기호</button><button id="symbol" aria-pressed="false">기호만</button></div></div>
+</section>
+<main id="list" aria-label="기출 회차"></main>
+<p class="note">‘다른 버전’을 누르면 같은 줄에서 유형과 문제·정답·해설·보내기·답안 입력이 함께 바뀝니다. 푼 표시는 회차에 함께 남습니다.</p>
+<p class="note">2025년 시행 자료로 만든 시안입니다. 기록은 이 시안에서만 표시하며 앱·동기화에 저장하지 않습니다.</p>
+<div id="status" role="status" aria-live="polite"></div>
+</div>
+</body>
+</html>

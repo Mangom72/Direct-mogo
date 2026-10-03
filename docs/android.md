@@ -841,7 +841,7 @@ apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
 뒤 요청 ID와 함께 웹에 전달한다. 과거 요청·종료 후 콜백은 무시한다.
 이미지는 서버·백업에 보내지 않는다. 상세한 [지원 양식과 검증 범위](omr.md)를 따른다.
 
-API 36 에뮬레이터의 `OmrCheck`는 실제 WebView의 공개 견본 입력·새 스캔 브리지
+API 36 에뮬레이터의 `OmrCheck`는 실제 WebView의 공개 답안지 입력·새 스캔 브리지
 존재·뒤로가기·늦은 응답 무시를 점검한다. 실물 카메라 촬영 정확도 검증은 아니다.
 테스트 fixture를 타깃 앱 `files/omr-fixture`에 넣고
 `./gradlew -PgijulRunner=kr.gijul.direct.OmrCheck assembleDebugAndroidTest` 후

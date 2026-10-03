@@ -41,6 +41,14 @@ with sync_playwright() as pw:
     assert "0/20" in page.locator(".omr-progress").inner_text()
     page.locator('.omr-bubble[data-question="1"][data-value="3"]').click()
     assert "1/20" in page.locator(".omr-progress").inner_text()
+    page.set_viewport_size({"width":1024,"height":768})
+    page.wait_for_function("()=>document.querySelector('.omr-sheet').classList.contains('omr-full-input')")
+    sheet=page.locator('.omr-sheet').bounding_box();frame=page.locator('.omr-sheet-scroll').bounding_box()
+    assert sheet['width']<=frame['width'] and sheet['height']<=frame['height']
+    page.locator('.omr-bubble[data-question="20"][data-value="4"]').click()
+    assert page.locator('.omr-bubble[data-question="20"][data-value="4"]').get_attribute('aria-pressed')=='true'
+    page.set_viewport_size({"width":390,"height":844})
+    page.wait_for_function("()=>!document.querySelector('.omr-sheet').classList.contains('omr-full-input')")
     page.click("#omrMode"); page.click("#omrPhoto")
     import base64
     # Actual unmodified source exercises WebKit's PNG header, resize and canvas paths.
