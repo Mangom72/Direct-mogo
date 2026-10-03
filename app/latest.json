@@ -1,8 +1,8 @@
 {
-  "versionCode": 93,
-  "versionName": "10.2",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.2/gijul-direct.apk",
-  "size": 4660376,
-  "sha256": "53563e34b1f9b77eba5529c7d2b57b8381701fbd0aff09ef55eba4be32e21aa8",
-  "notes": "답안지 직접 입력·사진 스캔·채점 기록을 추가했습니다."
+  "versionCode": 94,
+  "versionName": "10.3",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.3/gijul-direct.apk",
+  "size": 4662232,
+  "sha256": "13bf987e84b7863f5f534b2aafd47b5e756ac5fa6836f83ee1884dcad6487262",
+  "notes": "태블릿 전체 화면 OMR과 견본 글자 없는 직접 입력 양식을 반영했습니다."
 }
