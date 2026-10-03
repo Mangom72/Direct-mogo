@@ -248,6 +248,7 @@ with sync_playwright() as pw:
     assert pg.evaluate('()=>__batches.length')==1, 'Logout allowed further outbox chunks to send'
     remaining=pg.evaluate('async()=>{const j=await new GijulJournal.Journal().open();return (await j.read()).pending.length;}')
     assert remaining==1, 'Unsent chunk was acknowledged or confirmed chunk was retained'
+    assert pg.evaluate('()=>GijulSync.state().pending')==remaining, 'Disconnected UI retained an outdated pending count'
     print('Controller races: edit during receive, logout/login exclusion, stale listener, offline peer refresh, older value restore and confirmation UI')
     browser.close()
 print('전체: 통과')

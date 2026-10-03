@@ -42,20 +42,20 @@
         else for(const op of chunk){if(!current()) return;await adapter.send(account,op);}
         // A confirmed upload remains safe to ACK even if logout occurred during
         // the request. Unsent chunks stay in the original account's journal.
-        const pending=await journal.ackMany(chunk.map(op=>op.id));wake();
+        const pending=await journal.ackMany(chunk.map(op=>op.id));state.pending=pending;wake();
         if(!current()) return;
-        state.pending=pending;notify();
+        notify();
       }
       drained=true;state.message=state.invalid?"일부 변경을 읽지 못했습니다. 이전 이력은 서버에 보존합니다":state.pending?"전송할 기록이 남아 있습니다":"동기화했습니다";
     }catch(e){if(current()) state.message="전송을 기다리는 중입니다. 기록은 이 기기에 남아 있습니다";}
     finally{sending=false;notify();if(ready && state.on && (session!==connection || (drained && state.pending))) void flush();}
   }
   async function commitIntent(key,intent){
-    const result=await journal.capture(intent.before,intent.after,false,intent.id,()=>localStorage.getItem(key)!==null);
+    await journal.capture(intent.before,intent.after,false,intent.id,()=>localStorage.getItem(key)!==null);
     localStorage.removeItem(key);
     await journal.releaseReceipt(intent.id);
-    state.pending=result.pending.length;
-    apply((await journal.read()).view);wake();notify();void flush();
+    const saved=await journal.read();state.pending=saved.pending.length;
+    apply(saved.view);wake();notify();void flush();
   }
   async function recoverIntents(account){
     for(const {key,intent} of intents(account)) await commitIntent(key,intent);
