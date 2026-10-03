@@ -97,7 +97,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' https://apis.google.com/js/api.js https://apis.google.com/_/scs/ 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-LEvWxhbJCUS9BcYvmL80DRJ7RI66MKhd48gfkmckqBE=';
+  script-src 'self' https://apis.google.com/js/api.js https://apis.google.com/_/scs/ 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-kRn47WI9SXXshlvwS89AAtXtwKQMcAikmu18fKO9Flc=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -3466,7 +3466,7 @@ out.addEventListener("click", e=>{
   const st=e.target.closest(".stamp");
   if(st && !st.dataset.opened){
     const was=st.textContent;
-    st.textContent="길게 누르세요";
+    st.textContent="길게 눌러 수정";
     st.classList.add("hint");
     setTimeout(()=>{ st.textContent=was; st.classList.remove("hint"); }, 1400);
   }
