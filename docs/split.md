@@ -6,7 +6,7 @@
 |---|---|---|
 | 데스크톱·iOS 브라우저 | `NATIVE === false` · `__androidWeb === false` | 순수 웹 |
 | 안드로이드 브라우저 | `NATIVE === false` · `__androidWeb === true` | 위 + **앱 설치 권유 막대** |
-| 앱(WebView) | `NATIVE`(= `window.GijulNative`)가 있음 | 위 + **창구 20개** |
+| 앱(WebView) | `NATIVE`(= `window.GijulNative`)가 있음 | 위 + **네이티브 브리지** |
 
 `const NATIVE = typeof GijulNative !== "undefined" && GijulNative;` (index.html)
 하나가 모든 갈림의 기준입니다. **UA를 보지 않습니다** — 창구가 실제로 있는지만
@@ -31,7 +31,8 @@
 
 ## 양쪽에 똑같이 있는 것
 
-전부 `index.html` 안에서만 돌고 앱은 아무것도 안 합니다.
+화면은 `index.html`이 제공하며 앱에서도 같은 웹 기능을 사용합니다.
+계정 동기화는 `sync/`가 담당하고 앱의 로그인·위젯 사본 등은 네이티브와 연결됩니다.
 
 | 기능 | 비고 |
 |---|---|
@@ -43,7 +44,8 @@
 | 다크 모드 | 자동/밝게/어둡게. 앱에서는 `systemDark()`로 시스템을 물어봅니다 |
 | 주소로 공유 | `#/D300/158/2024/gov` |
 | 수능 D-day | 11월 13~19일 사이의 목요일로 셈 |
-| 풀이 기록 | 회차의 기록을 눌러 풀이시간·점수·틀린 문제 번호 입력/수정 |
+| 풀이 기록 | 풀이시간 수동 수정 · 정수 점수 0~100/0~50 · 틀린 번호 입력/수정 |
+| Google 계정 동기화 | 선택 연결 · 푼 날·시간·점수·오답·내 과목·테마 · PDF 제외 |
 | 등급컷·정답률 | EBSi 풀서비스로 나가는 링크(고3 2022-03-24 이후) |
 | 오프라인 | 서비스 워커. **웹뷰도 SW를 지원하므로 앱에서도 같습니다** |
 | AI로 쓰기 · 자료 갱신 내역 | 갱신 내역은 `api.github.com`을 직접 읽습니다 |
@@ -58,7 +60,7 @@
 | **시험 시간 재기** | `Clock`·`Timing`·`Exam` | 문제지가 새 탭으로 열려 우리 화면이 안 보입니다 |
 | 다른 앱 위에 띄우기 | `FloatService`·`PickerView`·`Catalog` | 브라우저에 오버레이 창이 없습니다 |
 | 홈 화면 위젯 여섯 | `*Widget`·`WidgetBase`·`Widgets`·`Solved` | — |
-| 자동 백업 | SAF 지속 권한 | `File System Access API`가 안드로이드 크롬에 없습니다 |
+| 구형 파일 자동 백업 | SAF 지속 권한; Google 계정 연결 후 중지 | `File System Access API`가 안드로이드 크롬에 없습니다 |
 | 앱 사본에서 되살리기 | `savedSolved` | — |
 | 앱 자체 업데이트 | `Updater` | 스토어를 안 거칩니다 |
 | 앱 링크 | `assetlinks.json` | — |
@@ -89,7 +91,7 @@
 
 ## 다리 — 페이지 → 앱
 
-`window.GijulNative`의 창구 20개입니다. 전부 `MainActivity.Bridge`에 있습니다.
+`window.GijulNative`의 주요 메서드입니다. 전부 `MainActivity.Bridge`에 있습니다.
 
 | 창구 | 하는 일 |
 |---|---|
@@ -98,17 +100,22 @@
 | `openPaper(url, name)` | 뷰어로 연다 |
 | `openPaperIn(url, name, grade, sub)` | + 어느 과목에서 왔는지 |
 | `openPaperAt(url, name, grade, sub, key)` | + **회차 열쇠**(잰 시간을 여기 남깁니다) |
+| `openPaperFrom(url, name, grade, sub, subName, key)` | + 과목 이름(타이머의 과목별 제한 시간 판정) |
 | `shareFile(name, url)` | 받아서 공유 시트로 |
 | `savePaper(json)` | 회차 전체를 앱 폴더에 |
 | `listSaved()` → `String` | 받아둔 것 목록 |
 | `openSaved(folder, name)` | 받아둔 것 하나를 연다 |
 | `deleteSaved(folder)` | 지운다(빈 문자열이면 전부) |
-| `setSolved(json)` | 표시·내 과목·테마를 앱에 옮겨 적는다 → 위젯·자동 백업 |
+| `setSolved(json)` | 표시·내 과목·테마·시간·점수·오답을 앱 사본에 전달 → 위젯·구형 자동 백업 |
 | `savedSolved()` → `String` | 앱이 든 사본을 백업 모양으로 |
-| `takeTimings()` → `String` | 잰 시간을 가져간다(한 번 넘긴 것은 지움) |
+| `peekTimings()` → `String` · `ackTimings(ids)` | 완료 기록을 읽고 JS 저장 확인 뒤 해당 ID만 삭제 |
+| `takeTimings()` → `String` | 구형 페이지 호환용; 현재 앱은 읽을 때 삭제하지 않음 |
+| `savedAutoBackup()` → `String` | 자동쓰기 전 정상 복구 사본 |
+| `deleteSavedWithConfirmation(folder)` | 네이티브 최종 확인 뒤 삭제 |
 | `saveBackup(json, name)` | 백업 파일을 만들어 공유 시트로 |
 | `pickBackup()` | 백업 파일을 고르게 한다 |
-| `pickAutoBackup()` | 자동 백업할 자리를 고르게 한다 |
+| `pickAutoBackup()` | 구형 자동 백업의 새 문서 자리 선택 |
+| `pickAutoBackupAt()` | 구형 자동 백업의 기존 문서 선택 |
 | `autoBackup()` → `String` | 지금 어디에 쓰는지 · 막혔는지 |
 | `stopAutoBackup()` | 그만둔다 |
 | `appVersion()` → `String` | 지금 판 |
@@ -155,7 +162,8 @@ else                          NATIVE.openPaper(url, nm);
 풀이 기록은 기존 `marks`(푼 날)와 `times`(초 단위 `spent`·`limit`)를 유지하고,
 `records`에 회차 열쇠별 `score`(점수)·`wrong`(틀린 번호 배열)을 더합니다.
 페이지의 파일 백업과 `setSolved` → 앱 사본/자동 백업 모두 이 값을 담습니다.
-점수·오답은 합칠 때 이 기기의 항목을 우선하고, 없는 항목만 더합니다.
+점수·오답은 **파일 백업을** 합칠 때 이 기기의 항목을 우선하고, 없는 항목만 더합니다.
+계정 동기화의 동시 변경 규칙은 아래 Google 계정 동기화 절을 따릅니다.
 모르는 과목의 기록도 보존합니다. 옛 백업의 `records` 부재는 빈 기록으로 읽습니다.
 
 ---
@@ -164,8 +172,8 @@ else                          NATIVE.openPaper(url, nm);
 
 | 고친 곳 | 워크플로 | 무엇 |
 |---|---|---|
-| `index.html`·`sw.js`·`s/`·`fonts/`·`tools/`·`tests/`·`.github/workflows/` | `tests.yml` | 회귀 시험 38종 |
-| `android/**` | `android.yml` | `test_twins` → JVM 단위 시험 32개 → 서명 빌드 → 지문 확인 → 릴리스 |
+| `index.html`·`sw.js`·`sync/`·`s/`·`fonts/`·`tools/`·`tests/`·`requirements/`·`.github/workflows/` | `tests.yml` | 회귀 시험 40종 |
+| `android/**` | `android.yml` | `test_twins` → JVM 단위 시험 36개 → 서명 빌드 → 지문 확인 → 릴리스 |
 | (매일 15:23·23:23 KST) | `refresh-data.yml` | EBSi 수집 → 수능 날짜 대조 → 새 회차 카나리아 |
 
 **앱을 고쳤으면 판올림까지가 한 벌입니다.** 올리지 않은 변경은 CI가 빌드만 하고

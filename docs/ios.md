@@ -1,8 +1,15 @@
 # 앱의 기능을 iOS 웹으로 옮길 수 있는가
 
 안드로이드 앱(`android/`)이 지금 하는 일을 **iOS Safari**와 **홈 화면 웹 앱**이
-어디까지 할 수 있는지 하나씩 따져 본 기록입니다. 2026년 8월 기준이고, 판단은
-전부 Apple/WebKit 공식 문서와 실제 응답으로 확인한 것만 적었습니다.
+어디까지 할 수 있는지 따져 본 설계 검토입니다. 초기 검토는 2026년 8월이며,
+2026-10-03에 현재 구현과 다른 설명을 보정했습니다. 아래 A/B/C/D는 구현 가능성
+분류이며 모두 구현·실기 검증되었다는 뜻은 아닙니다.
+
+현재 웹은 보관함·공유·풀이시간 수동 수정·정수 점수(0~100/0~50)·틀린 번호 기록과
+선택적 Google 계정 동기화를 제공합니다. 웹 타이머·웹 PDF 내장 뷰어·예약 푸시·iOS
+네이티브 앱은 제공하지 않습니다. Google 로그인 완료의 실제 Safari/iPhone 검증도
+별도 대상입니다. 데이터 전달 정책은 [동기화 안내](sync.md), 보관 정책은
+[PRIVACY.md](../PRIVACY.md)를 따릅니다.
 
 등급은 넷입니다.
 
@@ -48,14 +55,14 @@
 으로 펴지면 편한 길이 하나 더 있는 것이고, 안 펴지면 원래 있던 길로 갑니다.
 **어느 쪽으로 굴러도 파일은 손에 들어옵니다.**
 
-문서에서 온 판단(저장소 갈라짐, 이레 규칙, 위젯 불가)은 기기가 있어도 "확인"할
-성질이 아니라 그대로 둡니다. 갈래가 어디서 갈리는지는 `tests/test_tohome.py` 가
+저장소 분리·정리 정책과 위젯 지원 여부는 공식 설명을 참고하되 OS 판본과 실제
+기기 동작을 별도로 대조합니다. 갈래가 어디서 갈리는지는 `tests/test_tohome.py` 가
 UA 를 갈아 끼워 봅니다 — WebKit 의 행동이 아니라 **우리 코드의 판단**을 보는
 시험이라 크로미움으로 충분합니다.
 
 ---
 
-**알림(04d·05)은 안 합니다** — 서버를 세울지 정하는 문제라 코드가 먼저 갈 수
+**알림(04d·05)은 구현하지 않았습니다** — 푸시 예약·구독 저장을 설계해야 하므로 코드가 먼저 갈 수
 없습니다.
 
 **pdf.js 뷰어(01)는 재 보고 안 하기로 했습니다.** 아래에 그 값을 적어 둡니다.
@@ -167,8 +174,8 @@ Content-Range: bytes 0-2000/3857002
 
 | | |
 |---|---|
-| Safari 탭 | 되지만 **7일 만에 지워질 수 있다** |
-| 홈 화면 웹 앱 | 된다. 7일 규칙에서 면제 |
+| Safari 탭 | 가능하나 사용 빈도·저장 공간·사이트 데이터 삭제에 따라 소실 가능 |
+| 홈 화면 웹 앱 | 가능; 홈 화면 추가만으로 영구 보관이 보장되지는 않음 |
 | 필요한 것 | Cache Storage (이미 씀) 또는 OPFS |
 | 최소 | iOS 11.3 (SW) · OPFS는 Safari 15.2 |
 | 권한·제스처 | 없음 |
@@ -244,11 +251,10 @@ iOS 웹에는 **예약 로컬 알림이 없습니다.** `Notification`은 지금
 
 그런데 이 하나 때문에 잃는 것이 큽니다.
 
-- **서버가 생깁니다.** 지금 이 프로젝트는 서버가 없습니다. GitHub Pages 정적 파일과
-  EBSi 링크가 전부입니다. 알림 하나를 위해 푸시 예약을 받아 둘 곳(Cloudflare Workers +
-  Durable Object 알람 같은 것)이 필요해집니다.
-- **구독 endpoint를 어딘가에 적어야 합니다.** "계정도 서버도 없으므로 이 기기 밖에는
-  아무것도 없습니다"라는 README의 문장이 더 이상 참이 아니게 됩니다.
+- **푸시 예약 백엔드가 필요합니다.** 현재 Firebase Auth/Firestore는 기록 동기화용입니다.
+  푸시 예약을 실행하는 Functions나 별도 작업 서버는 구현하지 않았습니다.
+- **구독 endpoint 저장이 추가됩니다.** 현재 동기화하는 풀이 기록과 별개 정보이므로
+  구현한다면 구독·해지·보관 정책을 함께 정해야 합니다.
 - 카운트다운은 못 그립니다. iOS 알림에는 흐르는 시계가 없어서, **끝났다는 한 번의
   알림**으로 바뀝니다.
 
@@ -325,9 +331,9 @@ Document Picture-in-Picture API는 Chrome 130·Edge 130에 있고 Firefox 151에
 |---|---|---|
 | 내보내기 | **A** | `navigator.share({files})` (iOS 15+) 또는 `<a download>` |
 | 가져오기 | **A** | `<input type="file">` — 파일 앱이 열리고 iCloud Drive도 그 안에 있다 |
-| **자동 백업** | **D** | 아래 |
+| **구형 SAF 파일 자동 백업** | **D** | 아래; Google 계정 동기화와 별개 |
 
-자동 백업이 안드로이드에서 되는 까닭은 SAF에서 **자리를 한 번 고르면 그 권한이
+구형 파일 자동 백업이 안드로이드에서 되는 까닭은 SAF에서 **자리를 한 번 고르면 그 권한이
 남아**(`takePersistableUriPermission`) 그 뒤로는 같은 파일에 말없이 덮어쓸 수 있기
 때문입니다. iOS 웹에는 이에 대응하는 것이 **아무것도 없습니다.** `showSaveFilePicker`를
 비롯한 File System Access의 선택기들은 macOS·iPadOS·iOS 어느 Safari에도 없습니다.
@@ -353,25 +359,22 @@ WebKit이 구현한 것은 **OPFS**(우리 앱 안의 사설 저장소)뿐이라
 **우리 화면 밖에서는 존재하지 않습니다.** 밖으로 내보내려면 그때마다 공유 시트를
 거쳐야 합니다.
 
-### 12. localStorage + SharedPreferences 이중 저장 — 웹에서는 **하나로 줄어듭니다**
+### 12. 기록 저장과 계정 동기화 — 현재 구현
 
-지금 두 벌인 까닭은 위젯과 알림을 **WebView 없이 자바가** 그려야 하기 때문입니다.
-`setSolved`가 페이지의 기록을 `SharedPreferences`로 옮겨 적고, `Solved.java`가 그걸
-읽어 위젯을 그립니다.
+Android는 `setSolved`로 웹 기록을 SharedPreferences에도 남겨 위젯과 복구에 씁니다.
+iOS 웹에는 이 네이티브 사본이 없습니다. 웹 화면은 기존 localStorage 형식을 유지하고,
+Google 계정을 연결하면 IndexedDB의 계정별 저널에 변경·전송 대기·확인 기록을 둡니다.
+서버 확인 후에는 같은 계정으로 다른 기기에서 기록을 받을 수 있습니다.
 
-iOS 웹에는 그 두 번째 독자가 없습니다 — 위젯이 없으니까요. **그러므로 이중 구조는
-그냥 사라집니다.** 다만 통은 바꿔야 합니다.
-
-```
-현재:  page → localStorage
-              ↘ NATIVE.setSolved → SharedPreferences → 위젯·자동 백업
-
-iOS:   page ⇄ IndexedDB ⇄ Service Worker (알림을 그릴 때)
+```text
+웹/PWA: 화면 ⇄ localStorage + IndexedDB 저널 ⇄ Firebase Auth/Firestore
+Android: 위 구조 + setSolved → SharedPreferences → 위젯·복구
 ```
 
-`localStorage`가 아니라 **IndexedDB**여야 하는 이유는 하나뿐입니다 — 서비스 워커가
-읽어야 하고, 워커에는 `localStorage`가 없습니다. 푸시 알림을 안 쓰기로 하면
-`localStorage` 그대로도 돌아갑니다.
+서비스 워커의 푸시 알림을 위해 기록을 읽는 구조는 아직 구현하지 않았습니다.
+사이트 데이터 삭제는 로컬 기록과 미전송 대기를 지울 수 있습니다. 홈 화면 앱에도
+저장 한도와 저장 공간 압박에 따른 정리 가능성이 있으며 보존이 보장되지는 않습니다.
+[WebKit 저장 정책](https://webkit.org/blog/14403/updates-to-storage-policy/)을 참고하십시오.
 
 ### 13. PDF 공유 · 다른 앱으로 열기 — **A / B**
 
@@ -404,11 +407,11 @@ iOS:   page ⇄ IndexedDB ⇄ Service Worker (알림을 그릴 때)
 **그리고 이것보다 더 아픈 게 하나 있습니다.** 홈 화면 웹 앱은 Safari와 **저장소를
 따로 씁니다.** 같은 주소인데도 아이콘으로 연 것과 Safari로 연 것의 `localStorage`·
 IndexedDB가 서로 남남입니다. 그래서 사용자가 어느 날 Safari에서 사이트를 열면
-**푼 기록이 하나도 없는 화면**을 보게 됩니다. 안드로이드에는 이런 함정이 없습니다 —
-앱과 브라우저가 같은 페이지를 봐도 앱은 `savedSolved()`로 제 사본을 갖고 있습니다.
+**푼 기록이 하나도 없는 화면**을 보게 됩니다. Android 앱과 브라우저도 저장소는 서로 다릅니다.
+앱의 `savedSolved()`는 앱 내부 사본이며 브라우저 기록을 대신 읽는 기능은 아닙니다.
 
-iOS로 간다면 이 갈라짐을 **화면에 대놓고 알려 주고**, 백업 내보내기를 지금보다 훨씬
-세게 권해야 합니다. 이건 기능이 아니라 사고를 막는 문제입니다.
+현재 홈 화면 추가 안내에서 저장소 분리를 알립니다. 기존 기록은 파일 백업으로
+옮기거나 두 환경에 같은 Google 계정을 연결하여 맞춥니다.
 
 ### 15. PWA standalone · 서비스 워커 · 오프라인 실행 — **A**
 
@@ -417,8 +420,7 @@ iOS로 간다면 이 갈라짐을 **화면에 대놓고 알려 주고**, 백업 
 열립니다** — 설치 요건이 아예 없어졌습니다.
 
 손볼 것 하나: iOS에는 `beforeinstallprompt`가 없으므로 **"공유 → 홈 화면에 추가"를
-손으로 안내해야** 합니다. 지금 안드로이드 브라우저에 띄우는 앱 권유 막대의 iOS판이
-필요하고, 위의 저장소 갈라짐 때문에 그 막대는 권유가 아니라 거의 필수 안내입니다.
+손으로 안내해야** 합니다. 현재 iOS 안내 막대와 저장소 분리 경고를 제공합니다.
 
 ### 16. 앱 자체 업데이트 — **A, 그리고 코드가 없어집니다**
 
@@ -437,7 +439,7 @@ iOS로 간다면 이 갈라짐을 **화면에 대놓고 알려 주고**, 백업 
 |---|---|---|---|---|---|---|---|---|
 | 1 | 자체 PDF 뷰어 | **B** | ○ | ○ | pdf.js · Canvas | 16.4 | × | ○ |
 | 1b | 정답 PNG 보기 | **A** | ○ | ○ | `<img>` | — | × | ○ |
-| 2 | 오프라인 저장 | **A** | △ 7일 | ○ | Cache Storage | 11.3 | × | ○ |
+| 2 | 오프라인 저장 | **A** | △ 저장 조건 의존 | △ 저장 조건 의존 | Cache Storage | 11.3 | × | ○ |
 | 2b | 담김 표시 | **A** | ○ | ○ | `caches.match` | 11.3 | × | ○ |
 | 4a | 시간 셈 | **A** | ○ | ○ | `Date.now()` | — | × | ○ |
 | 4b | 화면 안 꺼짐 | **B** | ○ 16.4 | ○ **18.4** | Wake Lock | 16.4/18.4 | × | ○ |
@@ -453,7 +455,8 @@ iOS로 간다면 이 갈라짐을 **화면에 대놓고 알려 주고**, 백업 
 | 9b | 배지 하나 | **C** | **×** | ○ | Badging | 16.4 | △ | △ |
 | 10a | 백업 내보내기 | **A** | ○ | ○ | Web Share L2 | 15 | × | ○ |
 | 10b | 백업 가져오기 | **A** | ○ | ○ | `<input file>` | — | × | ○ |
-| 10c | **자동 백업** | **D** | × | × | — | — | — | — |
+| 10c | **구형 파일 자동 백업** | **D** | × | × | — | — | — | — |
+| 10d | Google 계정 기록 동기화 | 현재 구현; 실기 로그인 별도 | ○ | ○ | Firebase Auth/Firestore | 지원 브라우저 | ○ | × |
 | 11 | 파일 앱에 보이기 | **D** | × | × | — | — | — | — |
 | 12 | 이중 저장 대체 | **A** | ○ | ○ | IndexedDB | 10 | × | ○ |
 | 13 | PDF 공유 | **A** | ○ | ○ | Web Share L2 | 15 | × | ○ |
@@ -485,21 +488,21 @@ iOS로 간다면 이 갈라짐을 **화면에 대놓고 알려 주고**, 백업 
 |---|---|
 | PDF 뷰어 | `PdfRenderer` → pdf.js. 제스처·스크롤바 새로 씀. **타일 렌더링 필수** |
 | 저장 위치 | 앱 폴더의 진짜 파일 → Cache Storage. 밖에서는 안 보임 |
-| 기록 저장 | `localStorage` + `SharedPreferences` → **IndexedDB 한 통** |
-| 자동 백업 | 저절로 덮어쓰기 → **때맞춰 재촉하고 한 번 누르기** |
+| 기록 저장 | 기존 localStorage + 계정 동기화 IndexedDB 저널; 네이티브 사본은 없음 |
+| 구형 파일 자동 백업 | 지속 파일 권한을 유지하는 방식은 불가; 수동 JSON 또는 Google 계정 동기화 |
 | 위젯 여섯 | → **배지 숫자 하나** (D-day 정도) |
 | 다른 앱으로 열기 | 특정 앱 겨냥 → 공유 시트 |
-| 타이머 종료 알림 | 로컬 알림 → **Web Push (서버가 생긴다)** |
+| 타이머 종료 알림 | 로컬 알림 → Web Push 예약 백엔드 필요 (미구현) |
 
-마지막 줄만 성격이 다릅니다. 나머지는 코드를 바꾸는 일이지만, 이것은 **프로젝트의
-전제를 바꾸는 일**입니다 — 서버 없음·계정 없음이라는 성질을 알림 하나와 맞바꿉니다.
+푸시 예약은 기록 동기화와 별도 기능입니다. Firebase를 연결했다고 자동으로
+타이머 종료 알림을 예약하거나 iOS 백그라운드 타이머를 유지할 수 있는 것은 아닙니다.
 
 ### iOS 네이티브 앱 없이는 안 되는 것
 
 1. **다른 앱 위에 문제지 띄우기** — 투명도·터치 통과·창 셋 전부
 2. **홈 화면 위젯 여섯** — 웹 앱에 위젯·컨트롤·App Intents가 없음
 3. **알림의 흐르는 카운트다운** — iOS 알림에 시계가 없음
-4. **자동 백업** — 지속되는 쓰기 권한이 없음
+4. **구형 SAF 파일 자동 백업** — 지속되는 쓰기 권한이 없음; Google 계정 동기화는 제공
 5. **받아둔 문제지가 파일 앱에 보이는 것**
 6. **App Links** — Universal Links는 네이티브 App ID를 요구
 7. **진동**
@@ -598,6 +601,6 @@ else                          NATIVE.openPaper(a.href, a.dataset.nm);
 - [Badging for Home Screen Web Apps](https://webkit.org/blog/14112/badging-for-home-screen-web-apps/) — 홈 화면 웹 앱 전용, 알림 권한 필요
 - [WebKit Features in Safari 18.4](https://webkit.org/blog/16574/webkit-features-in-safari-18-4/) — Declarative Web Push, 홈 화면 웹 앱의 Wake Lock
 - [The File System Access API with Origin Private File System](https://webkit.org/blog/12257/the-file-system-access-api-with-origin-private-file-system/) — OPFS만 구현, 선택기 없음
-- [Storage quotas and eviction criteria (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria) — 7일 규칙과 설치된 웹 앱의 면제
+- [Storage quotas and eviction criteria (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria) — 저장 한도와 데이터 정리 조건
 - [Document Picture-in-Picture API (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/Document_Picture-in-Picture_API) — Safari 미지원
 - EBSi의 CORS·범위 요청은 이 문서를 쓰면서 직접 응답을 받아 확인했습니다(위 참조).

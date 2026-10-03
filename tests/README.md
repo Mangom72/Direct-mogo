@@ -2,7 +2,7 @@
 
 ```bash
 pip install -r requirements/tests.txt && playwright install chromium webkit
-python3 tests/run.py              # 전부 (3분 남짓, 38종)
+python3 tests/run.py              # 전부 (3분 남짓, 40종)
 python3 tests/run.py sw stale     # 이름에 그 말이 든 것만
 python3 tests/run.py -v           # 출력까지 그대로
 ```
@@ -61,13 +61,14 @@ python3 tests/run.py -v           # 출력까지 그대로
 | `test_solved` | 푼 회차 표시 — 찍은 것이 남는가, 거른 뒤에도 셈이 사실대로인가, 푼 날을 고칠 수 있는가 |
 | `test_backup` | **내보낸 것이 돌아오는가, 합칠 때 이 기기 것을 안 지우는가, 자동 백업이 막힌 것을 말하는가** |
 | `test_audit` | 타이머 저장 ACK·재전송, 잘못된 fragment, 늦은 갱신 응답, 달력 31일 경계, 300px 창과 모달 포커스 |
-| `test_timer` | **잰 시간·수동 수정·점수·오답이 회차와 백업에 남는가, 옛 앱에서도 자료가 열리는가** |
+| `test_timer` | 회차별 시간 수동 수정·정수 점수 범위·틀린 번호·백업 왕복·옛 앱 fallback |
 | `test_twins` | **화면과 위젯에 두 벌로 적힌 규칙이 어긋나지 않았는가** (브라우저를 안 씀) |
+| `test_sync` | IndexedDB 저널·전송 대기·ACK·재시작 복구·충돌·계정 분리·로그인 초기화 경합 |
 | `test_workflows` | Actions의 외부 action SHA·최소 권한·`run` 셸 문법, YAML 줄 접기 사고가 없는가 (브라우저를 안 씀) |
 
 ## 안드로이드 쪽은 여기 없습니다
 
-여기 38종은 대부분 브라우저를 띄웁니다. `test_fields`·`test_refresh`·`test_stable`·
+여기 40종은 대부분 브라우저를 띄웁니다. `test_fields`·`test_refresh`·`test_stable`·
 `test_workflows`는 브라우저 없이 자료·생성기·워크플로를 확인합니다. 자바를 확인하는 것은
 `android/app/src/test` 에 따로 있고(`./gradlew testDebugUnitTest`),
 PR에서는 `android-checks.yml`이 단위 시험·Lint·디버그 빌드를, main에서는
@@ -88,11 +89,11 @@ PR에서는 `android-checks.yml`이 단위 시험·Lint·디버그 빌드를, ma
 
 ## 개인 자료는 조용히 사라집니다
 
-계정도 서버도 없으므로 사람마다 다른 것은 전부 그 기기에만 있습니다. 백업이
+계정 동기화를 연결하지 않은 기록과 서버 확인 전 대기 기록은 이 기기에 의존합니다. 백업이
 조용히 망가지면 **되돌릴 방법이 없습니다** — 파일은 만들어졌는데 안이 반쪽이거나,
 가져오기가 이 기기에서 찍은 것을 지워 버리거나, 자동 백업이 멈췄는데 여전히
 켜져 있다고 보이거나. 어느 쪽도 그 자리에서는 멀쩡해 보이고, 알아차릴 때는 이미
-늦습니다. `test_backup`이 열한 가지를 봅니다.
+늦습니다. `test_backup`이 파일 왕복·합치기·복구·오류 상태를 확인합니다.
 
 그중 11번은 실제로 있던 버그에서 왔습니다 — 과목을 ★로 저장해도 앱에 알리지
 않아, '다음에 풀 것' 위젯이 옛 과목을 계속 짚고 자동 백업에도 그 과목이 안
@@ -179,3 +180,10 @@ main에 올라갈 때 40종을 전부 돌립니다. 실패하면 그때의 화�
 일반 브라우저 시험 서버는 Firebase를 비활성화하여 운영 계정에 연결하지 않는다.
 동기화 통합 시험은 mock 설정을 별도로 주입한다. 실제 Firebase SDK와 보안 규칙
 에뮬레이터 검증은 [동기화 안내](../docs/sync.md)의 별도 명령을 따른다.
+
+
+2026-10-03의 [전체 CI](https://github.com/Mangom72/Direct-mogo/actions/runs/37050373431)는
+40/40 통과이며 WebKit 시험도 실행했다. Android JVM 시험은
+36개다. 로컬에서 WebKit 런타임 부족으로 생략했다면 전체 플랫폼 검증으로 쓰지 않는다.
+CI는 `GIJUL_REQUIRE_WEBKIT=1`로 생략을 실패 처리한다. 실제 Google 계정 로그인 완료와
+두 실제 기기의 동기화는 별도 검증 대상이며 에뮬레이터 통과로 대신하지 않는다.
