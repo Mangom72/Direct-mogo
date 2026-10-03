@@ -2,7 +2,7 @@
 
 ```bash
 pip install -r requirements/tests.txt && playwright install chromium webkit
-python3 tests/run.py              # 전부 (3분 남짓, 41종)
+python3 tests/run.py              # 전부 (3분 남짓, 42종)
 python3 tests/run.py sw stale     # 이름에 그 말이 든 것만
 python3 tests/run.py -v           # 출력까지 그대로
 ```
@@ -62,6 +62,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 | `test_backup` | **내보낸 것이 돌아오는가, 합칠 때 이 기기 것을 안 지우는가, 자동 백업이 막힌 것을 말하는가** |
 | `test_audit` | 타이머 저장 ACK·재전송, 잘못된 fragment, 늦은 갱신 응답, 달력 31일 경계, 300px 창과 모달 포커스 |
 | `test_webkit` | 실제 WebKit 조회·저장과 OMR 입력·PNG 사진 선택·확인 단계 |
+| `test_omr_points` | 배점 표시 누락·중복·역순 거절, 원본별 배점 등록 검증 |
 | `test_omr` | 공식 견본 입력·숫자 답·정답 분리·합성 마킹·사진 확인·기록 보존 |
 | `test_timer` | 회차별 시간 수동 수정·정수 점수 범위·틀린 번호·백업 왕복·옛 앱 fallback |
 | `test_twins` | **화면과 위젯에 두 벌로 적힌 규칙이 어긋나지 않았는가** (브라우저를 안 씀) |
@@ -70,7 +71,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 
 ## 안드로이드 쪽은 여기 없습니다
 
-여기 41종은 대부분 브라우저를 띄웁니다. `test_fields`·`test_refresh`·`test_stable`·
+여기 42종은 대부분 브라우저를 띄웁니다. `test_fields`·`test_refresh`·`test_stable`·
 `test_workflows`는 브라우저 없이 자료·생성기·워크플로를 확인합니다. 자바를 확인하는 것은
 `android/app/src/test` 에 따로 있고(`./gradlew testDebugUnitTest`),
 PR에서는 `android-checks.yml`이 단위 시험·Lint·디버그 빌드를, main에서는
@@ -169,7 +170,7 @@ PR에서는 `android-checks.yml`이 단위 시험·Lint·디버그 빌드를, ma
 빨갛게 뜹니다.
 
 **화면 쪽**(`tests.yml`)은 `index.html`·`sw.js`·`s/`·`tools/`·`tests/`가 바뀐 채로
-main에 올라갈 때 41종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
+main에 올라갈 때 42종을 전부 돌립니다. 실패하면 그때의 화면 그림이 artifact로
 남아, 손에서 재현되지 않는 실패도 눈으로 볼 수 있습니다.
 
 어느 쪽이든 CI는 마지막 그물입니다. 고친 자리에서 `python3 tests/run.py`를 먼저
@@ -189,3 +190,7 @@ main에 올라갈 때 41종을 전부 돌립니다. 실패하면 그때의 화�
 36개다. 로컬에서 WebKit 런타임 부족으로 생략했다면 전체 플랫폼 검증으로 쓰지 않는다.
 CI는 `GIJUL_REQUIRE_WEBKIT=1`로 생략을 실패 처리한다. 실제 Google 계정 로그인 완료와
 두 실제 기기의 동기화는 별도 검증 대상이며 에뮬레이터 통과로 대신하지 않는다.
+
+`test_omr_points.py`는 PDF 문항 배점 추출의 누락·중복·역순·모호한 표시·총점
+오류 거절과 등록된 36개 원본 배열을 검사한다. 실제 PDF 전체는 저장소에 복사하지
+않으며 원본 URL·지문은 `omr/points-reviewed.json`에 둔다.

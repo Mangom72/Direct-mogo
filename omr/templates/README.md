@@ -16,14 +16,26 @@ See [implementation and limits](../../docs/omr.md).
 
 ## Manual-entry fronts without a specimen watermark
 
-`manual/` uses the six front-side images on PDF pages 23–28 of the 2023 September
-mock assessment guide (2024 academic year), publicly hosted by Incheon Education:
-https://www.ice.go.kr/upload/board/553/2023/08/94fb44f69915ae62e22e90c609421995.pdf
+`manual/` uses the six unmodified front-side JPEGs in the official **2027학년도
+(2026년 시행) 9월 모평 실시요강** HWP, publicly posted by a Gyeonggi Education school:
+https://gcja-h.goeay.kr/gcja-h/na/ntt/selectNttInfo.do?bbsId=2506&mi=5763&nttSn=1329024
 
-The embedded 619×786 JPEGs were extracted with `pdfimages -f 23 -l 28 -j`,
-rotated clockwise, and encoded as lossless WebP with ImageMagick. The resulting
-786×619 pixels retain the original printed content; this source has no specimen
-watermark. Its original resolution is lower than the CSAT specimen. Each layout
-has its own marking coordinates in `forms.js`; these images are used for manual
-entry, never substituted into the photo recognition reference mask. The exam
-heading shown to learners is a separate DOM layer.
+Direct original:
+https://gcja-h.goeay.kr/upload/gcja-h/na/bbs_2506/2026/08/040b6b26-ca97-4783-9fd5-cea5e3d17eb7.hwp
+
+HWP SHA-256: `ad031e20abd3a9544b1ee7abd23b855117c6c0d73c72dd94f1dd7c0f7ef730e5`.
+
+Extract the compressed OLE `BinData/BIN0002.jpg` through `BIN0007.jpg` streams
+using raw DEFLATE (`zlib.decompress(data, -15)`). In order: Korean, math, English,
+history, inquiry, second language. They are 3420×2683 pixels, except inquiry
+3447×2683. No rotation, retouching, watermark removal or upscaling is applied.
+Encode each original as lossless WebP. The assets retain the source JPEG pixels,
+including the original printing and registration marks. These fronts have no
+specimen watermark. Compared with the prior 786×619 fronts, the width is over
+four times larger. Lossless assets total about 15 MiB and are cached offline.
+
+Marking coordinates use a logical 1800px width with per-image aspect ratios.
+Each layout was recalibrated against the new originals. These manual fronts are
+never substituted for the separately calibrated 2026 CSAT photo recognition
+reference. Dynamic exam headings are a separate DOM layer aligned to the printed
+title and period; the original image files remain unmodified.

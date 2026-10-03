@@ -46,13 +46,27 @@ with sync_playwright() as pw:
     assert pg.locator('.omr-dialog').evaluate('e=>e.scrollWidth<=e.clientWidth')
     pg.screenshot(path=str(SHOT/'omr-manual-320.png'))
     pg.locator('.omr-close').click();pg.select_option('#subject','math');pg.click('#start');pg.click('#omrManual')
-    pg.select_option('#omrQuestion','16');pg.locator('.omr-number[data-question="16"]').click()
-    assert pg.locator('#omrNumberDone').is_disabled()
+    pg.select_option('#omrQuestion','16')
+    digit=lambda d,v: pg.locator(f'.omr-digit[data-question="16"][data-digit="{d}"][data-value="{v}"]')
+    assert pg.locator('.omr-digit[data-question="16"]').count()==29
+    digit(2,0).click()
+    assert '16번 · 0' in pg.locator('#omrCurrent').inner_text()
+    assert pg.locator('.omr-digit[aria-pressed="true"][data-question="16"]').count()==1
+    digit(0,1).click()
+    assert '미완성' in pg.locator('#omrCurrent').inner_text()
+    digit(1,0).click()
+    assert '16번 · 100' in pg.locator('#omrCurrent').inner_text()
+    digit(2,7).click()
+    assert '16번 · 107' in pg.locator('#omrCurrent').inner_text()
+    assert pg.locator('.omr-digit[aria-pressed="true"][data-question="16"][data-digit="2"]').count()==1
+    digit(2,7).click()
+    assert '미완성' in pg.locator('#omrCurrent').inner_text()
+    pg.click('#omrBlank');assert '미응답' in pg.locator('#omrCurrent').inner_text()
+    assert pg.locator('.omr-digit[aria-pressed="true"][data-question="16"]').count()==0
+    pg.locator('.omr-answer-controls button').click()
     pg.locator('.omr-number-pad [data-digit="2"][data-value="0"]').click();pg.click('#omrNumberDone')
-    assert pg.locator('.omr-number[data-question="16"]').get_attribute('aria-label')=='16번 숫자 답 0 수정'
-    assert pg.locator('.omr-number-dot.marked[data-question="16"]').count()==2
-    pg.locator('.omr-number[data-question="16"]').click();pg.keyboard.press('Escape')
-    # Native dialog close dispatch/removal is asynchronous; wait for the observable outcome.
+    assert '16번 · 0' in pg.locator('#omrCurrent').inner_text()
+    pg.locator('.omr-answer-controls button').click();pg.keyboard.press('Escape')
     pg.locator('.omr-number-pad').wait_for(state='detached')
     assert pg.locator('.omr-dialog').is_visible() and pg.locator('.omr-number-pad').count()==0
     pg.click('#omrKey');pg.fill('#omrKeyAnswers','1.5');pg.fill('#omrKeyPoints','3');pg.locator('.omr-actions button').click()
@@ -82,6 +96,41 @@ with sync_playwright() as pw:
     pg.set_viewport_size({'width':390,'height':844})
     pg.wait_for_function("()=>!document.querySelector('.omr-sheet').classList.contains('omr-full-input')")
     pg.locator('.omr-close').click();pg.select_option('#subject','inquiry')
+
+    # A partially marked integer survives a real draft reload and cannot be graded.
+    mathmeta={'grade':'D300','subjectId':'140120','subject':'미적분','group':'수학','date':'20260902','title':'9월 모평(평가원)','answerURL':'draft-answer','problemURL':'draft-problem'}
+    pg.evaluate('meta=>GijulOMR.open(meta)',mathmeta);pg.click('#omrManual');pg.select_option('#omrQuestion','16')
+    pg.locator('.omr-digit[data-question="16"][data-digit="0"][data-value="1"]').click()
+    pg.locator('.omr-close').click();pg.evaluate('meta=>GijulOMR.open(meta)',mathmeta);pg.click('#omrManual');pg.select_option('#omrQuestion','16')
+    assert pg.locator('.omr-digit[data-question="16"][data-digit="0"][data-value="1"]').get_attribute('aria-pressed')=='true'
+    assert '미완성' in pg.locator('#omrCurrent').inner_text()
+    pg.click('#omrKey');assert pg.locator('#omrKeyPoints').input_value().split()==['2','2','3','3','3','3','3','3','4','4','4','4','4','4','4','3','3','3','3','4','4','4','2','3','3','3','3','4','4','4']
+    pg.fill('#omrKeyAnswers',' '.join(['1']*30));pg.check('#omrKeyCheck');pg.locator('.omr-actions button').click();pg.check('#omrBlankCheck')
+    assert pg.locator('.omr-actions button').is_disabled()
+    pg.select_option('#omrQuestion','16');pg.locator('.omr-digit[data-question="16"][data-digit="1"][data-value="0"]').click();pg.locator('.omr-digit[data-question="16"][data-digit="2"][data-value="7"]').click()
+    assert '16번 · 107' in pg.locator('#omrCurrent').inner_text()
+    assert pg.locator('#omrBlankCheck').is_checked()==False
+    pg.locator('.omr-close').click()
+
+    # Source identity, checked year range and genuine pixel resolution are guarded.
+    scoring=pg.evaluate("""()=>{const F=GijulOmrForms,m={grade:'D300',subjectId:'140120',date:'20260902',title:'9월 모평(평가원)'};const f=F.forms.math;return {math:F.pointsFor(m,f).points,total:F.pointsFor(m,f).points.reduce((a,b)=>a+b,0),future:F.pointsFor({...m,date:'20270902'},f),old:F.pointsFor({...m,date:'20200902'},f),unknown:F.pointsFor({...m,subjectId:'999'},f)};}""")
+    assert scoring['total']==100 and scoring['future'] is None and scoring['old'] is None and scoring['unknown'] is None,scoring
+    import json
+    entries=json.loads((pathlib.Path(__file__).resolve().parents[1]/'omr/points-reviewed.json').read_text())['entries']
+    checks=pg.evaluate("""entries=>entries.filter(e=>!['140119','140120','140121'].includes(e.key[1])).map(e=>{const F=GijulOmrForms,[grade,subjectId,date,title,answerURL]=e.key;const m={grade,subjectId,date,title,answerURL,problemURL:e.problemURL},f=F.forms[({'140117':'korean','80003':'english','63004':'history','158':'inquiry','191':'language','195':'language'})[subjectId]];return {expected:e.points,actual:F.pointsFor(m,f)?.points,badURL:F.pointsFor({...m,problemURL:'different'},f),badType:F.pointsFor({...m,title:title+' 짝수형'},f)}})""",entries)
+    assert len(checks)==18 and all(c['actual']==c['expected'] and c['badURL'] is None and c['badType'] is None for c in checks),checks
+    for subject in ['korean','math','english','history','inquiry','language']:
+        pg.select_option('#subject',subject);pg.set_viewport_size({'width':1280,'height':960});pg.click('#start');pg.click('#omrManual')
+        pg.wait_for_function("()=>document.querySelector('.omr-sheet img').naturalWidth>=3420")
+        caption=pg.locator('.omr-paper-heading>strong')
+        assert caption.evaluate('e=>e.scrollWidth<=e.clientWidth')
+        assert caption.evaluate('e=>getComputedStyle(e).color')!='rgb(25, 23, 19)'
+        marks=pg.locator('.omr-bubble');headbox=caption.bounding_box()
+        for box in marks.evaluate_all('es=>es.map(e=>{const b=e.getBoundingClientRect();return {top:b.top,left:b.left,right:b.right,bottom:b.bottom}})'):
+            assert box['top']>=headbox['y']+headbox['height'], (subject,box,headbox)
+        pg.screenshot(path=str(SHOT/('omr-'+subject+'-tablet.png')))
+        pg.locator('.omr-close').click()
+    pg.select_option('#subject','inquiry');pg.set_viewport_size({'width':390,'height':844})
 
     # Reference-colour masking preserves printed digits and the original watermark.
     probe=pg.evaluate('''async ans=>{

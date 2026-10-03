@@ -5,6 +5,26 @@ if(!F||!S)return;
 const DRAFT='gijul.omr.drafts.v1';
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let current=null;
+const places=['백','십','일'];
+function digitsOf(value){
+ if(value===null)return [null,null,null];
+ return [value>=100?Math.floor(value/100):null,value>=10?Math.floor(value/10)%10:null,value%10];
+}
+function numberAnswer(digits){
+ if(digits.every(v=>v===null))return {value:null,partial:false};
+ if(digits[2]===null||digits[0]!==null&&digits[1]===null)return {value:null,partial:true};
+ return {value:(digits[0]||0)*100+(digits[1]||0)*10+digits[2],partial:false};
+}
+function restoreNumbers(s,draft){
+ s.numberMarks={};
+ for(const q of s.form.questions){if(q.kind!=='number')continue;
+  const d=draft?.numberMarks?.[q.n];
+  const valid=Array.isArray(d)&&d.length===3&&d.every(v=>v===null||Number.isInteger(v)&&v>=0&&v<=9);
+  s.numberMarks[q.n]=valid?[...d]:digitsOf(s.answers[q.n-1]);
+  const got=numberAnswer(s.numberMarks[q.n]);s.answers[q.n-1]=got.value;
+  if(got.partial)s.flags.set(q.n,'숫자 마킹 미완성');
+ }
+}
 function loadDraft(key,count){
  try{const text=localStorage.getItem(DRAFT)||'{}';if(text.length>300000)return null;const o=JSON.parse(text),d=o[key];
   if(!d||!Array.isArray(d.answers)||d.answers.length!==count||!d.answers.every(a=>a===null||Number.isInteger(a)&&a>=0&&a<=999))return null;
@@ -24,6 +44,7 @@ function open(meta,options={}){
  const exact=F.exactKey(meta),draft=options.demo?null:loadDraft(exact,form.count),verified=F.keys[exact];
  const state={meta,options,form,exact,answers:draft?.answers||Array(form.count).fill(null),slot:draft?.slot===2?2:1,key:verified?{answers:[...verified.answers],points:[...verified.points],source:verified.source}:null,
   flags:new Map(Array.isArray(draft?.flags)?draft.flags.filter(v=>Array.isArray(v)&&Number.isInteger(v[0])&&v[0]>=1&&v[0]<=form.count&&typeof v[1]==='string').slice(0,form.count):[]),mode:null,photoDerived:!!draft?.photoDerived,stage:'choose',zoom:1.55,whole:window.innerWidth>=768,wide:window.innerWidth>=768,active:1,photo:null,photoChecked:false,blankChecked:false,request:null,job:0,draftError:'',closed:false,focus:document.activeElement};
+ restoreNumbers(state,draft);
  if(!state.key&&draft?.key&&!validateKey(draft.key.answers,draft.key.points,form,F.questions(form,state.slot)))state.key=draft.key;
  const dialog=document.createElement('dialog');dialog.className='omr-dialog';dialog.setAttribute('aria-label','답안 입력·채점');
  dialog.innerHTML='<header class="omr-header"><div><span>기출 직행</span><strong>답안 입력·채점</strong></div><button type="button" class="omr-close" aria-label="답안 입력 닫기">✕</button></header><main class="omr-body" tabindex="-1"></main><footer class="omr-actions"></footer><div class="omr-live" role="status" aria-live="polite"></div>';
@@ -49,7 +70,7 @@ function note(text){const s=current;if(s){const node=s.body.querySelector('.omr-
 function saveDraft(){
  const s=current;if(!s||s.options.demo)return;
  try{let all=JSON.parse(localStorage.getItem(DRAFT)||'{}');if(!all||Array.isArray(all)||typeof all!=='object')all={};
-  delete all[s.exact];all[s.exact]={answers:s.answers,slot:s.slot,key:s.key,photoDerived:s.photoDerived,flags:[...s.flags],at:Date.now()};const entries=Object.entries(all).slice(-20);
+  delete all[s.exact];all[s.exact]={answers:s.answers,numberMarks:s.numberMarks,slot:s.slot,key:s.key,photoDerived:s.photoDerived,flags:[...s.flags],at:Date.now()};const entries=Object.entries(all).slice(-20);
   localStorage.setItem(DRAFT,JSON.stringify(Object.fromEntries(entries)));s.draftError='';
  }catch(e){s.draftError='답안 임시 저장을 하지 못했습니다. 화면을 닫기 전에 점수 기록을 저장해 주세요.';note(s.draftError);}
 }
@@ -63,7 +84,7 @@ function render(){
 function move(stage){current.job++;current.stage=stage;render();current.body.focus({preventScroll:true});current.body.scrollTop=0;}
 function choose(){
  const s=current;
- s.body.innerHTML=`<p class="omr-kicker">ANSWER SHEET</p><h1>어떻게 답안을 입력할까요?</h1>${info()}<div class="omr-modes"><button type="button" id="omrManual"><span class="omr-mode-icon">①</span><strong>직접 누르기</strong><small>답안지의 마킹 칸을 눌러 입력합니다.</small></button><button type="button" id="omrPhoto"><span class="omr-mode-icon">▣</span><strong>사진으로 읽기</strong><small>문서를 스캔하고 읽은 답을 확인합니다.</small></button></div><p class="omr-note" role="status">${s.answers.some(v=>v!==null)?'이 기기에 임시 저장한 답안을 이어서 입력할 수 있습니다.':'직접 입력은 빈 답안지에서 시작합니다.'}</p><div class="omr-source"><img src="${(F.manualForms[s.form.id]||s.form).image}" alt="${escape(s.form.area)} 공식 공개 답안지"><p>직접 입력은 인천교육청 공개 답안지 양식을 사용합니다.<br>사진 읽기는 경기도교육청 수능 견본과 같은 배치가 필요합니다.</p><a href="${F.manualSource}" target="_blank" rel="noopener">원본 공개 자료 ↗</a></div>`;
+ s.body.innerHTML=`<p class="omr-kicker">ANSWER SHEET</p><h1>어떻게 답안을 입력할까요?</h1>${info()}<div class="omr-modes"><button type="button" id="omrManual"><span class="omr-mode-icon">①</span><strong>직접 누르기</strong><small>답안지의 마킹 칸을 눌러 입력합니다.</small></button><button type="button" id="omrPhoto"><span class="omr-mode-icon">▣</span><strong>사진으로 읽기</strong><small>문서를 스캔하고 읽은 답을 확인합니다.</small></button></div><p class="omr-note" role="status">${s.answers.some(v=>v!==null)?'이 기기에 임시 저장한 답안을 이어서 입력할 수 있습니다.':'직접 입력은 빈 답안지에서 시작합니다.'}</p><div class="omr-source"><img src="${(F.manualForms[s.form.id]||s.form).image}" alt="${escape(s.form.area)} 공식 공개 답안지"><p>직접 입력은 공식 공개 모평 답안지의 고해상도 원본을 사용합니다.<br>사진 읽기는 경기도교육청 수능 견본과 같은 배치가 필요합니다.</p><a href="${F.manualSource}" target="_blank" rel="noopener">원본 공개 자료 ↗</a></div>`;
  s.footer.innerHTML='<p>입력 방식은 진행 중에도 바꿀 수 있습니다.</p>';
  s.body.querySelector('#omrManual').onclick=()=>{s.mode='manual';move('input');};
  s.body.querySelector('#omrPhoto').onclick=()=>{s.mode='photo';move('photo');};
@@ -158,24 +179,31 @@ async function recognize(s){
   if(current!==s||s.job!==job)return;
   const reference=await loadReference(s.form);if(current!==s||s.job!==job)return;
   const fixed=S.warp(s.photo,s.corners,s.form.width,s.form.height),read=S.read(fixed,reference,F.questions(s.form,s.slot));
-  s.photo=fixed;s.photoDerived=true;s.answers=read.answers;s.flags=read.flags;s.photoChecked=false;s.blankChecked=false;saveDraft();move('input');
+  s.photo=fixed;s.photoDerived=true;s.answers=read.answers;s.flags=read.flags;restoreNumbers(s,null);s.photoChecked=false;s.blankChecked=false;saveDraft();move('input');
  }catch(e){if(current===s&&s.job===job){note(e.message||'사진의 답란을 읽지 못했습니다. 모서리를 다시 맞춰 주세요.');s.footer.querySelector('button').disabled=false;}}
 }
 const references=new Map();
 async function loadReference(form){
  if(references.has(form.image))return references.get(form.image);
  const response=await fetch(form.image);if(!response.ok)throw new Error('답안지 원본을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.');
- const bitmap=await createImageBitmap(await response.blob()),canvas=document.createElement('canvas');canvas.width=form.width;canvas.height=form.height;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(bitmap,0,0);bitmap.close();const data=ctx.getImageData(0,0,form.width,form.height);references.set(form.image,data);return data;
+ const bitmap=await createImageBitmap(await response.blob()),canvas=document.createElement('canvas');canvas.width=form.width;canvas.height=form.height;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(bitmap,0,0,form.width,form.height);bitmap.close();const data=ctx.getImageData(0,0,form.width,form.height);references.set(form.image,data);return data;
 }
 function input(){
  const s=current;s.sheetForm=s.photoDerived?s.form:(F.manualForms[s.form.id]||s.form);const questions=F.questions(s.sheetForm,s.slot),done=s.answers.filter(v=>v!==null).length;
- s.body.innerHTML=`<p class="omr-kicker">${s.photoDerived?'CHECK YOUR MARKS':'MARK YOUR ANSWERS'}</p><h1>${s.photoDerived?'읽은 답을 확인해 주세요.':'답안지의 답란을 눌러 주세요.'}</h1>${info()}<div class="omr-input-tools"><label>문항 <select id="omrQuestion">${questions.map(q=>`<option value="${q.n}">${q.n}번${s.flags.has(q.n)?' · 확인 필요':''}</option>`).join('')}</select></label><button id="omrWhole">전체 양식</button><button id="omrKey">정답·배점</button></div><div class="omr-progress"><span>${done}/${s.form.count}문항 입력</span><span id="omrPending">${s.flags.size?'확인 '+s.flags.size+'개 남음':'답란을 다시 누르면 지웁니다'}</span></div><div class="omr-sheet-scroll"><div class="omr-sheet"><img src="${s.sheetForm.image}" alt="${escape(s.form.area)} 공개 답안지의 마킹 입력 영역"><div class="omr-caption${s.sheetForm.manual?' omr-caption-manual':''}${s.sheetForm.id==='language'?' omr-caption-language':''}${s.sheetForm.id==='math'?' omr-caption-math':''}"><small>기출 직행 · 학습용</small><strong>${escape(F.heading(s.meta))}</strong><b>${s.form.period}교시 ${escape(F.displayArea(s.meta,s.form))}</b><span>${escape(s.meta.subject)}${s.form.id==='inquiry'?' · 제'+s.slot+'선택':''}</span></div><div class="omr-marks"></div></div></div><div class="omr-current"><strong id="omrCurrent"></strong><div class="omr-answer-controls" aria-label="현재 문항 답안"></div><button id="omrBlank">미응답으로 확인</button><button id="omrNext">다음 문항 →</button></div><div class="omr-flags">${[...s.flags].map(([n,flag])=>`<button data-jump="${n}">${n}번 ${escape(flag)}</button>`).join('')}</div>${s.photoDerived?'<label class="omr-check"><input type="checkbox" id="omrPhotoCheck">원본 사진과 전체 답안을 비교해 확인했습니다.</label><button id="omrOriginal" class="omr-link">보정한 원본 사진 보기</button>':''}<label class="omr-check" id="omrBlankLabel"><input type="checkbox" id="omrBlankCheck">빈 답란은 미응답으로 채점합니다.</label><div class="omr-input-bottom"><button class="omr-link" id="omrMode">입력 방식 바꾸기</button><a href="${s.sheetForm.source||F.source}" target="_blank" rel="noopener">공개 양식 출처 ↗</a></div><p class="omr-note" role="status">${s.key?'정답표와 문항별 배점이 준비되어 있습니다.':'채점하려면 정답·문항별 배점을 먼저 확인해 주세요.'}</p>`;
+ s.body.innerHTML=`<p class="omr-kicker">${s.photoDerived?'CHECK YOUR MARKS':'MARK YOUR ANSWERS'}</p><h1>${s.photoDerived?'읽은 답을 확인해 주세요.':'답안지의 답란을 눌러 주세요.'}</h1>${info()}<div class="omr-input-tools"><label>문항 <select id="omrQuestion">${questions.map(q=>`<option value="${q.n}">${q.n}번${s.flags.has(q.n)?' · 확인 필요':''}</option>`).join('')}</select></label><button id="omrWhole">전체 양식</button><button id="omrKey">정답·배점</button></div><div class="omr-progress"><span>${done}/${s.form.count}문항 입력</span><span id="omrPending">${s.flags.size?'확인 '+s.flags.size+'개 남음':'답란을 다시 누르면 지웁니다'}</span></div><div class="omr-sheet-scroll"><div class="omr-sheet"><img src="${s.sheetForm.image}" alt="${escape(s.form.area)} 공개 답안지의 마킹 입력 영역">${s.sheetForm.manual?`<div class="omr-paper-heading omr-paper-${s.form.id}"><strong>${escape(F.heading(s.meta))} 답안지</strong><div><b>${['','①','②','③','④','⑤'][s.form.period]}</b><small>교시</small><span ${s.form.id==='language'||s.form.id==='inquiry'?'data-long="true"':''}>${escape(F.displayArea(s.meta,s.form))}</span></div></div>`:`<div class="omr-caption"><small>기출 직행 · 학습용</small><strong>${escape(F.heading(s.meta))}</strong><b>${s.form.period}교시 ${escape(F.displayArea(s.meta,s.form))}</b><span>${escape(s.meta.subject)}</span></div>`}<div class="omr-marks"></div></div></div><div class="omr-current"><strong id="omrCurrent"></strong><div class="omr-answer-controls" aria-label="현재 문항 답안"></div><button id="omrBlank">미응답으로 확인</button><button id="omrNext">다음 문항 →</button></div><div class="omr-flags">${[...s.flags].map(([n,flag])=>`<button data-jump="${n}">${n}번 ${escape(flag)}</button>`).join('')}</div>${s.photoDerived?'<label class="omr-check"><input type="checkbox" id="omrPhotoCheck">원본 사진과 전체 답안을 비교해 확인했습니다.</label><button id="omrOriginal" class="omr-link">보정한 원본 사진 보기</button>':''}<label class="omr-check" id="omrBlankLabel"><input type="checkbox" id="omrBlankCheck">빈 답란은 미응답으로 채점합니다.</label><div class="omr-input-bottom"><button class="omr-link" id="omrMode">입력 방식 바꾸기</button><a href="${s.sheetForm.source||F.source}" target="_blank" rel="noopener">공개 양식 출처 ↗</a></div><p class="omr-note" role="status">${s.key?'정답표와 문항별 배점이 준비되어 있습니다.':'채점하려면 정답·문항별 배점을 먼저 확인해 주세요.'}</p>`;
  const sheet=s.body.querySelector('.omr-sheet'),marks=s.body.querySelector('.omr-marks');
+ sheet.style.setProperty('--omr-color',s.sheetForm.color);
  for(const q of questions){
   if(q.kind==='choice')for(const spot of q.spots){const b=document.createElement('button');b.type='button';b.className='omr-bubble';b.dataset.question=q.n;b.dataset.value=spot.value;b.setAttribute('aria-label',q.n+'번 답 '+spot.value+'번');b.style.left=(spot.x/s.sheetForm.width*100)+'%';b.style.top=(spot.y/s.sheetForm.height*100)+'%';b.onclick=()=>change(q.n,s.answers[q.n-1]===spot.value?null:spot.value);marks.append(b);}
   else{
-   const b=document.createElement('button');b.type='button';b.className='omr-number';b.dataset.question=q.n;b.setAttribute('aria-label',q.n+'번 숫자 마킹 입력');b.style.left=((q.spots[0].x-16)/s.sheetForm.width*100)+'%';b.style.top=((q.spots[0].y-22)/s.sheetForm.height*100)+'%';b.style.width=(95/s.sheetForm.width*100)+'%';b.style.height=(535/s.sheetForm.height*100)+'%';b.onclick=()=>numberPad(q.n);marks.append(b);
-   for(const spot of q.spots){if(spot.unprinted)continue;const dot=document.createElement('span');dot.className='omr-number-dot';dot.dataset.question=q.n;dot.dataset.digit=spot.digit;dot.dataset.value=spot.value;dot.style.left=spot.x/s.sheetForm.width*100+'%';dot.style.top=spot.y/s.sheetForm.height*100+'%';marks.append(dot);}
+   for(const spot of q.spots){
+    if(spot.unprinted)continue;
+    const b=document.createElement('button');b.type='button';b.className='omr-bubble omr-digit';
+    b.dataset.question=q.n;b.dataset.digit=spot.digit;b.dataset.value=spot.value;
+    b.setAttribute('aria-label',q.n+'번 '+places[spot.digit]+'의 자리 '+spot.value);
+    b.style.left=spot.x/s.sheetForm.width*100+'%';b.style.top=spot.y/s.sheetForm.height*100+'%';
+    b.onclick=()=>markDigit(q.n,spot.digit,spot.value,b);marks.append(b);
+   }
   }
  }
  const choose=s.body.querySelector('#omrQuestion');choose.value=s.active;choose.onchange=e=>focusQuestion(+e.target.value);
@@ -212,27 +240,37 @@ function updateCurrent(){
  const s=current,node=s.body.querySelector('#omrCurrent');if(!node)return;const q=F.questions(s.sheetForm,s.slot)[s.active-1],answer=s.answers[s.active-1];
  node.textContent=s.active+'번 · '+(s.flags.get(s.active)||(answer===null?'미응답':answer+(q.kind==='number'?' → 숫자 답':'번 선택')));
  s.body.querySelector('#omrQuestion').value=s.active;
- const controls=s.body.querySelector('.omr-answer-controls');controls.replaceChildren();
- for(const value of q.kind==='choice'?[1,2,3,4,5]:['숫자 입력']){
+ const controls=s.body.querySelector('.omr-answer-controls');controls.classList.toggle('omr-numeric-controls',q.kind==='number');controls.replaceChildren();
+ for(const value of q.kind==='choice'?[1,2,3,4,5]:['숫자 답란 확대']){
   const b=document.createElement('button');b.type='button';b.textContent=value;b.dataset.answer=value;
-  b.setAttribute('aria-label',s.active+'번 '+(q.kind==='choice'?'답 '+value+'번':'숫자 답 입력'));
+  b.setAttribute('aria-label',s.active+'번 '+(q.kind==='choice'?'답 '+value+'번':'숫자 답란 확대'));
   if(q.kind==='choice')b.setAttribute('aria-pressed',String(value===answer));
   b.onclick=()=>{const n=s.active;if(q.kind==='number')numberPad(n);else{change(n,answer===value?null:value);s.body.querySelector('.omr-answer-controls [data-answer="'+value+'"]').focus({preventScroll:true});}};
   controls.append(b);
  }
 }
 function change(n,value){
- const s=current;s.answers[n-1]=value;s.flags.delete(n);s.active=n;s.photoChecked=false;s.blankChecked=false;saveDraft();updateInput();
- const b=s.body.querySelector('.omr-bubble[data-question="'+n+'"][data-value="'+value+'"]');b?.focus({preventScroll:true});live(n+'번 '+(value===null?'미응답으로 확인했습니다':value+' 답을 입력했습니다'));
+ const s=current;s.answers[n-1]=value;if(F.questions(s.form,s.slot)[n-1].kind==='number')s.numberMarks[n]=digitsOf(value);s.flags.delete(n);s.active=n;s.photoChecked=false;s.blankChecked=false;saveDraft();updateInput();
+ const b=s.body.querySelector('.omr-bubble:not(.omr-digit)[data-question="'+n+'"][data-value="'+value+'"]');b?.focus({preventScroll:true});live(n+'번 '+(value===null?'미응답으로 확인했습니다':value+' 답을 입력했습니다'));
+}
+function markDigit(n,digit,value,button){
+ const s=current,digits=s.numberMarks[n];digits[digit]=digits[digit]===value?null:value;
+ const got=numberAnswer(digits);s.answers[n-1]=got.value;s.flags.delete(n);
+ if(got.partial)s.flags.set(n,'숫자 마킹 미완성');
+ s.active=n;s.photoChecked=false;s.blankChecked=false;saveDraft();updateInput();button.focus({preventScroll:true});
+ live(n+'번 '+places[digit]+'의 자리 '+(digits[digit]===null?'비움':digits[digit])+(got.partial?' · 나머지 자릿수를 확인해 주세요':''));
 }
 function updateInput(){
  const s=current;
- s.body.querySelectorAll('.omr-bubble').forEach(b=>{const chosen=s.answers[+b.dataset.question-1]===+b.dataset.value;b.setAttribute('aria-pressed',chosen);});
- s.body.querySelectorAll('.omr-number-dot').forEach(dot=>{const value=s.answers[+dot.dataset.question-1],digits=value===null?null:String(value).padStart(3,'0');dot.classList.toggle('marked',digits!==null&&+digits[+dot.dataset.digit]===+dot.dataset.value);});
- s.body.querySelectorAll('.omr-number').forEach(b=>b.setAttribute('aria-label',b.dataset.question+'번 숫자 답 '+(s.answers[+b.dataset.question-1]??'미응답')+' 수정'));
+ s.body.querySelectorAll('.omr-bubble').forEach(b=>{
+  const n=+b.dataset.question,value=+b.dataset.value;
+  const chosen=b.classList.contains('omr-digit')?s.numberMarks[n]?.[+b.dataset.digit]===value:s.answers[n-1]===value;
+  b.setAttribute('aria-pressed',String(chosen));
+ });
  s.body.querySelector('.omr-progress span').textContent=s.answers.filter(v=>v!==null).length+'/'+s.form.count+'문항 입력';
  s.body.querySelector('#omrPending').textContent=s.flags.size?'확인 '+s.flags.size+'개 남음':'답란을 다시 누르면 지웁니다';
- s.body.querySelectorAll('.omr-flags [data-jump]').forEach(b=>{if(!s.flags.has(+b.dataset.jump))b.remove();});
+ const flags=s.body.querySelector('.omr-flags');flags.replaceChildren();
+ for(const [n,flag] of s.flags){const b=document.createElement('button');b.type='button';b.textContent=n+'번 '+flag;b.onclick=()=>focusQuestion(n);flags.append(b);}
  const photo=s.body.querySelector('#omrPhotoCheck');if(photo)photo.checked=s.photoChecked;
  const blank=s.body.querySelector('#omrBlankCheck');blank.checked=s.blankChecked;s.body.querySelector('#omrBlankLabel').hidden=!s.answers.includes(null);
  updateCurrent();updateFooter();
@@ -245,15 +283,16 @@ function updateFooter(){
  primary(blocked?'답안 확인 후 채점하기':'채점 결과 보기',()=>move('result'),blocked);
 }
 function numberPad(n){
- const s=current,old=s.answers[n-1],digits=old===null?[null,null,null]:String(old).padStart(3,'0').split('').map(Number),dialog=document.createElement('dialog');dialog.className='omr-number-pad';
- dialog.innerHTML=`<header><h2>${n}번 숫자 답</h2><button type="button" aria-label="숫자 입력 닫기">✕</button></header><p>자릿수별로 눌러 입력합니다. 빈칸과 0은 다릅니다.</p><div class="omr-digit-grid">${['백','십','일'].map((name,d)=>`<div><strong>${name}</strong>${Array.from({length:10},(_,v)=>`<button type="button" data-digit="${d}" data-value="${v}" aria-label="${name}의 자리 ${v}">${v}</button>`).join('')}<button type="button" data-digit="${d}" data-empty="true" aria-label="${name}의 자리 비우기">비움</button></div>`).join('')}</div><p class="omr-number-result" role="status"></p><button type="button" class="omr-primary" id="omrNumberDone">답안에 반영</button>`;
- function refresh(){dialog.querySelectorAll('[data-digit]').forEach(b=>b.setAttribute('aria-pressed',digits[+b.dataset.digit]===(b.dataset.empty?null:+b.dataset.value)));dialog.querySelector('.omr-number-result').textContent=digits.map(v=>v===null?'—':v).join(' · ');dialog.querySelector('#omrNumberDone').disabled=digits[2]===null||digits[0]!==null&&digits[1]===null;}
- dialog.querySelector('header button').onclick=()=>dialog.close();dialog.querySelectorAll('[data-digit]').forEach(b=>b.onclick=()=>{digits[+b.dataset.digit]=b.dataset.empty?null:+b.dataset.value;refresh();});dialog.querySelector('#omrNumberDone').onclick=()=>{const v=(digits[0]||0)*100+(digits[1]||0)*10+digits[2];dialog.close();change(n,v);};dialog.addEventListener('close',()=>{dialog.remove();s.body.querySelector('.omr-number[data-question="'+n+'"]')?.focus({preventScroll:true});});s.dialog.append(dialog);dialog.showModal();refresh();
+ const s=current,digits=[...s.numberMarks[n]],dialog=document.createElement('dialog');dialog.className='omr-number-pad';
+ dialog.innerHTML=`<header><h2>${n}번 숫자 답</h2><button type="button" aria-label="숫자 입력 닫기">✕</button></header><p>자릿수별로 눌러 입력합니다. 빈칸과 0은 다릅니다.</p><div class="omr-digit-grid">${places.map((name,d)=>`<div><strong>${name}</strong>${Array.from({length:10},(_,v)=>`<button type="button" data-digit="${d}" data-value="${v}" ${d===0&&v===0&&s.sheetForm.manual?'disabled':''} aria-label="${name}의 자리 ${v}">${v}</button>`).join('')}<button type="button" data-digit="${d}" data-empty="true" aria-label="${name}의 자리 비우기">비움</button></div>`).join('')}</div><p class="omr-number-result" role="status"></p><button type="button" class="omr-primary" id="omrNumberDone">답안에 반영</button>`;
+ function refresh(){dialog.querySelectorAll('[data-digit]').forEach(b=>b.setAttribute('aria-pressed',digits[+b.dataset.digit]===(b.dataset.empty?null:+b.dataset.value)));dialog.querySelector('.omr-number-result').textContent=digits.map(v=>v===null?'—':v).join(' · ');dialog.querySelector('#omrNumberDone').disabled=numberAnswer(digits).partial;}
+ dialog.querySelector('header button').onclick=()=>dialog.close();dialog.querySelectorAll('[data-digit]').forEach(b=>b.onclick=()=>{const d=+b.dataset.digit,v=b.dataset.empty?null:+b.dataset.value;digits[d]=digits[d]===v?null:v;refresh();});dialog.querySelector('#omrNumberDone').onclick=()=>{const v=numberAnswer(digits).value;dialog.close();change(n,v);s.numberMarks[n]=[...digits];saveDraft();updateInput();};dialog.addEventListener('close',()=>{dialog.remove();s.body.querySelector('.omr-digit[data-question="'+n+'"][data-digit="2"]')?.focus({preventScroll:true});});s.dialog.append(dialog);dialog.showModal();refresh();
 }
 function keyEditor(){
- const s=current;
- s.body.innerHTML=`<p class="omr-kicker">ANSWER KEY</p><h1>정답과 배점을 확인합니다.</h1>${info()}<p>${s.key?escape(s.key.source||'직접 확인한 정답표'):'이 회차에는 확인된 정답표가 없습니다. 정답지와 문제지의 배점을 보고 입력해 주세요.'}</p><div class="omr-input-bottom">${s.meta.answerURL?`<a href="${escape(s.meta.answerURL)}" target="_blank" rel="noopener">정답지 열기 ↗</a>`:''}${s.meta.problemURL?`<a href="${escape(s.meta.problemURL)}" target="_blank" rel="noopener">문제지 배점 확인 ↗</a>`:''}</div><form id="omrKeyForm"><label class="omr-field">정답 · 문항 순서대로<textarea id="omrKeyAnswers" rows="5" inputmode="numeric" aria-label="문항별 정답" placeholder="문항 순서대로 공백 또는 쉼표로 구분"></textarea></label><label class="omr-field">문항별 배점 · 합계 ${s.form.maximum}점<textarea id="omrKeyPoints" rows="5" inputmode="numeric" aria-label="문항별 배점" placeholder="문제지에 표시된 정수 배점"></textarea></label><label class="omr-check"><input type="checkbox" id="omrKeyCheck">${escape(s.meta.subject)}의 시험명·홀짝형·선택과목과 정답·배점이 일치합니다.</label><p class="omr-note" role="alert"></p></form><button id="omrKeyBack" class="omr-link">답안 입력으로 돌아가기</button>`;
- if(s.key){s.body.querySelector('#omrKeyAnswers').value=s.key.answers.join(' ');s.body.querySelector('#omrKeyPoints').value=s.key.points.join(' ');}
+ const s=current,knownPoints=F.pointsFor(s.meta,s.form);
+ s.body.innerHTML=`<p class="omr-kicker">ANSWER KEY</p><h1>정답과 배점을 확인합니다.</h1>${info()}<p>${s.key?escape(s.key.source||'직접 확인한 정답표'):'이 회차에는 확인된 정답표가 없습니다. 정답지와 문제지의 배점을 보고 입력해 주세요.'}</p><div class="omr-input-bottom">${s.meta.answerURL?`<a href="${escape(s.meta.answerURL)}" target="_blank" rel="noopener">정답지 열기 ↗</a>`:''}${s.meta.problemURL?`<a href="${escape(s.meta.problemURL)}" target="_blank" rel="noopener">문제지 배점 확인 ↗</a>`:''}</div>${knownPoints?`<p class="omr-points-source">${escape(knownPoints.source)}</p>`:''}<form id="omrKeyForm"><label class="omr-field">정답 · 문항 순서대로<textarea id="omrKeyAnswers" rows="5" inputmode="numeric" aria-label="문항별 정답" placeholder="문항 순서대로 공백 또는 쉼표로 구분"></textarea></label><label class="omr-field">문항별 배점 · 합계 ${s.form.maximum}점<textarea id="omrKeyPoints" rows="5" inputmode="numeric" aria-label="문항별 배점" placeholder="문제지에 표시된 정수 배점"></textarea></label><label class="omr-check"><input type="checkbox" id="omrKeyCheck">${escape(s.meta.subject)}의 시험명·홀짝형·선택과목과 정답·배점이 일치합니다.</label><p class="omr-note" role="alert"></p></form><button id="omrKeyBack" class="omr-link">답안 입력으로 돌아가기</button>`;
+ if(s.key)s.body.querySelector('#omrKeyAnswers').value=s.key.answers.join(' ');
+ if(s.key||knownPoints)s.body.querySelector('#omrKeyPoints').value=(s.key?.points||knownPoints.points).join(' ');
  s.body.querySelector('#omrKeyBack').onclick=()=>move('input');
  function parse(id){const raw=s.body.querySelector(id).value.trim();if(raw.length>10000||!/^\d+(?:[\s,]+\d+)*$/.test(raw))return [];return raw.split(/[\s,]+/).map(Number);}
  primary('확인한 정답표 적용',()=>{

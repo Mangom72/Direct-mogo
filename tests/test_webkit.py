@@ -59,6 +59,19 @@ with sync_playwright() as pw:
     page.locator(".omr-close").click()
     assert page.evaluate("document.body.style.overflow") == ""
 
+    page.evaluate("GijulOMR.open({grade:'D300',subjectId:'140120',subject:'미적분',group:'수학',date:'20260902',title:'9월 모평(평가원)'},{demo:true})")
+    page.click('#omrManual'); page.select_option('#omrQuestion','16')
+    page.wait_for_function("()=>document.querySelector('.omr-sheet img').naturalWidth===3420")
+    page.locator('.omr-digit[data-question="16"][data-digit="2"][data-value="0"]').click()
+    assert '16번 · 0' in page.locator('#omrCurrent').inner_text()
+    page.locator('.omr-digit[data-question="16"][data-digit="0"][data-value="1"]').click()
+    assert '미완성' in page.locator('#omrCurrent').inner_text()
+    page.locator('.omr-digit[data-question="16"][data-digit="1"][data-value="0"]').click()
+    assert '16번 · 100' in page.locator('#omrCurrent').inner_text()
+    page.click('#omrKey')
+    assert sum(map(int,page.locator('#omrKeyPoints').input_value().split()))==100
+    page.locator('.omr-close').click()
+
     print("WebKit gzip:", supported, "| 목록:", before, "→", after,
           "| 저장소:", kept, "| 오류:", errors or "없음")
     browser.close()

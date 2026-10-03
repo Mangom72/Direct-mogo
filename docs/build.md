@@ -24,12 +24,12 @@
 | `tools/check_fresh.py` | EBSi가 새 회차를 아직 올리고 있는지 — 수능 하나로 봅니다 |
 | `tools/check_csp.py` | 인라인 스크립트 해시가 CSP와 맞는지 봅니다 |
 | `tools/publish_apk.py` | 빌드된 릴리스 APK를 읽어 `app/latest.json`을 씁니다 |
-| `tests/` | 회귀 시험 40종 ([tests/README.md](../tests/README.md)) |
+| `tests/` | 회귀 시험 42종 ([tests/README.md](../tests/README.md)) |
 | `android/` | WebView 앱 ([docs/android.md](android.md)) |
 | — | 무엇이 웹이고 무엇이 앱인지: [docs/split.md](split.md) |
 | — | 그것을 iOS로 옮길 수 있는지: [docs/ios.md](ios.md) |
 | `.github/workflows/refresh-data.yml` | 매일 15시 23분·23시 23분(KST) 자료 갱신 |
-| `.github/workflows/tests.yml` | 화면이나 워크플로를 고쳐 main에 밀면 40종을 돌립니다 |
+| `.github/workflows/tests.yml` | 화면이나 워크플로를 고쳐 main에 밀면 42종을 돌립니다 |
 | `.github/workflows/android-checks.yml` | Android PR에서 단위 시험·lint·디버그 빌드를 확인합니다 |
 | `.github/workflows/android.yml` | APK 빌드·서명·릴리스 (main 푸시·수동 실행) |
 
@@ -47,7 +47,7 @@ PDF는 EBSi가 `Access-Control-Allow-Origin: *`를 주기 때문에 페이지가
 
 | 바꾼 것 | 도는 것 | 하는 일 |
 |---|---|---|
-| `index.html`·`sw.js`·`sync/`·`s/`·`fonts/`·`tools/`·`tests/`·`requirements/`·`.github/workflows/` | `tests.yml` | 회귀 시험 40종. 실패하면 그때의 화면 그림을 artifact로 남깁니다 |
+| `index.html`·`sw.js`·`sync/`·`s/`·`fonts/`·`tools/`·`tests/`·`requirements/`·`.github/workflows/` | `tests.yml` | 회귀 시험 42종. 실패하면 그때의 화면 그림을 artifact로 남깁니다 |
 | Android 관련 PR | `android-checks.yml` | 글꼴 규칙·단위 시험·lint·디버그 APK를 합치기 전에 확인합니다 |
 | `android/**` | `android.yml` | 서명 빌드 → **지문 확인** → 릴리스 생성 → APK 첨부 → 글꼴 다시 만들기 → `app/latest.json`·`fonts/` 커밋 |
 | (매일 15:23·23:23 KST) | `refresh-data.yml` | EBSi에서 새 회차 수집 → JSON·과목 페이지·글꼴 → `test_fields`·`test_refresh`·`test_stable` → 커밋 → 수능 날짜 대조 → 예약 유지 |
@@ -119,12 +119,12 @@ python3 tools/build_fonts.py              # → fonts/
 ## 고치고 나면
 
 ```bash
-python3 tests/run.py        # 회귀 시험 40종, 3분 남짓
+python3 tests/run.py        # 회귀 시험 42종, 3분 남짓
 ```
 
 무엇을 지키는 시험인지는 [tests/README.md](../tests/README.md)에 있습니다.
 `index.html`·`sw.js`·`sync/`·`manifest.webmanifest`·`s/`·`fonts/`·`tools/`·
-`tests/`·`requirements/`·`.github/workflows/`가 바뀐 채로 main에 올라가면 같은 40종이
+`tests/`·`requirements/`·`.github/workflows/`가 바뀐 채로 main에 올라가면 같은 42종이
 CI에서도 한 번 더 돕니다. 실패하면 그때의 화면 그림이 artifact로 남습니다.
 
 기존 기록의 **있는 값은 고치지 않습니다.** 새 시행일을 덧붙이고, 이미 있는 회차는
@@ -337,10 +337,11 @@ Firebase 인증 상태는 SDK가 기기에 유지합니다. SDK와 계정 동기
 시크릿 모드나 저장소 차단에서는 읽기도 쓰기도 예외가 납니다. 전부 `try`로 감싸
 두었고, 실패해도 화면은 그대로 돕니다 — 그 사람에게는 기억만 없을 뿐입니다.
 
-## 종이 OMR 기능 검토·디자인 시안
+## 답안 입력·종이 OMR 촬영·채점
 
-[종이 OMR 촬영·채점 검토](omr-feasibility.md)와
-[동작 시안](design/omr/overview.html)은 실제 답지 조사와 자체 합성 이미지 실험을
-바탕으로 작성했다. 아직 앱에 촬영 인식·자동 채점 기능을 추가한 것은 아니다.
-`docs/design/omr/`는 예시 데이터만 사용하는 별도 정적 페이지이며 실제 풀이 기록에
-연결하지 않는다. 연구용 Python 의존성도 `requirements/omr-probe.txt`로 분리했다.
+현재 앱·웹은 회차의 기록 화면에서 직접 마킹과 사진 인식 진입을 제공한다.
+[`omr/`](../omr/) 모듈, 고해상도 공식 양식·문항별 배점 등록과 실제 인식 범위는
+[구현 문서](omr.md)를 기준으로 본다. [체험 화면](design/omr/index.html)은 같은
+모듈을 사용하지만 실제 풀이 기록을 저장하지 않는다. 초기 [가능성 검토](omr-feasibility.md)는
+조사 당시 자료이며 현재 구현 여부를 나타내지 않는다. 연구용 Python 의존성은
+`requirements/omr-probe.txt`로 분리하며 앱 실행에 Python이나 새 번들러를 요구하지 않는다.
