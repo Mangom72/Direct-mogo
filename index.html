@@ -97,7 +97,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' https://apis.google.com/js/api.js https://apis.google.com/_/scs/ 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-zrZ/ZKsD48diBRgvdC4EcK+BqkUp27fbzVBfnS5Mfxg=';
+  script-src 'self' https://apis.google.com/js/api.js https://apis.google.com/_/scs/ 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-LEvWxhbJCUS9BcYvmL80DRJ7RI66MKhd48gfkmckqBE=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -3197,6 +3197,48 @@ window.addEventListener("gijul-sync-state",()=>{
 
 window.gijulAutoBackup = () => { if(!sheet.hidden && sheetNm.textContent === "백업") openBackup(null); };
 
+async function openSyncHistory(opener){
+  lastFocus=opener || lastFocus;vaultMode=false;sheetRow=null;sheetAll.hidden=true;
+  sheetNm.textContent="동기화 변경 이력";sheetSb.textContent="이 기기가 읽은 최근 200개 항목";
+  sheetNote.textContent="같은 항목의 동시 수정은 하나의 값으로 합칩니다. 아래에서 이전 값을 새 변경으로 복원할 수 있습니다. 이력은 기록 순서이며 실제 수정 시각순이 아닙니다.";
+  sheetList.innerHTML="";const box=document.createElement("div");sheetList.appendChild(box);
+  sheet.hidden=false;syncModals();sheetX.focus();
+  const live=()=>!sheet.hidden && sheetList.firstChild===box;
+  try{
+    const history=await GijulSync.history();if(!live()) return;
+    if(!history.length){box.textContent="아직 읽은 변경 이력이 없습니다.";return;}
+    const current=gijulSyncSnapshot(),names={solved:"푼 날",time:"풀이시간",score:"점수",wrong:"틀린 번호",favs:"내 과목",theme:"테마"};
+    const subject=(g,s)=>(GROUPS[g] || []).flatMap(([,items])=>items).find(f=>f[1]===s)?.[0] || s;
+    const describe=e=>{
+      const value=e.value;if(value===null) return "기록 삭제";
+      if(e.slot==="score") return value+"점";
+      if(e.slot==="wrong") return value.length?value.join(", "):"없음";
+      if(e.slot==="solved") return value.slice(0,4)+"."+value.slice(4,6)+"."+value.slice(6);
+      if(e.slot==="time") return Math.floor(value.spent/60)+"분 "+Math.floor(value.spent%60)+"초";
+      if(e.slot==="theme") return {auto:"자동",light:"밝게",dark:"어둡게"}[value];
+      return value.map(f=>subject(f.g,f.s)).join(", ") || "없음";
+    };
+    for(const entry of history){
+      const row=document.createElement("div");row.className="sfile";
+      const info=document.createElement("div");info.className="info";
+      const title=document.createElement("div");title.className="k";
+      const [g,s,year,...round]=entry.key.split("/");
+      title.textContent=names[entry.slot]+(entry.key==="settings"?"":" · "+year.slice(0,4)+" "+round.join("/")+" "+subject(g,s));
+      const detail=document.createElement("div");detail.className="x";detail.textContent=describe(entry);info.append(title,detail);
+      const button=document.createElement("button");button.type="button";button.className="go";
+      const equal=JSON.stringify(current[JSON.stringify([entry.slot,entry.key])] ?? null)===JSON.stringify(entry.value);
+      button.textContent=equal?"현재 값":"복원";button.disabled=equal;
+      button.onclick=async()=>{
+        if(button.dataset.confirm!=="yes"){button.dataset.confirm="yes";button.textContent="복원 확인";button.dataset.state="confirm";return;}
+        button.disabled=true;
+        try{await GijulSync.restore(entry);if(live()) void openSyncHistory(opener);}
+        catch(e){if(live()){sheetNote.textContent=e.message;button.disabled=false;}}
+      };
+      row.append(info,button);box.appendChild(row);
+    }
+  }catch(e){if(live()) sheetNote.textContent="이력을 읽지 못했습니다: "+e.message;}
+}
+
 function openBackup(opener){
   vaultMode = false;
   sheetRow = null;
@@ -3234,6 +3276,7 @@ function openBackup(opener){
     button.parentElement.querySelector(".x").setAttribute("aria-live","polite");
     const disconnect=row("계정 연결","연결을 끊어도 이 기기의 기록과 전송 대기는 보존합니다","연결 끊기",()=>{void GijulSync.logout();});
     disconnect.id="cloudSyncDisconnect";disconnect.parentElement.hidden=!cloud.on;
+    row("동기화 변경 이력","동시 수정으로 바뀐 값도 최근 이력에서 확인하고 복원합니다","이력 보기",button=>{void openSyncHistory(button);});
     window.dispatchEvent(new Event("gijul-sync-state"));
   }
 

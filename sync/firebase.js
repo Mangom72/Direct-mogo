@@ -29,6 +29,7 @@
     };
     return {
       current:()=>new Promise(resolve=>{const stop=auth.onAuthStateChanged(user=>{stop();resolve(user);});}),
+      watch:callback=>auth.onAuthStateChanged(callback),
       login:authenticate,
       logout:async()=>{await auth.signOut();if(root.GijulNative&&GijulNative.clearGoogleSignIn) GijulNative.clearGoogleSignIn();},
       listen(uid,cursor,onData,onError){

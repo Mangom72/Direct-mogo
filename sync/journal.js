@@ -3,6 +3,8 @@
   "use strict";
   const same = (a,b)=>JSON.stringify(a)===JSON.stringify(b);
   const newer = (a,b)=>!b || a.clock>b.clock || (a.clock===b.clock && a.id>b.id);
+  const subjectId=f=>JSON.stringify([f.g,f.s]);
+  const subjects=xs=>Array.isArray(xs) && xs.length<=256 && xs.every(f=>f&&typeof f.g==="string"&&typeof f.s==="string"&&f.g.length<=512&&f.s.length<=512);
   function valid(op){
     if(!op || op.v!==1 || !/^[a-f0-9-]{36}$/.test(op.id) || !Number.isSafeInteger(op.clock) || op.clock<1
        || typeof op.payload!=="string" || new TextEncoder().encode(op.payload).length>65536) throw new Error("Invalid sync event");
@@ -12,22 +14,59 @@
       if(!e || !["solved","time","score","wrong","favs","theme"].includes(e.slot)
          || typeof e.key!=="string" || e.key.length>512 || ["__proto__","constructor","prototype"].includes(e.key)) throw new Error("Invalid sync key");
       if(e.slot!=="favs" && e.slot!=="theme" && e.key.split("/").length<4) throw new Error("Invalid exam key");
+      if(e.delta!==undefined && (e.slot!=="favs" || e.key!=="settings" || !e.delta || !subjects(e.delta.add) || !subjects(e.delta.remove) || !subjects(e.delta.order) || !subjects(e.value))) throw new Error("Invalid subject changes");
       if(e.value===null) continue;
       if(e.slot==="solved" && !/^\d{8}$/.test(e.value)) throw new Error("Invalid solved date");
       if(e.slot==="score" && (!Number.isInteger(e.value) || e.value<0 || e.value>100)) throw new Error("Invalid score");
       if(e.slot==="wrong" && (!Array.isArray(e.value) || e.value.length>999 || !e.value.every(n=>Number.isInteger(n)&&n>0&&n<=999))) throw new Error("Invalid wrong numbers");
       if(e.slot==="time" && (!e.value || !Number.isFinite(e.value.spent) || e.value.spent<=0 || !Number.isFinite(e.value.limit) || e.value.limit<0)) throw new Error("Invalid time");
       if(e.slot==="theme" && !["auto","light","dark"].includes(e.value)) throw new Error("Invalid theme");
-      if(e.slot==="favs" && (!Array.isArray(e.value) || e.value.length>256 || !e.value.every(f=>f&&typeof f.g==="string"&&typeof f.s==="string"))) throw new Error("Invalid subjects");
+      if(e.slot==="favs" && !subjects(e.value)) throw new Error("Invalid subjects");
     }
     return entries;
+  }
+  function foldSubjects(state,k,e,op){
+    if(!state.subjects){
+      const old=state.cells[k];state.subjects={members:{},reset:old || null,order:old?{...old,value:old.value || []}:null};
+      for(const f of old?.value || []) state.subjects.members[subjectId(f)]={...old,value:f};
+    }
+    const s=state.subjects,stamp={clock:op.clock,id:op.id},put=(f,value)=>{
+      const key=subjectId(f);
+      if(newer(stamp,s.members[key])) s.members[key]={...stamp,value};
+    };
+    if(e.delta){
+      if(newer(stamp,s.reset)){
+        for(const f of e.delta.add) put(f,f);
+        for(const f of e.delta.remove) put(f,null);
+      }
+      if(newer(stamp,s.order)) s.order={...stamp,value:e.delta.order};
+    }else if(newer(stamp,s.reset)){
+      // Old clients send complete lists. Their replacement is a stamped reset,
+      // so an older add received later cannot resurrect a removed subject.
+      s.reset=stamp;const included=new Map((e.value || []).map(f=>[subjectId(f),f]));
+      for(const key of new Set([...Object.keys(s.members),...included.keys()])){
+        const [g,subject]=JSON.parse(key);put({g,s:subject},included.get(key) || null);
+      }
+      if(newer(stamp,s.order)) s.order={...stamp,value:e.value || []};
+    }
+    const rank=new Map((s.order?.value || []).map((f,i)=>[subjectId(f),i]));
+    const value=Object.entries(s.members).filter(([,m])=>m.value!==null).sort(([a],[b])=>(rank.get(a)??Infinity)-(rank.get(b)??Infinity) || (a<b?-1:a>b?1:0)).map(([,m])=>m.value);
+    const old=state.cells[k];state.cells[k]={...(newer(op,old)?stamp:old),value};
   }
   function fold(state,op){
     const entries=valid(op); state.clock=Math.max(state.clock,op.clock);
     for(const e of entries){
       const k=JSON.stringify([e.slot,e.key]),old=state.cells[k];
-      if(newer(op,old)) state.cells[k]={clock:op.clock,id:op.id,value:e.value};
+      const history=state.history || (state.history=[]),remember=h=>{
+        if(!history.some(v=>v.id===h.id && v.slot===h.slot && v.key===h.key)) history.push(h);
+      };
+      if(old) remember({clock:old.clock,id:old.id,slot:e.slot,key:e.key,value:old.value});
+      if(e.slot==="favs" && e.key==="settings") foldSubjects(state,k,e,op);
+      else if(newer(op,old)) state.cells[k]={clock:op.clock,id:op.id,value:e.value};
+      remember({clock:op.clock,id:op.id,slot:e.slot,key:e.key,value:e.value});
     }
+    state.history.sort((a,b)=>b.clock-a.clock || (a.id<b.id?1:a.id>b.id?-1:0));
+    state.history=state.history.slice(0,200);
   }
   function cells(state){
     const out={};
@@ -55,14 +94,22 @@
     }
     bind(uid){return this.change(s=>{if(s.uid && s.uid!==uid) throw new Error("ACCOUNT_MISMATCH");s.uid=uid;return {view:cells(s),pending:Object.keys(s.pending).length};});}
     read(){return this.change(s=>({uid:s.uid,view:cells(s),pending:Object.values(s.pending),cursor:s.cursor || null}));}
-    capture(before,after,seed=false,intentId=null){return this.change(s=>{
-      if(intentId && s.receipts && s.receipts[intentId]) return {view:cells(s),pending:Object.values(s.pending)};
+    history(){return this.change(s=>s.history || []);}
+    capture(before,after,seed=false,intentId=null,isLive=()=>true){return this.change(s=>{
+      // Check inside the serialized transaction: another tab may have consumed
+      // this intent and released its receipt while this transaction was waiting.
+      if(!isLive() || (intentId && s.receipts && s.receipts[intentId])) return {view:cells(s),pending:Object.values(s.pending)};
       if(!s.uid) throw new Error("No sync account");
       const changes=[];
       for(const k of new Set([...Object.keys(before),...Object.keys(after)])){
         if(same(before[k],after[k])) continue;
         if(seed && k in s.cells) continue; // Tombstones also block old-file resurrection.
-        const [slot,key]=JSON.parse(k);changes.push({slot,key,value:after[k]===undefined?null:after[k]});
+        const [slot,key]=JSON.parse(k),entry={slot,key,value:after[k]===undefined?null:after[k]};
+        if(!seed && slot==="favs" && key==="settings" && Array.isArray(after[k])){
+          const prev=new Map((before[k] || []).map(f=>[subjectId(f),f])),next=new Map(after[k].map(f=>[subjectId(f),f]));
+          entry.delta={add:[...next].filter(([id])=>!prev.has(id)).map(([,f])=>f),remove:[...prev].filter(([id])=>!next.has(id)).map(([,f])=>f),order:after[k]};
+        }
+        changes.push(entry);
       }
       while(changes.length){
         const chunk=[];let bytes=2;

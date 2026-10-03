@@ -5,7 +5,7 @@
 
 웹은 Node 번들러 없이 GitHub Pages의 정적 파일로 제공합니다. 선택적인 Google 계정
 동기화에는 Firebase Authentication/Cloud Firestore를 사용합니다. 기준은 2026-10-03,
-앱 10.1(versionCode 92)입니다. 실제 설정이 바뀌면 날짜와 함께 다시 대조합니다.
+앱 10.4(versionCode 95)입니다. 실제 설정이 바뀌면 날짜와 함께 다시 대조합니다.
 
 | 파일 | 역할 |
 |---|---|

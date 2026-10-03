@@ -46,7 +46,40 @@ with sync_playwright() as pw:
       const lots={};for(let n=0;n<300;n++)lots[JSON.stringify(['wrong',k+n])]=Array.from({length:999},(_,i)=>i+1);
       const large=await c.capture({},lots);
       if(!large.pending.every(op=>op.payload.length<=65536) || Object.keys(large.view).length!==300) throw Error('large import lost entries');
-      return ['restart/outbox','server ACK','independent fields','delete markers','concurrent convergence','account isolation','atomic invalid rollback','bounded import','invalid quarantine/checkpoint'];
+      // A tab that loaded an intent before another tab consumed it cannot replay it.
+      const shared=await new Journal('sync-test-shared').open(),peer=await new Journal('sync-test-shared').open();await shared.bind('owner');
+      const intentId=crypto.randomUUID(),intentKey='test-intent:'+intentId;localStorage.setItem(intentKey,'live');
+      await shared.capture({}, {[score]:40},false,intentId,()=>localStorage.getItem(intentKey)!==null);
+      localStorage.removeItem(intentKey);await shared.releaseReceipt(intentId);
+      await shared.receive([{v:1,id:crypto.randomUUID(),clock:10,payload:JSON.stringify([{slot:'score',key:k,value:90}])}]);
+      await peer.capture({}, {[score]:40},false,intentId,()=>localStorage.getItem(intentKey)!==null);
+      if((await peer.read()).view[score]!==90 || (await peer.read()).pending.length!==1) throw Error('consumed intent replayed from another tab');
+      const fav=JSON.stringify(['favs','settings']),base=[{g:'D300',s:'국어'}];
+      const fa=await new Journal('sync-test-favs-a').open(),fb=await new Journal('sync-test-favs-b').open();await fa.bind('owner');await fb.bind('owner');
+      const initial=await fa.capture({}, {[fav]:base},true);await fb.receive(initial.pending);await fa.ackMany(initial.pending.map(o=>o.id));
+      const ax=await fa.capture({[fav]:base},{[fav]:[...base,{g:'D300',s:'수학'}]}),bx=await fb.capture({[fav]:base},{[fav]:[...base,{g:'D300',s:'영어'}]});
+      await fa.receive(bx.pending);await fb.receive(ax.pending);
+      const union=(await fa.read()).view[fav];if(union.length!==3 || JSON.stringify(union)!==JSON.stringify((await fb.read()).view[fav])) throw Error('independent subject additions lost');
+      const removed=await fa.capture({[fav]:union},{[fav]:union.filter(f=>f.s!=='국어')});
+      await fb.receive(removed.pending);await fb.receive(initial.pending);
+      if((await fb.read()).view[fav].some(f=>f.s==='국어')) throw Error('subject removal resurrected by legacy event');
+      // Reordering preserves a concurrently added member, and replay order is immaterial.
+      const ordered=await fa.capture({[fav]:(await fa.read()).view[fav]},{[fav]:[...(await fa.read()).view[fav]].reverse()});
+      const fc=await new Journal('sync-test-favs-shuffled').open();await fc.bind('owner');
+      for(const op of [...initial.pending,...ax.pending,...bx.pending,...removed.pending,...ordered.pending].reverse()) await fc.receive([op]);
+      if(JSON.stringify((await fc.read()).view[fav])!==JSON.stringify((await fa.read()).view[fav])) throw Error('out-of-order subjects did not converge');
+      const events=[...new Map([...initial.pending,...ax.pending,...bx.pending,...removed.pending,...ordered.pending].map(o=>[o.id,o])).values()];
+      const expected=JSON.stringify((await fa.read()).view[fav]);let permutations=0;
+      function replay(prefix,remaining){
+        if(!remaining.length){const state={clock:0,cells:{}};for(const op of prefix)GijulJournal.fold(state,op);if(JSON.stringify(GijulJournal.cells(state)[fav])!==expected)throw Error('subject replay permutation diverged');permutations++;return;}
+        remaining.forEach((op,i)=>replay([...prefix,op],remaining.filter((_,n)=>n!==i)));
+      }
+      replay([],events);if(permutations!==120)throw Error('subject replay coverage changed');
+      const legacy={v:1,id:crypto.randomUUID(),clock:20,payload:JSON.stringify([{slot:'favs',key:'settings',value:base}])};
+      await fc.receive([legacy]);await fc.receive(events);
+      if(JSON.stringify((await fc.read()).view[fav])!==JSON.stringify(base))throw Error('old client replacement resurrected prior deltas');
+      if(!(await reopened.history()).some(h=>h.slot==='score' && h.value===42)) throw Error('overwritten value missing from recovery history');
+      return ['restart/outbox','server ACK','independent fields','delete markers','concurrent convergence','account isolation','atomic invalid rollback','bounded import','invalid quarantine/checkpoint','cross-tab intent deduplication','subject merge/removal/order','value recovery history'];
     }''')
     print('Journal:', ', '.join(report))
     page.evaluate('''async()=>{
@@ -70,10 +103,10 @@ with sync_playwright() as pw:
     ctx=browser.new_context(service_workers='block')
     ctx.route('**/sync/config.json',lambda r:r.fulfill(content_type='application/json',body=json.dumps({'enabled':True,'firebase':{'projectId':'test'},'googleWebClientId':'test'})))
     ctx.route('**/sync/firebase.js',lambda r:r.fulfill(content_type='application/javascript',body='''
-      window.__uploads=[];window.__remote=[];window.__accept=false;
-      window.GijulFirebase=async()=>({
-        current:()=>new Promise(resolve=>window.__initialAuth=resolve),login:async()=>({uid:'test-owner'}),logout:async()=>{},
-        listen:(uid,cursor,data,error)=>{window.__deliver=data;setTimeout(()=>data(__remote),0);return()=>{};},
+      window.__uploads=[];window.__remote=[];window.__accept=false;window.__listeners=[];window.__loginCount=0;
+      window.GijulFirebase=async()=>window.__adapter=({
+        current:()=>new Promise(resolve=>window.__initialAuth=resolve),watch:callback=>{window.__authWatch=callback;return()=>{};},login:async()=>{__loginCount++;return {uid:'test-owner'};},logout:async()=>{if(window.__holdLogout)await new Promise(r=>window.__finishLogout=r);},
+        listen:(uid,cursor,data,error)=>{window.__deliver=data;__listeners.push(data);setTimeout(()=>data(__remote),0);return()=>{};},
         send:(uid,op)=>{window.__uploads.push(op);return new Promise((resolve,reject)=>{
           window.__finish=()=>{__remote.push(op);resolve();};window.__reject=()=>reject(Error('offline'));
           if(__accept) __finish();
@@ -137,5 +170,84 @@ with sync_playwright() as pw:
     after_clock=pg.evaluate('async()=>{const j=await new GijulJournal.Journal().open();return j.change(s=>s.clock);}')
     assert before_clock==after_clock, 'Committed intent was replayed as a new change after restart'
     print('Controller: late initial auth ignored, retry same UUID, failure retains outbox, remote field merge, signed-out restart, crash intent receipt')
+    # A local edit made during a suspended receive stays visible before any server echo.
+    pg.evaluate('()=>__initialAuth(null)')
+    pg.evaluate('()=>{__accept=true;return GijulSync.login();}')
+    pg.wait_for_function('()=>GijulSync.state().on && GijulSync.state().pending===0')
+    pg.evaluate("""()=>{
+      const receive=GijulJournal.Journal.prototype.receive;
+      GijulJournal.Journal.prototype.receive=async function(ops){
+        GijulJournal.Journal.prototype.receive=receive;
+        await new Promise(r=>window.__releaseReceive=r);return receive.call(this,ops);
+      };
+      const apply=gijulApplySync;window.__appliedScores=[];
+      window.gijulApplySync=view=>{__appliedScores.push(view[JSON.stringify(['score',window.__testKey])]);apply(view);};
+    }""")
+    pg.evaluate('k=>window.__testKey=k',key)
+    pending_remote={**remote,'id':'22222222-2222-4222-8222-222222222222','clock':2000,'payload':json.dumps([{'slot':'score','key':key,'value':50}])}
+    pg.evaluate('op=>{void __deliver([op]);}',pending_remote)
+    pg.wait_for_function('()=>typeof __releaseReceive==="function"')
+    pg.evaluate('k=>{RECORDS[k].score=98;saveRecords();tellSolved();__releaseReceive();}',key)
+    pg.wait_for_function('()=>GijulSync.state().pending===0 && __uploads.some(o=>o.payload.includes("98"))')
+    assert pg.evaluate('k=>RECORDS[k].score',key)==98, 'Receive overwrote an in-flight local edit'
+    assert 50 not in pg.evaluate('()=>__appliedScores'), 'Remote value flashed over the local edit before commit'
+    # Disconnect blocks login and further sends immediately, even before signOut finishes.
+    old_listener=pg.evaluate('()=>__listeners.length-1')
+    pg.evaluate('()=>{__holdLogout=true;void GijulSync.logout();}')
+    pg.wait_for_function('()=>typeof __finishLogout==="function"')
+    count=pg.evaluate('()=>__loginCount')
+    pg.evaluate('()=>GijulSync.login()')
+    assert pg.evaluate('()=>__loginCount')==count and not pg.evaluate('()=>GijulSync.state().on'), 'Login raced with pending logout'
+    pg.evaluate('()=>{__holdLogout=false;__finishLogout();}')
+    pg.wait_for_function('()=>!GijulSync.state().busy')
+    pg.evaluate('()=>GijulSync.login()')
+    pg.wait_for_function('()=>GijulSync.state().on && GijulSync.state().pending===0')
+    stale={**pending_remote,'id':'33333333-3333-4333-8333-333333333333','clock':9999,'payload':json.dumps([{'slot':'score','key':key,'value':1}])}
+    pg.evaluate('a=>{void __listeners[a.index]([a.op]);}',{'index':old_listener,'op':stale})
+    pg.wait_for_timeout(100)
+    assert pg.evaluate('k=>RECORDS[k].score',key)==98, 'Stale same-account listener applied after reconnect'
+    pg.evaluate('()=>__authWatch(null)')
+    assert not pg.evaluate('()=>GijulSync.state().on'), 'External Auth logout left the controller connected'
+    # A second tab observes the durable journal while signed out/offline.
+    peer=ctx.new_page();peer.goto(SITE,wait_until='load');peer.wait_for_selector('.item .chk')
+    peer.wait_for_function('()=>typeof __initialAuth==="function"')
+    peer.evaluate('()=>__initialAuth(null)')
+    pg.evaluate('()=>GijulSync.logout()')
+    pg.evaluate('k=>{RECORDS[k].score=99;saveRecords();tellSolved();}',key)
+    peer.wait_for_function('k=>RECORDS[k]?.score===99',arg=key)
+    peer.evaluate('k=>{RECORDS[k].wrong=[5,8];saveRecords();tellSolved();}',key)
+    pg.wait_for_function('k=>JSON.stringify(RECORDS[k]?.wrong)==="[5,8]"',arg=key)
+    assert pg.evaluate('k=>RECORDS[k].score',key)==99
+    # Choosing a losing value makes a new durable normal event; legacy backups stay intact.
+    pg.evaluate("""async k=>{
+      const entry=(await GijulSync.history()).find(h=>h.key===k && h.slot==='score' && h.value===97);
+      if(!entry) throw Error('missing older score');await GijulSync.restore(entry);
+    }""",key)
+    peer.wait_for_function('k=>RECORDS[k]?.score===97',arg=key)
+    pg.evaluate('()=>closeSheet()')
+    pg.click('#bakBtn');pg.get_by_role('button',name='이력 보기',exact=True).click()
+    pg.wait_for_function('()=>sheetNm.textContent==="동기화 변경 이력" && sheetList.querySelector(".sfile")')
+    assert pg.get_by_role('button',name='복원',exact=True).count()>0
+    pg.get_by_role('button',name='복원',exact=True).first.click()
+    assert pg.get_by_role('button',name='복원 확인',exact=True).count()==1
+    pg.set_viewport_size({'width':300,'height':600})
+    assert pg.evaluate('()=>document.querySelector(".sheet-card").scrollWidth<=document.querySelector(".sheet-card").clientWidth')
+    # Only the in-flight confirmed chunk is ACKed when logout interrupts a large outbox.
+    peer.close()
+    pg.evaluate("""async()=>{
+      const j=await new GijulJournal.Journal().open(),pending=(await j.read()).pending;
+      await j.ackMany(pending.map(o=>o.id));
+      for(let n=0;n<51;n++)await j.capture({}, {[JSON.stringify(['score','D300/158/20260902/chunk-'+n])]:n});
+    }""")
+    pg.evaluate('''()=>{window.__batches=[];__adapter.sendBatch=(uid,ops)=>{__batches.push(ops);return new Promise(resolve=>window.__finishBatch=()=>{__remote.push(...ops);resolve();});};}''')
+    pg.evaluate('()=>{__accept=false;void GijulSync.login();}')
+    pg.wait_for_function('()=>__batches.length===1')
+    pg.evaluate('()=>GijulSync.logout()')
+    pg.evaluate('()=>__finishBatch()')
+    pg.wait_for_timeout(100)
+    assert pg.evaluate('()=>__batches.length')==1, 'Logout allowed further outbox chunks to send'
+    remaining=pg.evaluate('async()=>{const j=await new GijulJournal.Journal().open();return (await j.read()).pending.length;}')
+    assert remaining==1, 'Unsent chunk was acknowledged or confirmed chunk was retained'
+    print('Controller races: edit during receive, logout/login exclusion, stale listener, offline peer refresh, older value restore and confirmation UI')
     browser.close()
 print('전체: 통과')
