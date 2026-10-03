@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<title>기출 직행 · OMR 채점 디자인 시안</title>
+<link rel="stylesheet" href="../../../fonts/fonts.css"><link rel="stylesheet" href="omr.css">
+<script src="omr.js" defer></script>
+</head>
+<body>
+<div class="app">
+<div class="demo-strip"><a href="overview.html">시안 안내</a><span>예시 사진으로 체험합니다</span></div>
+<header class="brand"><a href="overview.html" class="wordmark">기출 직행<span>답안 채점</span></a><button id="theme" class="icon" aria-label="어두운 화면으로 보기">◐</button></header>
+<nav class="steps" aria-label="채점 진행"><button data-stage="capture" aria-current="step"><b>01</b> 촬영</button><button data-stage="review"><b>02</b> 답안 확인</button><button data-stage="result"><b>03</b> 결과</button></nav>
+<main id="main" tabindex="-1"></main>
+<footer id="actions" class="actions"></footer>
+<div id="status" class="sr-only" role="status" aria-live="polite"></div>
+</div>
+</body></html>
