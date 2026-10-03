@@ -1,8 +1,8 @@
 {
-  "versionCode": 94,
-  "versionName": "10.3",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.3/gijul-direct.apk",
-  "size": 4662232,
-  "sha256": "13bf987e84b7863f5f534b2aafd47b5e756ac5fa6836f83ee1884dcad6487262",
-  "notes": "태블릿 전체 화면 OMR과 견본 글자 없는 직접 입력 양식을 반영했습니다."
+  "versionCode": 95,
+  "versionName": "10.4",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.4/gijul-direct.apk",
+  "size": 4662900,
+  "sha256": "cfe452f711d48a14cc7c36a4c653cf6c3dfe4fc870e5906d3d25c2e0f9b6718d",
+  "notes": "동기화 충돌을 줄이고 최근 변경 이력을 복원할 수 있게 했습니다"
 }
