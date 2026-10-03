@@ -14,8 +14,8 @@ from fontTools.pens.svgPathPen import SVGPathPen
 ROOT = Path(__file__).resolve().parents[1]
 FONT_SHA256 = '197d5e1e019faca33a4d55931c7d68b8056f3b97cb862049f5cb8de9efdfb8ce'
 EXAMS = {'csat': '학년도 대학수학능력시험 답안지',
-         'm6': '학년도 대학수학능력시험 6월 모의평가 답안지',
-         'm9': '학년도 대학수학능력시험 9월 모의평가 답안지',
+         'm6': '학년도 대학수학능력시험 6월 모의 평가 답안지',
+         'm9': '학년도 대학수학능력시험 9월 모의 평가 답안지',
          **{f'edu{m}': f'년 {m}월 전국연합학력평가 답안지' for m in (3,4,5,6,7,9,10,11)},
          'other': '년 답안지'}
 AREAS = {'social': '사회탐구 영역', 'science': '과학탐구 영역', 'vocational': '직업탐구 영역'}
@@ -46,11 +46,12 @@ def build(font_path):
 
     for digit in '0123456789':
         path, width = words(digit)
-        defs.append(f'<symbol id="year-{digit}" viewBox="0 0 34 80"><g transform="translate(0 68) scale({60/upm} {-70/upm})">{path}</g></symbol>')
+        # Native title ink: year digits about 46–48px high, Hangul about 53px.
+        defs.append(f'<symbol id="year-{digit}" viewBox="0 0 34 80"><g transform="translate(0 60) scale({60/upm} {-64/upm})">{path}</g></symbol>')
     for key, text in EXAMS.items():
         path, width = words(text)
         sx = min(60/upm, 1245/width)
-        defs.append(f'<symbol id="exam-{key}" viewBox="0 0 1400 80"><title>{escape(text)}</title><g transform="translate(140 68) scale({sx:.8f} {-70/upm})">{path}</g></symbol>')
+        defs.append(f'<symbol id="exam-{key}" viewBox="0 0 1400 80"><title>{escape(text)}</title><g transform="translate(140 60) scale({sx:.8f} {-60/upm})">{path}</g></symbol>')
     for key, text in AREAS.items():
         path, width = words(text)
         sx = min(95/upm, 520/width)

@@ -4,7 +4,10 @@
 They are SVG paths, with no `<text>`, runtime font loading, or text measurement.
 The app selects a preset and stamps digits into the measured header rectangle.
 The original period circles/labels and non-inquiry area printing remain intact.
-Titles that already match the underlying official form are kept unchanged.
+Mock-exam titles use `0000학년도 대학수학능력시험 N월 모의 평가 답안지`.
+Photo-review CSAT titles that already match the source are kept unchanged.
+Manual overlays hide the tiny redundant identifier in the top margin, while
+keeping the real period/area label and machine registration bars intact.
 Original source images and recognition references are never retouched.
 
 Native-pixel rectangles `(x, y, width, height)` are in `forms.js`:
@@ -38,6 +41,8 @@ python3 tools/build_omr_headings.py --font /path/to/NotoSansCJK-Medium.ttc
 python3 tools/build_omr_headings.py --font /path/to/NotoSansCJK-Medium.ttc --check
 ```
 
+Year-digit ink is approximately 48 native pixels high; Hangul is approximately
+54 pixels, matched to the source title rather than a browser font size.
 Tests measure coloured oval positions in the original pixels, check that heading
 regions do not overlap answer buttons, and load actual preset paths in Chromium
 and the required WebKit CI run. Photo tests continue using unmodified references.

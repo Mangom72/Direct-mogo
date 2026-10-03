@@ -63,6 +63,7 @@ with sync_playwright() as pw:
     page.evaluate("GijulOMR.open({grade:'D300',subjectId:'140120',subject:'미적분',group:'수학',date:'20260902',title:'9월 모평(평가원)'},{demo:true})")
     page.click('#omrManual'); page.select_option('#omrQuestion','16')
     page.wait_for_function("()=>document.querySelector('.omr-sheet img').naturalWidth===3420")
+    page.wait_for_function("()=>document.querySelector('.omr-sheet').dataset.alignment==='clock'")
     page.locator('.omr-digit[data-question="16"][data-digit="2"][data-value="0"]').click()
     assert '16번 · 0' in page.locator('#omrCurrent').inner_text()
     page.locator('.omr-digit[data-question="16"][data-digit="0"][data-value="1"]').click()
@@ -82,6 +83,13 @@ with sync_playwright() as pw:
     page.select_option('#omrQuestion','21')
     page.locator('.omr-digit[data-question="21"][data-digit="2"][data-value="7"]').click()
     assert '21번 · 7' in page.locator('#omrCurrent').inner_text()
+    for n,x in [(20,3059.5),(21,1949.5),(30,3059.5)]:
+        page.select_option('#omrQuestion',str(n))
+        b=page.locator(f'.omr-digit[data-question="{n}"][data-digit="2"][data-value="7"]')
+        center=b.evaluate("e=>parseFloat(e.style.left)*3420/100")
+        assert abs(center-(x+120))<2,(n,center)
+        if n!=21:b.click()
+        assert f'{n}번 · 7' in page.locator('#omrCurrent').inner_text()
     page.locator('.omr-close').click()
 
     print("WebKit gzip:", supported, "| 목록:", before, "→", after,

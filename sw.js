@@ -1,7 +1,7 @@
 /* 기출 직행 서비스 워커
    자료 5천여 건이 index.html 안에 들어 있으므로, 이 파일 하나만 쥐고 있으면
    조회·필터는 네트워크 없이 전부 동작한다. 네트워크가 필요한 것은 PDF뿐이다. */
-const VERSION = "v14";
+const VERSION = "v15";
 const SHELL = `gijul-shell-${VERSION}`;
 const FILES = `gijul-files-${VERSION}`;
 const KEEP = [SHELL, FILES];
@@ -68,7 +68,12 @@ async function sweep(){
 }
 
 self.addEventListener("activate", e=>{
-  e.waitUntil(sweep().then(()=>self.clients.claim()));
+  e.waitUntil((async()=>{
+    const upgraded=(await caches.keys()).some(n=>n.startsWith("gijul-shell-")&&n!==SHELL);
+    await sweep();await self.clients.claim();
+    // An open page still runs the previous scripts even after the new cache is ready.
+    if(upgraded)for(const client of await self.clients.matchAll({type:"window"}))client.postMessage({type:"updated"});
+  })());
 });
 
 /* 오래된 자료부터 버린다. Cache Storage는 넣은 순서를 유지하므로 앞에서부터 지우면 된다. */
@@ -141,9 +146,9 @@ async function check(){
   const after = await res.clone().text();
   if(before !== after){
     // Refresh companion scripts before publishing the changed document in this cache.
-    const got=await Promise.all(REQUIRED_SHELL_URLS.filter(u=>u.startsWith("./sync/")).map(async u=>{
+    const got=await Promise.all(REQUIRED_SHELL_URLS.filter(u=>u.startsWith("./sync/")||/^\.\/omr\/[^/]+\.(js|css|svg)$/.test(u)).map(async u=>{
       const at=new URL(u,self.location).href,r=await fetch(at,{cache:"no-cache"});
-      if(!r.ok) throw new Error("sync script "+at);
+      if(!r.ok) throw new Error("companion file "+at);
       return [at,r];
     })).catch(()=>null);
     if(!got) return false;

@@ -123,6 +123,8 @@ with sync_playwright() as pw:
     for subject in ['korean','math','english','history','inquiry','language']:
         pg.select_option('#subject',subject);pg.set_viewport_size({'width':1280,'height':960});pg.click('#start');pg.click('#omrManual')
         pg.wait_for_function("()=>document.querySelector('.omr-sheet img').naturalWidth>=3420")
+        if subject=='math':
+            pg.wait_for_function("()=>document.querySelector('.omr-sheet').dataset.alignment==='clock'")
         # Find coloured ink in the original image, independently of button paint.
         # A shifted cell fails even when synthetic marks share the same bad coordinates.
         alignment=pg.evaluate("""()=>{
@@ -133,7 +135,8 @@ with sync_playwright() as pw:
             const pixels=ctx.getImageData(0,0,c.width,c.height).data,out=[];
             for(const q of [...f.questions,...(f.secondQuestions||[])])for(const spot of q.spots){
                 if(spot.unprinted)continue;
-                const x=spot.x*c.width/f.width,y=spot.y*c.width/f.width,xx=Math.round(x),yy=Math.round(y);
+                const button=f.id==='math'?document.querySelector(`.omr-bubble[data-question="${q.n}"][data-value="${spot.value}"]${q.kind==='number'?`[data-digit="${spot.digit}"]`:''}`):null;
+                const x=button?parseFloat(button.style.left)*c.width/100:spot.x*c.width/f.width,y=spot.y*c.width/f.width,xx=Math.round(x),yy=Math.round(y);
                 let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
                 for(let sy=yy-25;sy<=yy+25;sy++)for(let sx=xx-24;sx<=xx+24;sx++){
                     const i=(sy*c.width+sx)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2];
@@ -149,15 +152,63 @@ with sync_playwright() as pw:
         assert len(alignment)=={'korean':225,'math':366,'english':225,'history':100,'inquiry':200,'language':150}[subject]
         assert all(a['error'] is not None and a['error']<=6 for a in alignment),(subject,alignment)
         heading=pg.locator('.omr-paper-heading')
-        assert heading.get_attribute('data-year')=='2027' and heading.get_attribute('data-original')=='true'
+        assert heading.get_attribute('data-year')=='2027' and heading.get_attribute('data-original')=='false'
         assert heading.locator('text,strong,span').count()==0
-        assert pg.locator('.omr-title-preset').count()==0  # Native 9월 title remains intact.
+        assert pg.locator('.omr-title-preset').count()==1  # Exact “모의 평가” preset.
+        assert pg.locator('.omr-margin-mask').count()==1
         regions=heading.locator('.omr-area-preset').evaluate_all('es=>es.map(e=>{const b=e.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height}})')
         for box in pg.locator('.omr-bubble').evaluate_all('es=>es.map(e=>{const b=e.getBoundingClientRect();return {top:b.top,left:b.left,right:b.right,bottom:b.bottom}})'):
             for region in regions:
                 assert box['top']>=region['y']+region['height'] or box['left']>=region['x']+region['width'],(subject,box,region)
         pg.screenshot(path=str(SHOT/('omr-'+subject+'-tablet.png')))
         pg.locator('.omr-close').click()
+    # The source timing bars, rather than guessed answer X, control all columns.
+    pg.select_option('#subject','math');pg.click('#start');pg.click('#omrManual')
+    pg.wait_for_function("()=>document.querySelector('.omr-sheet').dataset.alignment==='clock'")
+    clocks=pg.evaluate("""async()=>{
+      const F=GijulOmrForms,f=F.manualForms.math,img=document.querySelector('.omr-sheet img');
+      const full=GijulOMR.clockColumns(img,f),c=document.createElement('canvas');c.width=1800;c.height=Math.round(f.height);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      c.naturalWidth=c.width;
+      return {full,small:GijulOMR.clockColumns(c,f)};
+    }""")
+    assert len(clocks['full'])==45 and max(abs(a-b) for a,b in zip(clocks['full'],clocks['small']))<=1,clocks
+    pg.locator('.omr-close').click()
+    original_x=pg.evaluate("()=>{const f=GijulOmrForms.manualForms.math,out=f.questions.map(q=>q.spots.map(p=>p.x));for(const q of f.questions)for(const p of q.spots)p.x+=15;return out}")
+    pg.click('#start');pg.click('#omrManual')
+    pg.wait_for_function("()=>document.querySelector('.omr-sheet').dataset.alignment==='clock'")
+    for n,index in [(20,41),(21,25),(22,28),(29,38),(30,41)]:
+        x=pg.locator(f'.omr-digit[data-question="{n}"][data-digit="0"][data-value="1"]').evaluate("e=>parseFloat(e.style.left)*1800/100")
+        assert abs(x-clocks['full'][index])<.001,(n,x,clocks)
+        pg.select_option('#omrQuestion',str(n))
+        pg.locator(f'.omr-digit[data-question="{n}"][data-digit="2"][data-value="7"]').click()
+        assert f'{n}번 · 7' in pg.locator('#omrCurrent').inner_text()
+    pg.locator('.omr-close').click()
+    pg.evaluate("xs=>GijulOmrForms.manualForms.math.questions.forEach((q,i)=>q.spots.forEach((p,j)=>p.x=xs[i][j]))",original_x)
+    # Missing machine marks must leave every answer control and grading blocked.
+    import base64
+    blank_strip=pg.evaluate("""async()=>{const f=GijulOmrForms.manualForms.math,i=new Image();i.src=f.image;await i.decode();const c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;const x=c.getContext('2d');x.drawImage(i,0,0);x.fillStyle='#fff';x.fillRect(0,100,c.width,80);return c.toDataURL().split(',')[1]}""")
+    bad_image_url=pg.evaluate("GijulOmrForms.manualForms.math.image")
+    ctx.route(bad_image_url,lambda r:r.fulfill(body=base64.b64decode(blank_strip),content_type='image/png'))
+    pg.click('#start');pg.click('#omrManual')
+    pg.wait_for_function("()=>document.querySelector('.omr-sheet').dataset.alignment==='failed'")
+    assert pg.locator('.omr-bubble:enabled').count()==0
+    assert pg.locator('.omr-answer-controls button:enabled').count()==0 and pg.locator('#omrBlank').is_disabled()
+    assert '기준 표식' in pg.locator('.omr-note').inner_text()
+    pg.click('#omrKey');pg.fill('#omrKeyAnswers',' '.join(['1']*30));pg.check('#omrKeyCheck');pg.locator('.omr-actions button').click()
+    pg.wait_for_function("()=>document.querySelector('.omr-sheet').dataset.alignment==='failed'")
+    pg.check('#omrBlankCheck');assert pg.locator('.omr-actions button').is_disabled()
+    pg.locator('.omr-close').click();ctx.unroute(bad_image_url)
+    # A late decode cannot change the key editor opened in the meantime.
+    pg.evaluate("""()=>{window.omrDecode=HTMLImageElement.prototype.decode;let hold=true;HTMLImageElement.prototype.decode=function(){const loaded=omrDecode.call(this);if(!hold)return loaded;hold=false;return loaded.then(()=>new Promise(r=>window.finishOmrDecode=r));};}""")
+    pg.click('#start');pg.click('#omrManual')
+    pg.wait_for_function("()=>typeof finishOmrDecode==='function'")
+    assert pg.locator('.omr-sheet').get_attribute('data-alignment')=='pending'
+    assert pg.locator('.omr-bubble:enabled').count()==0
+    pg.click('#omrKey')
+    pg.evaluate("async()=>{finishOmrDecode();HTMLImageElement.prototype.decode=omrDecode;await new Promise(requestAnimationFrame);}")
+    assert pg.locator('#omrKeyForm').count()==1 and pg.locator('.omr-sheet').count()==0
+    assert pg.locator('.omr-note').inner_text()==''
+    pg.locator('.omr-close').click()
     # Actual presets load painted outlines, with 시행 연도 / 학년도 and clear regions.
     for title,date,expected,year in [('수능 홀수형','20251113','csat','2026'),('6월 모평(평가원)','20250604','m6','2026'),('10월 학평(서울)','20211012','edu10','2021')]:
         meta={**mathmeta,'date':date,'title':title}

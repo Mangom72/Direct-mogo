@@ -40,7 +40,7 @@ function paperPreset(meta,form){
  const year=+meta.date.slice(0,4),month=+(meta.title.match(/^(\d+)월/)||[])[1];
  const exam=/^수능/.test(meta.title)?'csat':/평가원/.test(meta.title)&&[6,9].includes(month)?'m'+month:/학평/.test(meta.title)&&[3,4,5,6,7,9,10,11].includes(month)?'edu'+month:'other';
  const printedYear=exam==='csat'||exam==='m6'||exam==='m9'?year+1:year;
- return {exam,year:String(printedYear),original:form.manual?exam==='m9'&&printedYear===2027:exam==='csat'&&printedYear===2026,
+ return {exam,year:String(printedYear),original:!form.manual&&exam==='csat'&&printedYear===2026,
   area:form.id==='inquiry'?({'사회탐구':'social','과학탐구':'science','직업탐구':'vocational'})[meta.group]||null:null};
 }
 function questions(form,slot){return form.id==='inquiry'&&slot===2?form.secondQuestions:form.questions;}
@@ -48,7 +48,8 @@ function questions(form,slot){return form.id==='inquiry'&&slot===2?form.secondQu
    guide HWP, BinData/BIN0002.jpg–BIN0007.jpg. Separate from photo references. */
 const manualSource='https://gcja-h.goeay.kr/gcja-h/na/ntt/selectNttInfo.do?bbsId=2506&mi=5763&nttSn=1329024';
 const manualForms={};
-function manual(id,nativeWidth=3420){const old=forms[id];return manualForms[id]={...old,manual:true,source:manualSource,nativeWidth,nativeHeight:2683,height:2683*1800/nativeWidth,image:base+'templates/manual/'+id+'.webp',header:{title:id==='inquiry'?[190,188,1390,77]:[176,id==='math'?187:213,1400,78],area:id==='inquiry'?[458,315,532,110]:null},questions:[]};}
+const marginLabels={korean:[195,1,230,52],math:[222,9,178,38],english:[195,0,234,50],history:[191,2,265,46],inquiry:[166,3,209,44],language:[175,0,397,43]};
+function manual(id,nativeWidth=3420){const old=forms[id];return manualForms[id]={...old,manual:true,source:manualSource,nativeWidth,nativeHeight:2683,height:2683*1800/nativeWidth,image:base+'templates/manual/'+id+'.webp',header:{title:id==='inquiry'?[190,188,1390,77]:[176,id==='math'?187:213,1400,78],area:id==='inquiry'?[458,315,532,110]:null,margin:marginLabels[id]},questions:[]};}
 function choices(f,first,last,x,y,dx=60,dy=100){
  const scale=1800/f.nativeWidth;
  for(let n=first;n<=last;n++)f.questions[n-1]={n,kind:'choice',spots:Array.from({length:5},(_,v)=>({x:(x+v*dx)*scale,y:(y+(n-first)*dy)*scale,value:v+1}))};
@@ -63,6 +64,13 @@ m=manual('math');m.color='#ed258f';choices(m,1,8,1199.5,447);choices(m,9,15,1619
 /* The final numeric columns follow a 210px gap, not the previous 225px gap. */
 for(const [n,x,y] of [[16,2174.5,447],[17,2384.5,447],[18,2624.5,447],[19,2849.5,447],[20,3060,447],[21,1950,1597],[22,2174.5,1597],[29,2849.5,1597],[30,3060,1597]])
  m.questions[n-1]={n,kind:'number',spots:Array.from({length:30},(_,i)=>({x:(x+Math.floor(i/10)*60)*1800/m.nativeWidth,y:(y+(i%10)*100)*1800/m.nativeWidth,digit:Math.floor(i/10),value:i%10,unprinted:i===0}))};
+/* Each answer column is registered by a black timing bar on the top edge.
+   Indices follow the complete left-to-right row, including identity columns.
+   The displayed image supplies X; Y stays tied to its printed answer rows. */
+m.clock={band:[100,180],count:45,first:149.5,last:3269.5};
+const numericClocks={16:28,17:31,18:35,19:38,20:41,21:25,22:28,29:38,30:41};
+for(const q of m.questions)for(const spot of q.spots)
+ spot.clock=q.kind==='number'?numericClocks[q.n]+spot.digit:(q.n<=8?13:q.n<=15?20:33)+spot.value-1;
 /* Number-by-number scoring is stable for the checked 2021–2026 math format.
    Other subjects require exact exam identity; see points-reviewed.json and docs. */
 const mathPoints=Object.freeze([2,2,3,3,3,3,3,3,4,4,4,4,4,4,4,3,3,3,3,4,4,4,2,3,3,3,3,4,4,4]);

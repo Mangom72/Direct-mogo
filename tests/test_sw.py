@@ -94,6 +94,8 @@ try:
         # ---- 5. 셸 변경 -> 새 자료 알림
         script = TMP / "sync/controller.js"
         script.write_text(script.read_text(encoding="utf-8") + "\n/* updated-sync-fixture */\n", encoding="utf-8")
+        omr = TMP / "omr/omr.js"
+        omr.write_text(omr.read_text(encoding="utf-8") + "\n/* updated-omr-fixture */\n", encoding="utf-8")
         p = TMP / "index.html"
         p.write_text(p.read_text(encoding="utf-8").replace("'06~", "'07~"), encoding="utf-8")
         pg.goto(URL, wait_until="load")
@@ -110,6 +112,8 @@ try:
 
         refreshed = pg.evaluate("async()=>{const c=await caches.open('gijul-shell-%s');return (await (await c.match(new URL('./sync/controller.js',location.href))).text()).includes('updated-sync-fixture');}" % NOW)
         if not refreshed: BAD.append("셸 변경 후 동기화 스크립트 캐시가 이전 판입니다")
+        refreshed = pg.evaluate("async()=>{const c=await caches.open('gijul-shell-%s');return (await (await c.match(new URL('./omr/omr.js',location.href))).text()).includes('updated-omr-fixture');}" % NOW)
+        if not refreshed: BAD.append("셸 변경 후 OMR 스크립트 캐시가 이전 판입니다")
 
         # ---- 5b. 문서가 그대로여도 글꼴만 바뀌면 다시 받는가
         #
@@ -145,8 +149,10 @@ try:
         sw.write_text(sw.read_text(encoding="utf-8")
                       .replace('VERSION = "%s"' % NOW, 'VERSION = "%s"' % NEXT),
                       encoding="utf-8")
-        pg.goto(URL, wait_until="load")
-        pg.wait_for_selector(".item", timeout=20000)
+        # Same document; only a companion changed. An already open page needs
+        # an update notice even though the newly installed index is identical.
+        omr.write_text(omr.read_text(encoding="utf-8") + "\n/* next-omr-fixture */\n", encoding="utf-8")
+        pg.evaluate("()=>{window.upgradeMessages=[];navigator.serviceWorker.addEventListener('message',e=>upgradeMessages.push(e.data.type));}")
         pg.evaluate("navigator.serviceWorker.getRegistration().then(r => r && r.update())")
         cleaned = True
         try:
@@ -155,6 +161,12 @@ try:
                 % (NEXT, NOW), timeout=20000)
         except Exception:
             cleaned = False
+        try:
+            pg.wait_for_function("()=>upgradeMessages.includes('updated')",timeout=10000)
+        except Exception:
+            BAD.append("OMR 파일만 바뀐 SW 갱신이 실행 중인 화면에 알려지지 않았습니다")
+        refreshed = pg.evaluate("async()=>{const c=await caches.open('gijul-shell-%s');return (await (await c.match(new URL('./omr/omr.js',location.href))).text()).includes('next-omr-fixture');}" % NEXT)
+        if not refreshed: BAD.append("새 워커의 OMR 캐시가 갱신되지 않았습니다")
         # 다음 실행에서 잔여물이 사라지는지 (교체된 워커가 되살린 통)
         pg.goto(URL, wait_until="load")
         pg.wait_for_selector(".item", timeout=20000)
