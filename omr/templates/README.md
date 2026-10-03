@@ -37,5 +37,8 @@ four times larger. Lossless assets total about 15 MiB and are cached offline.
 Marking coordinates use a logical 1800px width with per-image aspect ratios.
 Each layout was recalibrated against the new originals. These manual fronts are
 never substituted for the separately calibrated 2026 CSAT photo recognition
-reference. Dynamic exam headings are a separate DOM layer aligned to the printed
-title and period; the original image files remain unmodified.
+reference. Printed periods and areas remain intact. Compiled SVG exam/year presets use
+per-image pixel rectangles; the original 2027 September title remains intact
+when it matches. Inquiry area presets distinguish social/science/vocational
+subjects. The original image files and photo references remain unmodified.
+See [preset generation and license](../HEADINGS.md).

@@ -119,39 +119,57 @@ with sync_playwright() as pw:
     entries=json.loads((pathlib.Path(__file__).resolve().parents[1]/'omr/points-reviewed.json').read_text())['entries']
     checks=pg.evaluate("""entries=>entries.filter(e=>!['140119','140120','140121'].includes(e.key[1])).map(e=>{const F=GijulOmrForms,[grade,subjectId,date,title,answerURL]=e.key;const m={grade,subjectId,date,title,answerURL,problemURL:e.problemURL},f=F.forms[({'140117':'korean','80003':'english','63004':'history','158':'inquiry','191':'language','195':'language'})[subjectId]];return {expected:e.points,actual:F.pointsFor(m,f)?.points,badURL:F.pointsFor({...m,problemURL:'different'},f),badType:F.pointsFor({...m,title:title+' 짝수형'},f)}})""",entries)
     assert len(checks)==18 and all(c['actual']==c['expected'] and c['badURL'] is None and c['badType'] is None for c in checks),checks
+    pg.select_option('#exam','gov')
     for subject in ['korean','math','english','history','inquiry','language']:
         pg.select_option('#subject',subject);pg.set_viewport_size({'width':1280,'height':960});pg.click('#start');pg.click('#omrManual')
         pg.wait_for_function("()=>document.querySelector('.omr-sheet img').naturalWidth>=3420")
-        if subject=='math':
-            # Measure printed oval centres in the original pixels, independently
-            # of the marking coordinates. The last columns are 210px after 19/29,
-            # unlike the preceding 225px gap; equal spacing shifts 20/30 right.
-            alignment=pg.evaluate('''()=>{
-                const f=GijulOmrForms.manualForms.math,img=document.querySelector('.omr-sheet>img');
-                const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;
-                const ctx=c.getContext('2d');ctx.drawImage(img,0,0);
-                const pixels=ctx.getImageData(0,0,c.width,c.height).data,out=[];
-                for(const n of [20,30])for(const spot of f.questions[n-1].spots){
-                    if(spot.unprinted)continue;
-                    const y=(n===20?447:1597)+100*spot.value,start=3033+60*spot.digit;
-                    let left=Infinity,right=-Infinity;
-                    for(let yy=y-22;yy<=y+22;yy++)for(let x=start;x<start+54;x++){
-                        const i=(yy*c.width+x)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2];
-                        if(r>170&&r-g>70&&r-b>12){left=Math.min(left,x);right=Math.max(right,x);}
+        # Find coloured ink in the original image, independently of button paint.
+        # A shifted cell fails even when synthetic marks share the same bad coordinates.
+        alignment=pg.evaluate("""()=>{
+            const f=GijulOmrForms.manualForms[document.querySelector('#subject').value];
+            const img=document.querySelector('.omr-sheet>img'),c=document.createElement('canvas');
+            c.width=img.naturalWidth;c.height=img.naturalHeight;
+            const ctx=c.getContext('2d');ctx.drawImage(img,0,0);
+            const pixels=ctx.getImageData(0,0,c.width,c.height).data,out=[];
+            for(const q of [...f.questions,...(f.secondQuestions||[])])for(const spot of q.spots){
+                if(spot.unprinted)continue;
+                const x=spot.x*c.width/f.width,y=spot.y*c.width/f.width,xx=Math.round(x),yy=Math.round(y);
+                let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
+                for(let sy=yy-25;sy<=yy+25;sy++)for(let sx=xx-24;sx<=xx+24;sx++){
+                    const i=(sy*c.width+sx)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2];
+                    if(Math.max(r,g,b)-Math.min(r,g,b)>70&&Math.min(r,g,b)<180){
+                        left=Math.min(left,sx);right=Math.max(right,sx);top=Math.min(top,sy);bottom=Math.max(bottom,sy);
                     }
-                    out.push({n,digit:spot.digit,value:spot.value,
-                        error:Math.abs(spot.x*c.width/f.width-(left+right)/2)});
                 }
-                return out;
-            }''')
-            assert len(alignment)==58 and all(a['error'] is not None and a['error']<=4 for a in alignment),alignment
-        caption=pg.locator('.omr-paper-heading>strong')
-        assert caption.evaluate('e=>e.scrollWidth<=e.clientWidth')
-        assert caption.evaluate('e=>getComputedStyle(e).color')!='rgb(25, 23, 19)'
-        marks=pg.locator('.omr-bubble');headbox=caption.bounding_box()
-        for box in marks.evaluate_all('es=>es.map(e=>{const b=e.getBoundingClientRect();return {top:b.top,left:b.left,right:b.right,bottom:b.bottom}})'):
-            assert box['top']>=headbox['y']+headbox['height'], (subject,box,headbox)
+                out.push({n:q.n,digit:spot.digit,value:spot.value,
+                    error:Math.max(Math.abs(x-(left+right)/2),Math.abs(y-(top+bottom)/2))});
+            }
+            return out;
+        }""")
+        assert len(alignment)=={'korean':225,'math':366,'english':225,'history':100,'inquiry':200,'language':150}[subject]
+        assert all(a['error'] is not None and a['error']<=6 for a in alignment),(subject,alignment)
+        heading=pg.locator('.omr-paper-heading')
+        assert heading.get_attribute('data-year')=='2027' and heading.get_attribute('data-original')=='true'
+        assert heading.locator('text,strong,span').count()==0
+        assert pg.locator('.omr-title-preset').count()==0  # Native 9월 title remains intact.
+        regions=heading.locator('.omr-area-preset').evaluate_all('es=>es.map(e=>{const b=e.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height}})')
+        for box in pg.locator('.omr-bubble').evaluate_all('es=>es.map(e=>{const b=e.getBoundingClientRect();return {top:b.top,left:b.left,right:b.right,bottom:b.bottom}})'):
+            for region in regions:
+                assert box['top']>=region['y']+region['height'] or box['left']>=region['x']+region['width'],(subject,box,region)
         pg.screenshot(path=str(SHOT/('omr-'+subject+'-tablet.png')))
+        pg.locator('.omr-close').click()
+    # Actual presets load painted outlines, with 시행 연도 / 학년도 and clear regions.
+    for title,date,expected,year in [('수능 홀수형','20251113','csat','2026'),('6월 모평(평가원)','20250604','m6','2026'),('10월 학평(서울)','20211012','edu10','2021')]:
+        meta={**mathmeta,'date':date,'title':title}
+        pg.evaluate('meta=>GijulOMR.open(meta,{demo:true})',meta);pg.click('#omrManual')
+        pg.wait_for_function("()=>document.querySelector('.omr-title-preset use').getBBox().width>0")
+        heading=pg.locator('.omr-paper-heading')
+        assert heading.get_attribute('data-year')==year and heading.get_attribute('data-preset')==expected
+        assert heading.locator('text,strong,span').count()==0
+        bounds=pg.locator('.omr-title-preset').bounding_box()
+        for box in pg.locator('.omr-bubble').evaluate_all('es=>es.map(e=>e.getBoundingClientRect().top)'):
+            assert box>=bounds['y']+bounds['height']
+        pg.screenshot(path=str(SHOT/('omr-preset-'+expected+'.png')))
         pg.locator('.omr-close').click()
     pg.select_option('#subject','inquiry');pg.set_viewport_size({'width':390,'height':844})
 

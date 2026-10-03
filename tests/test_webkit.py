@@ -38,6 +38,7 @@ with sync_playwright() as pw:
     page.locator(".item .record").first.click()
     page.click("#recordOmr"); page.click("#omrManual")
     assert page.locator(".omr-bubble").count() == 100
+    page.wait_for_function("()=>document.querySelector('.omr-area-preset use').getBBox().width>0")
     assert "0/20" in page.locator(".omr-progress").inner_text()
     page.locator('.omr-bubble[data-question="1"][data-value="3"]').click()
     assert "1/20" in page.locator(".omr-progress").inner_text()
@@ -70,6 +71,17 @@ with sync_playwright() as pw:
     assert '16번 · 100' in page.locator('#omrCurrent').inner_text()
     page.click('#omrKey')
     assert sum(map(int,page.locator('#omrKeyPoints').input_value().split()))==100
+    page.locator('.omr-close').click()
+
+    page.evaluate("GijulOMR.open({grade:'D300',subjectId:'140120',subject:'미적분',group:'수학',date:'20250604',title:'6월 모평(평가원)'},{demo:true})")
+    page.click('#omrManual')
+    page.wait_for_function("()=>document.querySelector('.omr-title-preset use').getBBox().width>0")
+    assert page.locator('.omr-paper-heading').get_attribute('data-preset')=='m6'
+    assert page.locator('.omr-paper-heading').get_attribute('data-year')=='2026'
+    assert page.locator('.omr-paper-heading text').count()==0
+    page.select_option('#omrQuestion','21')
+    page.locator('.omr-digit[data-question="21"][data-digit="2"][data-value="7"]').click()
+    assert '21번 · 7' in page.locator('#omrCurrent').inner_text()
     page.locator('.omr-close').click()
 
     print("WebKit gzip:", supported, "| 목록:", before, "→", after,

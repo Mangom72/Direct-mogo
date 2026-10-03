@@ -7,7 +7,7 @@ const forms = {};
 function multiple(form, first, last, x, y){
   for(let n=first;n<=last;n++) form.questions[n-1]={n,kind:'choice',spots:Array.from({length:5},(_,v)=>({x:x+v*31.58,y:y+(n-first)*52.63,value:v+1}))};
 }
-function form(id,area,period,count,maximum,color){return forms[id]={id,area,period,count,maximum,color,width:1800,height:1406,image:base+'templates/'+id+'.webp',questions:[]};}
+function form(id,area,period,count,maximum,color){return forms[id]={id,area,period,count,maximum,color,width:1800,height:1406,image:base+'templates/'+id+'.webp',header:{title:[120,105,550,42],area:id==='inquiry'?[260,166,400,64]:null},questions:[]};}
 let f=form('korean','국어 영역',1,45,100,'#36ba84');
 multiple(f,1,20,772,260.5);multiple(f,21,34,994.5,260.5);multiple(f,35,45,1388.5,260.5);
 f=form('english','영어 영역',3,45,100,'#00aeef');
@@ -36,12 +36,19 @@ function resolve(meta){
 function exactKey(meta){return JSON.stringify([meta.grade,meta.subjectId,meta.date,meta.title,meta.answerURL||'']);}
 function heading(meta){const gov=/수능|평가원/.test(meta.title),year=+meta.date.slice(0,4);return (gov?(year+1)+'학년도':year+'년')+' '+meta.title;}
 function displayArea(meta,form){return form.id==='inquiry'&&/^(사회|과학|직업)탐구$/.test(meta.group)?meta.group+' 영역':form.area;}
+function paperPreset(meta,form){
+ const year=+meta.date.slice(0,4),month=+(meta.title.match(/^(\d+)월/)||[])[1];
+ const exam=/^수능/.test(meta.title)?'csat':/평가원/.test(meta.title)&&[6,9].includes(month)?'m'+month:/학평/.test(meta.title)&&[3,4,5,6,7,9,10,11].includes(month)?'edu'+month:'other';
+ const printedYear=exam==='csat'||exam==='m6'||exam==='m9'?year+1:year;
+ return {exam,year:String(printedYear),original:form.manual?exam==='m9'&&printedYear===2027:exam==='csat'&&printedYear===2026,
+  area:form.id==='inquiry'?({'사회탐구':'social','과학탐구':'science','직업탐구':'vocational'})[meta.group]||null:null};
+}
 function questions(form,slot){return form.id==='inquiry'&&slot===2?form.secondQuestions:form.questions;}
 /* Unmodified high-resolution fronts extracted from the official 2027 September
    guide HWP, BinData/BIN0002.jpg–BIN0007.jpg. Separate from photo references. */
 const manualSource='https://gcja-h.goeay.kr/gcja-h/na/ntt/selectNttInfo.do?bbsId=2506&mi=5763&nttSn=1329024';
 const manualForms={};
-function manual(id,nativeWidth=3420){const old=forms[id];return manualForms[id]={...old,manual:true,source:manualSource,nativeWidth,nativeHeight:2683,height:2683*1800/nativeWidth,image:base+'templates/manual/'+id+'.webp',questions:[]};}
+function manual(id,nativeWidth=3420){const old=forms[id];return manualForms[id]={...old,manual:true,source:manualSource,nativeWidth,nativeHeight:2683,height:2683*1800/nativeWidth,image:base+'templates/manual/'+id+'.webp',header:{title:id==='inquiry'?[190,188,1390,77]:[176,id==='math'?187:213,1400,78],area:id==='inquiry'?[458,315,532,110]:null},questions:[]};}
 function choices(f,first,last,x,y,dx=60,dy=100){
  const scale=1800/f.nativeWidth;
  for(let n=first;n<=last;n++)f.questions[n-1]={n,kind:'choice',spots:Array.from({length:5},(_,v)=>({x:(x+v*dx)*scale,y:(y+(n-first)*dy)*scale,value:v+1}))};
@@ -54,7 +61,7 @@ const second={nativeWidth:m.nativeWidth,questions:[]};choices(second,1,20,2961,4
 m=manual('language');m.color='#fa8750';choices(m,1,20,2339.5,497.5);choices(m,21,30,2864.5,497.5);
 m=manual('math');m.color='#ed258f';choices(m,1,8,1199.5,447);choices(m,9,15,1619.5,447);choices(m,23,28,2504.5,1597);
 /* The final numeric columns follow a 210px gap, not the previous 225px gap. */
-for(const [n,x,y] of [[16,2174.5,447],[17,2384.5,447],[18,2624.5,447],[19,2849.5,447],[20,3060,447],[21,1964.5,1597],[22,2174.5,1597],[29,2849.5,1597],[30,3060,1597]])
+for(const [n,x,y] of [[16,2174.5,447],[17,2384.5,447],[18,2624.5,447],[19,2849.5,447],[20,3060,447],[21,1950,1597],[22,2174.5,1597],[29,2849.5,1597],[30,3060,1597]])
  m.questions[n-1]={n,kind:'number',spots:Array.from({length:30},(_,i)=>({x:(x+Math.floor(i/10)*60)*1800/m.nativeWidth,y:(y+(i%10)*100)*1800/m.nativeWidth,digit:Math.floor(i/10),value:i%10,unprinted:i===0}))};
 /* Number-by-number scoring is stable for the checked 2021–2026 math format.
    Other subjects require exact exam identity; see points-reviewed.json and docs. */
@@ -72,5 +79,5 @@ keys[JSON.stringify(['D300','158','20260902','9월 모평(평가원)','https://w
  points:[2,3,2,2,3,2,3,2,2,2,3,2,3,3,3,2,2,3,3,3],
  source:'문제·정답·해설을 대조한 정답표'
 };
-window.GijulOmrForms=Object.freeze({base,forms,resolve,exactKey,heading,displayArea,questions,keys,pointsFor,manualForms,manualSource,source:'https://www.goe.go.kr/goe/na/ntt/selectNttInfo.do?mi=10961&nttSn=2330309'});
+window.GijulOmrForms=Object.freeze({base,forms,resolve,exactKey,heading,displayArea,paperPreset,questions,keys,pointsFor,manualForms,manualSource,source:'https://www.goe.go.kr/goe/na/ntt/selectNttInfo.do?mi=10961&nttSn=2330309'});
 })();
