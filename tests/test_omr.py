@@ -51,6 +51,8 @@ with sync_playwright() as pw:
     pg.locator('.omr-number-pad [data-digit="2"][data-value="0"]').click();pg.click('#omrNumberDone')
     assert pg.locator('.omr-number[data-question="16"]').get_attribute('aria-label')=='16번 숫자 답 0 수정'
     pg.locator('.omr-number[data-question="16"]').click();pg.keyboard.press('Escape')
+    # Native dialog close dispatch/removal is asynchronous; wait for the observable outcome.
+    pg.locator('.omr-number-pad').wait_for(state='detached')
     assert pg.locator('.omr-dialog').is_visible() and pg.locator('.omr-number-pad').count()==0
     pg.click('#omrKey');pg.fill('#omrKeyAnswers','1.5');pg.fill('#omrKeyPoints','3');pg.locator('.omr-actions button').click()
     assert '모두 적어' in pg.locator('.omr-note').inner_text()
