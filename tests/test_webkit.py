@@ -35,6 +35,22 @@ with sync_playwright() as pw:
     page.reload(wait_until="load")
     kept = page.evaluate("localStorage.getItem('gijul.webkit.smoke')")
 
+    page.locator(".item .record").first.click()
+    page.click("#recordOmr"); page.click("#omrManual")
+    assert page.locator(".omr-bubble").count() == 100
+    assert "0/20" in page.locator(".omr-progress").inner_text()
+    page.locator('.omr-bubble[data-question="1"][data-value="3"]').click()
+    assert "1/20" in page.locator(".omr-progress").inner_text()
+    page.click("#omrMode"); page.click("#omrPhoto")
+    import base64
+    # Actual unmodified source exercises WebKit's PNG header, resize and canvas paths.
+    raw = page.evaluate("""async()=>{const r=await fetch(GijulOmrForms.forms.inquiry.image),b=await createImageBitmap(await r.blob()),c=document.createElement('canvas');c.width=b.width;c.height=b.height;c.getContext('2d').drawImage(b,0,0);b.close();return c.toDataURL('image/png').split(',')[1];}""")
+    page.set_input_files("#omrFile", {"name":"specimen.png","mimeType":"image/png","buffer":base64.b64decode(raw)})
+    page.wait_for_selector("#omrFormCheck")
+    assert page.locator(".omr-actions button").is_disabled()
+    page.locator(".omr-close").click()
+    assert page.evaluate("document.body.style.overflow") == ""
+
     print("WebKit gzip:", supported, "| 목록:", before, "→", after,
           "| 저장소:", kept, "| 오류:", errors or "없음")
     browser.close()

@@ -21,8 +21,8 @@ android {
         minSdk = 24               // SAF(문서 트리) 지속 권한이 안정적으로 되는 하한
         // 2026-08-31부터 Play의 앱 업데이트 제출 하한이다.
         targetSdk = 36
-        versionCode = 92
-        versionName = '10.1'
+        versionCode = 93
+        versionName = '10.2'
         testInstrumentationRunner = project.findProperty('gijulRunner') ?: 'kr.gijul.direct.SafCheck'
     }
     signingConfigs {
@@ -65,6 +65,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.google.android.gms:play-services-mlkit-document-scanner:16.0.0'
     implementation 'androidx.credentials:credentials:1.6.0'
     implementation 'androidx.credentials:credentials-play-services-auth:1.6.0'
     implementation 'com.google.android.libraries.identity.googleid:googleid:1.2.1'

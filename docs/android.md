@@ -831,3 +831,18 @@ adb shell pm get-app-links kr.gijul.direct
 ```bash
 apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
 ```
+
+## 답안지 문서 스캔 (10.2)
+
+풀이 기록의 답안 입력·채점에서 직접 마킹과 사진 읽기를 고른다. 새
+`OmrScanner`는 ML Kit document-scanner 16.0.0의 BASE 모드로 한 페이지를
+자르고 회전한다. 사진 선택은 ACTION_OPEN_DOCUMENT의 일시적 grant로 읽으며
+이 URI를 AUTO_URI에 저장하거나 영구권한을 요청하지 않는다. JPEG를 샘플링·축소한
+뒤 요청 ID와 함께 웹에 전달한다. 과거 요청·종료 후 콜백은 무시한다.
+이미지는 서버·백업에 보내지 않는다. 상세한 [지원 양식과 검증 범위](omr.md)를 따른다.
+
+API 36 에뮬레이터의 `OmrCheck`는 실제 WebView의 공개 견본 입력·새 스캔 브리지
+존재·뒤로가기·늦은 응답 무시를 점검한다. 실물 카메라 촬영 정확도 검증은 아니다.
+테스트 fixture를 타깃 앱 `files/omr-fixture`에 넣고
+`./gradlew -PgijulRunner=kr.gijul.direct.OmrCheck assembleDebugAndroidTest` 후
+`adb shell am instrument -w kr.gijul.direct.test/kr.gijul.direct.OmrCheck`로 실행한다.

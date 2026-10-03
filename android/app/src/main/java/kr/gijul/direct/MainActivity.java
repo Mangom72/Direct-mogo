@@ -62,6 +62,7 @@ public class MainActivity extends ComponentActivity {
 
     private WebView web;
     private Updater updater;
+    private OmrScanner omrScanner;
     private android.app.AlertDialog deletePrompt;
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private volatile boolean destroyed;
@@ -72,6 +73,9 @@ public class MainActivity extends ComponentActivity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        omrScanner = new OmrScanner(this, io, (id, ok, value) -> eval(
+                "window.gijulOmrScanResult&&window.gijulOmrScanResult("
+                        + JSONObject.quote(id) + "," + ok + "," + JSONObject.quote(value) + ")"));
         /* 화면을 만들기 전에 건다. 페이지가 뜨고 사용자가 자료를 누르기까지는 몇 초가
            걸리므로, 쓸어내는 일과 새로 받는 일이 겹칠 틈이 사실상 없어진다. */
         io.execute(this::sweep);
@@ -236,6 +240,7 @@ public class MainActivity extends ComponentActivity {
     @Override
     protected void onDestroy() {
         destroyed = true;
+        if (omrScanner != null) omrScanner.close();
         if (googleLogin != null) googleLogin.cancel();
         if (updater != null) updater.cancel();
         if (deletePrompt != null) deletePrompt.dismiss();
@@ -466,6 +471,21 @@ public class MainActivity extends ComponentActivity {
 
     private GoogleLogin googleLogin;
     private class Bridge {
+        @JavascriptInterface
+        public void scanOmr(String requestId) {
+            runOnUiThread(() -> { if (!destroyed) omrScanner.start(requestId, false); });
+        }
+
+        @JavascriptInterface
+        public void pickOmrPhoto(String requestId) {
+            runOnUiThread(() -> { if (!destroyed) omrScanner.start(requestId, true); });
+        }
+
+        @JavascriptInterface
+        public void cancelOmrScan(String requestId) {
+            runOnUiThread(() -> { if (!destroyed) omrScanner.cancel(requestId); });
+        }
+
         @JavascriptInterface
         public void googleSignIn(String clientId, String requestId) {
             runOnUiThread(() -> {
