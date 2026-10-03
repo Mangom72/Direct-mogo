@@ -122,6 +122,29 @@ with sync_playwright() as pw:
     for subject in ['korean','math','english','history','inquiry','language']:
         pg.select_option('#subject',subject);pg.set_viewport_size({'width':1280,'height':960});pg.click('#start');pg.click('#omrManual')
         pg.wait_for_function("()=>document.querySelector('.omr-sheet img').naturalWidth>=3420")
+        if subject=='math':
+            # Measure printed oval centres in the original pixels, independently
+            # of the marking coordinates. The last columns are 210px after 19/29,
+            # unlike the preceding 225px gap; equal spacing shifts 20/30 right.
+            alignment=pg.evaluate('''()=>{
+                const f=GijulOmrForms.manualForms.math,img=document.querySelector('.omr-sheet>img');
+                const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;
+                const ctx=c.getContext('2d');ctx.drawImage(img,0,0);
+                const pixels=ctx.getImageData(0,0,c.width,c.height).data,out=[];
+                for(const n of [20,30])for(const spot of f.questions[n-1].spots){
+                    if(spot.unprinted)continue;
+                    const y=(n===20?447:1597)+100*spot.value,start=3033+60*spot.digit;
+                    let left=Infinity,right=-Infinity;
+                    for(let yy=y-22;yy<=y+22;yy++)for(let x=start;x<start+54;x++){
+                        const i=(yy*c.width+x)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2];
+                        if(r>170&&r-g>70&&r-b>12){left=Math.min(left,x);right=Math.max(right,x);}
+                    }
+                    out.push({n,digit:spot.digit,value:spot.value,
+                        error:Math.abs(spot.x*c.width/f.width-(left+right)/2)});
+                }
+                return out;
+            }''')
+            assert len(alignment)==58 and all(a['error'] is not None and a['error']<=4 for a in alignment),alignment
         caption=pg.locator('.omr-paper-heading>strong')
         assert caption.evaluate('e=>e.scrollWidth<=e.clientWidth')
         assert caption.evaluate('e=>getComputedStyle(e).color')!='rgb(25, 23, 19)'

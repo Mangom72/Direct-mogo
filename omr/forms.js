@@ -53,7 +53,8 @@ m=manual('inquiry',3447);m.color='#215b96';choices(m,1,20,2181,447);
 const second={nativeWidth:m.nativeWidth,questions:[]};choices(second,1,20,2961,447);m.secondQuestions=second.questions;
 m=manual('language');m.color='#fa8750';choices(m,1,20,2339.5,497.5);choices(m,21,30,2864.5,497.5);
 m=manual('math');m.color='#ed258f';choices(m,1,8,1199.5,447);choices(m,9,15,1619.5,447);choices(m,23,28,2504.5,1597);
-for(const [n,x,y] of [[16,2174.5,447],[17,2384.5,447],[18,2624.5,447],[19,2849.5,447],[20,3074.5,447],[21,1964.5,1597],[22,2174.5,1597],[29,2849.5,1597],[30,3074.5,1597]])
+/* The final numeric columns follow a 210px gap, not the previous 225px gap. */
+for(const [n,x,y] of [[16,2174.5,447],[17,2384.5,447],[18,2624.5,447],[19,2849.5,447],[20,3060,447],[21,1964.5,1597],[22,2174.5,1597],[29,2849.5,1597],[30,3060,1597]])
  m.questions[n-1]={n,kind:'number',spots:Array.from({length:30},(_,i)=>({x:(x+Math.floor(i/10)*60)*1800/m.nativeWidth,y:(y+(i%10)*100)*1800/m.nativeWidth,digit:Math.floor(i/10),value:i%10,unprinted:i===0}))};
 /* Number-by-number scoring is stable for the checked 2021–2026 math format.
    Other subjects require exact exam identity; see points-reviewed.json and docs. */
