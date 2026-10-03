@@ -70,7 +70,7 @@ dependencies {
     implementation 'androidx.credentials:credentials-play-services-auth:1.6.0'
     implementation 'com.google.android.libraries.identity.googleid:googleid:1.2.1'
     implementation 'androidx.activity:activity:1.13.0'  // 예측형 뒤로가기
-    implementation 'androidx.core:core:1.19.0'      // FileProvider
+    implementation 'androidx.core:core:1.19.1'      // FileProvider
     implementation 'androidx.webkit:webkit:1.17.0'  // 다크모드 연동
     implementation 'androidx.recyclerview:recyclerview:1.4.0'  // 문제지 페이지를 필요한 만큼만 그린다
 
