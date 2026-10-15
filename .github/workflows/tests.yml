@@ -75,7 +75,7 @@ jobs:
           python3 tests/run.py
 
       # 손에서 재현되지 않는 실패를 눈으로 볼 수 있는 유일한 길이다.
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: failure()
         with:
           name: 실패한-화면
