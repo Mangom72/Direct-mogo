@@ -1,8 +1,8 @@
 {
-  "versionCode": 96,
-  "versionName": "10.5",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.5/gijul-direct.apk",
-  "size": 4665220,
-  "sha256": "9fa0319a0f6e9eb1549cd26b56e249c2ed24b0e7d17cb85cd1553de0a27e7963",
-  "notes": "저장 오류와 백업 복구를 고치고 연도 표기를 2026학년도로 바꿨습니다"
+  "versionCode": 97,
+  "versionName": "10.6",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.6/gijul-direct.apk",
+  "size": 4665252,
+  "sha256": "8449e52d6704661cf70d9778629efd97ce962573fdc751614acdeb00047963d5",
+  "notes": "연도를 학년도로 통일했습니다"
 }
