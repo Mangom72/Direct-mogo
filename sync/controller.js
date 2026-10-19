@@ -1,6 +1,6 @@
 (function(root){
   "use strict";
-  let authPending=false,authEpoch=0,connection=0,initialized=false,config=null,journal=null,backend=null,uid=null,stop=null,applying=false,ready=false,baseline=null,work=Promise.resolve(),sending=false,timer=null,peerQueued=false,peerDirty=false;
+  let authPending=false,authEpoch=0,connection=0,initialized=false,config=null,journal=null,backend=null,uid=null,stop=null,applying=false,ready=false,baseline=null,work=Promise.resolve(),sending=false,timer=null,peerQueued=false,peerDirty=false,watching=false;
   const intentPrefix="gijul.sync.intent.v1:",wakeKey="gijul.sync.wake.v1",tab=crypto.randomUUID();let serial=0;
   try{uid=localStorage.getItem("gijul.sync.uid.v1");}catch(e){}
   let state={enabled:false,on:false,busy:false,pending:0,invalid:0,message:""};
@@ -61,9 +61,14 @@
     for(const {key,intent} of intents(account)) await commitIntent(key,intent);
   }
   function refreshPeer(){
-    if(!journal || !uid) return;peerDirty=true;if(peerQueued) return;peerQueued=true;
+    if(!journal) return;peerDirty=true;if(peerQueued) return;peerQueued=true;
     queue(async()=>{
-      try{do{peerDirty=false;await recoverIntents(uid);const saved=await journal.read();state.pending=saved.pending.length;apply(saved.view);notify();void flush();}while(peerDirty);}
+      try{do{
+        peerDirty=false;const bound=await journal.read();
+        if(!uid && bound.uid){uid=bound.uid;localStorage.setItem("gijul.sync.uid.v1",uid);}
+        if(!uid)continue;
+        await recoverIntents(uid);const saved=await journal.read();state.pending=saved.pending.length;apply(saved.view);notify();void flush();
+      }while(peerDirty);}
       finally{peerQueued=false;}
     }).catch(()=>{});
   }
@@ -119,6 +124,13 @@
       try{await backend.logout();}finally{authPending=wasPending;if(cleanup===connection) fail(e);}
     }}
   }
+  function watchBackend(){
+    if(watching || !backend?.watch)return;watching=true;
+    backend.watch(user=>{
+      if(authPending || state.busy)return;
+      if(user?!state.on||user.uid!==uid:state.on){authEpoch++;void connect(user);}
+    });
+  }
   root.GijulSync={
     state:()=>({...state}),
     history:async()=>journal?journal.history():[],
@@ -151,12 +163,13 @@
             const current=await journal.read();state.pending=current.pending.length;apply(current.view);
           }
         });
-        notify();backend=await GijulFirebase(config);const user=await backend.current();
-        if(epoch===authEpoch) await connect(user);
-        if(backend.watch) backend.watch(user=>{
-          if(authPending || state.busy) return;
-          if(user ? !state.on || user.uid!==uid : state.on){authEpoch++;void connect(user);}
-        });
+        notify();
+        // New anonymous visitors need only the local journal, not the auth SDK.
+        if(uid){
+          backend=await GijulFirebase(config);const user=await backend.current();
+          if(epoch===authEpoch)await connect(user);
+          watchBackend();
+        }
         timer=setInterval(()=>{root.gijulCloudChanged();refreshPeer();},30000);
       }catch(e){fail(e);}
     },
@@ -167,12 +180,12 @@
         if(!backend) backend=await GijulFirebase(config);
         const user=await backend.login();if(epoch===authEpoch) await connect(user);
       }catch(e){if(epoch===authEpoch) fail(e);}
-      finally{authPending=false;}
+      finally{authPending=false;watchBackend();}
     },
     async logout(){
       if(authPending || state.busy) return;authPending=true;authEpoch++;disconnect();state.busy=true;state.on=false;
       state.message="연결을 끊고 있습니다";notify();
-      try{await backend.logout();state.message="연결을 끊었습니다. 이 기기의 기록은 보존합니다";}catch(e){fail(e);}
+      try{await backend?.logout();state.message="연결을 끊었습니다. 이 기기의 기록은 보존합니다";}catch(e){fail(e);}
       finally{authPending=false;state.busy=false;notify();}
       // Keep the journal bound to its original account, including signed-out edits.
     },
@@ -182,7 +195,7 @@
       else {root.gijulCloudChanged();refreshPeer();}
     },
   };
-  root.addEventListener("storage",e=>{if(e.key===wakeKey || e.key?.startsWith(intentPrefix)) refreshPeer();});
+  root.addEventListener("storage",e=>{if(e.key===wakeKey || e.key==="gijul.sync.uid.v1" || e.key?.startsWith(intentPrefix)) refreshPeer();});
   root.addEventListener("online",()=>{root.gijulCloudChanged();refreshPeer();});
   root.addEventListener("pageshow",()=>{refreshPeer();if(timer) clearInterval(timer);timer=setInterval(()=>{root.gijulCloudChanged();refreshPeer();},30000);});
   root.addEventListener("pagehide",()=>{if(timer) clearInterval(timer);});

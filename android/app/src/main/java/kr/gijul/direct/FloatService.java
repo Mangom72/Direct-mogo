@@ -784,6 +784,7 @@ public class FloatService extends Service {
         int v = Math.max(MIN_OPACITY, Math.min(max, pct));
         if (v == opacity) return;          // 상한에 붙은 채로 계속 끌 때가 대부분이다
         opacity = v;
+        if (slider != null) slider.sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_VIEW_SELECTED);
         updateBar();
         applyMode();
     }
@@ -1397,7 +1398,36 @@ public class FloatService extends Service {
     private class Slider extends View {
         private final Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final boolean night;
-        Slider(Context c, boolean night) { super(c); this.night = night; }
+        Slider(Context c, boolean night) {
+            super(c); this.night = night; setFocusable(true);
+            setContentDescription("창 불투명도"); setMinimumHeight(dp(48));
+        }
+        @Override public void onInitializeAccessibilityNodeInfo(android.view.accessibility.AccessibilityNodeInfo info) {
+            super.onInitializeAccessibilityNodeInfo(info);
+            info.setClassName(android.widget.SeekBar.class.getName());
+            info.setRangeInfo(android.view.accessibility.AccessibilityNodeInfo.RangeInfo.obtain(
+                    android.view.accessibility.AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_INT, MIN_OPACITY, passThrough ? capPct() : 100, opacity));
+            info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS);
+            info.addAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+            info.addAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+        }
+        @Override public boolean performAccessibilityAction(int action, android.os.Bundle args) {
+            if (action == android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.getId() && args != null) {
+                setOpacity(Math.round(args.getFloat(android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE))); invalidate(); return true;
+            }
+            if (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+                    || action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD) {
+                setOpacity(opacity + (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD ? 5 : -5)); invalidate(); return true;
+            }
+            return super.performAccessibilityAction(action, args);
+        }
+        @Override public boolean onKeyDown(int key, android.view.KeyEvent event) {
+            if (key == android.view.KeyEvent.KEYCODE_DPAD_LEFT || key == android.view.KeyEvent.KEYCODE_DPAD_RIGHT) {
+                setOpacity(opacity + (key == android.view.KeyEvent.KEYCODE_DPAD_RIGHT ? 5 : -5)); invalidate(); return true;
+            }
+            return super.onKeyDown(key, event);
+        }
+        @Override public boolean performClick() { super.performClick(); return true; }
 
         @Override protected void onDraw(Canvas c) {
             float cy = getHeight() / 2f, r = dp(2), knob = dp(7.5f);
@@ -1430,7 +1460,7 @@ public class FloatService extends Service {
             switch (e.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
                 case MotionEvent.ACTION_MOVE: showPct(this); break;
-                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_UP: performClick(); ui.postDelayed(hidePct, 700); break;
                 case MotionEvent.ACTION_CANCEL: ui.postDelayed(hidePct, 700); break;
             }
             return true;
@@ -2050,7 +2080,8 @@ public class FloatService extends Service {
         timerMenu = new android.widget.PopupWindow(box, dp(200),
                 ViewGroup.LayoutParams.WRAP_CONTENT, true);
         timerMenu.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0));
-        timerMenu.setWindowLayoutType(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY);
+        timerMenu.setWindowLayoutType(android.os.Build.VERSION.SDK_INT >= 26
+                ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE);
         timerMenu.setElevation(dp(12));
         timerMenu.showAsDropDown(timeChip);
     }

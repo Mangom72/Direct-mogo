@@ -40,3 +40,6 @@
 .omr-digit-grid button:not([data-empty]):before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:24px;height:36px;border:1px solid #ed258f;border-radius:50%}
 .omr-digit-grid button[aria-pressed=true]:not([data-empty]){background:transparent;color:#fff}.omr-digit-grid button[aria-pressed=true]:not([data-empty]):before{background:#191713;border-color:#191713;z-index:-1}
 .omr-digit-grid button[aria-pressed=true]{isolation:isolate}.omr-digit-grid [data-empty]{font-size:12px;color:var(--ink,#191713)}
+
+/* 전체 양식은 문항을 고른 뒤 큰 답 버튼으로 입력한다. */
+.omr-full-input .omr-bubble:disabled,.omr-overview .omr-bubble:disabled{opacity:1;pointer-events:none}

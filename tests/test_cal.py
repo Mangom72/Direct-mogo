@@ -85,14 +85,14 @@ with sync_playwright() as pw:
     ck(all("모" in t.split()[1] for t in edu),
        f"교육청 회차는 'N모'여야 합니다: {edu[:3]}")
 
-    # 학년도인가 — 시행 연도 + 1
+    # 학년도인가 — 시행 연도
     got = pg.evaluate("""()=>{
       const k = Object.keys(SOLVED)[0], p = k.split('/');
       const meta = SUBINDEX[p[0]+'/'+p[1]];
       return { yy: shortName(p[2].slice(0,4), p.slice(3).join('/'), meta.name),
                year: p[2].slice(0,4) };}""")
     print("4. 줄인 이름:", got["yy"], "· 시행 연도:", got["year"])
-    ck(got["yy"].startswith(str(int(got["year"]) + 1)[2:]),
+    ck(got["yy"].startswith(str(int(got["year"]))[2:]),
        f"줄인 이름의 연도가 학년도가 아닙니다: {got['yy']} (시행 {got['year']})")
 
     # 오른쪽 칸은 줄이지 않는다

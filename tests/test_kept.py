@@ -50,10 +50,8 @@ with sync_playwright() as pw:
     pg.wait_for_selector(".item .send", timeout=25000)
 
     # 첫 회차의 폴더 이름을 앱이 이미 들고 있는 것처럼 만든다
-    folder = pg.evaluate("""()=>{const r=ROWS[0];
-      return `${r.y} ${r.title} ${r.sub}`.replace(/[\\/\\\\:*?"<>|\\x00-\\x1f]/g,'')
-             .replace(/\\s+/g,' ').trim();}""")
-    pg.evaluate("f=>{window.__saved=[{folder:f, name:'문제.pdf', size:1000}];}", folder)
+    folder = pg.evaluate("()=>folderFor(ROWS[0])")
+    pg.evaluate("""()=>{const r=ROWS[0];window.__saved=r.files.map(f=>({folder:folderFor(r),name:f.name,url:f.url,size:1000}));}""")
     pg.evaluate("()=>{savedCache=null; render();}")
     print("1. 앱이 들고 있는 회차:", folder)
 
@@ -82,12 +80,13 @@ with sync_playwright() as pw:
     ck(not s["disabled"], "아직 받지 않은 회차인데 단추가 잠겨 있습니다")
     ck("이미" not in s["label"], "받지도 않았는데 이미 받았다고 합니다")
 
+    # 한 파일만 받은 회차는 완료가 아니며 나머지를 다시 받을 수 있어야 한다.
+    pg.evaluate("""()=>{const r=sheetRow,f=r.files[0];window.__saved.push({folder:folderFor(r),name:f.name,url:f.url,size:1000});}""")
+    pg.evaluate("()=>{savedCache=null;Vault.sync();syncSaveBtn();}")
+    ck(not state(pg)['disabled'], "일부만 받았는데 완료로 잠깁니다")
+
     # 저장이 끝나면 그 자리에서 잠겨야 한다
-    f2 = pg.evaluate("""()=>{const r=sheetRow;
-      return `${r.y} ${r.title} ${r.sub}`.replace(/[\\/\\\\:*?"<>|\\x00-\\x1f]/g,'')
-             .replace(/\\s+/g,' ').trim();}""")
-    pg.evaluate("f=>{window.__saved.push({folder:f, name:'문제.pdf', size:1000});"
-                "window.gijulSaveResult(true, 3, '3개 담았습니다');}", f2)
+    pg.evaluate("""()=>{window.__saved.push(...sheetRow.files.map(f=>({folder:folderFor(sheetRow),name:f.name,url:f.url,size:1000})));window.gijulSaveResult(true,3,'3개 담았습니다');}""")
     pg.wait_for_timeout(300)
     s = state(pg)
     print(f"3. 저장 직후: {s['label']!r} · 잠김 {s['disabled']}")

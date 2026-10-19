@@ -46,7 +46,7 @@ with sync_playwright() as pw:
     page.wait_for_function("()=>document.querySelector('.omr-sheet').classList.contains('omr-full-input')")
     sheet=page.locator('.omr-sheet').bounding_box();frame=page.locator('.omr-sheet-scroll').bounding_box()
     assert sheet['width']<=frame['width'] and sheet['height']<=frame['height']
-    page.locator('.omr-bubble[data-question="20"][data-value="4"]').click()
+    page.select_option('#omrQuestion','20');page.locator('.omr-answer-controls [data-answer="4"]').click()
     assert page.locator('.omr-bubble[data-question="20"][data-value="4"]').get_attribute('aria-pressed')=='true'
     page.set_viewport_size({"width":390,"height":844})
     page.wait_for_function("()=>!document.querySelector('.omr-sheet').classList.contains('omr-full-input')")
@@ -78,7 +78,7 @@ with sync_playwright() as pw:
     page.click('#omrManual')
     page.wait_for_function("()=>document.querySelector('.omr-title-preset use').getBBox().width>0")
     assert page.locator('.omr-paper-heading').get_attribute('data-preset')=='m6'
-    assert page.locator('.omr-paper-heading').get_attribute('data-year')=='2026'
+    assert page.locator('.omr-paper-heading').get_attribute('data-year')=='2025'
     assert page.locator('.omr-paper-heading text').count()==0
     page.select_option('#omrQuestion','21')
     page.locator('.omr-digit[data-question="21"][data-digit="2"][data-value="7"]').click()

@@ -361,6 +361,7 @@ public class MainActivity extends ComponentActivity {
                 }
                 os.getFD().sync();
             }
+            if (total == 0) throw new Exception("빈 파일입니다");
             replace(tmp, out);
         } catch (Exception e) {
             tmp.delete();          // 반쪽은 남기지 않는다 — 남으면 그 자리가 막힌다
@@ -527,7 +528,7 @@ public class MainActivity extends ComponentActivity {
                     /* 받는 중인 반쪽은 목록에 넣지 않는다 — 넣으면 파일 수와 용량에는
                        잡히는데 종류를 알 수 없어 버튼이 안 생긴다. 보이지도 지우지도
                        못하는 항목이 그렇게 생겼다. */
-                    File[] fs = d.listFiles(f -> f.isFile() && !f.getName().endsWith(".part"));
+                    File[] fs = d.listFiles(f -> f.isFile() && !f.getName().startsWith(".") && !f.getName().endsWith(".part"));
                     if (fs == null) continue;
                     Arrays.sort(fs, Comparator.comparing(File::getName));
                     for (File f : fs) {
@@ -535,7 +536,7 @@ public class MainActivity extends ComponentActivity {
                             out.put(new JSONObject()
                                     .put("folder", d.getName())
                                     .put("name", f.getName())
-                                    .put("size", f.length()));
+                                    .put("size", f.length()).put("url", PaperFiles.url(d, f)));
                         } catch (Exception ignored) { }
                     }
                 }
@@ -972,7 +973,10 @@ public class MainActivity extends ComponentActivity {
             for (int i = 0; i < files.length(); i++) {
                 JSONObject f = files.getJSONObject(i);
                 try {
-                    download(f.getString("url"), new File(dir, safe(f.getString("name"))));
+                    String url = f.getString("url");
+                    File target = new File(dir, safe(f.getString("name")));
+                    if (!url.equals(PaperFiles.url(dir, target))) download(url, target);
+                    PaperFiles.remember(dir, target, url);
                     ok++;
                 } catch (Exception e) {
                     Log.w(TAG, "파일 저장 실패: " + f.optString("name"), e);
@@ -994,14 +998,7 @@ public class MainActivity extends ComponentActivity {
     }
 
     /** 이미 받아둔 파일이 있으면 다시 받지 않는다 */
-    private File findSaved(String name) {
-        File[] dirs = root().listFiles(File::isDirectory);
-        if (dirs != null) for (File d : dirs) {
-            File f = new File(d, name);
-            if (f.isFile()) return f;
-        }
-        return null;
-    }
+    private File findSaved(String url) { return PaperFiles.saved(root(), url); }
 
     /**
      * WebView에는 Web Share API가 없다 — navigator.share 가 아예 없어서 페이지 혼자서는
@@ -1010,11 +1007,11 @@ public class MainActivity extends ComponentActivity {
     private void share(String name, String url) {
         try {
             safe(name);
-            File f = findSaved(name);
+            File f = findSaved(url);
             if (f == null) {
                 File dir = new File(getCacheDir(), "share");
                 if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("임시 폴더를 만들지 못했습니다");
-                f = new File(dir, name);
+                f = new File(dir, PaperFiles.shareName(name, url));
                 /* 다 받은 것만 최종 이름에 있으므로, 있으면 그대로 쓴다 */
                 if (!f.isFile()) { download(url, f); trim(dir, SHARE_BUDGET); }
                 else f.setLastModified(System.currentTimeMillis());   // 방금 쓴 것은 늦게 버린다

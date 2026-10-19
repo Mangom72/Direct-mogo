@@ -1,7 +1,7 @@
 /* 기출 직행 서비스 워커
    자료 5천여 건이 index.html 안에 들어 있으므로, 이 파일 하나만 쥐고 있으면
    조회·필터는 네트워크 없이 전부 동작한다. 네트워크가 필요한 것은 PDF뿐이다. */
-const VERSION = "v15";
+const VERSION = "v16";
 const SHELL = `gijul-shell-${VERSION}`;
 const FILES = `gijul-files-${VERSION}`;
 const KEEP = [SHELL, FILES];
@@ -23,7 +23,7 @@ const REQUIRED_SHELL_URLS = [
   "./omr/headings.svg",
   ...["korean","math","english","inquiry","history","language"].map(id=>"./omr/templates/"+id+".webp"),
   ...["korean","math","english","inquiry","history","language"].map(id=>"./omr/templates/manual/"+id+".webp"),
-  "./sync/journal.js", "./sync/firebase.js", "./sync/controller.js",
+  "./sync/journal.js", "./sync/firebase.js", "./sync/controller.js", "./sync/storage.js",
   /* 글꼴도 우리 것이 됐으므로 셸과 함께 미리 받아 둔다 — 첫 방문부터 오프라인에서
      제 글꼴로 뜨고, 예전처럼 남의 서버가 대답할 때까지 기다릴 일이 없다. */
   "./fonts/fonts.css",

@@ -1440,13 +1440,12 @@ public class PdfViewActivity extends ComponentActivity {
     private void fetch(String url) {
         try {
             /* 이미 '받아둔 자료'에 있으면 그걸 쓴다 — 같은 파일을 두 번 받을 이유가 없다 */
-            File saved = findSaved(name);
-            if (saved == null) saved = findSaved(nameOf(url));
+            File saved = findSaved(url);
             if (saved != null) { load(saved); return; }
 
             File dir = new File(getCacheDir(), "view");
             if (!dir.isDirectory() && !dir.mkdirs()) throw new Exception("임시 폴더를 만들지 못했습니다");
-            File to = new File(dir, MainActivity.safe(nameOf(url)));
+            File to = new File(dir, PaperFiles.cacheName(url));
             /* 받기는 MainActivity가 맡는다 — 다 받은 것만 이 이름에 놓이므로,
                여기 있다는 것은 온전하다는 뜻이다. 예전에는 이 자리에 직접 썼고,
                전송이 끊기면 반쪽이 남아 다음부터 '이미 있다'로 걸렸다. 그 회차는
@@ -1621,8 +1620,8 @@ public class PdfViewActivity extends ComponentActivity {
             if (nice.equals(file.getName())) return file;
             File dir = new File(getCacheDir(), "share");
             if (!dir.isDirectory() && !dir.mkdirs()) return file;
-            File to = new File(dir, nice);
-            if (!to.isFile() || to.length() != file.length()) MainActivity.copy(file, to);
+            File to = new File(dir, PaperFiles.shareName(nice, file.getAbsolutePath()));
+            MainActivity.copy(file, to);
             return to;
         } catch (Exception e) {
             Log.w(TAG, "이름을 맞추지 못했습니다: " + name, e);

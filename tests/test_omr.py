@@ -20,7 +20,7 @@ with sync_playwright() as pw:
     pg.evaluate('''k=>{SOLVED[k]='20260915';TIMES[k]={spent:1200,limit:1800};saveSolved();saveTimes();render()}''',key)
     row.locator('.record').click();pg.click('#recordOmr');pg.click('#omrManual')
     assert '0/20' in pg.locator('.omr-progress').inner_text()
-    assert pg.locator('.omr-exam').inner_text().startswith('2027학년도')
+    assert pg.locator('.omr-exam').inner_text().startswith('2026학년도')
     assert pg.locator('.omr-sheet img').get_attribute('src').endswith('/manual/inquiry.webp')
     assert pg.locator('header.head').count()==0 or pg.locator('header.head').evaluate('e=>e.inert')
     for n,v in enumerate(ANS,1):
@@ -72,7 +72,7 @@ with sync_playwright() as pw:
     pg.click('#omrKey');pg.fill('#omrKeyAnswers','1.5');pg.fill('#omrKeyPoints','3');pg.locator('.omr-actions button').click()
     assert '모두 적어' in pg.locator('.omr-note').inner_text()
     pg.locator('.omr-close').click();pg.select_option('#subject','inquiry');pg.select_option('#exam','edu');pg.click('#start');pg.click('#omrManual')
-    assert pg.locator('.omr-exam strong').inner_text().startswith('2026년 ')
+    assert pg.locator('.omr-exam strong').inner_text().startswith('2026학년도 ')
     assert '확인해' in pg.locator('.omr-note').inner_text()
     pg.locator('.omr-close').click()
 
@@ -84,13 +84,13 @@ with sync_playwright() as pw:
     sb=sheet.bounding_box();vb=pg.locator('.omr-sheet-scroll').bounding_box()
     assert sb['width']<=vb['width'] and sb['height']<=vb['height'] and sb['width']>650,(sb,vb)
     assert pg.locator('.omr-dialog').bounding_box()['width']==1024
-    pg.locator('.omr-bubble[data-question="1"][data-value="5"]').click()
+    pg.select_option('#omrQuestion','1');pg.locator('.omr-answer-controls [data-answer="5"]').click()
     assert pg.locator('.omr-bubble[data-question="1"][data-value="5"]').get_attribute('aria-pressed')=='true'
     pg.locator('.omr-answer-controls [data-answer="2"]').click()
     assert pg.locator('.omr-bubble[data-question="1"][data-value="2"]').get_attribute('aria-pressed')=='true'
     pg.select_option('#omrQuestion','45')
     assert sheet.evaluate("e=>e.classList.contains('omr-full-input')")
-    pg.locator('.omr-bubble[data-question="45"][data-value="4"]').click()
+    pg.select_option('#omrQuestion','45');pg.locator('.omr-answer-controls [data-answer="4"]').click()
     pg.click('#omrWhole');assert sheet.evaluate("e=>!e.classList.contains('omr-full-input')")
     pg.click('#omrWhole');assert sheet.evaluate("e=>e.classList.contains('omr-full-input')")
     pg.set_viewport_size({'width':390,'height':844})
@@ -152,7 +152,7 @@ with sync_playwright() as pw:
         assert len(alignment)=={'korean':225,'math':366,'english':225,'history':100,'inquiry':200,'language':150}[subject]
         assert all(a['error'] is not None and a['error']<=6 for a in alignment),(subject,alignment)
         heading=pg.locator('.omr-paper-heading')
-        assert heading.get_attribute('data-year')=='2027' and heading.get_attribute('data-original')=='false'
+        assert heading.get_attribute('data-year')=='2026' and heading.get_attribute('data-original')=='false'
         assert heading.locator('text,strong,span').count()==0
         assert pg.locator('.omr-title-preset').count()==1  # Exact “모의 평가” preset.
         assert pg.locator('.omr-margin-mask').count()==1
@@ -176,6 +176,7 @@ with sync_playwright() as pw:
     original_x=pg.evaluate("()=>{const f=GijulOmrForms.manualForms.math,out=f.questions.map(q=>q.spots.map(p=>p.x));for(const q of f.questions)for(const p of q.spots)p.x+=15;return out}")
     pg.click('#start');pg.click('#omrManual')
     pg.wait_for_function("()=>document.querySelector('.omr-sheet').dataset.alignment==='clock'")
+    pg.click('#omrWhole')  # 숫자 마킹은 확대된 답란에서 입력
     for n,index in [(20,41),(21,25),(22,28),(29,38),(30,41)]:
         x=pg.locator(f'.omr-digit[data-question="{n}"][data-digit="0"][data-value="1"]').evaluate("e=>parseFloat(e.style.left)*1800/100")
         assert abs(x-clocks['full'][index])<.001,(n,x,clocks)
@@ -210,7 +211,7 @@ with sync_playwright() as pw:
     assert pg.locator('.omr-note').inner_text()==''
     pg.locator('.omr-close').click()
     # Actual presets load painted outlines, with 시행 연도 / 학년도 and clear regions.
-    for title,date,expected,year in [('수능 홀수형','20251113','csat','2026'),('6월 모평(평가원)','20250604','m6','2026'),('10월 학평(서울)','20211012','edu10','2021')]:
+    for title,date,expected,year in [('수능 홀수형','20251113','csat','2025'),('6월 모평(평가원)','20250604','m6','2025'),('10월 학평(서울)','20211012','edu10','2021')]:
         meta={**mathmeta,'date':date,'title':title}
         pg.evaluate('meta=>GijulOMR.open(meta,{demo:true})',meta);pg.click('#omrManual')
         pg.wait_for_function("()=>document.querySelector('.omr-title-preset use').getBBox().width>0")

@@ -2,6 +2,8 @@ package kr.gijul.direct;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -256,4 +258,18 @@ public class GuardTest {
         } finally { java.util.TimeZone.setDefault(old); }
     }
 
+
+    @Test public void 같은_끝이름의_원본을_혼동하지_않는다() throws Exception {
+        String a = "https://wdown.ebsi.co.kr/2025/paper.pdf", b = "https://wdown.ebsi.co.kr/2026/paper.pdf";
+        assertNotEquals(PaperFiles.cacheName(a), PaperFiles.cacheName(b));
+        assertTrue(PaperFiles.cacheName(a).matches("[a-f0-9]{64}\\.pdf"));
+        java.io.File root = java.nio.file.Files.createTempDirectory("papers").toFile();
+        java.io.File dir = new java.io.File(root, "legacy"); assertTrue(dir.mkdir());
+        java.io.File file = new java.io.File(dir, "paper.pdf"); java.nio.file.Files.write(file.toPath(), new byte[]{1,2,3});
+        assertNull(PaperFiles.saved(root, a)); // Old ambiguous names stay available only in the vault.
+        org.json.JSONArray entries = new org.json.JSONArray().put(new org.json.JSONObject().put("name", "paper.pdf").put("url", a).put("size",3));
+        java.nio.file.Files.write(new java.io.File(dir, PaperFiles.MANIFEST).toPath(), entries.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        assertEquals(file, PaperFiles.saved(root, a)); assertNull(PaperFiles.saved(root, b));
+        java.nio.file.Files.write(file.toPath(), new byte[]{1}); assertNull(PaperFiles.saved(root, a));
+    }
 }

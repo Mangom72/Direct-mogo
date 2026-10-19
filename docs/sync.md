@@ -4,7 +4,7 @@
 2026-10-03 기준 `sync/config.json`은 `enabled:true`이며 운영 프로젝트는
 `direct-mogo`, Standard Firestore `(default)` / `asia-northeast3`다.
 `sync/config.json`의 `enabled:false` 동안에는 기존 기록·백업 동작을 유지하고 SDK도
-받지 않는다. 프로젝트 연결·규칙 배포·전송 검증이 끝난 뒤 활성화한다. 실제 기기의 Google 로그인은 별도로 확인한다.
+받지 않는다. 처음 방문한 비로그인 사용자도 로그인 버튼을 누를 때까지 SDK를 받지 않는다. 기존 계정에 묶인 기록이 있으면 시작 시 계정 상태를 복원한다. 프로젝트 연결·규칙 배포·전송 검증이 끝난 뒤 활성화한다. 실제 기기의 Google 로그인은 별도로 확인한다.
 
 ## 프로젝트 준비
 
@@ -116,7 +116,8 @@ Node 의존성은 시험용 경로에만 설치하며 웹 빌드에는 npm을 �
 ```sh
 npm install --prefix .git/codex-firebase-tests --no-save firebase@12.19.0 @firebase/rules-unit-testing@5.0.2
 export NODE_PATH="$PWD/.git/codex-firebase-tests/node_modules"
-npx -y firebase-tools@latest emulators:exec --only auth,firestore --project demo-gijul-sync --config sync/firebase.json 'node tests/firestore_rules.cjs && python3 tests/firestore_transport.py'
+npm ci --prefix tests/firebase --ignore-scripts
+NODE_PATH="$PWD/tests/firebase/node_modules" tests/firebase/node_modules/.bin/firebase emulators:exec --only auth,firestore --project demo-gijul-sync --config sync/emulators.json 'node tests/firestore_rules.cjs && python3 tests/firestore_transport.py'
 ```
 
 보안 규칙은 사용자만 읽고 자기 UID 경로에만 쓸 수 있는 제한된 초기 규칙이다.
@@ -129,3 +130,5 @@ Firestore 규칙 배포를 확인했다. Android 설정이 반환한 웹 OAuth c
 `sync/config.json`과 일치한다. 실제 Google 로그인 화면까지의 웹 smoke 시험은
 통과했으며 계정 선택 이후의 로그인과 실제 Android 기기 로그인은 별도 확인 대상이다.
 Analytics SDK는 사용하지 않는다.
+
+회귀 CI의 별도 Firebase 작업에서 Node 24·Java 21과 잠긴 npm 의존성을 사용해 두 시험을 실행한다. 운영 프로젝트에는 연결하지 않는다.

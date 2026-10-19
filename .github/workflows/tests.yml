@@ -81,3 +81,28 @@ jobs:
           name: 실패한-화면
           path: shots
           if-no-files-found: ignore
+
+  firebase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Install pinned emulator and browser dependencies
+        run: |
+          node --version
+          npm ci --prefix tests/firebase --ignore-scripts
+          pip install -r requirements/tests.txt
+          playwright install --with-deps chromium
+      - name: Security rules and real SDK offline/reconnect transport
+        env:
+          NODE_PATH: ${{ github.workspace }}/tests/firebase/node_modules
+        run: tests/firebase/node_modules/.bin/firebase emulators:exec --project demo-gijul-sync --config sync/emulators.json --only auth,firestore 'node tests/firestore_rules.cjs && python tests/firestore_transport.py'

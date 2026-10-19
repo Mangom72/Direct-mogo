@@ -306,9 +306,9 @@ with sync_playwright() as pw:
       return { kept: SOLVED[key], added: "D300/158/20240613/6월 모평(평가원)" in SOLVED,
                toldApp: !!sent };
     }""")
-    print("    겹치면 더 이른 날:", merged["kept"], "| 새것 들어옴:", merged["added"],
+    print("    겹치면 현재 기기의 날:", merged["kept"], "| 새것 들어옴:", merged["added"],
           "| 앱에 다시 알림:", merged["toldApp"])
-    ck(merged["kept"] == "20250301", f"더 이른 날이 안 남았습니다: {merged['kept']}")
+    ck(merged["kept"] == "20250601", f"현재 기기의 날이 안 남았습니다: {merged['kept']}")
     ck(merged["added"], "다른 기기의 표시가 안 들어왔습니다")
     ck(merged["toldApp"], "합친 것을 앱에 다시 알리지 않았습니다")
     note = pg3.text_content("#noticeText") or ""

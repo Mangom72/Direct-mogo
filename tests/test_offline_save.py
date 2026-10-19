@@ -118,7 +118,7 @@ with sync_playwright() as pw:
     print("   ERRORS:", pg.errs or "none")
     pg.context.close()
 
-    # ---- 3b. 목록이 없는 통은 없는 것으로 치고 치운다
+    # ---- 3b. 목록이 없는 통은 완료로 표시하지 않고 보존한다
     #      담는 중에 브라우저가 죽으면 통만 남을 수 있다. 그때 '담김'이 붙었는데
     #      열면 아무것도 없는 것이 제일 나쁘다.
     pg = page()
@@ -128,7 +128,7 @@ with sync_playwright() as pw:
     left = pg.evaluate(BOXES)
     print("    훑은 뒤:", left, "| 담김 표시:",
           pg.eval_on_selector_all(".item .meta .kept", "e=>e.length"), "개")
-    assert left == [], left
+    assert left == ["gijul-vault:유령 회차"] and pg.locator(".item .meta .kept").count()==0, left
     print("   ERRORS:", pg.errs or "none")
     pg.context.close()
 

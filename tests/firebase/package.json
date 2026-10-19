@@ -1,0 +1,10 @@
+{
+  "name": "gijul-sync-verification",
+  "private": true,
+  "version": "1.0.0",
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "6.0.0",
+    "firebase": "13.0.0",
+    "firebase-tools": "15.34.0"
+  }
+}

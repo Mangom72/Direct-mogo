@@ -11,3 +11,7 @@ fonts/.src/
 *.keystore
 keystore.properties
 local.properties
+
+# Local Firebase verification dependencies and logs
+node_modules/
+*-debug.log

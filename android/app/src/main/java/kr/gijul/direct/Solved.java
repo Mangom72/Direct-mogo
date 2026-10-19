@@ -245,12 +245,12 @@ final class Solved {
     }
 
     /**
-     * "26 6평 확통". 앞 두 자리는 <b>학년도</b>(시행 연도 + 1)다 — 학생이 말하는
-     * '26 3모'이 2025년 3월에 치른 그것이라, 줄여 부를 때는 이쪽이 맞는다.
+     * "26 6평 확통". 앞 두 자리는 화면 표기 규칙에 따라 <b>시행 연도</b>다 — 학생이 말하는
+     * '26 3모'는 2026년 3월 시행분을 가리킨다.
      */
     static String label(Item x) {
         int y;
-        try { y = Integer.parseInt(x.date.substring(0, 4)) + 1; }
+        try { y = Integer.parseInt(x.date.substring(0, 4)); }
         catch (Exception e) { return shortSub(x.name); }
         return String.valueOf(y).substring(2) + " " + shortRound(x.title) + " " + shortSub(x.name);
     }

@@ -115,10 +115,10 @@ with sync_playwright() as pw:
     pg=ctx.new_page();pg.goto(SITE,wait_until='load');pg.wait_for_selector('.item .chk')
     pg.wait_for_function('()=>GijulSync.state().enabled')
     pg.click('#bakBtn');assert not pg.locator('#cloudSyncDisconnect').is_visible(), 'Signed-out account controls are visible'
-    pg.wait_for_function('()=>typeof __initialAuth==="function"')
+    assert pg.evaluate("()=>typeof __adapter===\"undefined\""), "Anonymous visit loaded auth SDK"
+    early=ctx.new_page();early.goto(SITE,wait_until='load');early.wait_for_function('()=>GijulSync.state().enabled')
     pg.evaluate('()=>GijulSync.login()')
     pg.wait_for_function('()=>window.__finish && GijulSync.state().on')
-    pg.evaluate('()=>__initialAuth(null)')
     pg.wait_for_timeout(50)
     assert pg.evaluate('()=>GijulSync.state().on'), 'Late initial auth query disconnected the new login'
     assert pg.locator('#cloudSyncDisconnect').is_visible(), 'Signed-in account controls are hidden'
@@ -137,6 +137,7 @@ with sync_playwright() as pw:
     pg.evaluate('op=>__deliver([...__remote,op])',remote)
     pg.wait_for_function('k=>RECORDS[k]?.score===90',arg=key)
     assert pg.evaluate('k=>RECORDS[k].wrong',key)==[1,3]
+    early.wait_for_function('k=>RECORDS[k]?.score===90',arg=key);early.close()
     # Logging out preserves outbox and never reconnects the old Drive file.
     pg.evaluate('()=>GijulSync.logout()');assert not pg.evaluate('()=>GijulSync.state().on')
     assert not pg.locator('#cloudSyncDisconnect').is_visible(), 'Logged-out account controls remain visible'
@@ -171,8 +172,9 @@ with sync_playwright() as pw:
     assert before_clock==after_clock, 'Committed intent was replayed as a new change after restart'
     print('Controller: late initial auth ignored, retry same UUID, failure retains outbox, remote field merge, signed-out restart, crash intent receipt')
     # A local edit made during a suspended receive stays visible before any server echo.
+    pg.evaluate('()=>{__accept=true;void GijulSync.login();}')
+    pg.wait_for_function('()=>GijulSync.state().on')
     pg.evaluate('()=>__initialAuth(null)')
-    pg.evaluate('()=>{__accept=true;return GijulSync.login();}')
     pg.wait_for_function('()=>GijulSync.state().on && GijulSync.state().pending===0')
     pg.evaluate("""()=>{
       const receive=GijulJournal.Journal.prototype.receive;

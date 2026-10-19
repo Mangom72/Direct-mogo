@@ -117,9 +117,9 @@ def foot(depth, extra=""):
   <a href="mailto:direct.mogo.dev@gmail.com">direct.mogo.dev@gmail.com</a> 또는
   <a href="{REPO}/issues">GitHub 이슈</a>.
   자세한 것은 <a href="{REPO}/blob/main/NOTICE.md">이용 안내</a>에 있습니다.</p>
-  <p>연도는 <b>시행 연도</b>입니다. 평가원 시험의 학년도는 시행 연도 + 1이므로
-  (2025년 11월 시행 = 2026학년도 수능) 각 회차에 학년도를 함께 적었습니다.
-  교육청 학력평가는 관례상 시행 연도로만 부릅니다.</p>
+  <p>화면의 학년도와 줄인 연도는 <b>시험을 본 해</b>를 기준으로 합니다.
+  원본 자료의 시행일과 주소는 그대로 제공합니다.
+  </p>
   <p class="ln"><a href="{up}">기출 직행</a> ·
      <a href="{up}s/">전체 과목</a> ·
      <a href="{REPO}">GitHub</a></p>
@@ -229,9 +229,8 @@ def subject_page(meta, sub):
   <h1>{E(gl)} {E(name)} 기출문제</h1>
   <p class="lead">{E(gl)} <b>{E(name)}</b> 전 회차 <b>{n}개</b> ({E(span)}).
   아래 표의 문제·정답·해설은 EBSi 원본 파일로 직접 연결됩니다.</p>
-  <p class="yrnote"><b>연도는 시행 연도입니다.</b> 평가원 시험(수능·6·9월 모평)은
-  학년도가 한 해 뒤라 함께 적었습니다 — <b>2025년 11월 시행 = 2026학년도 수능</b>.
-  교육청 전국연합학력평가는 학년도를 쓰지 않습니다.</p>
+  <p class="yrnote">화면의 학년도와 줄인 연도는 <b>시험을 본 해</b>를 기준으로 합니다.
+  원본 자료의 시행일과 주소는 그대로 제공합니다.</p>
   <ul class="facts">{facts(meta)}</ul>
   <p class="go"><a class="app" href="../../#/{g}/{sid}/all/all">앱 화면에서 보기</a>
      <a href="../../data/{g}/{sid}.json">JSON으로 받기</a></p>
@@ -240,11 +239,9 @@ def subject_page(meta, sub):
 
     for y in years:
         rows = [p for p in meta["papers"] if p["year"] == y]
-        hak = next((p.get("schoolYear") for p in rows if p.get("schoolYear")), None)
         # 한 장에 연도별 표가 스무 개씩 있는데 이름이 없으면, 소리로 읽는 사람은
         # 지금 어느 해의 표를 지나는지 알 수 없다. 바로 위 연도 제목을 가리킨다.
-        out.append(f'<section class="yr"><h2 id="y{y}">{y}년'
-                   + (f' <span class="hak">{hak}학년도</span>' if hak else "")
+        out.append(f'<section class="yr"><h2 id="y{y}">{y}학년도'
                    + f'</h2>\n<table aria-labelledby="y{y}">\n'
                    '<thead><tr><th scope="col">회차</th><th scope="col">시행일</th>'
                    '<th scope="col">출제</th><th scope="col">자료</th></tr></thead>\n<tbody>\n')
@@ -253,14 +250,12 @@ def subject_page(meta, sub):
             for key, label in (("problem", "문제"), ("answer", "정답"), ("solution", "해설")):
                 links.append(f'<a href="{E(p[key])}">{label}</a>' if p.get(key)
                              else f'<span class="off">{label}</span>')
-            # 학년도는 날짜 옆에만. 회차 이름 뒤에 붙이면 이름의 일부처럼 읽힌다
-            hy = f' · {p["schoolYear"]}학년도' if p.get("schoolYear") else ""
             # 뷰어 제목에 쓸 이름의 앞부분. 뒤(문제/정답/해설 + 확장자)는 링크마다
             # 다르지만 링크 글자와 주소에서 그대로 읽어낼 수 있어 site.js에 맡긴다 —
             # 링크마다 온이름을 적으면 이 나무가 600KB 두꺼워진다.
-            out.append(f'<tr data-nm="{E(name_prefix(p["year"], p["title"], name))}">'
+            out.append(f'<tr data-nm="{E(name_prefix(p["year"], p["title"], gl + " " + name))}">'
                        f'<th scope="row">{E(p["title"])}</th>'
-                       f'<td>{E(p["date"])}{hy}</td>'
+                       f'<td>{E(p["date"])}</td>'
                        f'<td><span class="src s-{"gov" if p["source"]=="평가원" else "edu"}">'
                        f'{E(p["source"])}</span></td>'
                        f'<td class="dl">{" ".join(links)}</td></tr>\n')
@@ -288,9 +283,8 @@ def index_page(index):
   <p class="lead">2006년 시행분부터 <b>{index['count']:,}회차 · {n}과목</b>.
   과목을 고르면 그 과목의 전 회차가 연도별로 나오고, 문제·정답·해설은 EBSi 원본
   파일로 직접 연결됩니다. 수록된 가장 최근 시행일은 {E(index['updated'])}입니다.</p>
-  <p class="yrnote"><b>연도는 시행 연도입니다.</b> 평가원 시험(수능·6·9월 모평)은
-  학년도가 한 해 뒤라 함께 적었습니다 — <b>2025년 11월 시행 = 2026학년도 수능</b>.
-  교육청 전국연합학력평가는 학년도를 쓰지 않습니다.</p>
+  <p class="yrnote">화면의 학년도와 줄인 연도는 <b>시험을 본 해</b>를 기준으로 합니다.
+  원본 자료의 시행일과 주소는 그대로 제공합니다.</p>
   <p class="go"><a class="app" href="../">앱 화면에서 보기</a>
      <a href="../data/index.json">전 과목 JSON</a>
      <a href="../llms.txt">llms.txt</a></p>
@@ -510,7 +504,7 @@ def name_prefix(year, title, subject):
     """뷰어 제목에 쓸 이름의 앞부분. 앱 화면의 fileName()과 같은 규칙이라야 한다 —
     받아둔 자료에서 열 때와 목록에서 열 때와 여기서 열 때가 다르면 안 된다.
     뒤에 ' 문제.pdf' 꼴이 붙는 것은 site.js가 한다."""
-    base = re.sub(r'[/\\:*?"<>|\x00-\x1f]', "", f"{year} {title} {subject}")
+    base = re.sub(r'[/\\:*?"<>|\x00-\x1f]', "", f"{year}학년도 {title} {subject}")
     return re.sub(r"\s+", " ", base).strip()
 
 

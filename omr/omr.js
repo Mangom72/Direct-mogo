@@ -235,7 +235,7 @@ async function alignSheet(s,sheet){
   const columns=clockColumns(image,s.sheetForm);
   for(const b of sheet.querySelectorAll('[data-clock]'))b.style.left=columns[+b.dataset.clock]/s.sheetForm.width*100+'%';
   s.clockColumns=columns;s.sheetReady=true;sheet.dataset.alignment='clock';
-  sheet.querySelectorAll('.omr-bubble').forEach(b=>b.disabled=false);
+  updateSheet();
   s.body.querySelector('#omrBlank').disabled=false;
   note(s.key?'정답표와 문항별 배점이 준비되어 있습니다.':'채점하려면 정답·문항별 배점을 먼저 확인해 주세요.');
   updateInput();focusQuestion(s.active);
@@ -246,7 +246,7 @@ async function alignSheet(s,sheet){
 function input(){
  const s=current;s.sheetForm=s.photoDerived?s.form:(F.manualForms[s.form.id]||s.form);const questions=F.questions(s.sheetForm,s.slot),done=s.answers.filter(v=>v!==null).length;
  s.sheetReady=!s.sheetForm.clock;s.clockColumns=null;
- s.body.innerHTML=`<p class="omr-kicker">${s.photoDerived?'CHECK YOUR MARKS':'MARK YOUR ANSWERS'}</p><h1>${s.photoDerived?'읽은 답을 확인해 주세요.':'답안지의 답란을 눌러 주세요.'}</h1>${info()}<div class="omr-input-tools"><label>문항 <select id="omrQuestion">${questions.map(q=>`<option value="${q.n}">${q.n}번${s.flags.has(q.n)?' · 확인 필요':''}</option>`).join('')}</select></label><button id="omrWhole">전체 양식</button><button id="omrKey">정답·배점</button></div><div class="omr-progress"><span>${done}/${s.form.count}문항 입력</span><span id="omrPending">${s.flags.size?'확인 '+s.flags.size+'개 남음':'답란을 다시 누르면 지웁니다'}</span></div><div class="omr-sheet-scroll"><div class="omr-sheet"><img src="${s.sheetForm.image}" alt="${escape(s.form.area)} 공개 답안지의 마킹 입력 영역">${paperHeading(s)}<div class="omr-marks"></div></div></div><div class="omr-current"><strong id="omrCurrent"></strong><div class="omr-answer-controls" aria-label="현재 문항 답안"></div><button id="omrBlank">미응답으로 확인</button><button id="omrNext">다음 문항 →</button></div><div class="omr-flags">${[...s.flags].map(([n,flag])=>`<button data-jump="${n}">${n}번 ${escape(flag)}</button>`).join('')}</div>${s.photoDerived?'<label class="omr-check"><input type="checkbox" id="omrPhotoCheck">원본 사진과 전체 답안을 비교해 확인했습니다.</label><button id="omrOriginal" class="omr-link">보정한 원본 사진 보기</button>':''}<label class="omr-check" id="omrBlankLabel"><input type="checkbox" id="omrBlankCheck">빈 답란은 미응답으로 채점합니다.</label><div class="omr-input-bottom"><button class="omr-link" id="omrMode">입력 방식 바꾸기</button><a href="${s.sheetForm.source||F.source}" target="_blank" rel="noopener">공개 양식 출처 ↗</a></div><p class="omr-note" role="status">${s.key?'정답표와 문항별 배점이 준비되어 있습니다.':'채점하려면 정답·문항별 배점을 먼저 확인해 주세요.'}</p>`;
+ s.body.innerHTML=`<p class="omr-kicker">${s.photoDerived?'CHECK YOUR MARKS':'MARK YOUR ANSWERS'}</p><h1>${s.photoDerived?'읽은 답을 확인해 주세요.':'문항과 답을 선택해 주세요.'}</h1>${info()}<div class="omr-input-tools"><label>문항 <select id="omrQuestion">${questions.map(q=>`<option value="${q.n}">${q.n}번${s.flags.has(q.n)?' · 확인 필요':''}</option>`).join('')}</select></label><button id="omrWhole">전체 양식</button><button id="omrKey">정답·배점</button></div><div class="omr-progress"><span>${done}/${s.form.count}문항 입력</span><span id="omrPending">${s.flags.size?'확인 '+s.flags.size+'개 남음':s.whole?'전체 양식: 문항을 골라 큰 답 버튼으로 입력합니다':'답란을 다시 누르면 지웁니다'}</span></div><div class="omr-sheet-scroll"><div class="omr-sheet"><img src="${s.sheetForm.image}" alt="${escape(s.form.area)} 공개 답안지의 마킹 입력 영역">${paperHeading(s)}<div class="omr-marks"></div></div></div><div class="omr-current"><strong id="omrCurrent"></strong><div class="omr-answer-controls" aria-label="현재 문항 답안"></div><button id="omrBlank">미응답으로 확인</button><button id="omrNext">다음 문항 →</button></div><div class="omr-flags">${[...s.flags].map(([n,flag])=>`<button data-jump="${n}">${n}번 ${escape(flag)}</button>`).join('')}</div>${s.photoDerived?'<label class="omr-check"><input type="checkbox" id="omrPhotoCheck">원본 사진과 전체 답안을 비교해 확인했습니다.</label><button id="omrOriginal" class="omr-link">보정한 원본 사진 보기</button>':''}<label class="omr-check" id="omrBlankLabel"><input type="checkbox" id="omrBlankCheck">빈 답란은 미응답으로 채점합니다.</label><div class="omr-input-bottom"><button class="omr-link" id="omrMode">입력 방식 바꾸기</button><a href="${s.sheetForm.source||F.source}" target="_blank" rel="noopener">공개 양식 출처 ↗</a></div><p class="omr-note" role="status">${s.key?'정답표와 문항별 배점이 준비되어 있습니다.':'채점하려면 정답·문항별 배점을 먼저 확인해 주세요.'}</p>`;
  const sheet=s.body.querySelector('.omr-sheet'),marks=s.body.querySelector('.omr-marks');
  sheet.dataset.alignment=s.sheetReady?'fixed':'pending';
  sheet.style.setProperty('--omr-color',s.sheetForm.color);
@@ -285,6 +285,8 @@ function updateSheet(){
  sheet.classList.toggle('omr-overview',s.whole&&!s.wide);sheet.classList.toggle('omr-full-input',s.whole&&s.wide);
  scroll.classList.toggle('omr-fitted',s.whole&&s.wide);
  s.body.querySelector('#omrWhole').textContent=s.whole?'답란 확대':'전체 양식';
+ s.body.querySelector('#omrPending').textContent=s.flags.size?'확인 '+s.flags.size+'개 남음':s.whole?'전체 양식: 문항을 골라 큰 답 버튼으로 입력합니다':'답란을 다시 누르면 지웁니다';
+ sheet.querySelectorAll('.omr-bubble').forEach(b=>{b.disabled=!s.sheetReady||s.whole;});
 }
 function focusQuestion(n){
  const s=current;s.active=n;s.body.querySelector('#omrQuestion').value=n;
@@ -330,7 +332,7 @@ function updateInput(){
   b.setAttribute('aria-pressed',String(chosen));
  });
  s.body.querySelector('.omr-progress span').textContent=s.answers.filter(v=>v!==null).length+'/'+s.form.count+'문항 입력';
- s.body.querySelector('#omrPending').textContent=s.flags.size?'확인 '+s.flags.size+'개 남음':'답란을 다시 누르면 지웁니다';
+ s.body.querySelector('#omrPending').textContent=s.flags.size?'확인 '+s.flags.size+'개 남음':s.whole?'전체 양식: 문항을 골라 큰 답 버튼으로 입력합니다':'답란을 다시 누르면 지웁니다';
  const flags=s.body.querySelector('.omr-flags');flags.replaceChildren();
  for(const [n,flag] of s.flags){const b=document.createElement('button');b.type='button';b.textContent=n+'번 '+flag;b.onclick=()=>focusQuestion(n);flags.append(b);}
  const photo=s.body.querySelector('#omrPhotoCheck');if(photo)photo.checked=s.photoChecked;

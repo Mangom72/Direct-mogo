@@ -16,13 +16,77 @@ final class PaperFiles {
         if (s.endsWith(".pdf")) return "application/pdf";
         return "application/octet-stream";
     }
-    static File saved(File root, String name) {
-        if (root == null || name == null || name.isEmpty()) return null;
-        try { MainActivity.safe(name); } catch (Exception e) { return null; }
+    static final String MANIFEST = ".gijul-files.json";
+    static String cacheName(String url) {
+        try {
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(url.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder out = new StringBuilder();
+            for (byte v : digest) out.append(String.format(Locale.ROOT, "%02x", v & 255));
+            String path = url.split("[?#]", 2)[0].toLowerCase(Locale.ROOT);
+            return out + (path.endsWith(".png") ? ".png" : path.endsWith(".jpg") ? ".jpg"
+                    : path.endsWith(".jpeg") ? ".jpeg" : ".pdf");
+        } catch (java.security.NoSuchAlgorithmException e) { throw new IllegalStateException(e); }
+    }
+    static String shareName(String name, String identity) throws Exception {
+        String safe = MainActivity.safe(name);
+        int dot = safe.lastIndexOf('.');
+        String base = dot > 0 ? safe.substring(0, dot) : safe;
+        String ext = dot > 0 ? safe.substring(dot) : ".pdf";
+        while (base.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 170)
+            base = base.substring(0, base.offsetByCodePoints(base.length(), -1));
+        return base + " [" + cacheName(identity).substring(0, 24) + "]" + ext;
+    }
+    static org.json.JSONArray manifest(File dir) {
+        try { return new org.json.JSONArray(readManifest(dir)); }
+        catch (Exception e) { return new org.json.JSONArray(); }
+    }
+    private static String readManifest(File dir) throws java.io.IOException {
+        try (java.io.FileInputStream in = new java.io.FileInputStream(new File(dir, MANIFEST));
+             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
+            byte[] buffer = new byte[4096]; int n;
+            while ((n = in.read(buffer)) != -1) { if (out.size() + n > 65536) throw new java.io.IOException("metadata too large"); out.write(buffer, 0, n); }
+            return new String(out.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+    }
+    static String url(File dir, File file) {
+        org.json.JSONArray entries = manifest(dir);
+        for (int i = 0; i < entries.length(); i++) {
+            org.json.JSONObject entry = entries.optJSONObject(i);
+            if (entry != null && file.getName().equals(entry.optString("name"))
+                    && file.length() > 0 && file.length() == entry.optLong("size", -1))
+                return entry.optString("url");
+        }
+        return "";
+    }
+    static synchronized void remember(File dir, File file, String url) throws Exception {
+        org.json.JSONArray entries = manifest(dir), next = new org.json.JSONArray();
+        for (int i = 0; i < entries.length(); i++) {
+            org.json.JSONObject e = entries.optJSONObject(i);
+            if (e != null && !file.getName().equals(e.optString("name"))) next.put(e);
+        }
+        next.put(new org.json.JSONObject().put("name", file.getName()).put("url", url).put("size", file.length()));
+        File tmp = new File(dir, MANIFEST + ".part");
+        try {
+            try (java.io.FileOutputStream out = new java.io.FileOutputStream(tmp)) {
+                out.write(next.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8)); out.getFD().sync();
+            }
+            MainActivity.replace(tmp, new File(dir, MANIFEST));
+        } catch (Exception e) { tmp.delete(); throw e; }
+    }
+    static File saved(File root, String url) {
+        if (root == null || url == null || url.isEmpty()) return null;
         File[] dirs = root.listFiles(File::isDirectory);
         if (dirs != null) for (File dir : dirs) {
-            File f = new File(dir, name);
-            if (f.isFile()) return f;
+            org.json.JSONArray entries = manifest(dir);
+            for (int i = 0; i < entries.length(); i++) {
+                org.json.JSONObject e = entries.optJSONObject(i);
+                if (e == null || !url.equals(e.optString("url"))) continue;
+                try {
+                    File f = new File(dir, MainActivity.safe(e.getString("name")));
+                    if (f.isFile() && f.length() > 0 && f.length() == e.optLong("size", -1)) return f;
+                } catch (Exception ignored) { }
+            }
         }
         return null;
     }
