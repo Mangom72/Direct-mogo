@@ -1,8 +1,8 @@
 {
-  "versionCode": 95,
-  "versionName": "10.4",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.4/gijul-direct.apk",
-  "size": 4662900,
-  "sha256": "cfe452f711d48a14cc7c36a4c653cf6c3dfe4fc870e5906d3d25c2e0f9b6718d",
-  "notes": "동기화 충돌을 줄이고 최근 변경 이력을 복원할 수 있게 했습니다"
+  "versionCode": 96,
+  "versionName": "10.5",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.5/gijul-direct.apk",
+  "size": 4665220,
+  "sha256": "9fa0319a0f6e9eb1549cd26b56e249c2ed24b0e7d17cb85cd1553de0a27e7963",
+  "notes": "저장 오류와 백업 복구를 고치고 연도 표기를 2026학년도로 바꿨습니다"
 }
