@@ -34,12 +34,12 @@ function resolve(meta){
   return null;
 }
 function exactKey(meta){return JSON.stringify([meta.grade,meta.subjectId,meta.date,meta.title,meta.answerURL||'']);}
-function heading(meta){return meta.date.slice(0,4)+'학년도 '+meta.title;}
+function heading(meta){return (+meta.date.slice(0,4)+1)+'학년도 '+meta.title;}
 function displayArea(meta,form){return form.id==='inquiry'&&/^(사회|과학|직업)탐구$/.test(meta.group)?meta.group+' 영역':form.area;}
 function paperPreset(meta,form){
  const year=+meta.date.slice(0,4),month=+(meta.title.match(/^(\d+)월/)||[])[1];
  const exam=/^수능/.test(meta.title)?'csat':/평가원/.test(meta.title)&&[6,9].includes(month)?'m'+month:/학평/.test(meta.title)&&[3,4,5,6,7,9,10,11].includes(month)?'edu'+month:'other';
- const printedYear=year;
+ const printedYear=year+1;
  return {exam,year:String(printedYear),original:!form.manual&&exam==='csat'&&printedYear===2026,
   area:form.id==='inquiry'?({'사회탐구':'social','과학탐구':'science','직업탐구':'vocational'})[meta.group]||null:null};
 }

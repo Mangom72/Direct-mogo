@@ -70,7 +70,7 @@ with sync_playwright() as pw:
     ck(not any("학평" in c or "모평" in c for c in chips), "칸에 '학평·모평'이 그대로 있습니다")
     ck(not any("홀수형" in c or "짝수형" in c for c in chips), "칸에 홀짝이 남아 있습니다")
 
-    # 평가원은 '평', 교육청은 '모'. 그리고 앞 두 자리는 둘 다 학년도.
+    # 평가원은 '평', 교육청은 '모'. 그리고 앞 두 자리는 모두 학년도.
     pairs = pg.evaluate("""()=>{
       const out = [];
       document.querySelectorAll('.cal .cell[data-k]').forEach(c=>{
@@ -85,14 +85,14 @@ with sync_playwright() as pw:
     ck(all("모" in t.split()[1] for t in edu),
        f"교육청 회차는 'N모'여야 합니다: {edu[:3]}")
 
-    # 학년도인가 — 시행 연도
+    # 모두 시행 연도 + 1 학년도로 줄이는가
     got = pg.evaluate("""()=>{
       const k = Object.keys(SOLVED)[0], p = k.split('/');
       const meta = SUBINDEX[p[0]+'/'+p[1]];
       return { yy: shortName(p[2].slice(0,4), p.slice(3).join('/'), meta.name),
-               year: p[2].slice(0,4) };}""")
+               year: p[2].slice(0,4), gov:kindOf(p.slice(3).join("/"))==="gov" };}""")
     print("4. 줄인 이름:", got["yy"], "· 시행 연도:", got["year"])
-    ck(got["yy"].startswith(str(int(got["year"]))[2:]),
+    ck(got["yy"].startswith(str(int(got["year"])+1)[2:]),
        f"줄인 이름의 연도가 학년도가 아닙니다: {got['yy']} (시행 {got['year']})")
 
     # 오른쪽 칸은 줄이지 않는다

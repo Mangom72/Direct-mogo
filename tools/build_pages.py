@@ -117,7 +117,7 @@ def foot(depth, extra=""):
   <a href="mailto:direct.mogo.dev@gmail.com">direct.mogo.dev@gmail.com</a> 또는
   <a href="{REPO}/issues">GitHub 이슈</a>.
   자세한 것은 <a href="{REPO}/blob/main/NOTICE.md">이용 안내</a>에 있습니다.</p>
-  <p>화면의 학년도와 줄인 연도는 <b>시험을 본 해</b>를 기준으로 합니다.
+  <p>연도는 <b>학년도</b>로 표시하며, 줄인 표기는 뒤 두 자리를 사용합니다.
   원본 자료의 시행일과 주소는 그대로 제공합니다.
   </p>
   <p class="ln"><a href="{up}">기출 직행</a> ·
@@ -194,7 +194,7 @@ def facts(meta):
     # 연도가 끊긴 적이 있으면 그것도 사실이다 (교육과정이 바뀐 자리)
     gaps = [y for y in range(years[0], years[-1]) if y not in years]
     if gaps:
-        out.append("자료가 없는 해: <b>" + ", ".join(f"{y}년" for y in gaps[:6])
+        out.append("자료가 없는 해: <b>" + ", ".join(f"{y+1}학년도" for y in gaps[:6])
                    + ("…" if len(gaps) > 6 else "") + "</b>")
     if no_sol or no_ans:
         miss = []
@@ -213,7 +213,7 @@ def subject_page(meta, sub):
     name, sid, n = meta["subject"], meta["subjectId"], meta["count"]
     canon = f"{SITE}s/{g}/{sid}.html"
     years = sorted({p["year"] for p in meta["papers"]}, reverse=True)
-    span = f"{years[-1]}~{years[0]}년" if len(years) > 1 else f"{years[0]}년"
+    span = f"{years[-1]+1}~{years[0]+1}학년도" if len(years) > 1 else f"{years[0]+1}학년도"
     # 제목은 좁은 화면에서 픽셀 너비로 잘린다. 한글은 폭이 넓어 20자쯤에서
     # 끊기므로 짧게 간다. 회차 수는 설명과 본문에 있으니 제목에서 뺐다 —
     # 매달 바뀌는 값이라 두면 제목이 달마다 요동치기도 한다.
@@ -229,7 +229,7 @@ def subject_page(meta, sub):
   <h1>{E(gl)} {E(name)} 기출문제</h1>
   <p class="lead">{E(gl)} <b>{E(name)}</b> 전 회차 <b>{n}개</b> ({E(span)}).
   아래 표의 문제·정답·해설은 EBSi 원본 파일로 직접 연결됩니다.</p>
-  <p class="yrnote">화면의 학년도와 줄인 연도는 <b>시험을 본 해</b>를 기준으로 합니다.
+  <p class="yrnote">연도는 <b>학년도</b>로 표시하며, 줄인 표기는 뒤 두 자리를 사용합니다.
   원본 자료의 시행일과 주소는 그대로 제공합니다.</p>
   <ul class="facts">{facts(meta)}</ul>
   <p class="go"><a class="app" href="../../#/{g}/{sid}/all/all">앱 화면에서 보기</a>
@@ -241,7 +241,7 @@ def subject_page(meta, sub):
         rows = [p for p in meta["papers"] if p["year"] == y]
         # 한 장에 연도별 표가 스무 개씩 있는데 이름이 없으면, 소리로 읽는 사람은
         # 지금 어느 해의 표를 지나는지 알 수 없다. 바로 위 연도 제목을 가리킨다.
-        out.append(f'<section class="yr"><h2 id="y{y}">{y}학년도'
+        out.append(f'<section class="yr"><h2 id="y{y}">{int(y)+1}학년도'
                    + f'</h2>\n<table aria-labelledby="y{y}">\n'
                    '<thead><tr><th scope="col">회차</th><th scope="col">시행일</th>'
                    '<th scope="col">출제</th><th scope="col">자료</th></tr></thead>\n<tbody>\n')
@@ -253,9 +253,10 @@ def subject_page(meta, sub):
             # 뷰어 제목에 쓸 이름의 앞부분. 뒤(문제/정답/해설 + 확장자)는 링크마다
             # 다르지만 링크 글자와 주소에서 그대로 읽어낼 수 있어 site.js에 맡긴다 —
             # 링크마다 온이름을 적으면 이 나무가 600KB 두꺼워진다.
+            hy = f' · {int(p["year"])+1}학년도'
             out.append(f'<tr data-nm="{E(name_prefix(p["year"], p["title"], gl + " " + name))}">'
                        f'<th scope="row">{E(p["title"])}</th>'
-                       f'<td>{E(p["date"])}</td>'
+                       f'<td>{E(p["date"])}{hy}</td>'
                        f'<td><span class="src s-{"gov" if p["source"]=="평가원" else "edu"}">'
                        f'{E(p["source"])}</span></td>'
                        f'<td class="dl">{" ".join(links)}</td></tr>\n')
@@ -280,10 +281,10 @@ def index_page(index):
            f"""<header class="pg">
   <p class="kicker">문 제 지 원 본 직 행</p>
   <h1>과목별 기출문제</h1>
-  <p class="lead">2006년 시행분부터 <b>{index['count']:,}회차 · {n}과목</b>.
+  <p class="lead">2007학년도부터 <b>{index['count']:,}회차 · {n}과목</b>.
   과목을 고르면 그 과목의 전 회차가 연도별로 나오고, 문제·정답·해설은 EBSi 원본
   파일로 직접 연결됩니다. 수록된 가장 최근 시행일은 {E(index['updated'])}입니다.</p>
-  <p class="yrnote">화면의 학년도와 줄인 연도는 <b>시험을 본 해</b>를 기준으로 합니다.
+  <p class="yrnote">연도는 <b>학년도</b>로 표시하며, 줄인 표기는 뒤 두 자리를 사용합니다.
   원본 자료의 시행일과 주소는 그대로 제공합니다.</p>
   <p class="go"><a class="app" href="../">앱 화면에서 보기</a>
      <a href="../data/index.json">전 과목 JSON</a>
@@ -504,7 +505,8 @@ def name_prefix(year, title, subject):
     """뷰어 제목에 쓸 이름의 앞부분. 앱 화면의 fileName()과 같은 규칙이라야 한다 —
     받아둔 자료에서 열 때와 목록에서 열 때와 여기서 열 때가 다르면 안 된다.
     뒤에 ' 문제.pdf' 꼴이 붙는 것은 site.js가 한다."""
-    base = re.sub(r'[/\\:*?"<>|\x00-\x1f]', "", f"{year}학년도 {title} {subject}")
+    label = f"{int(year)+1}학년도"
+    base = re.sub(r'[/\\:*?"<>|\x00-\x1f]', "", f"{label} {title} {subject}")
     return re.sub(r"\s+", " ", base).strip()
 
 

@@ -272,4 +272,12 @@ public class GuardTest {
         assertEquals(file, PaperFiles.saved(root, a)); assertNull(PaperFiles.saved(root, b));
         java.nio.file.Files.write(file.toPath(), new byte[]{1}); assertNull(PaperFiles.saved(root, a));
     }
+
+    @Test public void 모든_회차를_학년도로_표시한다() {
+        Solved.Item gov = Solved.byDay(log("D300/158/20260902/9월 모평(평가원)", "20261019")).get("20261019").get(0);
+        Solved.Item edu = Solved.byDay(log("D300/158/20260324/3월 학평(서울)", "20261019")).get("20261019").get(0);
+        assertEquals("27 9평 확통", Solved.label(gov));
+        assertEquals("27 3모 확통", Solved.label(edu));
+        assertEquals("26 수능 확통", Solved.label(item("수능")));
+    }
 }

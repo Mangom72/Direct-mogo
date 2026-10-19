@@ -245,12 +245,11 @@ final class Solved {
     }
 
     /**
-     * "26 6평 확통". 앞 두 자리는 화면 표기 규칙에 따라 <b>시행 연도</b>다 — 학생이 말하는
-     * '26 3모'는 2026년 3월 시행분을 가리킨다.
+     * 출제기관과 관계없이 학년도로 표시한다. 2026년 시행분은 27이다.
      */
     static String label(Item x) {
         int y;
-        try { y = Integer.parseInt(x.date.substring(0, 4)); }
+        try { y = Integer.parseInt(x.date.substring(0, 4)) + 1; }
         catch (Exception e) { return shortSub(x.name); }
         return String.valueOf(y).substring(2) + " " + shortRound(x.title) + " " + shortSub(x.name);
     }

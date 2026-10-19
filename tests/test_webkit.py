@@ -78,7 +78,7 @@ with sync_playwright() as pw:
     page.click('#omrManual')
     page.wait_for_function("()=>document.querySelector('.omr-title-preset use').getBBox().width>0")
     assert page.locator('.omr-paper-heading').get_attribute('data-preset')=='m6'
-    assert page.locator('.omr-paper-heading').get_attribute('data-year')=='2025'
+    assert page.locator('.omr-paper-heading').get_attribute('data-year')=='2026'
     assert page.locator('.omr-paper-heading text').count()==0
     page.select_option('#omrQuestion','21')
     page.locator('.omr-digit[data-question="21"][data-digit="2"][data-value="7"]').click()
