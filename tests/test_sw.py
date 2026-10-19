@@ -97,7 +97,7 @@ try:
         omr = TMP / "omr/omr.js"
         omr.write_text(omr.read_text(encoding="utf-8") + "\n/* updated-omr-fixture */\n", encoding="utf-8")
         p = TMP / "index.html"
-        p.write_text(p.read_text(encoding="utf-8").replace("'06~", "'07~"), encoding="utf-8")
+        p.write_text(p.read_text(encoding="utf-8") + "\n<!-- shell-update-fixture -->\n", encoding="utf-8")
         pg.goto(URL, wait_until="load")
         try:
             pg.wait_for_selector("#notice:not([hidden])", timeout=15000)
