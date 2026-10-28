@@ -98,7 +98,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' https://apis.google.com/js/api.js https://apis.google.com/_/scs/ 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-cpst4bF0PRAWVuzunD9j0VTvBxyrUCNU7JqaZmrbFpw=';
+  script-src 'self' https://apis.google.com/js/api.js https://apis.google.com/_/scs/ 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-SRFVfFruvfq6ZV9yPLFHeFaeSqiVfzp59P48ehwjTJ8=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -301,6 +301,17 @@ body{
 .omr button[aria-pressed="true"]{border-color:var(--ink);background:var(--sel)}
 .omr button[aria-pressed="true"] .b::after{content:"";position:absolute;inset:2.5px;border-radius:50%;background:var(--ink)}
 .omr button:focus-visible{outline:2.5px solid var(--mark);outline-offset:2px}
+#kindBox button[data-k="sample"]{margin-left:auto}
+#gradeBox button:disabled{opacity:.45;cursor:default}
+@media(max-width:840px){
+  #kindBox{gap:4px}
+  #kindBox button{font-size:12.5px;padding:8px 5px;gap:4px}
+  #kindBox button .b{width:13px;height:13px}
+}
+@media(max-width:340px){
+  #kindBox button{font-size:11px;padding:8px 3px}
+  #kindBox button .b{width:12px;height:12px}
+}
 
 /* 내 과목 — 저장한 과목만 한 줄 알약 버튼으로 */
 .lab .mini{
@@ -996,6 +1007,7 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
             <button type="button" data-k="all" aria-pressed="true"><span class="b"></span>전체</button>
             <button type="button" data-k="gov" aria-pressed="false"><span class="b"></span>평가원</button>
             <button type="button" data-k="edu" aria-pressed="false"><span class="b"></span>교육청</button>
+            <button type="button" data-k="sample" aria-pressed="false"><span class="b"></span>예시문항</button>
           </div>
         </div>
         <div>
@@ -1209,12 +1221,12 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
     "role": "guide"
    },
    {
-    "label": "EBSi 주요 문항 해설",
+    "label": "EBSi 주요 문항 해설·분석",
     "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=1&bbsCd=B123&datNo=620487",
     "role": "analysis"
    }
   ],
-  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설이며 전체 문항 해설은 아닙니다."
+  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설·분석이며 전체 문항 해설은 아닙니다."
  },
  {
   "id": "2028-900002",
@@ -1242,12 +1254,12 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
     "role": "guide"
    },
    {
-    "label": "EBSi 주요 문항 해설",
+    "label": "EBSi 주요 문항 해설·분석",
     "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=2&bbsCd=B123&datNo=620487",
     "role": "analysis"
    }
   ],
-  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설이며 전체 문항 해설은 아닙니다."
+  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설·분석이며 전체 문항 해설은 아닙니다."
  },
  {
   "id": "2028-900003",
@@ -1275,12 +1287,12 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
     "role": "guide"
    },
    {
-    "label": "EBSi 주요 문항 해설",
+    "label": "EBSi 주요 문항 해설·분석",
     "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=3&bbsCd=B123&datNo=620487",
     "role": "analysis"
    }
   ],
-  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설이며 전체 문항 해설은 아닙니다."
+  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설·분석이며 전체 문항 해설은 아닙니다."
  },
  {
   "id": "2028-900004",
@@ -1308,12 +1320,12 @@ button:active,.acts a:active,.src a:active,.notice a:active{transform:scale(.97)
     "role": "guide"
    },
    {
-    "label": "EBSi 주요 문항 해설",
+    "label": "EBSi 주요 문항 해설·분석",
     "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=4&bbsCd=B123&datNo=620487",
     "role": "analysis"
    }
   ],
-  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설이며 전체 문항 해설은 아닙니다."
+  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설·분석이며 전체 문항 해설은 아닙니다."
  },
  {
   "id": "2028-inquiry-2024",
@@ -1400,10 +1412,17 @@ function samplesFor(grade, subject){
   return grade === "D300" ? SAMPLES.filter(p=>p.subjects.includes(subject)) : [];
 }
 function catalogYears(grade, subject){
-  const years = {...((DB[grade] || {})[subject] || {})};
+  const years = sel.kind === "sample" ? {} : {...((DB[grade] || {})[subject] || {})};
   /* 기존 주소의 연도는 시행 연도 기준이다. 예시문항은 필터 위치만 환산한다. */
-  for(const p of samplesFor(grade,subject)) years[String(p.schoolYear-1)] ||= [];
+  if(sel.kind === "sample") for(const p of samplesFor(grade,subject)) years[String(p.schoolYear-1)] ||= [];
   return years;
+}
+function hasExamPapers(grade, subject){
+  return Object.values((DB?.[grade] || {})[subject] || {}).some(rows=>rows.length);
+}
+function subjectsFor(grade, group){
+  return GROUPS[grade][group][1].filter(([,id])=>sel.kind === "sample"
+    ? samplesFor(grade,id).length > 0 : !DB || hasExamPapers(grade,id));
 }
 function sampleLabel(p, short=false){
   return short ? String(p.schoolYear).slice(-2) : `${p.schoolYear}학년도`;
@@ -1734,9 +1753,11 @@ function favIndex(){ return favs.findIndex(f=>f.g===sel.grade && f.s===sel.sub);
 function pickSub(grade, subId){
   const meta = SUBINDEX[grade+"/"+subId];
   if(!meta) return;
-  sel.grade=grade; sel.grp=meta.grp; sel.sub=subId;
-  [...gradeBox.children].forEach((x,i)=>x.setAttribute("aria-pressed", GRADES[i][0]===grade));
-  fillGroups(); fillYears(); render(); syncFav(); syncURL();
+  const hasSamples=samplesFor(grade,subId).length > 0;
+  const kind=DB && hasSamples && !hasExamPapers(grade,subId) ? "sample"
+    : sel.kind==="sample" && !hasSamples ? "all" : sel.kind;
+  applyState({...sel,grade,grp:meta.grp,sub:subId,kind});
+  fillYears(); render(); syncFav(); syncURL();
 }
 
 function renderFavs(){
@@ -2057,25 +2078,42 @@ GRADES.forEach(([v,label], i)=>{
   gradeBox.appendChild(b);
 });
 
+/* 일반 기출과 예시문항의 선택을 각각 기억한다. 저장·백업 형식은 그대로 둔다. */
+const categoryPicks = {};
+function syncCategoryButtons(){
+  kindBox.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x.dataset.k===sel.kind));
+  [...gradeBox.children].forEach((x,i)=>{
+    x.disabled=sel.kind==="sample" && GRADES[i][0]!=="D300";
+    x.setAttribute("aria-pressed",GRADES[i][0]===sel.grade);
+  });
+}
 kindBox.querySelectorAll("button").forEach(b=>{
   b.onclick = ()=>{
-    sel.kind=b.dataset.k;
-    kindBox.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
-    fillYears(); render(); syncURL();
+    const kind=b.dataset.k, from=sel.kind==="sample" ? "sample" : "exam";
+    const to=kind==="sample" ? "sample" : "exam";
+    if(from!==to){
+      categoryPicks[from]={...sel};
+      if(categoryPicks[to]) Object.assign(sel,categoryPicks[to]);
+      else if(to==="sample") Object.assign(sel,{grade:"D300",grp:0,sub:"900001",year:"all"});
+    }
+    sel.kind=kind;
+    syncCategoryButtons(); fillGroups(); fillYears(); render(); syncFav(); syncURL();
   };
 });
 
 function fillGroups(){
   grpSel.innerHTML="";
   GROUPS[sel.grade].forEach(([name],i)=>{
+    if(!subjectsFor(sel.grade,i).length) return;
     const o=document.createElement("option"); o.value=i; o.textContent=name; grpSel.appendChild(o);
   });
+  if(![...grpSel.options].some(o=>+o.value===sel.grp)) sel.grp=+grpSel.options[0].value;
   grpSel.value=sel.grp;
   fillSubs();
 }
 function fillSubs(){
   subSel.innerHTML="";
-  const items=GROUPS[sel.grade][sel.grp][1];
+  const items=subjectsFor(sel.grade,sel.grp);
   items.forEach(([name,id])=>{
     const o=document.createElement("option"); o.value=id; o.textContent=name; subSel.appendChild(o);
   });
@@ -2088,7 +2126,7 @@ function fillYears(){
   const years=catalogYears(sel.grade,sel.sub);
   const keys=Object.keys(years)
     .filter(y => years[y].some(r => sel.kind==="all" || kindOf(r[0])===sel.kind)
-      || (sel.kind!=="edu" && samplesFor(sel.grade,sel.sub).some(p=>p.schoolYear===+y+1)))
+      || (sel.kind==="sample" && samplesFor(sel.grade,sel.sub).some(p=>p.schoolYear===+y+1)))
     .sort((a,b)=>b-a);
   yrSel.innerHTML="";
   const all=document.createElement("option");
@@ -2119,9 +2157,13 @@ function validState(s){
   if(!s) return null;
   const meta = SUBINDEX[s.grade+"/"+s.sub];
   if(!meta) return null;
+  let kind=["all","gov","edu","sample"].includes(s.kind) ? s.kind : "all";
+  /* 이전에 나간 예시문항 전용 과목의 /all·/gov 주소도 계속 연다. */
+  if(DB && ["all","gov"].includes(kind) && !hasExamPapers(s.grade,s.sub) && samplesFor(s.grade,s.sub).length) kind="sample";
+  if(kind==="sample" && !samplesFor(s.grade,s.sub).length) kind="all";
   return {
     grade: s.grade, grp: meta.grp, sub: s.sub,
-    kind: ["all","gov","edu"].includes(s.kind) ? s.kind : "all",
+    kind,
     year: (s.year==="all" || /^\d{4}$/.test(s.year)) ? s.year : "all"
   };
 }
@@ -2156,9 +2198,10 @@ function syncURL(){
 /* 드롭다운·버튼을 한꺼번에 맞춘다. 연도는 DB가 있어야 채울 수 있어 여기서 다루지 않는다. */
 function applyState(s){
   restoring = true;
+  if(DB && (sel.kind==="sample")!==(s.kind==="sample"))
+    categoryPicks[sel.kind==="sample" ? "sample" : "exam"]={...sel};
   sel.grade=s.grade; sel.grp=s.grp; sel.sub=s.sub; sel.kind=s.kind; sel.year=s.year;
-  [...gradeBox.children].forEach((x,i)=>x.setAttribute("aria-pressed", GRADES[i][0]===s.grade));
-  kindBox.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x.dataset.k===s.kind));
+  syncCategoryButtons();
   fillGroups();
   restoring = false;
 }
@@ -4151,8 +4194,8 @@ function render(){
   let total=0, html="", shownAll=0;
   const allSeen = new Set(), allDoneSet = new Set();
   for(const y of keys){
-    const rows=years[y].filter(r => sel.kind==="all" || kindOf(r[0])===sel.kind);
-    const samples=sel.kind==="edu" ? [] : samplesFor(sel.grade,sel.sub).filter(p=>p.schoolYear===+y+1);
+    const rows=years[y].filter(r => sel.kind!=="sample" && (sel.kind==="all" || kindOf(r[0])===sel.kind));
+    const samples=sel.kind==="sample" ? samplesFor(sel.grade,sel.sub).filter(p=>p.schoolYear===+y+1) : [];
     if(!rows.length && !samples.length) continue;
     total+=rows.length+samples.length;
     /* 그 해의 진도는 줄을 다 만든 뒤에야 알 수 있다. 자리만 잡아 두고
@@ -4244,7 +4287,7 @@ function render(){
   const gradeName=GRADES.find(g=>g[0]===sel.grade)[1];
   const scope = sel.year==="all" ? "전체 연도" : `${+sel.year+1}학년도`;
   /* 받아둔 자료는 앱 데이터 폴더에 있어 앱 안에서만 열 수 있다 */
-  const vaultBtn = Vault.can ? `<button type="button" class="vault" id="vaultBtn">받아둔 자료</button>` : "";
+  const vaultBtn = Vault.can && sel.kind!=="sample" ? `<button type="button" class="vault" id="vaultBtn">받아둔 자료</button>` : "";
   /* 이 과목을 한 장에 펼쳐 놓은 정적 페이지로. 연도를 오가지 않고 쭉 훑거나,
      찾기(Ctrl+F)로 뒤지거나, 인쇄하거나, 앱 없는 사람에게 보내기 좋다.
      앱에서도 그대로 연다 — 저쪽 페이지가 자료 링크마다 사람이 읽는 이름을 달고
@@ -4269,7 +4312,7 @@ function render(){
                  title="푼 날 달력" aria-label="푼 날 달력 열기">${CAL_ICON}</button></span>` : "";
   /* 거르개는 찍은 것이 있을 때만 뜬다. 켜 둔 채로 다른 과목에 가면 그 과목은
      아직 아무것도 안 찍었을 수 있는데, 그때도 단추는 있어야 끌 수 있다. */
-  const only = (allDone || onlyLeft)
+  const only = sel.kind!=="sample" && (allDone || onlyLeft)
     ? `<button type="button" class="onlyleft" id="onlyBtn" aria-pressed="${onlyLeft}">안 푼 것만</button>` : "";
   const acts = (onePage || vaultBtn || only)
     ? `<span class="tally-acts">${only}${onePage}${vaultBtn}</span>` : "";
@@ -4586,6 +4629,7 @@ if("serviceWorker" in navigator){
     /* syncURL()이 주소를 '#/과목/…' 꼴로 정리해 버리므로 먼저 챙겨 둔다 */
     const wantCal = location.hash === "#cal";
     DB = await loadDB();
+    applyState(validState(sel));
     fillYears();          /* 자료 없는 연도를 가리켰다면 여기서 '전체'로 내려앉는다 */
     render();
     if(!GijulStorage.recovered)saveFailed();

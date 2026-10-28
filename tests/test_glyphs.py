@@ -36,15 +36,17 @@ with sync_playwright() as pw:
     pg = ctx.new_page()
     pg.goto(BASE + "/", wait_until="load"); pg.wait_for_timeout(2500); take(pg)
     # 학년·과목군을 돌며 이름을 다 훑는다
-    for gi in range(3):
-        pg.eval_on_selector_all(".row [name=grade]", f"e=>e[{gi}] && e[{gi}].click()")
-        pg.wait_for_timeout(120)
-        n = pg.eval_on_selector_all("#grp option", "e=>e.length")
-        for k in range(n):
-            pg.select_option("#grp", index=k); pg.wait_for_timeout(90)
-            m = pg.eval_on_selector_all("#sub option", "e=>e.length")
-            for j in range(m):
-                pg.select_option("#sub", index=j); pg.wait_for_timeout(60); take(pg)
+    for kind in ['all','sample']:
+        pg.click(f'#kindBox [data-k={kind}]')
+        for gi in (range(3) if kind=='all' else [0]):
+            pg.locator('#gradeBox button').nth(gi).click()
+            pg.wait_for_timeout(120)
+            n = pg.eval_on_selector_all("#grp option", "e=>e.length")
+            for k in range(n):
+                pg.select_option("#grp", index=k); pg.wait_for_timeout(90)
+                m = pg.eval_on_selector_all("#sub option", "e=>e.length")
+                for j in range(m):
+                    pg.select_option("#sub", index=j); pg.wait_for_timeout(60); take(pg)
     # 시트·보관함·안내 막대
     # 마지막 과목이 공식 예시문항만 제공하면 보내기 시트가 없다. 기존 기출에서 연다.
     pg.goto(BASE + "/#/D300/158/2024/all", wait_until="load")

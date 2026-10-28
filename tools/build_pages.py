@@ -265,7 +265,7 @@ def subject_page(meta, sub):
                        f'<td class="dl">{" ".join(links)}</td></tr>\n')
         out.append("</tbody>\n</table>\n</section>\n")
 
-    out.append(sample_sections(meta.get("samples", [])))
+    out.append(sample_sections(meta.get("samples", []), g, sid))
     out.append(f"""<section class="also">
   <h2>같은 {E(meta['group'])} 과목</h2>
   <p class="chips">{{SIBLINGS}}</p>
@@ -274,7 +274,7 @@ def subject_page(meta, sub):
     return "".join(out)
 
 
-def sample_sections(samples):
+def sample_sections(samples, grade, sid):
     out = []
     for p in sorted(samples, key=lambda p: (p["schoolYear"], p["published"] or ""), reverse=True):
         links = " · ".join(f'<a href="{E(f["url"])}" target="_blank" rel="noopener">{E(f["label"])}</a>'
@@ -284,7 +284,8 @@ def sample_sections(samples):
                    f'<h2>{p["schoolYear"]}학년도 · {E(p["title"])}</h2>'
                    f'<p>평가원 · 예시문항{published}</p><p>{E(p["note"])}</p>'
                    f'<p class="sample-links">{links} · '
-                   f'<a href="{E(p["sourcePage"])}" target="_blank" rel="noopener">공식 출처</a></p></section>')
+                   f'<a href="{E(p["sourcePage"])}" target="_blank" rel="noopener">공식 출처</a> · '
+                   f'<a href="../../#/{grade}/{sid}/{p["schoolYear"]-1}/sample">예시문항 탭에서 보기</a></p></section>')
     return "".join(out)
 
 
@@ -298,9 +299,9 @@ def sample_subject_page(meta):
             + f'<header class="pg"><p class="kicker">{E(meta["group"])}</p><h1>{E(name)} 수능 예시문항</h1>'
               '<p class="lead">공식 원본으로 연결됩니다. 예시문항의 대상 학년도로 표시하며 '
               '등록일은 시행일이 아닙니다.</p>'
-            + f'<p class="go"><a class="app" href="../../#/{g}/{sid}/all/all">앱 화면에서 보기</a> '
+            + f'<p class="go"><a class="app" href="../../#/{g}/{sid}/all/sample">앱 화면에서 보기</a> '
               f'<a href="../../data/{g}/{sid}.json">JSON으로 받기</a></p></header>'
-            + sample_sections(meta["samples"])
+            + sample_sections(meta["samples"], g, sid)
             + f'<section class="also"><h2>같은 {E(meta["group"])} 과목</h2><p class="chips">{{SIBLINGS}}</p></section>'
             + foot(2, official=True))
 

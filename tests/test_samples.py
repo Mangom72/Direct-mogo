@@ -65,14 +65,52 @@ with sync_playwright() as pw:
     pg=ctx.new_page();errors=[]
     pg.on('pageerror',lambda e:errors.append(str(e)))
     for sid,year in [('900001',2028),('900002',2022),('900003',2028),('900004',2028),('63004',2017),('80003',2018),('140122',2022),('900011',2028),('900019',2028)]:
-        pg.goto(url+f'#/D300/{sid}/{year-1}/all');pg.wait_for_selector('.sample')
+        pg.goto(url+f'#/D300/{sid}/{year-1}/sample');pg.wait_for_selector('.sample')
         assert f'{year}학년도' in pg.locator('#yr').inner_text()
         assert pg.locator('.sample .chk,.sample .record,.sample .send,.sample [data-nm]').count()==0
         assert pg.evaluate('document.documentElement.scrollWidth<=innerWidth')
         assert pg.evaluate('SAMPLES.filter(p=>p.schoolYear===%d).every(p=>sampleLabel(p)==="%d학년도"&&sampleLabel(p,true)==="%s")'%(year,year,str(year)[2:]))
     assert pg.evaluate('url("0legacy.pdf","20251113")')=='https://wdown.ebsi.co.kr/W61001/01exam/20251113/go3/legacy.pdf'
+    # 예전 예시문항 전용 과목의 공유 주소는 새 탭으로 이어진다.
     pg.goto(url+'#/D300/900003/2027/gov');pg.wait_for_selector('.sample')
+    assert pg.locator('#kindBox [data-k=sample]').get_attribute('aria-pressed')=='true'
     assert pg.locator('.sample').count()==2
+    # 전체·평가원·교육청에는 예시문항과 예시 전용 과목이 섞이지 않는다.
+    pg.goto(url+'#/D300/80003/2017/all');pg.wait_for_selector('.item')
+    for kind in ['all','gov','edu']:
+        pg.locator(f'#kindBox [data-k={kind}]').click()
+        assert pg.locator('.sample').count()==0
+        assert pg.evaluate('Object.keys(catalogYears(sel.grade,sel.sub)).every(y=>((DB[sel.grade]||{})[sel.sub]||{})[y])')
+        normal_options=pg.evaluate('GROUPS.D300.map((_,i)=>subjectsFor("D300",i)).flat().map(x=>x[1])')
+        assert '900001' not in normal_options and '140117' in normal_options
+    pg.locator('#kindBox [data-k=sample]').click()
+    assert pg.locator('#sub').input_value()=='900003'
+    assert pg.locator('.sample').count()>0 and pg.locator('.item:not(.sample)').count()==0
+    pg.select_option('#grp','0')
+    assert pg.locator('#sub option').all_text_contents()==['국어']
+    pg.select_option('#grp','2');pg.select_option('#sub','80003')
+    assert pg.locator('#yr option').all_text_contents()==['전체 연도 (1개)','2018학년도']
+    sample_options=pg.evaluate('GROUPS.D300.map((_,i)=>subjectsFor("D300",i)).flat().map(x=>x[1])')
+    assert '900001' in sample_options and '140117' not in sample_options and '158' not in sample_options
+    assert pg.locator('#gradeBox button:disabled').count()==2
+    pg.locator('#kindBox [data-k=all]').click()
+    assert pg.locator('#sub').input_value()=='80003' and pg.locator('.sample').count()==0
+    assert pg.evaluate('''()=>{const saved=DB;DB=null;pickSub('D300','80003');const kind=sel.kind;DB=saved;fillGroups();fillYears();render();return kind}''')=='all'
+    pg.locator('#kindBox [data-k=sample]').click()
+    assert pg.locator('#sub').input_value()=='80003'
+    pg.reload();pg.wait_for_selector('.sample')
+    assert pg.locator('#kindBox [data-k=sample]').get_attribute('aria-pressed')=='true'
+    pg.evaluate('pickSub("D300","158")')
+    assert pg.locator('.item:not(.sample)').count()>0 and pg.locator('.sample').count()==0
+    pg.evaluate('pickSub("D300","900003")')
+    assert pg.locator('.sample').count()==2
+    for width in [320,360,768,1280]:
+        pg.set_viewport_size({'width':width,'height':900})
+        assert pg.evaluate('document.documentElement.scrollWidth<=innerWidth')
+        assert pg.locator('#kindBox button').last.get_attribute('data-k')=='sample'
+        assert pg.evaluate('''()=>{const box=document.querySelector('#kindBox').getBoundingClientRect(),b=document.querySelector('#kindBox [data-k=sample]').getBoundingClientRect();return Math.abs(box.right-b.right)<2}''')
+        assert pg.evaluate('''()=>{const buttons=[...document.querySelectorAll('#kindBox button')],first=buttons[0].getBoundingClientRect();return buttons.every(b=>Math.abs(b.getBoundingClientRect().top-first.top)<2&&b.getBoundingClientRect().height>=24)}''')
+    pg.set_viewport_size({'width':360,'height':900})
     first=pg.locator('.sample .acts a').first
     target=first.get_attribute('href')
     ctx.route('https://www.suneung.re.kr/**',lambda route:route.fulfill(status=200,content_type='text/html',body='official source'))
@@ -81,6 +119,8 @@ with sync_playwright() as pw:
     popup=opened.value;popup.wait_for_load_state();assert popup.url==target
     assert pg.evaluate('nativeCalls')==[]
     pg.screenshot(path='/tmp/direct-mogo-samples-mobile.png',full_page=True)
+    pg.set_viewport_size({'width':1280,'height':900})
+    pg.screenshot(path='/tmp/direct-mogo-samples-desktop.png',full_page=True)
     pg.goto(url+'s/D300/900003.html');pg.wait_for_selector('.sample')
     assert pg.locator('.sample').count()==2 and pg.locator('.sample [data-nm]').count()==0
     with ctx.expect_page() as opened:pg.locator('.sample-links a').first.click()
