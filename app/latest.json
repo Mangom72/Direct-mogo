@@ -1,8 +1,8 @@
 {
-  "versionCode": 98,
-  "versionName": "10.7",
-  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.7/gijul-direct.apk",
-  "size": 4665440,
-  "sha256": "c7e69b8fd81d4000b81798b84ca8d9a99e592c1cd6779b7a92b29087e00dbb36",
-  "notes": "예시문항 탭과 과목 선택을 분리했습니다"
+  "versionCode": 99,
+  "versionName": "10.8",
+  "url": "https://github.com/Mangom72/Direct-mogo/releases/download/v10.8/gijul-direct.apk",
+  "size": 4667164,
+  "sha256": "f7a4c3087c35f34b9db9d27eada813f18ade38dd3c5a3ef5dcf5f65e549235d5",
+  "notes": "예시문항도 앱 안에서 열리도록 고쳤습니다"
 }
