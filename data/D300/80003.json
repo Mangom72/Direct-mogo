@@ -2037,5 +2037,25 @@
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20060311/eng_hsj.pdf"
   }
+ ],
+ "samples": [
+  {
+   "id": "2018-english",
+   "schoolYear": 2018,
+   "subjects": [
+    "80003"
+   ],
+   "title": "수능 예시문항 · 영어 절대평가 학습 안내",
+   "published": null,
+   "sourcePage": "https://www.suneung.re.kr/sub/info.do?m=0401&s=suneung",
+   "files": [
+    {
+     "label": "문제·정답·학습 안내 (한 PDF)",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=0f946c8e039659ca355e82e21e850bb1",
+     "role": "guide"
+    }
+   ],
+   "note": "절대평가 학습 안내에 실린 유형별 예시입니다. 기존 기출을 활용한 문항을 포함하며 별도 시행 시험이 아닙니다."
+  }
  ]
 }

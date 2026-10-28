@@ -277,5 +277,35 @@
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/20210603/go3/J_sjl_hsj_I6Q5A98E_1.pdf",
    "schoolYear": 2022
   }
+ ],
+ "samples": [
+  {
+   "id": "2022-140122",
+   "schoolYear": 2022,
+   "subjects": [
+    "140122"
+   ],
+   "title": "수능 예시문항 · 직업탐구 · 2020년 안내서·문제지",
+   "published": "2020-07-02",
+   "sourcePage": "https://www.suneung.re.kr/boardCnts/view.do?boardID=1500236&boardSeq=5050076&lev=0&m=0403&s=suneung&statusYN=W",
+   "files": [
+    {
+     "label": "문제",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=a0aa9b435bbb3c95ff484e5ba97fc27d",
+     "role": "problem"
+    },
+    {
+     "label": "정답",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=82ec89b4b761175225370a71be3b9b2d",
+     "role": "answer"
+    },
+    {
+     "label": "문항·학습 안내 (통합 PDF)",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=4c56e911ea50fb545ae4bfdacb8757a6",
+     "role": "guide"
+    }
+   ],
+   "note": "안내서의 문항을 문제지 형식으로 다시 편집한 자료입니다. 국어·수학 문제지는 공통과목과 선택과목 전체를 함께 담고 있습니다."
+  }
  ]
 }

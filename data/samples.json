@@ -1,0 +1,299 @@
+[
+ {
+  "id": "2017-history",
+  "schoolYear": 2017,
+  "subjects": [
+   "63004"
+  ],
+  "title": "수능 예시문항 · 한국사 유형별 안내",
+  "published": "2014-04-11",
+  "sourcePage": "https://www.kice.re.kr/boardCnts/view.do?boardID=10024&boardSeq=2139658&lev=0&m=050102&s=kice&statusYN=W",
+  "files": [
+   {
+    "label": "문제·정답·학습 안내 (한 PDF)",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=6357e2f4036197724bb13027737a6edd",
+    "role": "guide"
+   }
+  ],
+  "note": "한국사 필수과목 도입에 따른 유형별 예시문항입니다. 문제·정답·학습 안내가 같은 문서에 있습니다."
+ },
+ {
+  "id": "2018-english",
+  "schoolYear": 2018,
+  "subjects": [
+   "80003"
+  ],
+  "title": "수능 예시문항 · 영어 절대평가 학습 안내",
+  "published": null,
+  "sourcePage": "https://www.suneung.re.kr/sub/info.do?m=0401&s=suneung",
+  "files": [
+   {
+    "label": "문제·정답·학습 안내 (한 PDF)",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=0f946c8e039659ca355e82e21e850bb1",
+    "role": "guide"
+   }
+  ],
+  "note": "절대평가 학습 안내에 실린 유형별 예시입니다. 기존 기출을 활용한 문항을 포함하며 별도 시행 시험이 아닙니다."
+ },
+ {
+  "id": "2022-900001",
+  "schoolYear": 2022,
+  "subjects": [
+   "900001"
+  ],
+  "title": "수능 예시문항 · 국어 · 2020년 안내서·문제지",
+  "published": "2020-07-02",
+  "sourcePage": "https://www.suneung.re.kr/boardCnts/view.do?boardID=1500236&boardSeq=5050078&lev=0&m=0403&s=suneung&statusYN=W",
+  "files": [
+   {
+    "label": "문제",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=4b0c957f57a31b0fea30b89930f4a2ad",
+    "role": "problem"
+   },
+   {
+    "label": "정답",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=58ff395b233bcf231e7a85022452c296",
+    "role": "answer"
+   },
+   {
+    "label": "문항·학습 안내 (통합 PDF)",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=4c56e911ea50fb545ae4bfdacb8757a6",
+    "role": "guide"
+   }
+  ],
+  "note": "안내서의 문항을 문제지 형식으로 다시 편집한 자료입니다. 국어·수학 문제지는 공통과목과 선택과목 전체를 함께 담고 있습니다."
+ },
+ {
+  "id": "2022-900002",
+  "schoolYear": 2022,
+  "subjects": [
+   "900002"
+  ],
+  "title": "수능 예시문항 · 수학 · 2020년 안내서·문제지",
+  "published": "2020-07-02",
+  "sourcePage": "https://www.suneung.re.kr/boardCnts/view.do?boardID=1500236&boardSeq=5050077&lev=0&m=0403&s=suneung&statusYN=W",
+  "files": [
+   {
+    "label": "문제",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=c29a5e922183e4f919b1cc829583875b",
+    "role": "problem"
+   },
+   {
+    "label": "정답",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=77becfb1bab058dde44856ebb6bbaa6b",
+    "role": "answer"
+   },
+   {
+    "label": "문항·학습 안내 (통합 PDF)",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=4c56e911ea50fb545ae4bfdacb8757a6",
+    "role": "guide"
+   }
+  ],
+  "note": "안내서의 문항을 문제지 형식으로 다시 편집한 자료입니다. 국어·수학 문제지는 공통과목과 선택과목 전체를 함께 담고 있습니다."
+ },
+ {
+  "id": "2022-140122",
+  "schoolYear": 2022,
+  "subjects": [
+   "140122"
+  ],
+  "title": "수능 예시문항 · 직업탐구 · 2020년 안내서·문제지",
+  "published": "2020-07-02",
+  "sourcePage": "https://www.suneung.re.kr/boardCnts/view.do?boardID=1500236&boardSeq=5050076&lev=0&m=0403&s=suneung&statusYN=W",
+  "files": [
+   {
+    "label": "문제",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=a0aa9b435bbb3c95ff484e5ba97fc27d",
+    "role": "problem"
+   },
+   {
+    "label": "정답",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=82ec89b4b761175225370a71be3b9b2d",
+    "role": "answer"
+   },
+   {
+    "label": "문항·학습 안내 (통합 PDF)",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=4c56e911ea50fb545ae4bfdacb8757a6",
+    "role": "guide"
+   }
+  ],
+  "note": "안내서의 문항을 문제지 형식으로 다시 편집한 자료입니다. 국어·수학 문제지는 공통과목과 선택과목 전체를 함께 담고 있습니다."
+ },
+ {
+  "id": "2028-900001",
+  "schoolYear": 2028,
+  "subjects": [
+   "900001"
+  ],
+  "title": "수능 예시문항 · 국어 · 2025년 공개",
+  "published": "2025-04-15",
+  "sourcePage": "https://www.suneung.re.kr/boardCnts/view.do?boardID=1500237&boardSeq=5089982&lev=0&m=0403&s=suneung&statusYN=W",
+  "files": [
+   {
+    "label": "문제",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=aec9a03dc37cda0f107fd6c1d175e6b8",
+    "role": "problem"
+   },
+   {
+    "label": "정답",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=ae2aa58e13f8e1f2fda19de1b9143a37",
+    "role": "answer"
+   },
+   {
+    "label": "문항·학습 안내 (통합 PDF)",
+    "url": "https://www.moe.go.kr/boardCnts/fileDown.do?fileSeq=76dc225437d298122bc7000aab130487",
+    "role": "guide"
+   },
+   {
+    "label": "EBSi 주요 문항 해설",
+    "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=1&bbsCd=B123&datNo=620487",
+    "role": "analysis"
+   }
+  ],
+  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설이며 전체 문항 해설은 아닙니다."
+ },
+ {
+  "id": "2028-900002",
+  "schoolYear": 2028,
+  "subjects": [
+   "900002"
+  ],
+  "title": "수능 예시문항 · 수학 · 2025년 공개",
+  "published": "2025-04-15",
+  "sourcePage": "https://www.suneung.re.kr/boardCnts/view.do?boardID=1500237&boardSeq=5089981&lev=0&m=0403&s=suneung&statusYN=W",
+  "files": [
+   {
+    "label": "문제",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=06eff0322c90fe3f587d2581c9b91367",
+    "role": "problem"
+   },
+   {
+    "label": "정답",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=0675e3a5019f6c4b98147a499311297c",
+    "role": "answer"
+   },
+   {
+    "label": "문항·학습 안내 (통합 PDF)",
+    "url": "https://www.moe.go.kr/boardCnts/fileDown.do?fileSeq=76dc225437d298122bc7000aab130487",
+    "role": "guide"
+   },
+   {
+    "label": "EBSi 주요 문항 해설",
+    "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=2&bbsCd=B123&datNo=620487",
+    "role": "analysis"
+   }
+  ],
+  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설이며 전체 문항 해설은 아닙니다."
+ },
+ {
+  "id": "2028-900003",
+  "schoolYear": 2028,
+  "subjects": [
+   "900003"
+  ],
+  "title": "수능 예시문항 · 사회탐구 · 2025년 공개",
+  "published": "2025-04-15",
+  "sourcePage": "https://www.suneung.re.kr/boardCnts/view.do?boardID=1500237&boardSeq=5089980&lev=0&m=0403&s=suneung&statusYN=W",
+  "files": [
+   {
+    "label": "문제",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=cfec8872947730855f1217c429063a8b",
+    "role": "problem"
+   },
+   {
+    "label": "정답",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=fbed99539b82f77cb4bb612dcb2c8e5a",
+    "role": "answer"
+   },
+   {
+    "label": "문항·학습 안내 (통합 PDF)",
+    "url": "https://www.moe.go.kr/boardCnts/fileDown.do?fileSeq=76dc225437d298122bc7000aab130487",
+    "role": "guide"
+   },
+   {
+    "label": "EBSi 주요 문항 해설",
+    "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=3&bbsCd=B123&datNo=620487",
+    "role": "analysis"
+   }
+  ],
+  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설이며 전체 문항 해설은 아닙니다."
+ },
+ {
+  "id": "2028-900004",
+  "schoolYear": 2028,
+  "subjects": [
+   "900004"
+  ],
+  "title": "수능 예시문항 · 과학탐구 · 2025년 공개",
+  "published": "2025-04-15",
+  "sourcePage": "https://www.suneung.re.kr/boardCnts/view.do?boardID=1500237&boardSeq=5089979&lev=0&m=0403&s=suneung&statusYN=W",
+  "files": [
+   {
+    "label": "문제",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=1f42deaec52059f97e169964668b4b5c",
+    "role": "problem"
+   },
+   {
+    "label": "정답",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=2d61407c6b2d3083455e0a4b8dd105bb",
+    "role": "answer"
+   },
+   {
+    "label": "문항·학습 안내 (통합 PDF)",
+    "url": "https://www.moe.go.kr/boardCnts/fileDown.do?fileSeq=76dc225437d298122bc7000aab130487",
+    "role": "guide"
+   },
+   {
+    "label": "EBSi 주요 문항 해설",
+    "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=4&bbsCd=B123&datNo=620487",
+    "role": "analysis"
+   }
+  ],
+  "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설이며 전체 문항 해설은 아닙니다."
+ },
+ {
+  "id": "2028-inquiry-2024",
+  "schoolYear": 2028,
+  "subjects": [
+   "900003",
+   "900004"
+  ],
+  "title": "수능 예시문항 · 통합사회·통합과학 · 2024년 공개",
+  "published": "2024-09-26",
+  "sourcePage": "https://www.moe.go.kr/boardCnts/viewRenew.do?boardID=294&boardSeq=101085&lev=0",
+  "files": [
+   {
+    "label": "문제·정답·문항 안내 (한 PDF)",
+    "url": "https://www.moe.go.kr/boardCnts/fileDown.do?fileSeq=ee517bedf5aa88ac3c1e3669051a8a3e",
+    "role": "guide"
+   }
+  ],
+  "note": "통합사회·통합과학 각 12문항의 초기 공개분입니다. 2025년 공개분과 구분합니다. 두 과목과 정답·문항 안내가 한 문서에 있습니다."
+ },
+ {
+  "id": "2028-languages",
+  "schoolYear": 2028,
+  "subjects": [
+   "900011",
+   "900012",
+   "900013",
+   "900014",
+   "900015",
+   "900016",
+   "900017",
+   "900018",
+   "900019"
+  ],
+  "title": "수능 예시문항 · 제2외국어·한문 유형별 안내",
+  "published": null,
+  "sourcePage": "https://www.suneung.re.kr/sub/info.do?m=0401&s=suneung",
+  "files": [
+   {
+    "label": "문제·정답·문항 안내 (한 PDF)",
+    "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=fc6ee108c3bfcf8ca0373f854c1c595b",
+    "role": "guide"
+   }
+  ],
+  "note": "2028학년도 제2외국어·한문 9과목의 유형별 예시와 정답이 한 문서에 있습니다. 과목명에 Ⅰ을 붙이지 않는 새 교육과정 자료입니다."
+ }
+]

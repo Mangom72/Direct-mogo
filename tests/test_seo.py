@@ -55,7 +55,7 @@ async def main():
         urls=sm.findall(NS+"url")
         if sm.findall(f".//{NS}priority") or sm.findall(f".//{NS}changefreq"):
             bad.append("구글이 무시하는 priority/changefreq가 남아 있습니다")
-        dates={u.find(NS+"lastmod").text for u in urls}
+        dates={u.find(NS+"lastmod").text for u in urls if u.find(NS+"lastmod") is not None}
         print(f"\n사이트맵 {len(urls)}개 · 서로 다른 날짜 {len(dates)}가지 "
               f"· priority/changefreq 없음: "
               f"{not sm.findall(f'.//{NS}priority')}")
@@ -65,8 +65,11 @@ async def main():
             loc=u.find(NS+"loc").text
             m=re.search(r"/s/(D\d00)/(\d+)\.html$", loc)
             if not m: continue
-            want=json.loads((R/f"data/{m.group(1)}/{m.group(2)}.json").read_text())["papers"][0]["date"]
-            if u.find(NS+"lastmod").text != want: wrong+=1
+            meta=json.loads((R/f"data/{m.group(1)}/{m.group(2)}.json").read_text())
+            want=(meta["papers"][0]["date"] if meta["papers"] else
+                  max((p["published"] for p in meta.get("samples",[]) if p["published"]), default=None))
+            node=u.find(NS+"lastmod")
+            if (node.text if node is not None else None) != want: wrong+=1
         print("과목 페이지 lastmod 어긋남:", wrong)
         if wrong: bad.append("lastmod가 실제 최신 시행일과 다릅니다")
 
@@ -74,7 +77,8 @@ async def main():
         await pg.goto(B+"/s/", wait_until="load")
         hrefs=await pg.eval_on_selector_all(".subs a","e=>e.map(x=>x.getAttribute('href'))")
         print("색인에서 나가는 과목 링크:", len(hrefs))
-        if len(hrefs)!=49: bad.append("과목 링크가 49개가 아닙니다")
+        expected=sum(len(g["subjects"]) for gr in idx["grades"] for g in gr["groups"])
+        if len(hrefs)!=expected: bad.append(f"과목 링크가 {expected}개가 아닙니다")
         # 링크 글자가 설명적인가 (구글: 'here' 같은 것 금지)
         texts=await pg.eval_on_selector_all(".subs a","e=>e.map(x=>x.textContent.trim())")
         if any(len(t)<2 for t in texts): bad.append("링크 글자가 너무 짧습니다")

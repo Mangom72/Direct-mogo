@@ -46,6 +46,9 @@ with sync_playwright() as pw:
             for j in range(m):
                 pg.select_option("#sub", index=j); pg.wait_for_timeout(60); take(pg)
     # 시트·보관함·안내 막대
+    # 마지막 과목이 공식 예시문항만 제공하면 보내기 시트가 없다. 기존 기출에서 연다.
+    pg.goto(BASE + "/#/D300/158/2024/all", wait_until="load")
+    pg.wait_for_selector(".item .q")
     pg.eval_on_selector(".item .q", "e=>e.click()"); pg.wait_for_timeout(400); take(pg)
     pg.keyboard.press("Escape"); pg.wait_for_timeout(200)
     pg.goto(BASE + "/#subs=D300.140117-D300.140119", wait_until="load"); pg.wait_for_timeout(2500); take(pg)

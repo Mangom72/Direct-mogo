@@ -3,7 +3,7 @@
 > 한국 수능·모의평가·전국연합학력평가 **기출 문제지 원본 PDF 목록**입니다.
 > An index of Korean college-entrance exam papers — problem sheets, answer keys
 > and solutions, each as a public URL. 2006년 시행분부터 5,167회차 ·
-> 77과목 · 자료 기준 2026-10-20. 인증도 API 키도 서버도 없는 정적 JSON입니다.
+> 90과목 · 자료 기준 2026-10-20. 인증도 API 키도 서버도 없는 정적 JSON입니다.
 
 `data/index.json` 하나에서 시작합니다. 거기 각 과목의 `data` 경로가 있고, 그 파일을
 받으면 그 과목의 전 회차가 `papers` 배열로 나옵니다. 회차마다 세 개의 절대 주소가
@@ -34,7 +34,8 @@ D200(고2) · D100(고1) 셋뿐입니다. 과목ID는 지어내지 말고 `index
 
 ## 시작점
 
-- [과목 목록](https://mangom72.github.io/Direct-mogo/data/index.json): 학년·과목군·77개 과목과 각 과목의 데이터 경로. 여기서 시작하세요
+- [과목 목록](https://mangom72.github.io/Direct-mogo/data/index.json): 학년·과목군·90개 과목과 각 과목의 데이터 경로. 여기서 시작하세요
+- [공식 수능 예시문항](https://mangom72.github.io/Direct-mogo/data/samples.json): 시행 회차와 별개인 자료입니다. schoolYear는 대상 학년도, published는 등록일(모르면 null)입니다. 과목별 JSON의 samples에도 들어 있으며 files는 실제 원본 링크입니다. 같은 PDF의 문제·정답·안내를 별도 파일로 세지 마세요
 - [자세한 사용 안내](https://mangom72.github.io/Direct-mogo/llms-full.txt): 필드별 설명, 돌아가는 예제 코드, 404가 날 때 볼 것
 
 ## 과목 자료 (예시)
@@ -46,7 +47,7 @@ D200(고2) · D100(고1) 셋뿐입니다. 과목ID는 지어내지 말고 `index
 ## 사람이 읽는 화면
 
 - [기출 직행](https://mangom72.github.io/Direct-mogo/): 학년 → 과목 → 연도로 고르는 화면. 사용자에게 안내할 주소입니다
-- [과목별 기출문제 목록](https://mangom72.github.io/Direct-mogo/s/): 같은 자료를 스크립트 없이 펼쳐 놓은 77과목 색인
+- [과목별 기출문제 목록](https://mangom72.github.io/Direct-mogo/s/): 같은 자료를 스크립트 없이 펼쳐 놓은 90과목 색인
 
 ## Optional
 

@@ -1125,5 +1125,25 @@
    "answer": null,
    "solution": "https://wdown.ebsi.co.kr/W61001/01exam/201303133/s_his_hsj.pdf"
   }
+ ],
+ "samples": [
+  {
+   "id": "2017-history",
+   "schoolYear": 2017,
+   "subjects": [
+    "63004"
+   ],
+   "title": "수능 예시문항 · 한국사 유형별 안내",
+   "published": "2014-04-11",
+   "sourcePage": "https://www.kice.re.kr/boardCnts/view.do?boardID=10024&boardSeq=2139658&lev=0&m=050102&s=kice&statusYN=W",
+   "files": [
+    {
+     "label": "문제·정답·학습 안내 (한 PDF)",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=6357e2f4036197724bb13027737a6edd",
+     "role": "guide"
+    }
+   ],
+   "note": "한국사 필수과목 도입에 따른 유형별 예시문항입니다. 문제·정답·학습 안내가 같은 문서에 있습니다."
+  }
  ]
 }

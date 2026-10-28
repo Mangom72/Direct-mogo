@@ -1,0 +1,64 @@
+{
+ "grade": "D300",
+ "gradeLabel": "고3·N수",
+ "group": "과학탐구",
+ "subject": "통합과학",
+ "subjectId": "900004",
+ "count": 0,
+ "note": "year는 시험을 본 해(시행 연도)입니다. schoolYear는 학년도이며 시행 연도 + 1로, 평가원 시험(수능·6월·9월 모의평가)에만 있습니다. 흔히 '2021학년도 6월 모평'이라 부르는 것은 year 2020 · schoolYear 2021인 회차입니다 — year로 찾으면 한 해 어긋납니다. 교육청 전국연합학력평가는 학년도를 쓰지 않습니다.",
+ "papers": [],
+ "samples": [
+  {
+   "id": "2028-900004",
+   "schoolYear": 2028,
+   "subjects": [
+    "900004"
+   ],
+   "title": "수능 예시문항 · 과학탐구 · 2025년 공개",
+   "published": "2025-04-15",
+   "sourcePage": "https://www.suneung.re.kr/boardCnts/view.do?boardID=1500237&boardSeq=5089979&lev=0&m=0403&s=suneung&statusYN=W",
+   "files": [
+    {
+     "label": "문제",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=1f42deaec52059f97e169964668b4b5c",
+     "role": "problem"
+    },
+    {
+     "label": "정답",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=2d61407c6b2d3083455e0a4b8dd105bb",
+     "role": "answer"
+    },
+    {
+     "label": "문항·학습 안내 (통합 PDF)",
+     "url": "https://www.moe.go.kr/boardCnts/fileDown.do?fileSeq=76dc225437d298122bc7000aab130487",
+     "role": "guide"
+    },
+    {
+     "label": "EBSi 주요 문항 해설",
+     "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=4&bbsCd=B123&datNo=620487",
+     "role": "analysis"
+    }
+   ],
+   "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설이며 전체 문항 해설은 아닙니다."
+  },
+  {
+   "id": "2028-inquiry-2024",
+   "schoolYear": 2028,
+   "subjects": [
+    "900003",
+    "900004"
+   ],
+   "title": "수능 예시문항 · 통합사회·통합과학 · 2024년 공개",
+   "published": "2024-09-26",
+   "sourcePage": "https://www.moe.go.kr/boardCnts/viewRenew.do?boardID=294&boardSeq=101085&lev=0",
+   "files": [
+    {
+     "label": "문제·정답·문항 안내 (한 PDF)",
+     "url": "https://www.moe.go.kr/boardCnts/fileDown.do?fileSeq=ee517bedf5aa88ac3c1e3669051a8a3e",
+     "role": "guide"
+    }
+   ],
+   "note": "통합사회·통합과학 각 12문항의 초기 공개분입니다. 2025년 공개분과 구분합니다. 두 과목과 정답·문항 안내가 한 문서에 있습니다."
+  }
+ ]
+}

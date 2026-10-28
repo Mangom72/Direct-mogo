@@ -104,13 +104,14 @@ def head(title, desc, canon, depth, alt=""):
 """
 
 
-def foot(depth, extra=""):
+def foot(depth, extra="", official=False):
     up = "../" * depth
+    provider = "EBSi·한국교육과정평가원·교육부" if official else "EBSi"
     return f"""
 </main>
 <footer>
   {extra}
-  <p>모든 링크는 EBSi가 공개하여 별도의 인증 없이 접근 가능한 파일 주소로 직접
+  <p>모든 링크는 {provider}가 공개하여 별도의 인증 없이 접근 가능한 파일 주소로 직접
   연결되며, 이 사이트는 어떤 파일도 저장·재배포하지 않습니다. 문제 자료의 저작권은
   <b>한국교육과정평가원</b> 및 <b>각 시·도교육청</b>에 있습니다.
   권리자 또는 정당한 대리인의 게시중단 요청은 확인 즉시 이행합니다 —
@@ -209,6 +210,8 @@ def facts(meta):
 
 def subject_page(meta, sub):
     """과목 한 개 — 전 회차를 연도별로 묶어 표로."""
+    if not meta["papers"]:
+        return sample_subject_page(meta)
     g, gl = meta["grade"], meta["gradeLabel"]
     name, sid, n = meta["subject"], meta["subjectId"], meta["count"]
     canon = f"{SITE}s/{g}/{sid}.html"
@@ -262,12 +265,44 @@ def subject_page(meta, sub):
                        f'<td class="dl">{" ".join(links)}</td></tr>\n')
         out.append("</tbody>\n</table>\n</section>\n")
 
+    out.append(sample_sections(meta.get("samples", [])))
     out.append(f"""<section class="also">
   <h2>같은 {E(meta['group'])} 과목</h2>
   <p class="chips">{{SIBLINGS}}</p>
 </section>""")
-    out.append(foot(2))
+    out.append(foot(2, official=bool(meta.get("samples"))))
     return "".join(out)
+
+
+def sample_sections(samples):
+    out = []
+    for p in sorted(samples, key=lambda p: (p["schoolYear"], p["published"] or ""), reverse=True):
+        links = " · ".join(f'<a href="{E(f["url"])}" target="_blank" rel="noopener">{E(f["label"])}</a>'
+                           for f in p["files"])
+        published = f' · {E(p["published"])} 등록' if p["published"] else ""
+        out.append(f'<section class="yr sample" data-sample="{E(p["id"])}">'
+                   f'<h2>{p["schoolYear"]}학년도 · {E(p["title"])}</h2>'
+                   f'<p>평가원 · 예시문항{published}</p><p>{E(p["note"])}</p>'
+                   f'<p class="sample-links">{links} · '
+                   f'<a href="{E(p["sourcePage"])}" target="_blank" rel="noopener">공식 출처</a></p></section>')
+    return "".join(out)
+
+
+def sample_subject_page(meta):
+    g, sid, name = meta["grade"], meta["subjectId"], meta["subject"]
+    gl = meta["gradeLabel"]
+    title = f"{gl} {name} 수능 예시문항 — 기출 직행"
+    desc = f"{gl} {name} 공식 수능 예시문항. 대상 학년도별 문제·정답·안내 원본을 확인하세요."
+    return (head(title, desc, f"{SITE}s/{g}/{sid}.html", 2)
+            + crumbs(2, f"{gl} {name}")
+            + f'<header class="pg"><p class="kicker">{E(meta["group"])}</p><h1>{E(name)} 수능 예시문항</h1>'
+              '<p class="lead">공식 원본으로 연결됩니다. 예시문항의 대상 학년도로 표시하며 '
+              '등록일은 시행일이 아닙니다.</p>'
+            + f'<p class="go"><a class="app" href="../../#/{g}/{sid}/all/all">앱 화면에서 보기</a> '
+              f'<a href="../../data/{g}/{sid}.json">JSON으로 받기</a></p></header>'
+            + sample_sections(meta["samples"])
+            + f'<section class="also"><h2>같은 {E(meta["group"])} 과목</h2><p class="chips">{{SIBLINGS}}</p></section>'
+            + foot(2, official=True))
 
 
 def index_page(index):
@@ -285,7 +320,7 @@ def index_page(index):
   과목을 고르면 그 과목의 전 회차가 연도별로 나오고, 문제·정답·해설은 EBSi 원본
   파일로 직접 연결됩니다. 수록된 가장 최근 시행일은 {E(index['updated'])}입니다.</p>
   <p class="yrnote">연도는 <b>학년도</b>로 표시하며, 줄인 표기는 뒤 두 자리를 사용합니다.
-  원본 자료의 시행일과 주소는 그대로 제공합니다.</p>
+  원본 자료의 시행일과 주소는 그대로 제공합니다. 공식 수능 예시문항도 과목별로 확인할 수 있습니다.</p>
   <p class="go"><a class="app" href="../">앱 화면에서 보기</a>
      <a href="../data/index.json">전 과목 JSON</a>
      <a href="../llms.txt">llms.txt</a></p>
@@ -296,11 +331,14 @@ def index_page(index):
         for g in gr["groups"]:
             out.append(f'<h3>{E(g["name"])}</h3>\n<ul class="subs">\n')
             for s in g["subjects"]:
+                count = f'{s["count"]}회차'
+                if s.get("sampleCount"):
+                    count += f' · 예시문항 {s["sampleCount"]}건'
                 out.append(f'<li><a href="{gr["code"]}/{s["id"]}.html">{E(s["name"])}</a>'
-                           f'<span class="cnt">{s["count"]}회차</span></li>\n')
+                           f'<span class="cnt">{count}</span></li>\n')
             out.append("</ul>\n")
         out.append("</section>\n")
-    out.append(foot(1))
+    out.append(foot(1, official=True))
     return "".join(out)
 
 
@@ -313,7 +351,7 @@ def sitemap(pages):
     바뀌지 않은 과목까지 매달 새 날짜를 달고 있었다. 그건 부정확한 신호라
     쓰이지 않느니만 못하다. 이제 과목 페이지는 그 과목의 최신 시행일을 단다.
     """
-    body = "".join(f"  <url><loc>{E(u)}</loc><lastmod>{d}</lastmod></url>\n"
+    body = "".join(f"  <url><loc>{E(u)}</loc>" + (f"<lastmod>{d}</lastmod>" if d else "") + "</url>\n"
                    for u, d in pages)
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -540,7 +578,8 @@ def main():
                 (out / gr["code"] / f'{s["id"]}.html').write_text(page, encoding="utf-8")
                 # 이 페이지가 실제로 바뀌는 날은 이 과목에 새 회차가 붙는 날이다
                 pages.append((f'{SITE}s/{gr["code"]}/{s["id"]}.html',
-                              meta["papers"][0]["date"]))
+                              meta["papers"][0]["date"] if meta["papers"] else
+                              max((p["published"] for p in meta.get("samples", []) if p["published"]), default=None)))
                 n += 1
 
     (out / "index.html").write_text(index_page(index), encoding="utf-8")

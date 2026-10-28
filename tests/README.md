@@ -47,6 +47,7 @@ python3 tests/run.py -v           # 출력까지 그대로
 | `test_pages` `test_seo` | 과목 페이지가 스크립트 없이 읽히는가, 제목·사이트맵·빵부스러기 |
 | `test_llms` | `llms.txt`가 규격에 맞고, 적힌 대로 따라가면 실제 파일이 나오는가 |
 | `test_fields` | 회차 `id`가 유일한가, `type`·`form`·`schoolYear`·`aliases`가 서로 맞는가 |
+| `test_samples` | 공식 예시문항의 대상 학년도·과목·공개분·원본 링크, 기존 기록과 갱신 후 보존, 네이티브 다운로드·기존 OMR 격리 |
 | `test_refresh` | EBSi 폼·회차 파싱, 덧붙이기·빈칸 채우기, 순간 장애 재시도가 그대로인가 |
 | `test_glyphs` | **화면에 그려지는 글자가 글꼴에 다 있는가** |
 | `test_stable` | 같은 자료면 같은 파일이 나오는가 (매일 도는 갱신이 헛커밋을 내지 않도록) |

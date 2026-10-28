@@ -92,6 +92,16 @@ def read_payload(text):
     return json.loads(gzip.decompress(base64.b64decode(m.group(1).strip())))
 
 
+def read_samples(text):
+    """수집 페이로드 밖의 공식 예시문항. 시행 연도·시행일은 만들지 않는다."""
+    match = re.search(r'id="samples"[^>]*>(.*?)</script>', text, re.S)
+    return json.loads(match.group(1)) if match else []
+
+
+def samples_for(samples, grade, sid):
+    return [p for p in samples if grade == "D300" and sid in p["subjects"]]
+
+
 def read_groups(text):
     """GROUPS 상수에서 (학년 → 과목군 → [(과목명, 코드)]) 를 그대로 읽어온다."""
     i = text.find("const GROUPS")
@@ -187,6 +197,7 @@ def main():
 
     text = Path(args.index).read_text(encoding="utf-8")
     db = read_payload(text)
+    samples = read_samples(text)
     groups = read_groups(text)
     out = Path(args.out)
 
@@ -201,7 +212,8 @@ def main():
                 for y in sorted(years, reverse=True):
                     papers += [paper(r, y, grade, sid) for r in years[y]]
                 papers.sort(key=lambda p: p["date"], reverse=True)
-                if not papers:
+                examples = samples_for(samples, grade, sid)
+                if not papers and not examples:
                     continue
                 rel = f"{grade}/{sid}.json"
                 (out / grade).mkdir(parents=True, exist_ok=True)
@@ -216,6 +228,7 @@ def main():
                     # 답을 봤다. 파일마다 한 줄이면 어디로 들어오든 눈에 걸린다.
                     "note": YEAR_NOTE,
                     "papers": papers,
+                    **({"samples": examples} if examples else {}),
                 }, ensure_ascii=False, indent=1), encoding="utf-8")
                 subs.append({
                     "id": sid, "name": name,
@@ -225,9 +238,13 @@ def main():
                     "count": len(papers),
                     "years": sorted({p["year"] for p in papers}, reverse=True),
                     "data": f"data/{rel}",
+                    **({"sampleCount": len(examples),
+                        "schoolYears": sorted({p["schoolYear"] for p in examples}, reverse=True)}
+                       if examples else {}),
                 })
                 total += len(papers)
-                latest = max(latest, papers[0]["date"])   # 이미 내림차순
+                if papers:
+                    latest = max(latest, papers[0]["date"])   # 이미 내림차순
             if subs:
                 gnode["groups"].append({"name": group["name"], "subjects": subs})
         grades.append(gnode)
@@ -243,6 +260,8 @@ def main():
         "updated": latest,
         "count": total,
         "note": YEAR_NOTE,
+        "samples": {"data": "data/samples.json", "count": len(samples),
+                    "note": "공식 예시문항은 별도 samples 목록입니다. schoolYear가 대상 학년도이며 published는 등록일(모르면 null)입니다. 시행일·시행 연도·기록 키는 없습니다. files는 실제 원본이며 한 PDF의 문제·정답·안내를 별도 파일로 보지 마세요."},
         "fields": {
             "problem": "문제지 PDF 주소 (없으면 null)",
             "answer": "정답 이미지 주소 (없으면 null)",
@@ -253,6 +272,8 @@ def main():
         "grades": grades,
     }
     out.mkdir(parents=True, exist_ok=True)
+    (out / "samples.json").write_text(
+        json.dumps(samples, ensure_ascii=False, indent=1), encoding="utf-8")
     (out / "index.json").write_text(
         json.dumps(index, ensure_ascii=False, indent=1), encoding="utf-8")
 
@@ -359,6 +380,7 @@ D200(고2) · D100(고1) 셋뿐입니다. 과목ID는 지어내지 말고 `index
 ## 시작점
 
 - [과목 목록]({SITE}data/index.json): 학년·과목군·{nsub}개 과목과 각 과목의 데이터 경로. 여기서 시작하세요
+- [공식 수능 예시문항]({SITE}data/samples.json): 시행 회차와 별개인 자료입니다. schoolYear는 대상 학년도, published는 등록일(모르면 null)입니다. 과목별 JSON의 samples에도 들어 있으며 files는 실제 원본 링크입니다. 같은 PDF의 문제·정답·안내를 별도 파일로 세지 마세요
 - [자세한 사용 안내]({SITE}llms-full.txt): 필드별 설명, 돌아가는 예제 코드, 404가 날 때 볼 것
 
 ## 과목 자료 (예시)

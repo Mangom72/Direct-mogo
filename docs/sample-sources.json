@@ -1,0 +1,162 @@
+{
+  "verifiedOn": "2026-10-28",
+  "method": "공식 게시물의 실제 첨부파일을 GET하여 PDF를 열고 본문·정답표·표지/목차를 대조. PDF 원본은 저장소에 포함하지 않음.",
+  "documents": [
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=4b0c957f57a31b0fea30b89930f4a2ad",
+      "title": "국어_문제지.pdf",
+      "pages": 20,
+      "sha256": "09cb6ae2b03c12fd875ab75466e96df78b392d7763931b9880475e7766090fdd"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=58ff395b233bcf231e7a85022452c296",
+      "title": "국어_정답표.pdf",
+      "pages": 1,
+      "sha256": "3380275a1432644b222d3d4b24ec8e17df68ccba05bf9c803b97c1d3306b21f8"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=c29a5e922183e4f919b1cc829583875b",
+      "title": "수학_문제지.pdf",
+      "pages": 20,
+      "sha256": "c81117bd496aaa2b84157df3e9bd099216ce2ba337e648bcee229b8aa4f00b2d"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=77becfb1bab058dde44856ebb6bbaa6b",
+      "title": "수학_정답표.pdf",
+      "pages": 1,
+      "sha256": "772bd8784ce4ea25967f660575105ffd812df3102e73b123b883cb26c8e52ec6"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=a0aa9b435bbb3c95ff484e5ba97fc27d",
+      "title": "직업탐구_문제지.pdf",
+      "pages": 4,
+      "sha256": "a7062f548e3e96e964d79b80beacdf15b7ac0be340bc9af3508f179014c4b4aa"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=82ec89b4b761175225370a71be3b9b2d",
+      "title": "직업탐구_정답표.pdf",
+      "pages": 1,
+      "sha256": "654b936a869de18a9f1ecd64eb999a3b31fd1a1ac446da4cf548ce49ec1777e8"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=aec9a03dc37cda0f107fd6c1d175e6b8",
+      "title": "11_탑재용_국어.pdf",
+      "pages": 16,
+      "sha256": "690a52c3f39f9e9e33ee5d9e07650cb9c88eba380d7d52f0cdf0b9215a04af9c"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=ae2aa58e13f8e1f2fda19de1b9143a37",
+      "title": "1a_정답표_국어.pdf",
+      "pages": 1,
+      "sha256": "8f9d3a32b32e5c7d8bd05c21f95c089578891c301ee125ce277bbf3bea5bcc82"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=06eff0322c90fe3f587d2581c9b91367",
+      "title": "21_탑재용_수학.pdf",
+      "pages": 12,
+      "sha256": "fe3cbcafb2733948d4c95af7afc64c0eea88ae68c23d0b9827d153787734522b"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=0675e3a5019f6c4b98147a499311297c",
+      "title": "2a_정답표_수학.pdf",
+      "pages": 1,
+      "sha256": "2c4e6610113e3890071ae4e31fc4ebf46acffd558d6dd59082900f473ea80b28"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=cfec8872947730855f1217c429063a8b",
+      "title": "41_2_탑재용_사회탐구.pdf",
+      "pages": 6,
+      "sha256": "7286e747b6ac9e624135446805651eb9d5d7821eea62611390adc2b940c7a5f1"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=fbed99539b82f77cb4bb612dcb2c8e5a",
+      "title": "4a_2_정답표_사회탐구.pdf",
+      "pages": 1,
+      "sha256": "83f298e4051152eceb446bc8fb11de8dae7d6f8c0c41283f02394836521594c2"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=1f42deaec52059f97e169964668b4b5c",
+      "title": "51_탑재용_과학탐구.pdf",
+      "pages": 6,
+      "sha256": "d873c8beaa4a81c336059e0aec5acaf2f8703a5ac7dcc8904aa74778327844e5"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=2d61407c6b2d3083455e0a4b8dd105bb",
+      "title": "5a_과학탐구.pdf",
+      "pages": 1,
+      "sha256": "a25cd7da48f41e1e0fd878340b501bd1c00bc7b05377987f532428943dd5120c"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=fc6ee108c3bfcf8ca0373f854c1c595b",
+      "title": "2028 수능 제2외국어/한문 영역 이렇게 바뀝니다! PDF 보기",
+      "pages": 2,
+      "sha256": "ac9390b60522ebdfd4ee5f622584e452ad8e0997fafa31d3e964770a4450a8fa"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=b62d630d5de685c7ee5e1ddcd8a9bf5c",
+      "title": "2028 예시문항 안내자료집 PDF 보기",
+      "pages": 154,
+      "sha256": "453512891dafc488e2a1a7d92a01c0f8d385603d9e9b29d706e283dd98f32baf"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=5bff477aac639a0ce35811bff71623b5",
+      "title": "2028 대학입시제도 개편안에 따른 통합사회·통합과학 예시문항 안내 PDF 보기",
+      "pages": 79,
+      "sha256": "d97a43c87c2d984d7d85d4ee2cec77056b33b004aa29015cbb14029f3e63eda7"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=4c56e911ea50fb545ae4bfdacb8757a6",
+      "title": "2022학년도 대학수학능력시험 예시문항 안내 PDF 보기",
+      "pages": 154,
+      "sha256": "0a33f57a1024db932acfebdc6420f86b1c4b25993ffc514416aae5d79640fa5c"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=0f946c8e039659ca355e82e21e850bb1",
+      "title": "2018학년도 수능 영어 절대평가 학습안내 PDF 보기",
+      "pages": 25,
+      "sha256": "7e320ed75b6a099c28fe83560a1c5a37cf713e3ff37d5f3e8e72a3871c3289d8"
+    },
+    {
+      "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=6357e2f4036197724bb13027737a6edd",
+      "title": "문항 유형으로 알아보는 2017학년도 대학수학능력시험 한국사 학습 안내 PDF 보기",
+      "pages": 33,
+      "sha256": "f2c580ff0af17d96370be5eda388cc268d01313e302348a5c48e6ff8c972adea"
+    },
+    {
+      "url": "https://www.moe.go.kr/boardCnts/fileDown.do?fileSeq=ee517bedf5aa88ac3c1e3669051a8a3e",
+      "title": "2024-moe",
+      "pages": 75,
+      "sha256": "05710d80b1a985cdfe61012c50c3a6cc235d3a921d8040f465d4c2ee50642184"
+    },
+    {
+      "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=1&bbsCd=B123&datNo=620487",
+      "title": "ebsi-2028-1",
+      "pages": 18,
+      "sha256": "5a966852d41cd8babb62e0197e2147b4a9a857db3303eab53b9fe1052179b3b8"
+    },
+    {
+      "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=2&bbsCd=B123&datNo=620487",
+      "title": "ebsi-2028-2",
+      "pages": 9,
+      "sha256": "3e210c00721a5e3dfdcc108798c150bc0d0945e365b4e9f3566f3f56da2353d4"
+    },
+    {
+      "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=3&bbsCd=B123&datNo=620487",
+      "title": "ebsi-2028-3",
+      "pages": 11,
+      "sha256": "c4ba2d1dae1a8d7d41deed60d6be85fb61c1c6afd0faca9222c75c98641e773f"
+    },
+    {
+      "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=4&bbsCd=B123&datNo=620487",
+      "title": "ebsi-2028-4",
+      "pages": 15,
+      "sha256": "f110c077d112f5299bded99b2addd52dc1274ec96cf27803617f654bd333a757"
+    },
+    {
+      "url": "https://www.moe.go.kr/boardCnts/fileDown.do?fileSeq=76dc225437d298122bc7000aab130487",
+      "title": "[별첨] 2028학년도 대학수학능력시험 예시문항 안내.pdf",
+      "pages": 153,
+      "sha256": "7176053e8ef34ae26c87918fb5012f21eecf1cf0af984effd9a37bfb10bf5e3d"
+    }
+  ]
+}

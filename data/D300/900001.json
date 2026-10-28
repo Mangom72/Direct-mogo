@@ -1,0 +1,73 @@
+{
+ "grade": "D300",
+ "gradeLabel": "고3·N수",
+ "group": "국어",
+ "subject": "국어",
+ "subjectId": "900001",
+ "count": 0,
+ "note": "year는 시험을 본 해(시행 연도)입니다. schoolYear는 학년도이며 시행 연도 + 1로, 평가원 시험(수능·6월·9월 모의평가)에만 있습니다. 흔히 '2021학년도 6월 모평'이라 부르는 것은 year 2020 · schoolYear 2021인 회차입니다 — year로 찾으면 한 해 어긋납니다. 교육청 전국연합학력평가는 학년도를 쓰지 않습니다.",
+ "papers": [],
+ "samples": [
+  {
+   "id": "2022-900001",
+   "schoolYear": 2022,
+   "subjects": [
+    "900001"
+   ],
+   "title": "수능 예시문항 · 국어 · 2020년 안내서·문제지",
+   "published": "2020-07-02",
+   "sourcePage": "https://www.suneung.re.kr/boardCnts/view.do?boardID=1500236&boardSeq=5050078&lev=0&m=0403&s=suneung&statusYN=W",
+   "files": [
+    {
+     "label": "문제",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=4b0c957f57a31b0fea30b89930f4a2ad",
+     "role": "problem"
+    },
+    {
+     "label": "정답",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=58ff395b233bcf231e7a85022452c296",
+     "role": "answer"
+    },
+    {
+     "label": "문항·학습 안내 (통합 PDF)",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=4c56e911ea50fb545ae4bfdacb8757a6",
+     "role": "guide"
+    }
+   ],
+   "note": "안내서의 문항을 문제지 형식으로 다시 편집한 자료입니다. 국어·수학 문제지는 공통과목과 선택과목 전체를 함께 담고 있습니다."
+  },
+  {
+   "id": "2028-900001",
+   "schoolYear": 2028,
+   "subjects": [
+    "900001"
+   ],
+   "title": "수능 예시문항 · 국어 · 2025년 공개",
+   "published": "2025-04-15",
+   "sourcePage": "https://www.suneung.re.kr/boardCnts/view.do?boardID=1500237&boardSeq=5089982&lev=0&m=0403&s=suneung&statusYN=W",
+   "files": [
+    {
+     "label": "문제",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=aec9a03dc37cda0f107fd6c1d175e6b8",
+     "role": "problem"
+    },
+    {
+     "label": "정답",
+     "url": "https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=ae2aa58e13f8e1f2fda19de1b9143a37",
+     "role": "answer"
+    },
+    {
+     "label": "문항·학습 안내 (통합 PDF)",
+     "url": "https://www.moe.go.kr/boardCnts/fileDown.do?fileSeq=76dc225437d298122bc7000aab130487",
+     "role": "guide"
+    },
+    {
+     "label": "EBSi 주요 문항 해설",
+     "url": "https://www.ebsi.co.kr/ebs/ent/com/downLoadFileDefaultNew.ebs?fileGbn=1&bbsCd=B123&datNo=620487",
+     "role": "analysis"
+    }
+   ],
+   "note": "2025년 공개분입니다. 국어·수학은 선택과목 없는 공통 시험이며 탐구는 통합사회·통합과학입니다. EBSi 자료는 주요 문항의 해설이며 전체 문항 해설은 아닙니다."
+  }
+ ]
+}

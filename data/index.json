@@ -5,6 +5,11 @@
  "updated": "2026-10-20",
  "count": 5167,
  "note": "year는 시험을 본 해(시행 연도)입니다. schoolYear는 학년도이며 시행 연도 + 1로, 평가원 시험(수능·6월·9월 모의평가)에만 있습니다. 흔히 '2021학년도 6월 모평'이라 부르는 것은 year 2020 · schoolYear 2021인 회차입니다 — year로 찾으면 한 해 어긋납니다. 교육청 전국연합학력평가는 학년도를 쓰지 않습니다.",
+ "samples": {
+  "data": "data/samples.json",
+  "count": 11,
+  "note": "공식 예시문항은 별도 samples 목록입니다. schoolYear가 대상 학년도이며 published는 등록일(모르면 null)입니다. 시행일·시행 연도·기록 키는 없습니다. files는 실제 원본이며 한 PDF의 문제·정답·안내를 별도 파일로 보지 마세요."
+ },
  "fields": {
   "problem": "문제지 PDF 주소 (없으면 null)",
   "answer": "정답 이미지 주소 (없으면 null)",
@@ -55,6 +60,19 @@
         2021
        ],
        "data": "data/D300/140118.json"
+      },
+      {
+       "id": "900001",
+       "name": "국어",
+       "aliases": [],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900001.json",
+       "sampleCount": 2,
+       "schoolYears": [
+        2028,
+        2022
+       ]
       }
      ]
     },
@@ -110,6 +128,19 @@
         2021
        ],
        "data": "data/D300/140121.json"
+      },
+      {
+       "id": "900002",
+       "name": "수학",
+       "aliases": [],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900002.json",
+       "sampleCount": 2,
+       "schoolYears": [
+        2028,
+        2022
+       ]
       }
      ]
     },
@@ -144,7 +175,11 @@
         2007,
         2006
        ],
-       "data": "data/D300/80003.json"
+       "data": "data/D300/80003.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2018
+       ]
       },
       {
        "id": "63004",
@@ -167,7 +202,11 @@
         2014,
         2013
        ],
-       "data": "data/D300/63004.json"
+       "data": "data/D300/63004.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2017
+       ]
       }
      ]
     },
@@ -417,6 +456,20 @@
         2013
        ],
        "data": "data/D300/66001.json"
+      },
+      {
+       "id": "900003",
+       "name": "통합사회",
+       "aliases": [
+        "통사"
+       ],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900003.json",
+       "sampleCount": 2,
+       "schoolYears": [
+        2028
+       ]
       }
      ]
     },
@@ -672,6 +725,20 @@
         2006
        ],
        "data": "data/D300/155.json"
+      },
+      {
+       "id": "900004",
+       "name": "통합과학",
+       "aliases": [
+        "통과"
+       ],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900004.json",
+       "sampleCount": 2,
+       "schoolYears": [
+        2028
+       ]
       }
      ]
     },
@@ -832,7 +899,11 @@
         2022,
         2021
        ],
-       "data": "data/D300/140122.json"
+       "data": "data/D300/140122.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2022
+       ]
       }
      ]
     },
@@ -1128,6 +1199,114 @@
         2006
        ],
        "data": "data/D300/198.json"
+      },
+      {
+       "id": "900011",
+       "name": "독일어",
+       "aliases": [],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900011.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2028
+       ]
+      },
+      {
+       "id": "900012",
+       "name": "프랑스어",
+       "aliases": [],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900012.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2028
+       ]
+      },
+      {
+       "id": "900013",
+       "name": "스페인어",
+       "aliases": [],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900013.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2028
+       ]
+      },
+      {
+       "id": "900014",
+       "name": "중국어",
+       "aliases": [],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900014.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2028
+       ]
+      },
+      {
+       "id": "900015",
+       "name": "일본어",
+       "aliases": [],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900015.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2028
+       ]
+      },
+      {
+       "id": "900016",
+       "name": "러시아어",
+       "aliases": [],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900016.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2028
+       ]
+      },
+      {
+       "id": "900017",
+       "name": "아랍어",
+       "aliases": [],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900017.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2028
+       ]
+      },
+      {
+       "id": "900018",
+       "name": "베트남어",
+       "aliases": [],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900018.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2028
+       ]
+      },
+      {
+       "id": "900019",
+       "name": "한문",
+       "aliases": [],
+       "count": 0,
+       "years": [],
+       "data": "data/D300/900019.json",
+       "sampleCount": 1,
+       "schoolYears": [
+        2028
+       ]
       }
      ]
     }
