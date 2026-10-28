@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ZRa2zhLbd7GOFKb3wioy+nc3jfeqWSEHhyfmuzcF8zw='; img-src 'self' data:; style-src 'self' 'sha256-w9BV3vkb9rMqZEZQpvKwEVevXufihuQnrjMTiA/c0ZY='; font-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-zvoXZlkn/1elgKGdHkxYsjr5N8IzhHitswFpvGJFw70='; img-src 'self' data:; style-src 'self' 'sha256-w9BV3vkb9rMqZEZQpvKwEVevXufihuQnrjMTiA/c0ZY='; font-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>고3·N수 한문 수능 예시문항 — 기출 직행</title>
 <meta name="description" content="고3·N수 한문 공식 수능 예시문항. 대상 학년도별 문제·정답·안내 원본을 확인하세요.">
 <link rel="canonical" href="https://mangom72.github.io/Direct-mogo/s/D300/900019.html">
@@ -189,6 +189,15 @@ footer .ln{font-weight:600}
   /* 다른 탭에서 앱 화면의 테마를 바꿨을 때 */
   addEventListener("storage", function(e){ if(e.key === KEY) apply(); });
 
+  addEventListener("click", function(e){
+    var a=e.target.closest && e.target.closest('a[data-sample-pdf]');
+    if(!a || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    try{
+      if(typeof GijulNative !== 'undefined' && GijulNative.openSamplePaper
+          && GijulNative.openSamplePaper(a.href,a.dataset.samplePdf)) e.preventDefault();
+    }catch(err){ /* Existing apps keep the official browser link. */ }
+  });
+
   /* 앱 안에서만 — 브라우저에서는 평범한 링크가 맞다 */
   try{
     if(typeof GijulNative === "undefined" || !GijulNative || !GijulNative.openPaper) return;
@@ -220,7 +229,7 @@ footer .ln{font-weight:600}
 <body>
 <main>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "기출 직행", "item": "https://mangom72.github.io/Direct-mogo/"}, {"@type": "ListItem", "position": 2, "name": "전체 과목", "item": "https://mangom72.github.io/Direct-mogo/s/"}, {"@type": "ListItem", "position": 3, "name": "고3·N수 한문"}]}</script>
-<nav class="crumb" aria-label="위치"><a href="../../">기출 직행</a> <span aria-hidden="true">›</span> <a href="../../s/">전체 과목</a> <span aria-hidden="true">›</span> <b>고3·N수 한문</b></nav><header class="pg"><p class="kicker">제2외국어·한문</p><h1>한문 수능 예시문항</h1><p class="lead">공식 원본으로 연결됩니다. 예시문항의 대상 학년도로 표시하며 등록일은 시행일이 아닙니다.</p><p class="go"><a class="app" href="../../#/D300/900019/all/sample">앱 화면에서 보기</a> <a href="../../data/D300/900019.json">JSON으로 받기</a></p></header><section class="yr sample" data-sample="2028-languages"><h2>2028학년도 · 수능 예시문항 · 제2외국어·한문 유형별 안내</h2><p>평가원 · 예시문항</p><p>2028학년도 제2외국어·한문 9과목의 유형별 예시와 정답이 한 문서에 있습니다. 과목명에 Ⅰ을 붙이지 않는 새 교육과정 자료입니다.</p><p class="sample-links"><a href="https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=fc6ee108c3bfcf8ca0373f854c1c595b" target="_blank" rel="noopener">문제·정답·문항 안내 (한 PDF)</a> · <a href="https://www.suneung.re.kr/sub/info.do?m=0401&amp;s=suneung" target="_blank" rel="noopener">공식 출처</a> · <a href="../../#/D300/900019/2027/sample">예시문항 탭에서 보기</a></p></section><section class="also"><h2>같은 제2외국어·한문 과목</h2><p class="chips"><a href="191.html">독일어Ⅰ</a> <a href="192.html">프랑스어Ⅰ</a> <a href="193.html">스페인어Ⅰ</a> <a href="194.html">중국어Ⅰ</a> <a href="195.html">일본어Ⅰ</a> <a href="196.html">러시아어Ⅰ</a> <a href="197.html">아랍어Ⅰ</a> <a href="60009.html">베트남어Ⅰ</a> <a href="198.html">한문Ⅰ</a> <a href="900011.html">독일어</a> <a href="900012.html">프랑스어</a> <a href="900013.html">스페인어</a> <a href="900014.html">중국어</a> <a href="900015.html">일본어</a> <a href="900016.html">러시아어</a> <a href="900017.html">아랍어</a> <a href="900018.html">베트남어</a></p></section>
+<nav class="crumb" aria-label="위치"><a href="../../">기출 직행</a> <span aria-hidden="true">›</span> <a href="../../s/">전체 과목</a> <span aria-hidden="true">›</span> <b>고3·N수 한문</b></nav><header class="pg"><p class="kicker">제2외국어·한문</p><h1>한문 수능 예시문항</h1><p class="lead">공식 원본으로 연결됩니다. 예시문항의 대상 학년도로 표시하며 등록일은 시행일이 아닙니다.</p><p class="go"><a class="app" href="../../#/D300/900019/all/sample">앱 화면에서 보기</a> <a href="../../data/D300/900019.json">JSON으로 받기</a></p></header><section class="yr sample" data-sample="2028-languages"><h2>2028학년도 · 수능 예시문항 · 제2외국어·한문 유형별 안내</h2><p>평가원 · 예시문항</p><p>2028학년도 제2외국어·한문 9과목의 유형별 예시와 정답이 한 문서에 있습니다. 과목명에 Ⅰ을 붙이지 않는 새 교육과정 자료입니다.</p><p class="sample-links"><a href="https://www.suneung.re.kr/boardCnts/fileDown.do?fileSeq=fc6ee108c3bfcf8ca0373f854c1c595b" data-sample-pdf="2028학년도 수능 예시문항 · 제2외국어·한문 유형별 안내 문제·정답·문항 안내 (한 PDF).pdf" target="_blank" rel="noopener">문제·정답·문항 안내 (한 PDF)</a> · <a href="https://www.suneung.re.kr/sub/info.do?m=0401&amp;s=suneung" target="_blank" rel="noopener">공식 출처</a> · <a href="../../#/D300/900019/2027/sample">예시문항 탭에서 보기</a></p></section><section class="also"><h2>같은 제2외국어·한문 과목</h2><p class="chips"><a href="191.html">독일어Ⅰ</a> <a href="192.html">프랑스어Ⅰ</a> <a href="193.html">스페인어Ⅰ</a> <a href="194.html">중국어Ⅰ</a> <a href="195.html">일본어Ⅰ</a> <a href="196.html">러시아어Ⅰ</a> <a href="197.html">아랍어Ⅰ</a> <a href="60009.html">베트남어Ⅰ</a> <a href="198.html">한문Ⅰ</a> <a href="900011.html">독일어</a> <a href="900012.html">프랑스어</a> <a href="900013.html">스페인어</a> <a href="900014.html">중국어</a> <a href="900015.html">일본어</a> <a href="900016.html">러시아어</a> <a href="900017.html">아랍어</a> <a href="900018.html">베트남어</a></p></section>
 </main>
 <footer>
   

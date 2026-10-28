@@ -127,7 +127,8 @@ public class MainActivity extends ComponentActivity {
                 if (isPaper(s)) {
                     Intent i = new Intent(MainActivity.this, PdfViewActivity.class);
                     i.putExtra(PdfViewActivity.EXTRA_URL, s);
-                    i.putExtra(PdfViewActivity.EXTRA_NAME, u.getLastPathSegment());
+                    i.putExtra(PdfViewActivity.EXTRA_NAME, PaperSources.known(s)
+                            ? PaperSources.filename(s) : u.getLastPathSegment());
                     open(i);
                 } else {
                     open(new Intent(Intent.ACTION_VIEW, u));
@@ -348,7 +349,7 @@ public class MainActivity extends ComponentActivity {
      */
     static void download(String url, File out) throws Exception {
         File tmp = new File(out.getParentFile(), out.getName() + ".part");
-        HttpURLConnection c = Net.open(url, Net.EBSI);
+        HttpURLConnection c = Net.openPaper(url);
         try {
             long total = 0;
             try (InputStream in = c.getInputStream(); FileOutputStream os = new FileOutputStream(tmp)) {
@@ -458,6 +459,7 @@ public class MainActivity extends ComponentActivity {
     }
 
     private static boolean isPaper(String url) {
+        if (PaperSources.known(url)) return true;
         String p = Uri.parse(url).getPath();
         return p != null && canDraw(p);
     }
@@ -631,6 +633,16 @@ public class MainActivity extends ComponentActivity {
          */
         @JavascriptInterface
         public void openPaper(String url, String name) { openPaperIn(url, name, null, null); }
+
+        /** Only the source-verified sample PDFs can use this bridge. Old apps lack it. */
+        @JavascriptInterface
+        public boolean openSamplePaper(String url, String name) {
+            if (!PaperSources.known(url) || name == null || name.length() > 300) return false;
+            Intent intent = paperIntent(url, name, null, null, null);
+            if (intent == null) return false;
+            open(intent);
+            return true;
+        }
 
         /**
          * 같은 뷰어로 열되 <b>회차 열쇠</b>까지 받는다. 잰 시간을 그 회차에
@@ -1047,7 +1059,7 @@ public class MainActivity extends ComponentActivity {
                                String subName, String key) {
         String title;
         try {
-            fromEbsi(url);
+            if (!PaperSources.known(url)) fromEbsi(url);
             title = safe(name);
         } catch (Exception e) {
             Log.w(TAG, "열 수 없는 자료: " + url, e);

@@ -42,6 +42,9 @@ jobs:
       # 확인이 fontTools 를 쓴다. 없으면 확인이 깨지고 발행이 통째로 멈춘다.
       - run: pip install -r requirements/fonts.txt
 
+      - name: 공식 예시 PDF 허용 목록 확인
+        run: python3 tools/build_sample_sources.py --check
+
       # 자료 갱신이 함께 들어온 커밋에서도 APK가 방금 만든 글꼴을 품게 한다.
       # 웹 글꼴만 새것이고 앱 글꼴은 전날 것이 되는 갈래를 빌드 전에 닫는다.
       - name: 웹과 앱 글꼴 맞추기

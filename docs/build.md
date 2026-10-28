@@ -100,6 +100,8 @@ EBSi `payload`와 합치지 않으므로 자동 수집의 수집량·활성 과�
 않고, 갱신 후에도 보존됩니다. `build_api.py`가 `data/samples.json`과 과목별 `samples`를,
 `build_pages.py`가 과목 페이지를 생성합니다. 새 자료도 아래 API → 페이지 → 글꼴
 순서로 생성합니다. [원본·학년도·중복 처리](exam-samples.md)를 확인하세요.
+예시 PDF 주소를 추가했다면 `python3 tools/build_sample_sources.py`로 Android의
+정확한 URL 허용 목록도 생성합니다. 바뀐 Android 자료는 판올림과 함께 배포합니다.
 
 새 회차는 워크플로가 알아서 채웁니다. 직접 돌리려면:
 

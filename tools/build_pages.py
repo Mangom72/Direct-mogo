@@ -277,7 +277,7 @@ def subject_page(meta, sub):
 def sample_sections(samples, grade, sid):
     out = []
     for p in sorted(samples, key=lambda p: (p["schoolYear"], p["published"] or ""), reverse=True):
-        links = " · ".join(f'<a href="{E(f["url"])}" target="_blank" rel="noopener">{E(f["label"])}</a>'
+        links = " · ".join(f'<a href="{E(f["url"])}" data-sample-pdf="{E(sample_filename(p,f))}" target="_blank" rel="noopener">{E(f["label"])}</a>'
                            for f in p["files"])
         published = f' · {E(p["published"])} 등록' if p["published"] else ""
         out.append(f'<section class="yr sample" data-sample="{E(p["id"])}">'
@@ -287,6 +287,11 @@ def sample_sections(samples, grade, sid):
                    f'<a href="{E(p["sourcePage"])}" target="_blank" rel="noopener">공식 출처</a> · '
                    f'<a href="../../#/{grade}/{sid}/{p["schoolYear"]-1}/sample">예시문항 탭에서 보기</a></p></section>')
     return "".join(out)
+
+
+def sample_filename(p, f):
+    label=f'{p["schoolYear"]}학년도 {p["title"]} {f["label"]}'
+    return re.sub(r'[/\\:*?"<>|\x00-\x1f]', '', label)+'.pdf'
 
 
 def sample_subject_page(meta):
@@ -510,6 +515,15 @@ JS = r"""/* tools/build_pages.py 가 쓴다. 손으로 고치지 말 것.
   window.gijulThemeChanged = apply;
   /* 다른 탭에서 앱 화면의 테마를 바꿨을 때 */
   addEventListener("storage", function(e){ if(e.key === KEY) apply(); });
+
+  addEventListener("click", function(e){
+    var a=e.target.closest && e.target.closest('a[data-sample-pdf]');
+    if(!a || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+    try{
+      if(typeof GijulNative !== 'undefined' && GijulNative.openSamplePaper
+          && GijulNative.openSamplePaper(a.href,a.dataset.samplePdf)) e.preventDefault();
+    }catch(err){ /* Existing apps keep the official browser link. */ }
+  });
 
   /* 앱 안에서만 — 브라우저에서는 평범한 링크가 맞다 */
   try{

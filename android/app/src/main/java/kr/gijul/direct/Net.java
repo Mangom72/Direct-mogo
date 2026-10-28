@@ -31,6 +31,7 @@ final class Net {
      * 값을 넣어 보는 일이 특히 값지다({@code app/src/test} 참고).
      */
     interface Allow { boolean ok(String host); }
+    private interface Target { boolean ok(String url); }
 
     /** 문제지는 EBSi 에서만 */
     static final Allow EBSI = h ->
@@ -57,10 +58,21 @@ final class Net {
 
     /** 주소를 확인하고 200 인 연결을 돌려준다. 리디렉션은 한 발씩 따라가며 매번 다시 본다. */
     static HttpURLConnection open(String url, Allow allow) throws Exception {
+        return openTarget(url, at -> allow.ok(Uri.parse(at).getHost()));
+    }
+
+    /** Verified sample PDFs use their exact URL; a redirect cannot escape that resource. */
+    static HttpURLConnection openPaper(String url) throws Exception {
+        if (PaperSources.known(url))
+            return openTarget(url, at -> PaperSources.redirectAllowed(url, at));
+        return open(url, EBSI);
+    }
+
+    private static HttpURLConnection openTarget(String url, Target allow) throws Exception {
         String at = url;
         for (int hop = 0; ; hop++) {
             Uri u = Uri.parse(at == null ? "" : at);
-            if (!"https".equals(u.getScheme()) || !allow.ok(u.getHost()))
+            if (!"https".equals(u.getScheme()) || !allow.ok(at))
                 throw new Exception("허용되지 않는 주소입니다");
 
             HttpURLConnection c = (HttpURLConnection) new URL(at).openConnection();

@@ -98,7 +98,7 @@ addEventListener("securitypolicyviolation", function(e){
      frame-ancestors는 meta로 걸 수 없다(서버 헤더 전용). -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' https://apis.google.com/js/api.js https://apis.google.com/_/scs/ 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-SRFVfFruvfq6ZV9yPLFHeFaeSqiVfzp59P48ehwjTJ8=';
+  script-src 'self' https://apis.google.com/js/api.js https://apis.google.com/_/scs/ 'sha256-6jWxumQcZWPs2dNhih+Z+WzjTuLSzkJ1f0BbE9Q/cgM=' 'sha256-xey9W89KIrlaC7bwcW058139TtOMsdsTxyEwWRsJegE=' 'sha256-DZRFmyB9bEJGZPnN4BYCR6lY/oyuKQbhTZM9AppojS8=' 'sha256-0o6M8pAecDO0J6828O8xMTaXJolyhhz7s/3D29llbgc=';
   style-src 'self' 'unsafe-inline';
   font-src 'self';
   img-src 'self';
@@ -1432,7 +1432,7 @@ function sampleHTML(p){
     <div><div class="nm">${esc(p.title)}</div>
       <div class="meta"><span class="badge">평가원 · 예시문항</span><span>${esc(sampleLabel(p))}${p.published ? ` · ${esc(p.published)} 등록` : ""}</span></div>
       <p>${esc(p.note)}</p></div>
-    <div class="acts">${p.files.map(f=>`<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.label)}</a>`).join("")}
+    <div class="acts">${p.files.map(f=>`<a href="${esc(f.url)}" data-sample-pdf="${esc(GijulStorage.label(`${sampleLabel(p)} ${p.title} ${f.label}`)+'.pdf')}" target="_blank" rel="noopener">${esc(f.label)}</a>`).join("")}
       <a href="${esc(p.sourcePage)}" target="_blank" rel="noopener">공식 출처</a></div>
   </div>`;
 }
@@ -4119,6 +4119,14 @@ function toApp(href, nm, key){
   else if(NATIVE.openPaperIn) NATIVE.openPaperIn(href, nm, sel.grade, sel.sub);
   else NATIVE.openPaper(href, nm);
 }
+
+out.addEventListener("click", e=>{
+  const a=e.target.closest("a[data-sample-pdf]");
+  if(!a || e.defaultPrevented || e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+  try{
+    if(NATIVE?.openSamplePaper && NATIVE.openSamplePaper(a.href,a.dataset.samplePdf)) e.preventDefault();
+  }catch(err){ /* 구형 앱에서는 원본 링크를 그대로 연다. */ }
+});
 
 if(NATIVE && NATIVE.openPaper){
   out.addEventListener("click", e=>{

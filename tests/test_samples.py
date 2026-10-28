@@ -10,6 +10,7 @@ from harness import ROOT, CHROME, site
 sys.path.insert(0, str(ROOT / 'tools'))
 import build_api as API
 import refresh_data as REFRESH
+import build_sample_sources as SOURCES
 from playwright.sync_api import sync_playwright
 
 text=(ROOT/'index.html').read_text()
@@ -18,6 +19,7 @@ assert {p['schoolYear'] for p in samples} == {2017,2018,2022,2028}
 assert len({p['id'] for p in samples}) == len(samples)
 assert all('예시문항' in p['title'] and 'date' not in p and 'year' not in p for p in samples)
 assert json.loads((ROOT/'data/samples.json').read_text()) == samples
+assert SOURCES.TARGET.read_text()==SOURCES.generated(samples)
 by_id={p['id']:p for p in samples}
 assert by_id['2017-history']['schoolYear']==2017 and by_id['2017-history']['published']=='2014-04-11'
 assert by_id['2028-inquiry-2024']['published']=='2024-09-26'
@@ -60,7 +62,7 @@ _srv,url=site()
 with sync_playwright() as pw:
     browser=pw.chromium.launch(executable_path=CHROME)
     ctx=browser.new_context(viewport={'width':360,'height':900},service_workers='block')
-    # Android 창구가 있어도 공식 fileDown 링크는 네이티브 다운로드로 넘기지 않는다.
+    # 구형 앱의 기존 브리지로는 공식 fileDown 링크를 잘못 넘기지 않는다.
     ctx.add_init_script('window.nativeCalls=[]; window.GijulNative={openPaper:(...a)=>nativeCalls.push(a),openPaperIn:(...a)=>nativeCalls.push(a)};')
     pg=ctx.new_page();errors=[]
     pg.on('pageerror',lambda e:errors.append(str(e)))
@@ -126,5 +128,22 @@ with sync_playwright() as pw:
     with ctx.expect_page() as opened:pg.locator('.sample-links a').first.click()
     opened.value.wait_for_load_state();assert pg.evaluate('nativeCalls')==[]
     assert not errors,errors
+    # 새 앱에서는 검증된 예시 PDF 전용 브리지로 같은 PDF 뷰어를 연다.
+    modern=browser.new_context(service_workers='block')
+    modern.add_init_script('window.nativeCalls=[]; window.GijulNative={openPaper:()=>{throw new Error("legacy bridge used")},openSamplePaper:(url,name)=>{nativeCalls.push([url,name]);return true}};')
+    modern.route('https://www.suneung.re.kr/**',lambda route:route.fulfill(status=200,content_type='text/html',body='official source'))
+    modern.route('https://www.moe.go.kr/**',lambda route:route.fulfill(status=200,content_type='text/html',body='official source'))
+    q=modern.new_page();q.goto(url+'#/D300/900003/2027/sample');q.wait_for_selector('.sample')
+    link=q.locator('.sample [data-sample-pdf]').first;file_url=link.get_attribute('href')
+    link.click();calls=q.evaluate('nativeCalls')
+    assert len(modern.pages)==1 and calls[0][0]==file_url
+    assert len(calls[0])==2 and calls[0][1].startswith('2028학년도 ') and calls[0][1].endswith('.pdf')
+    main_name=calls[0][1]
+    q.goto(url+'s/D300/900003.html');q.locator('.sample [data-sample-pdf]').first.click()
+    assert q.evaluate('nativeCalls')[0]==[file_url,main_name] and len(modern.pages)==1
+    with modern.expect_page() as opened:q.locator('.sample a[href*="boardCnts/view"]').first.click()
+    opened.value.wait_for_load_state()
+    assert q.evaluate('nativeCalls').__len__()==1
+    modern.close()
     browser.close()
 print('화면·짧은 학년도·필터·기존 링크·Android 창구 격리 확인')

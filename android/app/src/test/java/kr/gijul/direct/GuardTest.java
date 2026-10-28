@@ -44,6 +44,8 @@ public class GuardTest {
         assertFalse(Net.EBSI.ok("ebsi.co.kr.kr"));
         assertFalse(Net.EBSI.ok(null));
         assertFalse(Net.EBSI.ok(""));
+        assertFalse(Net.EBSI.ok("www.moe.go.kr"));
+        assertFalse(Net.EBSI.ok("www.suneung.re.kr"));
     }
 
     @Test

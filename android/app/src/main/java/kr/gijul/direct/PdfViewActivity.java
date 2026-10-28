@@ -265,6 +265,7 @@ public class PdfViewActivity extends ComponentActivity {
         timerBtn = iconBtn(R.drawable.ic_timer, "시험 시간 재기", ink);
         timerBtn.setOnClickListener(v -> tapTimer());
         timerBtn.setOnLongClickListener(v -> { askTime(); return true; });
+        if (PaperSources.known(getIntent().getStringExtra(EXTRA_URL))) timerBtn.setVisibility(View.GONE);
         bar.addView(timerBtn, new LinearLayout.LayoutParams(dp(44), dp(44)));
 
         ImageButton flo = iconBtn(R.drawable.ic_float, "다른 앱 위에 띄우기", ink);
@@ -974,6 +975,13 @@ public class PdfViewActivity extends ComponentActivity {
 
     private void drawTimer() {
         if (timerChip == null) return;
+        if (PaperSources.known(src)) {
+            timerChip.setVisibility(View.GONE);
+            timerBtn.setVisibility(View.GONE);
+            timerLine.setVisibility(View.GONE);
+            beat.removeCallbacksAndMessages(null);
+            return;
+        }
         boolean on = Timing.mine(this, paperKey);
         timerChip.setVisibility(on ? View.VISIBLE : View.GONE);
         timerBtn.setVisibility(on ? View.GONE : View.VISIBLE);
