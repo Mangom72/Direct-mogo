@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
 
       - run: pip install -r requirements/fonts.txt
       - name: 화면·앱 규칙과 글꼴 확인

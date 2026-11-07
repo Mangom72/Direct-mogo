@@ -36,7 +36,7 @@ jobs:
       #
       # Gradle 판본과 배포 ZIP 지문은 저장소의 Wrapper가 함께 못박는다. 로컬과
       # CI가 같은 실행 파일을 쓰고, 내려받은 배포본이 바뀌어도 시작 전에 막힌다.
-      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
 
       # publish_apk.py 가 알림 문구의 글자가 글꼴에 있는지 확인하는데, 그
       # 확인이 fontTools 를 쓴다. 없으면 확인이 깨지고 발행이 통째로 멈춘다.
